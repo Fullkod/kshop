@@ -1,0 +1,41 @@
+# dependencies
+node_modules/
+.pnpm-store/
+.pnp
+.pnp.js
+
+# builds and caches
+.next/
+out/
+build/
+dist/
+.turbo/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Capacitor native outputs
+android/app/build/
+ios/App/Pods/
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+pnpm-debug.log*
+
+# local env files (secrets: never versioned)
+.env
+.env*.local
+
+# vercel / supabase local state
+.vercel
+supabase/.temp/
+supabase/.branches/
+
+# AI agents (shared config is versioned; personal state stays local)
+.claude/settings.local.json
+.claude/logs/
+.claude/skills/**/node_modules
+CLAUDE.local.md
+.titan-toolkit-backups/

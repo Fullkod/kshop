@@ -1,0 +1,83 @@
+> Sembrado el 2026-10-24 desde `_materiales/kshop/09-arranque-repo.md`. Las referencias "ver 0X" apuntan a las
+> entradas hermanas de `project/` (ver índice en `MEMORY.md`). Desde ahora la memoria viva es esta.
+
+# Arranque del repo `kshop`
+
+> Para el agente (Claude Code / Codex) que trabaje en `C:\Local-Disc-D\Project\Fullkod\kshop`
+> (carpeta y repo de GitHub ya renombrados desde `fullshop`; el repo está vacío).
+> Las decisiones de producto se toman en esta carpeta de materiales; el repo las implementa.
+> Si algo de aquí choca con lo que se vaya decidiendo después, gana lo más reciente en `01-decisiones.md`.
+
+## Paso 0 (obligatorio, antes de escribir código): Titan Factory para Claude Code **y** Codex
+El repo debe quedar con **las dos fábricas listas y funcionando**, igual que klauShop y LensSpace
+(layout dual: ver `klauShop/.titan/memory/project/2026-10-02-dual-agent-tooling.md` y `klauShop/docs/AGENT_SETUP.md`).
+
+| Pieza | Claude Code | Codex |
+|-------|-------------|-------|
+| Reglas del proyecto | `CLAUDE.md` (importa `@AGENTS.md` + bloque propio de Claude) | `AGENTS.md` (fuente común) |
+| Skills `tf-*` (mismos nombres) | `.claude/skills/tf-*` | `plugins/titan-factory-codex/skills/tf-*` (marketplace `kshop`: `titan-factory-codex@kshop`) |
+| Subagentes | `.claude/agents/tf-*.md` | `.codex/agents/tf-*.toml` + `.codex/config.toml` |
+| Skills de terceros | puentes en `.claude/skills/{supabase,supabase-postgres-best-practices,logo-design}` | fuente real en `.agents/skills/` + `skills-lock.json` |
+| MCP | `.mcp.json` (supabase vía script con token de `.env.local` limitado al proyecto nuevo, next-devtools, playwright, n8n-mcp) | configurado en cada instalación de Codex |
+| Ajustes | `.claude/settings.json` con `"autoMemoryEnabled": false` | — |
+| Memoria compartida | `.titan/memory/` (`MEMORY.md` + `user/`, `feedback/`, `project/`, `reference/`), `.titan/plans/` (`prp-base.md`), `.titan/qa/` | la misma |
+| Docs | `docs/AGENT_SETUP.md` (setup de ambos agentes) | el mismo |
+
+Criterios de "listo" (verificar en ambos agentes):
+- `/tf-primer` funciona en Claude Code y `tf-primer` en Codex: sincroniza git, carga `.titan/memory/MEMORY.md`,
+  lee `AGENTS.md`, mapea BD (o avisa si el MCP no conecta) y entrega el resumen.
+- `tf-prp`, `tf-bucle-agentico`, `tf-memory-manager`, `tf-supabase`, `tf-playwright-cli` y `tf-tasknic` disponibles en ambos.
+- `AGENTS.md` describe el stack **real** de Kshop (monorepo, pg_graphql + RLS, multi-tenant, módulos,
+  reglas de app móvil) y en qué se aparta del Golden Path de Titan Factory (sin Polar/Prisma, pago manual,
+  checkout WhatsApp), para que ningún skill "migre" el proyecto a su plantilla.
+- `.titan/memory/` sembrada con estos materiales (decisiones → `project/`, el equipo → `user/`) y su índice.
+- Origen de la copia registrado (`.claude/titan-factory-source.json`, como en klauShop). Para actualizar
+  después: `tf-update-tf`, nunca copiar el template encima.
+- Sin secretos versionados (`.env.local` en `.gitignore`; `.mcp.json` sin tokens). `TASKNIC_API_KEY` propia de este repo.
+- Primer commit: solo la fábrica + `AGENTS.md`/`CLAUDE.md` + memoria (sin código de app).
+
+## Cómo se trabaja
+1. Antes de cada fase, leer `01-decisiones.md` y los documentos de la fase.
+2. Al crear el repo, copiar estos materiales a `.titan/memory/` (decisiones como entradas `project/`)
+   y cada fase como PRP en `.titan/plans/`. Desde entonces la memoria viva es la del repo; esta carpeta
+   queda como origen y para lo que se siga hablando fuera (marca, negocio).
+3. Una fase = un PRP aprobado por Roberto → implementación → verificación (typecheck, lint, tests,
+   tests de RLS, prueba en navegador) → commit.
+4. Nada de push, deploy ni cambios en servicios externos (Supabase, Vercel, GitHub) sin permiso explícito.
+
+## Convenciones
+- Código, identificadores, comentarios, commits y nombres de archivo en **inglés**; UI en **español**
+  (preparado para traducir más adelante, pero sin i18n en el MVP).
+- Prefijo de paquetes `@kshop/*`; appId de las apps `com.fullkod.kshop.<slug>` (tienda) y
+  `com.fullkod.kshop.admin`.
+- Reglas de arquitectura de `07-app-movil.md` desde el primer commit: sin lógica de negocio en Server
+  Actions, API `/api/v1` con Bearer, auth por token, código compartido sin `next/*`.
+- `store_id` en toda tabla de tienda; RLS en todas las tablas + tests de aislamiento entre tiendas.
+- Módulos con registro central y comprobación en UI, API y BD (`08-modulos-y-planes.md`).
+- Validación con Zod en toda entrada; operaciones de stock/órdenes en transacción con `for update`.
+- Sin `any` nuevo; secretos nunca en código ni en memoria.
+
+## Stack (propuesto, confirmar en Fase 0)
+Monorepo (pnpm + Turborepo): `apps/web` (Next.js App Router, última estable), `packages/{ui,core,data}`,
+`supabase/` (esquema, migraciones, RLS, funciones, tests). Supabase (Postgres + Auth + Storage +
+pg_graphql), urql + graphql-codegen para lecturas, Drizzle o SQL para esquema y escrituras transaccionales,
+Tailwind + shadcn/ui, Vercel. Apps Capacitor (`apps/store-app`, `apps/admin-app`) se añaden en su fase.
+Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desarrollo separado de producción.
+
+## Fases (borrador — cada una se detalla en su PRP)
+| Fase | Alcance | Verificación |
+|------|---------|--------------|
+| 0a. Fábrica | Titan Factory Claude Code + Codex, memoria `.titan/` sembrada (ver "Paso 0") | `tf-primer` OK en Claude Code y en Codex |
+| 0b. Cimientos | Monorepo, Supabase nuevo, tablas de plataforma (`stores`, `store_domains`, `store_members`, `modules`, `plans`…), resolución de tienda por host, superadmin (login + crear tienda + dueño), registro de módulos, tests de RLS | Crear 2 tiendas desde el superadmin y entrar a cada una por su subdominio en local; tests de aislamiento en verde |
+| 1. Catálogo | Tipos, atributos, variantes, precios/costos, monedas, categorías, colecciones, marcas, medias, almacenes/stocks; admin de catálogo; importar/exportar Excel | Crear y importar productos con variantes; costo invisible en lectura pública |
+| 2. Tienda pública | Home por secciones, listados con filtros, ficha, búsqueda, menús, páginas, temas | Lighthouse y navegación en móvil; lecturas cacheadas por tienda |
+| 3. Clientes y compra | Cuentas por tienda (email sintético + recuperación por WhatsApp), carrito, checkout WhatsApp, entregas, órdenes, reservas, estados, pagos | Flujo completo de compra y cambio de estados; aislamiento de cuentas entre tiendas |
+| 4. Avisos y descuentos | WhatsApp de plataforma (plantillas, log), promociones y cupones | Avisos llegan; descuentos se reflejan en la orden |
+| 5. Suscripciones y módulos | Planes Base/Pro, add-ons, grants, facturas manuales, límites, suspensión | Bajar/subir de plan activa/desactiva funciones sin perder datos |
+| 6. Pro | Finanzas, multi-almacén, multimoneda, dominio propio | Informes por moneda cuadran con las órdenes |
+| 7. Apps | Capacitor tienda + admin, build por tienda | APK instalable de una tienda de prueba |
+| 8. Migrar klauShop | Datos de klauShop como tienda nº 1 | Comparativa de productos/órdenes; cambio de dominio con permiso |
+
+## Lo que aún no bloquea pero hay que decidir en su fase
+Delegación DNS de `kshop.fullkod.com` a Vercel (antes de Fase 0b en producción; en local se usa `*.localhost`), proveedor de
+email, límite de productos por plan, precios, logo y paleta (antes de la Fase 2 para los temas por defecto).
