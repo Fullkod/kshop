@@ -1,6 +1,6 @@
 # PRP-1: Catálogo de Kshop
 
-> **Estado**: CASI CERRADA (2026-10-25) — 1.1 a 1.8 hechas; quedan 2 puntos de la 1.7 (imágenes por URL en el Excel y prueba de 1 000 filas), ver «Progreso». Pendiente de revisión de Roberto. Aprobado por Roberto el 2026-10-25 (D1–D13 tal cual; D4 provisional Base = 300, Pro sin límite).
+> **Estado**: COMPLETADO (2026-10-25) — 1.1 a 1.8 hechas, incluidas las imágenes por URL del Excel y la prueba de 1 000 filas; ver «Progreso». Aprobado por Roberto el 2026-10-25 (D1–D13 tal cual; D4 provisional Base = 300, Pro sin límite).
 > **Fecha**: 2026-10-24
 > **Proyecto**: Kshop
 > **Fase**: 1 (ver `arranque-y-fases.md`). Código de partida: commit `9fcd43f` (Fase 0b cerrada)
@@ -298,7 +298,7 @@ de 1 000 filas se importa sin timeouts.
 **Validación**:
 - [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:rls` y `pnpm build` pasan
 - [x] E2E Playwright: crear el producto con 6 variantes + importar/exportar Excel + consulta anon sin costo; capturas en `.titan/qa/fase-1/`
-- [x] Criterios de éxito cumplidos (salvo los 2 puntos pendientes de la 1.7)
+- [x] Criterios de éxito cumplidos
 - [x] Memoria actualizada (`.titan/memory/project/` con D1–D13 confirmadas y los trucos nuevos), `AGENTS.md`/`docs/` si cambian comandos
 - [x] Commit(s) `feat:` en local (sin push ni deploy sin permiso)
 
@@ -317,9 +317,14 @@ de 1 000 filas se importa sin timeouts.
 | 1.7 Excel | Hecha: API (plantilla con desplegables, export, import con vista previa y lotes, upsert por SKU; `pnpm e2e:excel` 18/18) y pantalla `/admin/excel-import` (tipo → plantilla/export → subir → vista previa → importar por lotes con progreso → resumen) | `9a24b5a`, `8fb5b0e`, capturas `08–11` |
 | 1.8 Validación final | Hecha: editor con precios por moneda (`multi_currency`) y stock por almacén (`multi_warehouse`), badge «Pro» en Base; E2E en navegador del Excel (8/8) y del editor Pro (7/7); `typecheck`, `lint`, `test`, `build`, `test:rls` 122/122, `e2e:catalog` 30/30, `e2e:excel` 18/18; advisors sin tablas sin RLS ni FKs sin índice | `86ba903`, capturas `12–13` |
 
-**Pendiente de la 1.7 (Roberto decide si entra en la Fase 1 o se aplaza):**
-1. Imágenes por URL en el Excel (columna + descarga por lotes con timeout y tamaño máx.): no implementado.
-2. Prueba de carga: un Excel de 1 000 filas sin timeouts (lotes de `IMPORT_BATCH_SIZE` = 25): no ejecutada.
+**Cierre de la 1.7 (Roberto pidió cerrar la fase, 2026-10-25):**
+1. Imágenes por URL en el Excel: columna «Imágenes (URLs)» (plantilla, export e import). El servidor descarga
+   (solo http/https y direcciones públicas, comprobadas en cada redirección; 15 s; 15 MB), convierte con sharp a
+   WebP 1600/480 y guarda en `store-media`; `product_media.source_url` (columna privada) evita duplicar al
+   reimportar; los fallos salen como avisos. Commit `c901b47`; `pnpm e2e:excel` 22/22; `test:rls` 123/123.
+2. Carga: `pnpm e2e:excel-load` (1 000 filas / 250 productos en la Tienda Demo, borra lo creado). Lotes de 4
+   productos en paralelo y slugs comprobados una vez por lote: de 441 s a 89 s en total, lote más lento 22,5 s,
+   vista previa 22,6 s (medido en local con ~170 ms de latencia a Supabase). Commit `d6f1507`.
 
 **Notas del cierre (2026-10-25):**
 - La Tienda Demo queda con USD a la venta, el almacén «Tienda Centro», un precio de 9,50 USD en
@@ -343,6 +348,8 @@ de 1 000 filas se importa sin timeouts.
 - **Leaked password protection (HIBP) de Supabase Auth requiere plan Pro de Supabase**: no se puede activar en el plan actual.
 - **Guiones de Playwright**: esperar la respuesta de la API y el elemento nuevo en la lista, no un botón que siempre está visible.
 - **Si el navegador del MCP de Playwright está ocupado por otra sesión**, lanzar un Chromium propio con `playwright-core` (misma versión que el navegador instalado en `%LOCALAPPDATA%\ms-playwright`) desde un directorio aparte.
+- **El import es lento por idas y vueltas a la BD, no por la BD** (`import_product` ~17 ms): paralelizar productos del lote y agrupar consultas; nunca juntar el marcado de filas al final del lote (se perdería la reanudación).
+- **`ReadableStream` no es iterable con `for await` en los tipos DOM de TS**: usar `getReader()`.
 - **Node no resuelve `*.localhost`** (ENOTFOUND): las llamadas a la API desde scripts van a `http://localhost:3000`; el navegador sí resuelve `demo.kshop.localhost`. `getByRole("button")` choca con el botón de Next Dev Tools: usar el nombre.
 
 > Esta sección CRECE con cada error encontrado durante la implementación.

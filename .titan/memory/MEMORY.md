@@ -21,7 +21,7 @@
 - [decision-no-golden-path.md](project/decision-no-golden-path.md) — 2026-10-24: TF solo como capa de agente; en qué se aparta Kshop del template
 - [2026-10-24-dual-agent-tooling.md](project/2026-10-24-dual-agent-tooling.md) — Fase 0a: Claude Code + Codex copiados de klauShop, marketplace kshop, MCP Supabase con project ref propio
 - [2026-10-24-fase-0b-cimientos.md](project/2026-10-24-fase-0b-cimientos.md) — Fase 0b cerrada: D1–D7 confirmadas, Supabase online sin permiso por migración, trucos (introspección, urql POST, versiones de migración), cuentas
-- [2026-10-25-fase-1-catalogo.md](project/2026-10-25-fase-1-catalogo.md) — Fase 1 casi cerrada (faltan imágenes por URL en Excel y prueba de 1 000 filas): dónde está cada pieza, pruebas y datos de la Tienda Demo
+- [2026-10-25-fase-1-catalogo.md](project/2026-10-25-fase-1-catalogo.md) — Fase 1 CERRADA: dónde está cada pieza del catálogo, pruebas y datos de la Tienda Demo
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
 
 ## feedback/ — Correcciones y preferencias
@@ -37,4 +37,4 @@
 - `arranque-y-fases.md` — Paso 0, convenciones y fases 0a–8 (cada fase → su PRP)
 - `prp-base.md` — Plantilla de PRP
 - `prp-fase-0b-cimientos.md` — Fase 0b: monorepo, esquema de plataforma + RLS + tests A/B, host → tienda, superadmin (COMPLETADO 2026-10-24, commit 9fcd43f)
-- `prp-fase-1-catalogo.md` — Fase 1: catálogo (tipos, atributos, variantes, costo privado, monedas, categorías, colecciones, marcas, medias, almacenes/stock, Excel) (CASI CERRADA 2026-10-25: 1.1–1.8 hechas; quedan 2 puntos de la 1.7 a decidir por Roberto)
+- `prp-fase-1-catalogo.md` — Fase 1: catálogo (tipos, atributos, variantes, costo privado, monedas, categorías, colecciones, marcas, medias, almacenes/stock, Excel) (COMPLETADO 2026-10-25, commits hasta d6f1507)

@@ -1,8 +1,9 @@
-# Fase 1 — catálogo (casi cerrada, 2026-10-25)
+# Fase 1 — catálogo (CERRADA, 2026-10-25)
 
 PRP con progreso y pendientes exactos: `.titan/plans/prp-fase-1-catalogo.md` (sección «Progreso»).
-Estado: 1.1–1.8 hechas (commits hasta `86ba903`). Quedan 2 puntos de la 1.7 para que Roberto decida si
-entran o se aplazan: imágenes por URL en el Excel (no implementado) y prueba de 1 000 filas (no ejecutada).
+Estado: cerrada (commits hasta `d6f1507`), incluidas las imágenes por URL del Excel (sharp en el servidor,
+`server/catalog/remote-images.ts`, `product_media.source_url` privada) y la prueba de 1 000 filas
+(`pnpm e2e:excel-load`).
 
 ## Decisiones confirmadas por Roberto (2026-10-25)
 - PRP aprobado tal cual (D1–D13). Límite de productos: Base = 300 (provisional), Pro sin límite.
@@ -24,7 +25,8 @@ entran o se aplazan: imágenes por URL en el Excel (no implementado) y prueba de
   (`multi_warehouse`, vía `PUT stock` al guardar). Excel: `admin/excel-import/` +
   `features/excel-import/components/ExcelImportPage.tsx`; cliente `api.catalog(id).excelTemplate/
   excelExport/createImport/runImport`. Imágenes: `apps/web/src/lib/images.ts` (WebP 1600/480 en el navegador).
-- Pruebas: `pnpm test:rls` (122), `pnpm e2e:catalog` (30, tiendas temporales), `pnpm e2e:excel` (18, Tienda Demo).
+- Pruebas: `pnpm test:rls` (123), `pnpm e2e:catalog` (30, tiendas temporales), `pnpm e2e:excel` (22, Tienda Demo),
+  `pnpm e2e:excel-load` (1 000 filas, borra lo creado).
 
 ## Datos que hay en la Tienda Demo
 Atributos Talla/Color/Material, tipos Ropa y Accesorios, categorías Mujer › Vestidos, Mujer › Blusas,
