@@ -24,6 +24,7 @@
 - [2026-10-25-fase-1-catalogo.md](project/2026-10-25-fase-1-catalogo.md) — Fase 1 CERRADA: dónde está cada pieza del catálogo, pruebas y datos de la Tienda Demo
 - [2026-10-25-fase-2-tienda-publica.md](project/2026-10-25-fase-2-tienda-publica.md) — Fase 2 hecha (Lighthouse en Vercel medido; re-medir listado): decisiones (URLs en inglés, Cache Components, WhatsApp), dónde está cada pieza, invalidación
 - [2026-10-25-fase-3-clientes-y-compra.md](project/2026-10-25-fase-3-clientes-y-compra.md) — Fase 3 hecha: dónde está cada pieza, pruebas, pendientes
+- [2026-10-25-fase-4-avisos-y-descuentos.md](project/2026-10-25-fase-4-avisos-y-descuentos.md) — Fase 4 en curso: descuentos hechos (motor de precios SQL, promociones, cupones), faltan avisos WhatsApp
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
 
 ## feedback/ — Correcciones y preferencias

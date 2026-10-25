@@ -1,6 +1,6 @@
 # PRP-4: Avisos y descuentos en Kshop
 
-> **Estado**: APROBADO (2026-10-25) — Roberto: D20 sí; OpenWA = la misma instancia de klauShop con otra sesión y otro número; D6 sí (uso al crear la orden); D10 sí (descuento manual libre); D18 cambiada (ver D18); D19 sí. Resto de D tal cual.
+> **Estado**: EN CURSO — 4.1–4.3 (descuentos) hechas: commits 23ce834, a782cba, 4fa371d, e6d3b2d; faltan 4.4–4.6 (avisos y validación). APROBADO (2026-10-25) — Roberto: D20 sí; OpenWA = la misma instancia de klauShop con otra sesión y otro número; D6 sí (uso al crear la orden); D10 sí (descuento manual libre); D18 cambiada (ver D18); D19 sí. Resto de D tal cual.
 > **Fecha**: 2026-10-25
 > **Proyecto**: Kshop
 > **Fase**: 4 (ver `arranque-y-fases.md`). Código de partida: commit `98a564c` (Fase 3 cerrada)
@@ -289,6 +289,28 @@ Respuestas: 1 sí · 2 misma instancia OpenWA de klauShop, otra sesión y otro n
 
 > Esta sección CRECE con cada error encontrado durante la implementación.
 > El conocimiento persiste para futuros PRPs. El mismo error NUNCA ocurre dos veces.
+
+### 2026-10-25: Columna nueva en `products` = permission denied para anon
+- **Error**: `products` tiene grants **por columna** (oculta `search_vector`); al añadir `on_sale` los tests 02/03
+  fallaron con `42501 permission denied for table products`.
+- **Fix**: `grant select (on_sale) on public.products to anon, authenticated` en su propia migración.
+- **Aplicar en**: cualquier columna nueva de una tabla con grants por columna (`products`, `stores`, `carts`, `warehouses`).
+
+### 2026-10-25: `record "x" is not assigned yet` en plpgsql
+- **Error**: `checkout_create_order` y `price_lines` leían `v_voucher.code` cuando no había cupón (el `select into`
+  nunca corrió).
+- **Fix**: copiar a variables escalares dentro del `if` (`v_voucher_code`, `v_voucher_json`, `v_discount`).
+- **Aplicar en**: todo `record` opcional en funciones SQL.
+
+### 2026-10-25: Importes con 16 decimales y booleanos `t` en `format()`
+- **Error**: `convert_from_base` devuelve `numeric` sin escala (1400.0000000000000000) y `format('%s', bool)` da `t`.
+- **Fix**: `round(…, 2)` en `variant_sale_price`; los tests comparan con `t`/`f`.
+
+### 2026-10-25: Falso error de hidratación en el QA con Playwright
+- **Error**: «attributes didn't match … caret-color: transparent» en la ficha: lo inyecta `page.screenshot` (oculta
+  el cursor) si la captura llega antes de que React hidrate.
+- **Fix**: `page.screenshot({ …, caret: "initial" })` en `qa-orders` y `qa-discounts`.
+- **Aplicar en**: todo script de QA con capturas y control de errores de consola.
 
 ---
 

@@ -28,6 +28,9 @@ Detalle de cada error en la sección «Aprendizajes» de los PRP de las fases 1 
 - En el Bash del agente los heredocs largos con comillas a veces fallan («unexpected EOF»): escribir el script
   en un archivo del scratchpad y ejecutarlo.
 
+- Capturas de Playwright: `caret: "initial"`; el valor por defecto inyecta `caret-color` y da un falso error de
+  hidratación si la captura llega antes de que React hidrate.
+
 ## Vercel + Turborepo
 - Route handlers con Cache Components: si todo lo que leen está en `use cache`, el build los **prerenderiza**; bajo
   un segmento dinámico (`/s/[storeSlug]/…`) eso acabó en 404 en Vercel aunque `next start` local funcionaba. Usar

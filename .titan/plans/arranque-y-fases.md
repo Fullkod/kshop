@@ -72,6 +72,7 @@ Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desa
 | 1. Catálogo | Hecha (incluye imágenes por URL en Excel y prueba de 1 000 filas) | `prp-fase-1-catalogo.md` | `0684e23` |
 | 2. Tienda pública | Hecha. Lighthouse en Vercel: portada 97–98, ficha 89–93, listado 81–82 (CLS corregido, re-medir tras el próximo deploy) | `prp-fase-2-tienda-publica.md` | `f1b50e0` |
 | 3. Clientes y compra | Hecha (avisos automáticos por OpenWA en la Fase 4) | `prp-fase-3-clientes-y-compra.md` | ver PRP |
+| 4. Avisos y descuentos | En curso: 4.1–4.3 (descuentos) hechas, faltan avisos 4.4–4.6 | `prp-fase-4-avisos-y-descuentos.md` | `e6d3b2d` |
 
 El remoto `origin` (`Fullkod/kshop`) está al día hasta la Fase 2 (Roberto subió los commits); lo de la Fase 3
 sigue en commits locales hasta que Roberto autorice el push.
