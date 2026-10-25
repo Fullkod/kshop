@@ -1,8 +1,8 @@
-# Fase 1 — catálogo (en curso, 2026-10-25)
+# Fase 1 — catálogo (casi cerrada, 2026-10-25)
 
 PRP con progreso y pendientes exactos: `.titan/plans/prp-fase-1-catalogo.md` (sección «Progreso»).
-Estado al cerrar la sesión: 1.1–1.6 hechas, Excel hecho en API; falta la pantalla de importar/exportar,
-las partes Pro del editor (stock por almacén, precios por moneda) y la validación final.
+Estado: 1.1–1.8 hechas (commits hasta `86ba903`). Quedan 2 puntos de la 1.7 para que Roberto decida si
+entran o se aplazan: imágenes por URL en el Excel (no implementado) y prueba de 1 000 filas (no ejecutada).
 
 ## Decisiones confirmadas por Roberto (2026-10-25)
 - PRP aprobado tal cual (D1–D13). Límite de productos: Base = 300 (provisional), Pro sin límite.
@@ -20,13 +20,17 @@ las partes Pro del editor (stock por almacén, precios por moneda) y la validaci
   `server/catalog/resources.ts`), `products`, `stock`, `currencies`, `reorder`, `excel/{template,export}`,
   `imports` y `imports/[jobId]/run`. Errores de Postgres → `server/db-errors.ts`.
 - Admin: `apps/web/src/app/s/[storeSlug]/admin/catalog/` + `apps/web/src/features/catalog/`
-  (`use-catalog.ts`, componentes). Imágenes: `apps/web/src/lib/images.ts` (WebP 1600/480 en el navegador).
+  (`use-catalog.ts`, componentes). Editor: precios por moneda (`multi_currency`) y stock por almacén
+  (`multi_warehouse`, vía `PUT stock` al guardar). Excel: `admin/excel-import/` +
+  `features/excel-import/components/ExcelImportPage.tsx`; cliente `api.catalog(id).excelTemplate/
+  excelExport/createImport/runImport`. Imágenes: `apps/web/src/lib/images.ts` (WebP 1600/480 en el navegador).
 - Pruebas: `pnpm test:rls` (122), `pnpm e2e:catalog` (30, tiendas temporales), `pnpm e2e:excel` (18, Tienda Demo).
 
 ## Datos que hay en la Tienda Demo
 Atributos Talla/Color/Material, tipos Ropa y Accesorios, categorías Mujer › Vestidos, Mujer › Blusas,
 Complementos, marca Kaya, colección Novedades, tasa USD = 300 CUP, «Vestido Ñandú» (6 variantes con imágenes)
-y las blusas «Blusa Excel NN …» de las pruebas de Excel.
+y las blusas «Blusa Excel NN …» de las pruebas de Excel. Desde el cierre: USD a la venta, almacén «Tienda Centro»,
+9,50 USD en VESTIDO-NANDU-S-ROJO (7 uds. en Tienda Centro) y las faldas «Falda UI N …» (categoría Mujer › Faldas).
 
 ## Para Roberto
 - La protección de contraseñas filtradas (HaveIBeenPwned) de Supabase Auth requiere el plan Pro de Supabase.

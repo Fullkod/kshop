@@ -1,6 +1,6 @@
 # PRP-1: Catálogo de Kshop
 
-> **Estado**: EN CURSO (2026-10-25) — 1.1 a 1.6 hechas, 1.7 (Excel) hecha en API, falta su pantalla; ver «Progreso» abajo. Aprobado por Roberto el 2026-10-25 (D1–D13 tal cual; D4 provisional Base = 300, Pro sin límite).
+> **Estado**: CASI CERRADA (2026-10-25) — 1.1 a 1.8 hechas; quedan 2 puntos de la 1.7 (imágenes por URL en el Excel y prueba de 1 000 filas), ver «Progreso». Pendiente de revisión de Roberto. Aprobado por Roberto el 2026-10-25 (D1–D13 tal cual; D4 provisional Base = 300, Pro sin límite).
 > **Fecha**: 2026-10-24
 > **Proyecto**: Kshop
 > **Fase**: 1 (ver `arranque-y-fases.md`). Código de partida: commit `9fcd43f` (Fase 0b cerrada)
@@ -31,13 +31,13 @@ ensayo del modelo para la migración de klauShop (Fase 8).
 ## Qué
 
 ### Criterios de Éxito
-- [ ] `pnpm db:migrate` aplica las migraciones del catálogo al Supabase online sin errores y los advisors de seguridad/rendimiento no marcan tablas nuevas sin RLS ni FKs sin índice.
-- [ ] `pnpm test:rls` en verde con la suite nueva de catálogo: anon solo ve productos `published` de tiendas activas y **nunca** el costo (ni por tabla, ni por pg_graphql, ni por relación anidada); el staff de A no lee borradores, costos, stocks ni import jobs de B, ni escribe nada directo en tablas (solo vía API); una FK que apunte a otra tienda es rechazada por la BD.
-- [ ] Desde el admin de «Tienda A», el dueño crea el tipo «Ropa» (atributos Talla y Color de variante, Material de producto), un producto con 6 variantes (3 tallas × 2 colores) con precio, costo en USD, stock e imágenes, lo asigna a categoría, marca y colección y lo publica.
-- [ ] Descarga la plantilla Excel del tipo «Ropa», la rellena con 20 productos / 60 variantes (con una categoría y un valor de atributo nuevos), ve la vista previa con los errores por fila, corrige, importa y los encuentra en el listado; exporta el catálogo, cambia precios y stock en el Excel y lo vuelve a subir en modo actualización (match por SKU).
-- [ ] La consulta pública (anon, pg_graphql) de un producto publicado devuelve nombre, precio, variantes, imágenes y stock disponible, y pedir `costPrice` falla o no existe; un producto en borrador no aparece.
-- [ ] Con el plan Base, la tienda no puede crear un segundo almacén ni activar otra moneda (UI muestra «Disponible en el plan Pro», la API responde 403 `module_not_enabled`); con Pro sí. El límite `max_products` se respeta al crear e importar (aviso antes de importar).
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build` pasan; E2E Playwright de los dos flujos anteriores con capturas en `.titan/qa/fase-1/`.
+- [x] `pnpm db:migrate` aplica las migraciones del catálogo al Supabase online sin errores y los advisors de seguridad/rendimiento no marcan tablas nuevas sin RLS ni FKs sin índice.
+- [x] `pnpm test:rls` en verde con la suite nueva de catálogo: anon solo ve productos `published` de tiendas activas y **nunca** el costo (ni por tabla, ni por pg_graphql, ni por relación anidada); el staff de A no lee borradores, costos, stocks ni import jobs de B, ni escribe nada directo en tablas (solo vía API); una FK que apunte a otra tienda es rechazada por la BD.
+- [x] Desde el admin de «Tienda A», el dueño crea el tipo «Ropa» (atributos Talla y Color de variante, Material de producto), un producto con 6 variantes (3 tallas × 2 colores) con precio, costo en USD, stock e imágenes, lo asigna a categoría, marca y colección y lo publica.
+- [x] Descarga la plantilla Excel del tipo «Ropa», la rellena con 20 productos / 60 variantes (con una categoría y un valor de atributo nuevos), ve la vista previa con los errores por fila, corrige, importa y los encuentra en el listado; exporta el catálogo, cambia precios y stock en el Excel y lo vuelve a subir en modo actualización (match por SKU).
+- [x] La consulta pública (anon, pg_graphql) de un producto publicado devuelve nombre, precio, variantes, imágenes y stock disponible, y pedir `costPrice` falla o no existe; un producto en borrador no aparece.
+- [x] Con el plan Base, la tienda no puede crear un segundo almacén ni activar otra moneda (UI muestra «Disponible en el plan Pro», la API responde 403 `module_not_enabled`); con Pro sí. El límite `max_products` se respeta al crear e importar (aviso antes de importar).
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build` pasan; E2E Playwright de los dos flujos anteriores con capturas en `.titan/qa/fase-1/`.
 
 ### Comportamiento Esperado (Happy Path)
 
@@ -296,11 +296,11 @@ de 1 000 filas se importa sin timeouts.
 ### Fase 8: Validación final
 **Objetivo**: catálogo funcionando end-to-end, documentado y cerrado.
 **Validación**:
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:rls` y `pnpm build` pasan
-- [ ] E2E Playwright: crear el producto con 6 variantes + importar/exportar Excel + consulta anon sin costo; capturas en `.titan/qa/fase-1/`
-- [ ] Criterios de éxito cumplidos
-- [ ] Memoria actualizada (`.titan/memory/project/` con D1–D13 confirmadas y los trucos nuevos), `AGENTS.md`/`docs/` si cambian comandos
-- [ ] Commit(s) `feat:` en local (sin push ni deploy sin permiso)
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:rls` y `pnpm build` pasan
+- [x] E2E Playwright: crear el producto con 6 variantes + importar/exportar Excel + consulta anon sin costo; capturas en `.titan/qa/fase-1/`
+- [x] Criterios de éxito cumplidos (salvo los 2 puntos pendientes de la 1.7)
+- [x] Memoria actualizada (`.titan/memory/project/` con D1–D13 confirmadas y los trucos nuevos), `AGENTS.md`/`docs/` si cambian comandos
+- [x] Commit(s) `feat:` en local (sin push ni deploy sin permiso)
 
 ---
 
@@ -314,13 +314,22 @@ de 1 000 filas se importa sin timeouts.
 | 1.4 API v1 del catálogo | Hecha: `pnpm e2e:catalog` 30/30 | `be4645d` |
 | 1.5 Admin — estructura | Hecha (categorías, atributos, tipos, marcas, colecciones, almacenes, monedas) | `e6dd85b`, `a6b0cd1` |
 | 1.6 Admin — productos | Hecha: listado + editor con matriz, costo/margen, stock, imágenes WebP; probado en la Tienda Demo | `e6dd85b`, capturas `.titan/qa/fase-1/01–07` |
-| 1.7 Excel | API hecha: plantilla con desplegables, export, import con vista previa y lotes, upsert por SKU; `pnpm e2e:excel` 18/18. **Falta la pantalla** `/admin/excel-import` (asistente subir → vista previa → ejecutar con progreso; hoy muestra el placeholder) | commit de cierre de 1.7 |
-| 1.8 Validación final | Pendiente: pantalla Excel + E2E en navegador del Excel, stock por almacén (Pro) y overrides por moneda (Pro) en el editor, `pnpm build`, memoria/AGENTS | — |
+| 1.7 Excel | Hecha: API (plantilla con desplegables, export, import con vista previa y lotes, upsert por SKU; `pnpm e2e:excel` 18/18) y pantalla `/admin/excel-import` (tipo → plantilla/export → subir → vista previa → importar por lotes con progreso → resumen) | `9a24b5a`, `8fb5b0e`, capturas `08–11` |
+| 1.8 Validación final | Hecha: editor con precios por moneda (`multi_currency`) y stock por almacén (`multi_warehouse`), badge «Pro» en Base; E2E en navegador del Excel (8/8) y del editor Pro (7/7); `typecheck`, `lint`, `test`, `build`, `test:rls` 122/122, `e2e:catalog` 30/30, `e2e:excel` 18/18; advisors sin tablas sin RLS ni FKs sin índice | `86ba903`, capturas `12–13` |
 
-**Pendiente concreto para seguir (en este orden):**
-1. Pantalla `apps/web/src/app/s/[storeSlug]/admin/excel-import/page.tsx` (ruta real que sustituye al placeholder del módulo): elegir tipo → descargar plantilla / exportar (fetch con Bearer → blob) → subir a `store-imports` (`stores/{id}/imports/{uuid}-{nombre}`) con el cliente de sesión → `POST imports` → mostrar `ImportPreview` (crear/actualizar/saltar, errores por fila, lo que se creará, aviso de límite) → «Importar» llama a `imports/{jobId}/run` en bucle con barra de progreso → resumen. Añadir métodos al cliente de `@kshop/data`.
-2. Editor de producto, partes Pro: stock por almacén (con `multi_warehouse`, `PUT catalog/stock` por almacén) y precios por moneda (`prices` en la variante, con `multi_currency`). En Base: badge «Pro».
-3. Validación 1.8: E2E en navegador del flujo Excel con capturas en `.titan/qa/fase-1/`, `pnpm build`, cerrar PRP, memoria y `AGENTS.md`.
+**Pendiente de la 1.7 (Roberto decide si entra en la Fase 1 o se aplaza):**
+1. Imágenes por URL en el Excel (columna + descarga por lotes con timeout y tamaño máx.): no implementado.
+2. Prueba de carga: un Excel de 1 000 filas sin timeouts (lotes de `IMPORT_BATCH_SIZE` = 25): no ejecutada.
+
+**Notas del cierre (2026-10-25):**
+- La Tienda Demo queda con USD a la venta, el almacén «Tienda Centro», un precio de 9,50 USD en
+  VESTIDO-NANDU-S-ROJO, 7 unidades de esa variante en Tienda Centro y las faldas «Falda UI N …» del E2E de Excel.
+- Advisors: avisos esperados (pg_graphql expone `public` a propósito; `private.store_private_config` sin
+  políticas a propósito; HIBP requiere Supabase Pro; índices aún sin uso por falta de tráfico).
+- La vista de Base de las secciones Pro del editor se verificó por código (badge + texto), no con captura;
+  el bloqueo de la API en Base lo cubre `pnpm e2e:catalog`.
+- Los guiones de navegador de esta sesión (playwright-core aparte) no están en el repo: si se quieren
+  permanentes, pasar a `scripts/` en la Fase 2.
 
 ## 🧠 Aprendizajes (Self-Annealing / Neural Network)
 
@@ -333,6 +342,8 @@ de 1 000 filas se importa sin timeouts.
 - **PostgREST puede devolver un embed uno-a-uno como lista** (`variant_costs`): normalizar `Array.isArray(x) ? x[0] : x`.
 - **Leaked password protection (HIBP) de Supabase Auth requiere plan Pro de Supabase**: no se puede activar en el plan actual.
 - **Guiones de Playwright**: esperar la respuesta de la API y el elemento nuevo en la lista, no un botón que siempre está visible.
+- **Si el navegador del MCP de Playwright está ocupado por otra sesión**, lanzar un Chromium propio con `playwright-core` (misma versión que el navegador instalado en `%LOCALAPPDATA%\ms-playwright`) desde un directorio aparte.
+- **Node no resuelve `*.localhost`** (ENOTFOUND): las llamadas a la API desde scripts van a `http://localhost:3000`; el navegador sí resuelve `demo.kshop.localhost`. `getByRole("button")` choca con el botón de Next Dev Tools: usar el nombre.
 
 > Esta sección CRECE con cada error encontrado durante la implementación.
 > El conocimiento persiste para futuros PRPs. El mismo error NUNCA ocurre dos veces.
