@@ -261,7 +261,8 @@ async function run() {
     manualDiscount: { reward: "fixed", value: 50, reason: "Cliente habitual" },
   });
   check("admin order: voucher 100 + manual 50 on 1800 (+200)",
-    r.status === 201 && r.body.order?.discountTotal === 150 && r.body.order?.total === 1850, r.body);
+    r.status === 201 && r.body.order?.discountTotal === 150 && r.body.order?.total === 1850,
+    { status: r.status, discountTotal: r.body.order?.discountTotal, total: r.body.order?.total, discounts: r.body.order?.discounts });
   r = await anon("POST", `${base}/checkout`, {
     idempotencyKey: key(), cartToken: cart2, customer: { name: "X", phone: "5359990024" }, shipping,
     manualDiscount: { reward: "fixed", value: 500 },

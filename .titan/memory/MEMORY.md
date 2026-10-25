@@ -10,7 +10,7 @@
 ## project/ — Proyectos y decisiones activas
 
 - [identidad-kshop.md](project/identidad-kshop.md) — Nombre, dominio kshop.fullkod.com, qué es, índice de los documentos de diseño
-- [decisiones.md](project/decisiones.md) — Decisiones tomadas (0–22, hasta 2026-10-25), recomendaciones confirmadas y preguntas abiertas. LEER ANTES DE CADA FASE
+- [decisiones.md](project/decisiones.md) — Decisiones tomadas (0–24, hasta 2026-10-25), recomendaciones confirmadas y preguntas abiertas. LEER ANTES DE CADA FASE
 - [2026-10-24-estudio-klaushop-vs-dcabellos.md](project/2026-10-24-estudio-klaushop-vs-dcabellos.md) — Qué se adopta de cada uno y qué no
 - [modelo-de-datos.md](project/modelo-de-datos.md) — Esquema v0: plataforma, clientes, catálogo Saleor, monedas, carrito, órdenes, descuentos, temas, entregas, WhatsApp, Excel
 - [tenancy-dominios-auth.md](project/tenancy-dominios-auth.md) — Tienda por host, wildcard Vercel, email sintético por tienda, alta de tienda, storage
@@ -24,7 +24,7 @@
 - [2026-10-25-fase-1-catalogo.md](project/2026-10-25-fase-1-catalogo.md) — Fase 1 CERRADA: dónde está cada pieza del catálogo, pruebas y datos de la Tienda Demo
 - [2026-10-25-fase-2-tienda-publica.md](project/2026-10-25-fase-2-tienda-publica.md) — Fase 2 hecha (Lighthouse en Vercel medido; re-medir listado): decisiones (URLs en inglés, Cache Components, WhatsApp), dónde está cada pieza, invalidación
 - [2026-10-25-fase-3-clientes-y-compra.md](project/2026-10-25-fase-3-clientes-y-compra.md) — Fase 3 hecha: dónde está cada pieza, pruebas, pendientes
-- [2026-10-25-fase-4-avisos-y-descuentos.md](project/2026-10-25-fase-4-avisos-y-descuentos.md) — Fase 4 en curso: descuentos hechos (motor de precios SQL, promociones, cupones), faltan avisos WhatsApp
+- [2026-10-25-fase-4-avisos-y-descuentos.md](project/2026-10-25-fase-4-avisos-y-descuentos.md) — Fase 4 hecha: motor de precios SQL, promociones, cupones y avisos WhatsApp (dry_run; falta OpenWA real)
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
 
 ## feedback/ — Correcciones y preferencias
@@ -44,4 +44,4 @@
 - `prp-fase-1-catalogo.md` — Fase 1: catálogo (tipos, atributos, variantes, costo privado, monedas, categorías, colecciones, marcas, medias, almacenes/stock, Excel) (COMPLETADO 2026-10-25, commits hasta d6f1507)
 - `prp-fase-2-tienda-publica.md` — Fase 2: tienda pública (COMPLETADO 2026-10-25; Lighthouse en Vercel en el PRP)
 - `prp-fase-3-clientes-y-compra.md` — Fase 3: clientes y compra (COMPLETADO)
-- `prp-fase-4-avisos-y-descuentos.md` — Fase 4: promociones, cupones y avisos WhatsApp de plataforma (EN CURSO: 4.1–4.3 hechas)
+- `prp-fase-4-avisos-y-descuentos.md` — Fase 4: promociones, cupones y avisos WhatsApp de plataforma (COMPLETADO salvo OpenWA real)

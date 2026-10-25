@@ -1,6 +1,6 @@
 # PRP-4: Avisos y descuentos en Kshop
 
-> **Estado**: EN CURSO — 4.1–4.3 (descuentos) hechas: commits 23ce834, a782cba, 4fa371d, e6d3b2d; faltan 4.4–4.6 (avisos y validación). APROBADO (2026-10-25) — Roberto: D20 sí; OpenWA = la misma instancia de klauShop con otra sesión y otro número; D6 sí (uso al crear la orden); D10 sí (descuento manual libre); D18 cambiada (ver D18); D19 sí. Resto de D tal cual.
+> **Estado**: COMPLETADO (2026-10-25) salvo el envío real con una instancia OpenWA (pendiente: no hay instancia; todo probado en `dry_run` y el despachador contra un servidor de eco). Commits 23ce834 … 34944e6 y el de la validación final. APROBADO (2026-10-25) — Roberto: D20 sí; OpenWA = la misma instancia de klauShop con otra sesión y otro número; D6 sí (uso al crear la orden); D10 sí (descuento manual libre); D18 cambiada (ver D18); D19 sí. Resto de D tal cual.
 > **Fecha**: 2026-10-25
 > **Proyecto**: Kshop
 > **Fase**: 4 (ver `arranque-y-fases.md`). Código de partida: commit `98a564c` (Fase 3 cerrada)
@@ -262,10 +262,15 @@ admin, la API key nunca vuelve en una respuesta); si hay instancia OpenWA, un me
 ### Fase 6: Validación final
 **Objetivo**: sistema funcionando end-to-end.
 **Validación**:
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build` pasan
-- [ ] `pnpm test:rls`, `pnpm e2e:catalog`, `pnpm e2e:orders`, `pnpm e2e:discounts`, `pnpm e2e:notifications` en verde
-- [ ] QA en navegador de compra con promoción + cupón y de los avisos (dry_run); capturas en `.titan/qa/fase-4/`
-- [ ] Criterios de éxito cumplidos; memoria, `arranque-y-fases.md` y este PRP actualizados
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build` pasan
+- [x] `pnpm test:rls` 370/370, `pnpm e2e:catalog` 45/45, `pnpm e2e:orders` 94/94, `pnpm e2e:discounts` 32/32,
+  `pnpm e2e:notifications` 29/29
+- [x] `pnpm qa:orders` 14/14, `pnpm qa:discounts` 9/9, `pnpm qa:notifications` 8/8; capturas en `.titan/qa/fase-4/`
+- [x] Despachador en `live` contra `httpbin.org` (cuerpo `chatId`/`text`, cabecera `X-API-Key`, ruta
+  `/sessions/{id}/messages/send-text`): 200 → `sent`; 404 → `pending` con error y reintento. Vuelto a `dry_run`.
+- [ ] **Pendiente**: mensaje real con la instancia OpenWA (misma de klauShop, otra sesión y otro número) desde
+  Superadmin › WhatsApp: poner URL, sesión y API key, pasar a «Real» y «Enviar prueba».
+- [x] Memoria, `arranque-y-fases.md` y este PRP actualizados
 
 ---
 
@@ -305,6 +310,13 @@ Respuestas: 1 sí · 2 misma instancia OpenWA de klauShop, otra sesión y otro n
 ### 2026-10-25: Importes con 16 decimales y booleanos `t` en `format()`
 - **Error**: `convert_from_base` devuelve `numeric` sin escala (1400.0000000000000000) y `format('%s', bool)` da `t`.
 - **Fix**: `round(…, 2)` en `variant_sale_price`; los tests comparan con `t`/`f`.
+
+### 2026-10-25: El servidor de desarrollo servía una versión vieja de una ruta
+- **Error**: tras `pnpm build` con `pnpm dev` corriendo, `POST /orders` ignoraba `manualDiscount`/`voucherCode` (la
+  RPC directa sí los aplicaba). `touch` no lo arregló; un cambio real del archivo sí (Turbopack compara contenido).
+- **Fix**: editar el archivo (o reiniciar `pnpm dev`) y repetir. Ante un fallo que «no puede ser», aislar capa:
+  RPC directa → API → UI.
+- **Aplicar en**: validaciones finales que corren `pnpm build` y luego E2E contra el dev.
 
 ### 2026-10-25: Falso error de hidratación en el QA con Playwright
 - **Error**: «attributes didn't match … caret-color: transparent» en la ficha: lo inyecta `page.screenshot` (oculta

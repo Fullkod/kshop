@@ -1,4 +1,4 @@
-# Fase 4 — Avisos y descuentos (en curso: 4.1–4.3 descuentos hechas, faltan avisos 4.4–4.6)
+# Fase 4 — Avisos y descuentos (hecha; falta probar con la instancia OpenWA real)
 
 PRP: `.titan/plans/prp-fase-4-avisos-y-descuentos.md` (decisión 24; aprendizajes ahí). Commits 23ce834, a782cba,
 4fa371d, e6d3b2d.
@@ -27,7 +27,25 @@ PRP: `.titan/plans/prp-fase-4-avisos-y-descuentos.md` (decisión 24; aprendizaje
 - Pruebas: `pnpm test:rls` 343/343 (suite 05), `pnpm e2e:discounts` 32/32 (incluye carrera por el último uso),
   `pnpm qa:discounts` 9/9 (capturas en `.titan/qa/fase-4/`).
 
-## Falta
-- 4.4–4.5: avisos por WhatsApp (OpenWA en `dry_run`), contactos, plantillas, historial, superadmin,
-  recuperación por WhatsApp, enlace del aviso (cuenta → `/account/orders/{id}`, invitado → `/order/{token}`).
-- 4.6 validación final.
+## Avisos WhatsApp (hecho, en `dry_run`)
+- **BD** (`20261030100000…100400`): `pg_net` (schema extensions) + `pg_cron`; `private.platform_config` (modo
+  off/dry_run/live, URL, sesión, límites) y la API key en **Vault** (`openwa_api_key`); `store_notification_contacts`,
+  `whatsapp_templates` (`store_id` null = texto de Kshop, fila de tienda = override), `notification_log` (outbox,
+  único por pedido+evento+teléfono), `orders.notify_customer`.
+- **Motor** (`20261030100200_notifications_engine.sql`): trigger **diferido** en `order_events` → avisos al commit
+  (tienda: pedido nuevo, pagos; cliente: recibido, pendiente de pago, pagado, preparación, enviado, entregado,
+  cancelado, costo de entrega). Requiere módulo `whatsapp_notifications`. Cabecera `*Tienda*` y pie fijo «Aviso
+  automático… Consultas: contactos». Enlace del cliente: con cuenta → `/account/orders/{id}`, si no → `/order/{token}`.
+  `dispatch_notifications` (pg_cron `kshop-whatsapp-dispatch`, cada minuto) solo envía en `live`, concilia
+  `net._http_response`, reintenta 3 veces. Nunca rompe un pedido.
+- **API**: `notification-contacts`, `whatsapp-templates` (+`preview`), `notifications/{id}/retry`,
+  `customer/orders/{id}`, `platform/whatsapp` (+`test`, superadmin; la key nunca vuelve). Código de recuperación por
+  WhatsApp cuando el modo es `live` (todas las tiendas).
+- **Web**: admin `/admin/whatsapp-notifications` (Contactos, Mensajes con vista previa, Historial con «Reintentar» y
+  «Abrir en WhatsApp»), avisos en la ficha del pedido, `/superadmin/whatsapp`, casilla en el checkout,
+  `/account/orders/{id}`. Tienda Demo: contacto `+5350000000`.
+- Pruebas: suite 06 (370/370 en total), `pnpm e2e:notifications` 29/29, `pnpm qa:notifications` 8/8.
+
+## Pendiente
+- Conectar la instancia OpenWA (misma de klauShop, otra sesión y otro número) en Superadmin › WhatsApp y enviar
+  una prueba real. Hasta entonces todo queda «Simulado».
