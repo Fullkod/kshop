@@ -27,7 +27,8 @@
     "e2e:catalog": "node scripts/e2e-catalog.mjs",
     "e2e:excel": "node scripts/e2e-excel.mjs",
     "e2e:excel-load": "node scripts/e2e-excel-load.mjs",
-    "e2e:orders": "node scripts/e2e-orders.mjs"
+    "e2e:orders": "node scripts/e2e-orders.mjs",
+    "qa:orders": "node scripts/qa-orders.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
@@ -38,6 +39,7 @@
     "exceljs": "^4.4.0",
     "globals": "^16.0.0",
     "graphql": "^16.11.0",
+    "playwright-core": "1.56.1",
     "prettier": "^3.6.0",
     "turbo": "^2.11.10",
     "typescript": "^5.9.0",

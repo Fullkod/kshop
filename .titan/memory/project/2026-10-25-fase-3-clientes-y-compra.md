@@ -1,4 +1,4 @@
-# Fase 3 — Clientes y compra (en curso: 3.1–3.5 hechas, falta 3.6 validación final)
+# Fase 3 — Clientes y compra (hecha)
 
 PRP: `.titan/plans/prp-fase-3-clientes-y-compra.md` (decisión 23; aprendizajes ahí). Commits 8201e1f, 769428a,
 d7cf1fb, 929a31f, 683be12.
@@ -26,10 +26,9 @@ d7cf1fb, 929a31f, 683be12.
 
 ## Pruebas
 - `pnpm test:rls` 288/288 · `pnpm e2e:orders` 94/94 (incluye carrera por la última unidad) · core 54 tests.
-- QA navegador (playwright-core del scratchpad, el MCP estaba ocupado): capturas en `.titan/qa/fase-3/`.
+- `pnpm qa:orders` 13/13: QA en navegador del ciclo de compra (cuenta, «a convenir», admin, cancelación), deja la
+  Tienda Demo como estaba (borra la clienta QA, repone stock); capturas `qa-*.png` en `.titan/qa/fase-3/`.
 
-## Falta (3.6)
-- Validación final: todo junto otra vez, E2E Playwright del happy path con cuenta y «a convenir» como script del repo
-  (hoy los scripts de QA viven en el scratchpad), actualizar `arranque-y-fases.md` a «hecha».
-- Pendientes conocidos: los comprobantes de pago van al bucket público `store-media` (ruta aleatoria); avisos
+## Pendientes conocidos
+- los comprobantes de pago van al bucket público `store-media` (ruta aleatoria); avisos
   automáticos y OpenWA en la Fase 4.

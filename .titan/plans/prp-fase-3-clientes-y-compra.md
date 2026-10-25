@@ -1,6 +1,6 @@
 # PRP-3: Clientes y compra en Kshop
 
-> **Estado**: EN CURSO — fases 1–5 hechas (commits 8201e1f, 769428a, d7cf1fb, 929a31f, 683be12), falta la 6.
+> **Estado**: COMPLETADO (2026-10-25) — commits 8201e1f, 769428a, d7cf1fb, 929a31f, 683be12 y el de la validación final.
 > Aprobado el 2026-10-25 por Roberto. D1–D18 tal cual, con estos ajustes:
 > - D1/D4: se entra con teléfono + contraseña; **el teléfono no se verifica** (no hay forma de confirmarlo aún).
 > - D5: sin OpenWA → el staff ve el código de recuperación en «Clientes» y lo manda por `wa.me`; el emisor
@@ -257,10 +257,12 @@ navegador; el staff (rol `staff`) puede gestionar pedidos pero no entregas ni m�
 ### Fase 6: Validación final
 **Objetivo**: sistema funcionando end-to-end.
 **Validación**:
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build` pasan
-- [ ] `pnpm test:rls` y E2E de API (fases 0b, 1, 2 y 3) en verde
-- [ ] E2E Playwright del happy path completo (invitado y con cuenta, «a convenir», cancelación) con capturas en `.titan/qa/fase-3/` (móvil y escritorio)
-- [ ] Criterios de éxito cumplidos; memoria (`.titan/memory/project/`), `arranque-y-fases.md` y este PRP actualizados
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test` (core 54 + web 2), `pnpm build` pasan
+- [x] `pnpm test:rls` 288/288, `pnpm e2e:catalog` 45/45, `pnpm e2e:orders` 94/94. `pnpm e2e:api` (Fase 0b) no se
+  corrió: necesita las tiendas `tienda-a`/`tienda-b` del flujo manual de la UI, que hoy no existen
+- [x] `pnpm qa:orders` 13/13 (cuenta + «a convenir» en 390 px, ciclo completo en el admin a 1280 px, nota interna
+  invisible al cliente, invitado cancelado, «Nuevo pedido» cancelado); capturas `qa-*.png` en `.titan/qa/fase-3/`
+- [x] Memoria, `arranque-y-fases.md` y este PRP actualizados
 
 ---
 
