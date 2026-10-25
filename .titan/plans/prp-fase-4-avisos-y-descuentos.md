@@ -1,6 +1,6 @@
 # PRP-4: Avisos y descuentos en Kshop
 
-> **Estado**: PENDIENTE
+> **Estado**: APROBADO (2026-10-25) — Roberto: D20 sí; OpenWA = la misma instancia de klauShop con otra sesión y otro número; D6 sí (uso al crear la orden); D10 sí (descuento manual libre); D18 cambiada (ver D18); D19 sí. Resto de D tal cual.
 > **Fecha**: 2026-10-25
 > **Proyecto**: Kshop
 > **Fase**: 4 (ver `arranque-y-fases.md`). Código de partida: commit `98a564c` (Fase 3 cerrada)
@@ -123,7 +123,7 @@ justifica cobrar suscripciones en la Fase 5.
 | D15 | **Destinatarios** | `store_notification_contacts` (nombre, teléfono E.164, `notify_new_order`, `notify_status_changes`, `notify_payment_recorded`, `show_to_customer`, activo). Al activar el módulo se propone el `whatsapp_phone` de la tienda como primer contacto. Cliente: el teléfono de la orden | Avisar al dueño siempre al `whatsapp_phone` (sin poder añadir vendedores) |
 | D16 | **Eventos y plantillas** | Eventos: a la tienda `order_created` (y opcional `payment_recorded`); al cliente `order_created`, `pending_payment` (con instrucciones del método de pago), `paid`, `processing`, `shipped`, `delivered`, `cancelled`, `shipping_set`. **Plantillas por defecto de la plataforma** (sembradas, en español, tono educado, sin enlaces para el cliente salvo `/order/{token}`, ver D18) y **override por tienda** (`whatsapp_templates`: store_id, event, audience, body, is_active). Variables en lista cerrada: `{{tienda}}`, `{{numero}}`, `{{cliente}}`, `{{total}}`, `{{subtotal}}`, `{{descuento}}`, `{{envio}}`, `{{lineas}}`, `{{metodo_pago}}`, `{{instrucciones_pago}}`, `{{zona}}`, `{{direccion}}`, `{{contactos}}`, `{{enlace_pedido}}`, `{{enlace_admin}}`, `{{motivo}}`. Variable desconocida → error al guardar | Plantillas fijas sin edición por tienda |
 | D17 | **Render en un solo sitio** | Render en SQL (`private.render_whatsapp_template`), porque el mensaje se congela al encolarse; la vista previa del admin llama a la misma función por API. `@kshop/core` solo tiene la lista de variables y eventos (Zod) para el editor. Cabecera y pie fijos de plataforma (no editables): `*{{tienda}}* — ` al inicio y «Aviso automático, no respondas a este número. Para cualquier consulta escribe a: {{contactos}}» al final | Render en TS (habría que hacer el envío desde Next y no desde la BD) |
-| D18 | **Enlace al pedido para el cliente** | Incluir `/order/{public_token}` en los avisos al cliente (la página ya es pública por token desde la Fase 3). klauShop los quitó; aquí el token no es adivinable | Sin enlaces (regla de klauShop) |
+| D18 | **Enlace al pedido para el cliente** | **Aprobado con cambio (Roberto)**: se incluye enlace. Si la orden es de una cuenta (`customer_id`), el enlace lleva a su pedido dentro de su perfil (`/account/orders/{id}`, pide iniciar sesión); si es de invitado o la creó el admin sin cuenta, a la página pública por token `/order/{public_token}` (sin sesión) | Sin enlaces (regla de klauShop) |
 | D19 | **Opt-out del cliente** | Casilla en el checkout «Recibir avisos del pedido por WhatsApp» marcada por defecto (`orders.notify_customer`); los contactos de la tienda se desactivan desde el admin | Sin opción (siempre se avisa) |
 | D20 | **Módulo y recuperación** | Los avisos de pedidos exigen `whatsapp_notifications` (Pro/suelto; en la BD dentro del trigger). El **código de recuperación** se envía para **todas** las tiendas (es seguridad de la cuenta, no un aviso comercial) cuando el modo es `live` | Recuperación también solo con el módulo (las tiendas Base seguirían con el código manual) |
 | D21 | **Teléfono → chatId** | Reutilizar la normalización E.164 de la Fase 3 (los teléfonos ya se guardan así) → `{dígitos}@c.us`; los contactos se validan con el mismo Zod | Portar `wa_phone_to_chat_id` de klauShop (los teléfonos ya vienen normalizados) |
@@ -269,7 +269,9 @@ admin, la API key nunca vuelve en una respuesta); si hay instancia OpenWA, un me
 
 ---
 
-## Preguntas para Roberto (antes de aprobar)
+## Preguntas para Roberto (respondidas 2026-10-25)
+
+Respuestas: 1 sí · 2 misma instancia OpenWA de klauShop, otra sesión y otro número · 3 al crear · 4 sí, manual libre · 5 con enlace (cuenta → perfil; invitado/admin → página pública) · 6 sí.
 
 1. **D20**: ¿los avisos de pedidos solo con el módulo `whatsapp_notifications` (Pro/suelto, como dice la
    decisión 16) y el código de recuperación para todas las tiendas? ¿O alguna tienda Base debería tener al
@@ -320,4 +322,4 @@ admin, la API key nunca vuelve en una respuesta); si hay instancia OpenWA, un me
 
 ---
 
-*PRP pendiente de aprobación. No se ha modificado código.*
+*PRP aprobado el 2026-10-25.*

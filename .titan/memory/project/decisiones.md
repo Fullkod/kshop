@@ -65,6 +65,13 @@
     el teléfono**; se compra **sin cuenta** (invitado); reservas **sin caducidad** (aviso > 48 h); **«Nuevo
     pedido» desde el admin entra en la Fase 3**. Aún no hay instancia de OpenWA → el staff ve el código de
     recuperación y lo manda por `wa.me`.
+24. **Fase 4 (avisos y descuentos)**: PRP aprobado. Avisos de pedidos solo con el módulo
+    `whatsapp_notifications`; el código de recuperación por WhatsApp para **todas** las tiendas. OpenWA: la
+    **misma instancia de klauShop con otra sesión y otro número**. El cupón cuenta su uso **al crear** la orden
+    (se libera al cancelar). «Nuevo pedido» del admin admite **descuento manual libre**. Los avisos al cliente
+    llevan enlace: si la orden es de una cuenta → su pedido en el perfil (`/account/orders/{id}`); si es de
+    invitado o del admin sin cuenta → página pública por token. Casilla «Recibir avisos por WhatsApp» en el
+    checkout, marcada por defecto.
 
 ## Recomendaciones de Claude (confirmadas en la Fase 0b, ver `AGENTS.md`)
 - Next (App Router) + Supabase + Tailwind/shadcn, deploy en Vercel (wildcard de subdominios).
