@@ -494,3 +494,28 @@ select tests.login_anon();
 select tests.check('anon: cannot call checkout_create_order', tests.throws(format(
   $$select public.checkout_create_order(%L, '{}'::jsonb)$$, tests.fx('store_a'))));
 select tests.logout();
+
+-- Payment evidence lives in the private bucket: staff of the store only, never customers or anon.
+insert into storage.objects (bucket_id, name)
+values ('store-private', 'stores/' || tests.fx('store_a') || '/payments/x/a.png'),
+       ('store-private', 'stores/' || tests.fx('store_b') || '/payments/x/b.png');
+select tests.eq('store-private bucket is not public',
+  (select public from storage.buckets where id = 'store-private'), false);
+select tests.login('staff_a');
+select tests.eq('staff A: reads only A private files',
+  (select count(*) from storage.objects where bucket_id = 'store-private')::int, 1);
+select tests.eq('staff A: uploads evidence to A', tests.affected(format(
+  $$insert into storage.objects (bucket_id, name) values ('store-private', 'stores/%s/payments/x/c.png')$$, tests.fx('store_a'))), 1);
+select tests.eq('staff A: cannot upload evidence to B', tests.affected(format(
+  $$insert into storage.objects (bucket_id, name) values ('store-private', 'stores/%s/payments/x/d.png')$$, tests.fx('store_b'))), -1);
+select tests.logout();
+select tests.login('cust_a');
+select tests.eq('customer A: reads no private files',
+  (select count(*) from storage.objects where bucket_id = 'store-private')::int, 0);
+select tests.eq('customer A: cannot upload private files', tests.affected(format(
+  $$insert into storage.objects (bucket_id, name) values ('store-private', 'stores/%s/payments/x/e.png')$$, tests.fx('store_a'))), -1);
+select tests.logout();
+select tests.login_anon();
+select tests.eq('anon: reads no private files',
+  (select count(*) from storage.objects where bucket_id = 'store-private')::int, 0);
+select tests.logout();

@@ -28,6 +28,8 @@ const BASE = env.QA_STORE_URL ?? "http://demo.kshop.localhost:3000";
 const OUT = join(root, ".titan/qa/fase-3");
 const PHONE = "5359990400";
 const PASSWORD = "clave-qa-orders-1234";
+// 1x1 PNG used as payment evidence.
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
 mkdirSync(OUT, { recursive: true });
 
 const service = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
@@ -175,7 +177,22 @@ try {
   const { data: guestOrder } = await service.from("orders").select("id").eq("public_token", guestUrl.split("/").pop()).single();
   check("guest order placed", !!guestOrder);
 
+  // A partial payment with evidence: the file goes to the private bucket and opens through a signed URL.
   await admin.goto(`${BASE}/admin/orders/${guestOrder.id}`);
+  await admin.getByRole("button", { name: "Registrar pago" }).click();
+  await admin.fill("#pay-amount", "100");
+  await admin.setInputFiles("#pay-evidence", { name: "comprobante.png", mimeType: "image/png", buffer: PNG });
+  await admin.getByRole("button", { name: "Guardar pago" }).click();
+  const evidence = admin.getByRole("link", { name: "comprobante" });
+  await evidence.waitFor({ timeout: 15000 });
+  const signed = await evidence.getAttribute("href");
+  const { data: payment } = await service.from("payments").select("evidence_path").eq("order_id", guestOrder.id).single();
+  const publicUrl = `${env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/store-private/${payment.evidence_path}`;
+  check(
+    "payment evidence is private: the signed URL opens it, the public URL does not",
+    signed.includes("/object/sign/store-private/") && (await fetch(signed)).ok && !(await fetch(publicUrl)).ok,
+    signed,
+  );
   await admin.getByRole("button", { name: "Cancelar pedido" }).click();
   await admin.getByLabel("Motivo").fill("Prueba de QA");
   await admin.getByRole("button", { name: "Confirmar cancelación" }).click();
@@ -214,7 +231,15 @@ try {
   await shot(admin, "error-admin");
 } finally {
   await browser.close();
-  // Cancel any QA order of this run left open, then put back the stock sold and delete the QA customer.
+  // Remove the evidence files, cancel any QA order of this run left open, put back the stock sold and delete
+  // the QA customer.
+  const { data: evidences } = await service
+    .from("payments")
+    .select("evidence_path")
+    .eq("store_id", store.id)
+    .gte("created_at", startedAt)
+    .not("evidence_path", "is", null);
+  if (evidences?.length) await service.storage.from("store-private").remove(evidences.map((e) => e.evidence_path));
   const { data: open } = await service
     .from("orders")
     .select("id")

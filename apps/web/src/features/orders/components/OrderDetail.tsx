@@ -22,11 +22,31 @@ import { Alert, Badge, Button, Card, Input, Label, Select } from "@kshop/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useApiAction } from "@/features/catalog/use-catalog";
-import { platformProtocol, publicEnv, supabaseConfig } from "@/env";
+import { platformProtocol, publicEnv } from "@/env";
 import { useSession } from "@/lib/session";
 import { useStore } from "@/lib/store-context";
 import { useCheckoutSettings } from "../use-orders";
 import { STATUS_VARIANT } from "./OrderList";
+
+// Payment evidence is private (staff of the store only): it is opened through a signed URL valid for 1 h.
+const EVIDENCE_BUCKET = "store-private";
+
+function EvidenceLink({ path, signedUrl }: { path: string; signedUrl: (path: string) => Promise<string | null> }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    signedUrl(path).then((u) => !cancelled && setUrl(u));
+    return () => {
+      cancelled = true;
+    };
+  }, [path, signedUrl]);
+  if (!url) return null;
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="ml-2 underline">
+      comprobante
+    </a>
+  );
+}
 
 type OrderNode = NonNullable<ResultOf<typeof AdminOrderQuery>["ordersCollection"]>["edges"][number]["node"];
 
@@ -52,6 +72,10 @@ export function OrderDetail({ orderId }: { orderId: string }) {
   const [order, setOrder] = useState<OrderNode | null>(null);
   const [missing, setMissing] = useState(false);
   const [version, setVersion] = useState(0);
+  const signedEvidenceUrl = useCallback(
+    async (path: string) => (await supabase.storage.from(EVIDENCE_BUCKET).createSignedUrl(path, 60 * 60)).data?.signedUrl ?? null,
+    [supabase],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -220,10 +244,11 @@ export function OrderDetail({ orderId }: { orderId: string }) {
             upload={async (file) => {
               const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
               const path = `stores/${store.id}/payments/${order.id}/${crypto.randomUUID()}.${ext}`;
-              const { error } = await supabase.storage.from("store-media").upload(path, file, { contentType: file.type });
+              const { error } = await supabase.storage.from(EVIDENCE_BUCKET).upload(path, file, { contentType: file.type });
               if (error) throw error;
               return path;
             }}
+            signedUrl={signedEvidenceUrl}
           />
 
           <Card>
@@ -331,6 +356,7 @@ function PaymentsCard({
   disabled,
   onRecord,
   upload,
+  signedUrl,
 }: {
   orderId: string;
   currency: string;
@@ -341,10 +367,10 @@ function PaymentsCard({
   disabled: boolean;
   onRecord: (input: { amount: number; paymentMethodId?: string; reference?: string; evidencePath?: string }) => Promise<boolean>;
   upload: (file: File) => Promise<string>;
+  signedUrl: (path: string) => Promise<string | null>;
 }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const evidenceUrl = (path: string) => `${supabaseConfig.url}/storage/v1/object/public/store-media/${path}`;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -383,9 +409,7 @@ function PaymentsCard({
               {formatMoney(Number(p.amount), p.currency)}
               {p.reference && <span className="text-muted-foreground"> · {p.reference}</span>}
               {p.evidencePath && (
-                <a href={evidenceUrl(p.evidencePath)} target="_blank" rel="noopener noreferrer" className="ml-2 underline">
-                  comprobante
-                </a>
+                <EvidenceLink path={p.evidencePath} signedUrl={signedUrl} />
               )}
             </span>
             <span className="text-muted-foreground">{dateTime(p.createdAt)}</span>

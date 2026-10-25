@@ -85,7 +85,8 @@
   módulo nunca borra datos. El core no importa módulos opcionales.
 - **Dinero:** `numeric(12,2)` + código de moneda (`CUP`, `USD`, `EUR`; el MLC no existe). Órdenes y líneas
   guardan snapshot de precios, costo, tasa y descuentos.
-- **Storage:** bucket único con prefijo `stores/{store_id}/...` y políticas por `store_id`.
+- **Storage:** prefijo `stores/{store_id}/...` y políticas por `store_id`: `store-media` (lectura pública: imágenes,
+  logos) y `store-private` (solo staff de la tienda, URLs firmadas: comprobantes de pago).
 
 ## Reglas de código
 

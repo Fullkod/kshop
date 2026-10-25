@@ -30,5 +30,6 @@ d7cf1fb, 929a31f, 683be12.
   Tienda Demo como estaba (borra la clienta QA, repone stock); capturas `qa-*.png` en `.titan/qa/fase-3/`.
 
 ## Pendientes conocidos
-- los comprobantes de pago van al bucket público `store-media` (ruta aleatoria); avisos
-  automáticos y OpenWA en la Fase 4.
+- Avisos automáticos y OpenWA en la Fase 4.
+- Resuelto (2026-10-25): los comprobantes de pago van al bucket **privado** `store-private`
+  (`stores/{id}/payments/{orderId}/…`, solo staff de la tienda; el admin los abre con URL firmada de 1 h).
