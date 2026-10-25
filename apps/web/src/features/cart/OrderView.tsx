@@ -90,6 +90,7 @@ export function OrderView() {
                 {l.variantName && <span className="text-muted-foreground">{l.variantName}</span>}
                 <span className="text-muted-foreground">
                   {l.quantity} × {money(l.unitPrice)}
+                  {l.listPrice !== null && l.listPrice > l.unitPrice && <s className="ml-2">{money(l.listPrice)}</s>}
                 </span>
               </div>
               <span className="text-sm font-medium">{money(l.lineTotal)}</span>
@@ -101,6 +102,21 @@ export function OrderView() {
             <dt>Subtotal</dt>
             <dd>{money(order.subtotal)}</dd>
           </div>
+          {order.discounts
+            .filter((d) => d.kind === "promotion")
+            .map((d, i) => (
+              <p key={`p-${i}`} className="text-xs text-primary">
+                {d.name}: ahorras {money(d.amount)}
+              </p>
+            ))}
+          {order.discounts
+            .filter((d) => d.kind !== "promotion")
+            .map((d, i) => (
+              <div key={`d-${i}`} className="flex justify-between text-primary">
+                <dt>{d.kind === "voucher" ? `Cupón ${d.code}` : d.name}</dt>
+                <dd>−{money(d.amount)}</dd>
+              </div>
+            ))}
           <div className="flex justify-between">
             <dt>Entrega</dt>
             <dd>

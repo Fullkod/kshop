@@ -106,10 +106,17 @@ export function ProductView({ product }: { product: StorefrontProduct }) {
             {variant?.compareAtPrice != null && variant.compareAtPrice > variant.price && (
               <Price
                 amount={variant.compareAtPrice}
+                overrides={variant.compareAtOverrides}
                 className="text-base text-muted-foreground line-through"
               />
             )}
+            {variant?.badge && (
+              <span className="rounded-full bg-primary px-2 py-0.5 text-sm font-semibold text-primary-foreground">
+                {variant.badge}
+              </span>
+            )}
           </p>
+          {variant?.promotionName && <p className="text-sm text-primary">{variant.promotionName}</p>}
         </div>
 
         {axes.map((axis) => (

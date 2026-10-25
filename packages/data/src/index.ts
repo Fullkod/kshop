@@ -7,3 +7,4 @@ export * from "./catalog-queries";
 export * from "./storefront-queries";
 export * from "./content-queries";
 export * from "./order-queries";
+export * from "./discount-queries";

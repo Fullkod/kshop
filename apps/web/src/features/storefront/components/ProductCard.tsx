@@ -33,9 +33,9 @@ export function ProductCard({ product, priority = false }: { product: ProductCar
             Sin imagen
           </div>
         )}
-        {product.compareAtPrice != null && (
+        {product.badge && (
           <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
-            Oferta
+            {product.badge}
           </span>
         )}
         {!product.inStock && (
@@ -51,7 +51,11 @@ export function ProductCard({ product, priority = false }: { product: ProductCar
           {product.maxPrice > product.minPrice && <span className="text-muted-foreground">Desde</span>}
           <Price amount={product.minPrice} overrides={product.overrides} className="font-semibold" />
           {product.compareAtPrice != null && (
-            <Price amount={product.compareAtPrice} className="text-xs text-muted-foreground line-through" />
+            <Price
+              amount={product.compareAtPrice}
+              overrides={product.compareAtOverrides}
+              className="text-xs text-muted-foreground line-through"
+            />
           )}
         </p>
       </div>

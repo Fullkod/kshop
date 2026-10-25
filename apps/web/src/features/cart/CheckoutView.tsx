@@ -11,6 +11,7 @@ import { useCustomerSession } from "../customer-account/CustomerSession";
 import { useSelectedCurrency } from "../storefront/components/Currency";
 import { getCartToken } from "./cart-token";
 import { useCart } from "./CartProvider";
+import { VoucherForm } from "./CartView";
 
 // One-page checkout, mobile first (D9): the server recomputes prices, stock and shipping; this page only
 // shows an estimate and sends the choices.
@@ -62,6 +63,9 @@ export function CheckoutView() {
   const toCartCurrency = (base: number) =>
     !currency || currency.isBase ? base : convertFromBase(base, currency.rateToBase, currency.rounding);
   const subtotalBase = currency && !currency.isBase ? cart.subtotal * currency.rateToBase : cart.subtotal;
+  const voucher = cart.voucher && !cart.voucher.error ? cart.voucher : null;
+  // Products after the voucher (a shipping voucher is priced by the server when the order is created).
+  const goods = Math.max(0, cart.subtotal - cart.discountTotal);
   const shipping =
     !method || method.type === "to_agree"
       ? null
@@ -317,15 +321,28 @@ export function CheckoutView() {
             <span>Subtotal</span>
             <span>{money(cart.subtotal)}</span>
           </div>
+          {cart.promotionSavings > 0 && (
+            <p className="text-xs text-primary">Ahorras {money(cart.promotionSavings)} con las ofertas.</p>
+          )}
+          {voucher && (
+            <div className="flex justify-between text-primary">
+              <span>Cupón {voucher.code}</span>
+              <span>{voucher.amount === null ? "En el envío" : `−${money(voucher.amount)}`}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span>Entrega</span>
             <span>{!method ? "—" : shipping === null ? "A convenir" : shipping === 0 ? "Gratis" : money(shipping)}</span>
           </div>
           <div className="flex justify-between pt-1 text-base font-semibold">
             <span>Total</span>
-            <span>{shipping === null ? `${money(cart.subtotal)} + entrega` : money(cart.subtotal + shipping)}</span>
+            <span>{shipping === null ? `${money(goods)} + entrega` : money(goods + shipping)}</span>
           </div>
+          {voucher?.amount === null && (
+            <p className="text-xs text-muted-foreground">El cupón se descuenta del envío al confirmar el pedido.</p>
+          )}
         </div>
+        <VoucherForm />
         {cart.hasIssues && <Alert variant="destructive">Algunos productos cambiaron. Revisa tu carrito.</Alert>}
         {error && <Alert variant="destructive">{error}</Alert>}
         <Button type="submit" size="lg" disabled={pending || cart.hasIssues}>

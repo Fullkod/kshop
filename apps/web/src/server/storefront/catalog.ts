@@ -3,6 +3,7 @@ import {
   homeSectionInputSchema,
   linkHref,
   PRODUCTS_PER_PAGE,
+  savingPercent,
   sortOrderBy,
   type LinkType,
   type ProductSort,
@@ -28,11 +29,43 @@ export type ProductCardData = {
   imageUrl: string | null;
   minPrice: number;
   maxPrice: number;
-  /** Highest "before" price among the variants that are on sale. */
+  /** "Before" price of the cheapest variant (its compare-at price, or its price when a promotion lowers it). */
   compareAtPrice: number | null;
+  compareAtOverrides: PriceOverride[];
+  /** "-20 %" for a promotion, "Oferta" for a compare-at price. */
+  badge: string | null;
   inStock: boolean;
-  overrides: { currency: string; price: number }[];
+  overrides: PriceOverride[];
 };
+
+type PriceOverride = { currency: string; price: number };
+type VariantPromotion = { promoPrice: unknown; reward: unknown; value: unknown; promotionName: string } | null | undefined;
+
+/**
+ * Storefront price of a variant with its materialized promotion (PRP-4 D3/D4): the promotion price in the base
+ * currency and the per-currency overrides lowered by the same percent (a fixed reward drops the overrides so the
+ * base price is converted). The cart and the checkout always price again in SQL.
+ */
+function withPromotion(price: number, compareAt: number | null, overrides: PriceOverride[], promo: VariantPromotion) {
+  const listCompare = compareAt != null && compareAt > price ? compareAt : null;
+  if (!promo) {
+    return { price, overrides, compareAtPrice: listCompare, compareAtOverrides: [], badge: listCompare ? "Oferta" : null, promotionName: null };
+  }
+  const promoPrice = Number(promo.promoPrice);
+  const value = Number(promo.value);
+  const before = listCompare ?? price;
+  return {
+    price: promoPrice,
+    overrides:
+      String(promo.reward) === "percent"
+        ? overrides.map((o) => ({ ...o, price: Math.round(o.price * (100 - value)) / 100 }))
+        : [],
+    compareAtPrice: before,
+    compareAtOverrides: listCompare ? [] : overrides,
+    badge: `-${savingPercent(before, promoPrice)} %`,
+    promotionName: promo.promotionName,
+  };
+}
 
 export type ProductFilters = {
   query?: string | null;
@@ -81,11 +114,15 @@ export async function getProducts(
   return {
     total: connection?.totalCount ?? 0,
     products: nodes(connection).map((p) => {
-      const variants = nodes(p.productVariantsCollection);
-      const onSale = variants.filter(
-        (v) => v.compareAtPrice != null && Number(v.compareAtPrice) > Number(v.price),
+      const variants = nodes(p.productVariantsCollection).map((v) =>
+        withPromotion(
+          Number(v.price),
+          v.compareAtPrice != null ? Number(v.compareAtPrice) : null,
+          nodes(v.variantPricesCollection).map((o) => ({ currency: String(o.currency), price: Number(o.price) })),
+          v.variantPromotions,
+        ),
       );
-      const cheapest = [...variants].sort((a, b) => Number(a.price) - Number(b.price))[0];
+      const cheapest = [...variants].sort((a, b) => a.price - b.price)[0];
       return {
         id: p.id,
         slug: p.slug,
@@ -94,12 +131,11 @@ export async function getProducts(
         imageUrl: p.primaryMediaUrl ?? null,
         minPrice: Number(p.minPrice ?? 0),
         maxPrice: Number(p.maxPrice ?? 0),
-        compareAtPrice: onSale.length ? Math.max(...onSale.map((v) => Number(v.compareAtPrice))) : null,
+        compareAtPrice: cheapest?.compareAtPrice ?? null,
+        compareAtOverrides: cheapest?.compareAtOverrides ?? [],
+        badge: cheapest?.badge ?? null,
         inStock: p.inStock,
-        overrides: nodes(cheapest?.variantPricesCollection).map((o) => ({
-          currency: String(o.currency),
-          price: Number(o.price),
-        })),
+        overrides: cheapest?.overrides ?? [],
       };
     }),
   };
@@ -196,13 +232,13 @@ export async function getProduct(storeId: string, slug: string) {
       id: v.id,
       sku: v.sku,
       name: v.name,
-      price: Number(v.price),
-      compareAtPrice: v.compareAtPrice != null ? Number(v.compareAtPrice) : null,
+      ...withPromotion(
+        Number(v.price),
+        v.compareAtPrice != null ? Number(v.compareAtPrice) : null,
+        nodes(v.variantPricesCollection).map((o) => ({ currency: String(o.currency), price: Number(o.price) })),
+        v.variantPromotions,
+      ),
       available: !v.trackInventory || v.stockAvailable > 0,
-      overrides: nodes(v.variantPricesCollection).map((o) => ({
-        currency: String(o.currency),
-        price: Number(o.price),
-      })),
       mediaIds: nodes(v.variantMediaCollection).map((m) => m.mediaId),
       options: nodes(v.variantAttributeValuesCollection).flatMap((o) =>
         o.attributeValues

@@ -153,5 +153,34 @@ if (!zoneCount) {
   console.log("Created shipping zones, shipping methods and payment methods");
 }
 
+// Discounts (phase 4): a -20 % promotion on «Vestidos» and the voucher BIENVENIDA10, only when the store has none.
+const { count: promoCount } = await service
+  .from("promotions")
+  .select("id", { count: "exact", head: true })
+  .eq("store_id", store.id);
+if (!promoCount) {
+  const { data: category } = await service.from("categories").select("id").eq("store_id", store.id).eq("slug", "vestidos").maybeSingle();
+  if (category) {
+    const { data: promo, error: promoError } = await service
+      .from("promotions")
+      .insert({ store_id: store.id, name: "Rebajas de vestidos", reward: "percent", value: 20 })
+      .select("id")
+      .single();
+    if (promoError) throw promoError;
+    const { error: targetError } = await service
+      .from("promotion_targets")
+      .insert({ store_id: store.id, promotion_id: promo.id, target_type: "category", target_id: category.id });
+    if (targetError) throw targetError;
+    const { error: refreshError } = await service.rpc("refresh_promotions", { p_store_id: store.id });
+    if (refreshError) throw refreshError;
+    console.log("Created the promotion «Rebajas de vestidos» (-20 % on Vestidos)");
+  }
+}
+const { error: voucherError } = await service.from("vouchers").upsert(
+  { store_id: store.id, code: "BIENVENIDA10", name: "Bienvenida", scope: "order", reward: "percent", value: 10, min_subtotal: 2000, usage_per_customer: 1 },
+  { onConflict: "store_id,code", ignoreDuplicates: true },
+);
+if (voucherError) throw voucherError;
+
 console.log(`Owner: ${DEMO.owner} (DEMO_OWNER_PASSWORD) · Staff: ${DEMO.staff} (DEMO_STAFF_PASSWORD)`);
 console.log("Admin: http://demo.kshop.localhost:3000/admin");

@@ -18,7 +18,7 @@ import {
   type ShippingType,
 } from "@kshop/core";
 import { AdminOrderQuery, type ResultOf } from "@kshop/data";
-import { Alert, Badge, Button, Card, Input, Label, Select } from "@kshop/ui";
+import { Alert, Badge, Button, Card, cn, Input, Label, Select } from "@kshop/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useApiAction } from "@/features/catalog/use-catalog";
@@ -205,7 +205,11 @@ export function OrderDetail({ orderId }: { orderId: string }) {
                     <div className="text-right">
                       <div>
                         {l.quantity} × {money(l.unitPrice)}
+                        {l.unitListPrice != null && Number(l.unitListPrice) > Number(l.unitPrice) && (
+                          <s className="ml-1 text-muted-foreground">{money(l.unitListPrice)}</s>
+                        )}
                       </div>
+                      {l.promotionName && <div className="text-xs text-primary">{l.promotionName}</div>}
                       <div className="font-medium">{money(l.lineTotal)}</div>
                     </div>
                   </li>
@@ -217,6 +221,15 @@ export function OrderDetail({ orderId }: { orderId: string }) {
                 <dt>Subtotal</dt>
                 <dd>{money(order.subtotal)}</dd>
               </div>
+              {nodes(order.orderDiscountsCollection).map((d) => (
+                <div key={d.id} className={cn("flex justify-between", d.kind === "promotion" ? "text-xs text-muted-foreground" : "text-primary")}>
+                  <dt>
+                    {d.kind === "promotion" ? `Oferta «${d.name}» (ya en los precios)` : d.kind === "voucher" ? `Cupón ${d.code}` : d.name}
+                    {d.reason && ` · ${d.reason}`}
+                  </dt>
+                  <dd>−{money(d.amount)}</dd>
+                </div>
+              ))}
               <div className="flex justify-between">
                 <dt>Envío</dt>
                 <dd>{shippingTotal === null ? "A convenir" : money(shippingTotal)}</dd>

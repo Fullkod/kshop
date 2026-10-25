@@ -18,6 +18,8 @@ type CartValue = {
   pending: boolean;
   add: (variantId: string, quantity: number) => Promise<void>;
   setQuantity: (variantId: string, quantity: number) => Promise<void>;
+  /** Saves (or removes with null) the voucher code; the cart comes back priced with it. */
+  setVoucher: (code: string | null) => Promise<void>;
   refresh: () => Promise<void>;
   /** After a checkout: the server converted the cart. */
   reset: () => void;
@@ -84,6 +86,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [api, store.id, currency, apply],
   );
 
+  const setVoucher = useCallback(
+    async (code: string | null) => {
+      setPending(true);
+      try {
+        apply(await api.cart(store.id).setVoucher({ token: getCartToken(store.id), code }));
+      } finally {
+        setPending(false);
+      }
+    },
+    [api, store.id, apply],
+  );
+
   const value = useMemo<CartValue>(
     () => ({
       cart,
@@ -91,13 +105,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
       pending,
       add: (variantId, quantity) => update(variantId, quantity, "add"),
       setQuantity: (variantId, quantity) => update(variantId, quantity, "set"),
+      setVoucher,
       refresh,
       reset: () => {
         clearCartToken(store.id);
-        setCart((c) => (c ? { ...c, token: null, lines: [], subtotal: 0, itemCount: 0, hasIssues: false } : c));
+        setCart((c) =>
+          c
+            ? { ...c, token: null, lines: [], subtotal: 0, promotionSavings: 0, voucher: null, discountTotal: 0, itemCount: 0, hasIssues: false }
+            : c,
+        );
       },
     }),
-    [cart, pending, update, refresh, store.id],
+    [cart, pending, update, setVoucher, refresh, store.id],
   );
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

@@ -173,6 +173,12 @@ export const StorefrontProductsQuery = graphql(`
               node {
                 price
                 compareAtPrice
+                variantPromotions {
+                  promoPrice
+                  reward
+                  value
+                  promotionName
+                }
                 variantPricesCollection(first: 3) {
                   edges {
                     node {
@@ -286,6 +292,12 @@ export const StorefrontProductQuery = graphql(`
                 compareAtPrice
                 trackInventory
                 stockAvailable
+                variantPromotions {
+                  promoPrice
+                  reward
+                  value
+                  promotionName
+                }
                 variantPricesCollection(first: 3) {
                   edges {
                     node {

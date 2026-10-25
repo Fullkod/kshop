@@ -1,9 +1,10 @@
 "use client";
 
 import { formatMoney } from "@kshop/core";
-import type { CartLine } from "@kshop/data";
-import { Alert } from "@kshop/ui";
+import { ApiError, type Cart, type CartLine } from "@kshop/data";
+import { Alert, Button, Input } from "@kshop/ui";
 import Link from "next/link";
+import { useState } from "react";
 import { useCart } from "./CartProvider";
 
 export function CartView() {
@@ -33,10 +34,8 @@ export function CartView() {
         ))}
       </ul>
       <aside className="flex h-fit flex-col gap-4 rounded-[var(--sf-radius)] border p-4">
-        <div className="flex justify-between text-lg font-semibold">
-          <span>Subtotal</span>
-          <span>{money(cart.subtotal)}</span>
-        </div>
+        <CartTotals cart={cart} money={money} />
+        <VoucherForm />
         <p className="text-sm text-muted-foreground">La entrega se calcula en el siguiente paso.</p>
         {cart.hasIssues && (
           <Alert variant="destructive">Ajusta los productos marcados antes de continuar.</Alert>
@@ -82,10 +81,9 @@ function CartLineRow({
         {line.variantName && <p className="text-sm text-muted-foreground">{line.variantName}</p>}
         <p className="text-sm">
           {money(line.unitPrice)}
-          {line.compareAtPrice && line.compareAtPrice > line.unitPrice && (
-            <s className="ml-2 text-muted-foreground">{money(line.compareAtPrice)}</s>
-          )}
+          {beforePrice(line) !== null && <s className="ml-2 text-muted-foreground">{money(beforePrice(line)!)}</s>}
         </p>
+        {line.promotionName && <p className="text-xs text-primary">{line.promotionName}</p>}
         {line.issue === "unavailable" && <p className="text-sm text-destructive">Ya no está disponible.</p>}
         {line.issue === "insufficient" && (
           <p className="text-sm text-destructive">
@@ -129,5 +127,95 @@ function CartLineRow({
         </div>
       </div>
     </li>
+  );
+}
+
+/** Struck "before" price of a line: its compare-at price, or its list price when a promotion lowers it. */
+function beforePrice(line: CartLine): number | null {
+  const before = Math.max(line.compareAtPrice ?? 0, line.listPrice);
+  return before > line.unitPrice ? before : null;
+}
+
+/** Subtotal with the promotion saving, the voucher and the total before shipping. */
+export function CartTotals({ cart, money }: { cart: Cart; money: (v: number) => string }) {
+  const voucher = cart.voucher && !cart.voucher.error ? cart.voucher : null;
+  return (
+    <dl className="flex flex-col gap-1 text-sm">
+      <div className="flex justify-between">
+        <dt>Subtotal</dt>
+        <dd>{money(cart.subtotal)}</dd>
+      </div>
+      {cart.promotionSavings > 0 && (
+        <p className="text-xs text-primary">Ahorras {money(cart.promotionSavings)} con las ofertas.</p>
+      )}
+      {voucher && (
+        <div className="flex justify-between text-primary">
+          <dt>Cupón {voucher.code}</dt>
+          <dd>{voucher.amount === null ? "Se aplica al envío" : `−${money(voucher.amount)}`}</dd>
+        </div>
+      )}
+      <div className="mt-1 flex justify-between text-lg font-semibold">
+        <dt>Total</dt>
+        <dd>{money(Math.max(0, cart.subtotal - cart.discountTotal))}</dd>
+      </div>
+    </dl>
+  );
+}
+
+/** Voucher code of the cart: applied by the server, which says why when it does not apply. */
+export function VoucherForm() {
+  const { cart, setVoucher, pending } = useCart();
+  const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  if (!cart) return null;
+
+  // Not a <form>: it also lives inside the checkout form.
+  async function apply() {
+    setError(null);
+    try {
+      await setVoucher(code.trim() || null);
+      setCode("");
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "No se pudo aplicar el cupón.");
+    }
+  }
+
+  if (cart.voucher) {
+    return (
+      <div className="flex flex-col gap-1 text-sm">
+        <div className="flex items-center justify-between gap-2">
+          <span>
+            Cupón <strong>{cart.voucher.code}</strong>
+          </span>
+          <button type="button" className="underline" disabled={pending} onClick={() => setVoucher(null)}>
+            Quitar
+          </button>
+        </div>
+        {cart.voucher.error && <p className="text-destructive">{cart.voucher.error}</p>}
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex gap-2">
+        <Input
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            e.preventDefault();
+            if (code.trim().length >= 3) void apply();
+          }}
+          placeholder="Código de cupón"
+          aria-label="Código de cupón"
+          autoCapitalize="characters"
+          className="uppercase"
+        />
+        <Button type="button" variant="outline" disabled={pending || code.trim().length < 3} onClick={apply}>
+          Aplicar
+        </Button>
+      </div>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </div>
   );
 }

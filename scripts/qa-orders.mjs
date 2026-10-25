@@ -79,7 +79,9 @@ async function newPage(viewport) {
   page.on("console", (m) => m.type() === "error" && !m.text().includes("instant navigation") && errors.push(m.text()));
   return page;
 }
-const shot = (page, name) => page.screenshot({ path: join(OUT, `qa-${name}.png`), fullPage: true });
+// caret "initial": the default hides the caret with an inline style that breaks hydration if React has not
+// hydrated yet (a false "attributes didn't match" error).
+const shot = (page, name) => page.screenshot({ path: join(OUT, `qa-${name}.png`), fullPage: true, caret: "initial" });
 
 const customer = await newPage({ width: 390, height: 844 });
 const admin = await newPage({ width: 1280, height: 900 });

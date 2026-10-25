@@ -4,6 +4,7 @@ import { formatMoney, formatPhone, normalizePhone, SHIPPING_TYPE_LABELS } from "
 import { AdminCustomersQuery, OrderVariantSearchQuery } from "@kshop/data";
 import { Alert, Button, Card, Input, Label, Select } from "@kshop/ui";
 import { useRouter } from "next/navigation";
+import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useApiAction } from "@/features/catalog/use-catalog";
 import { useSession } from "@/lib/session";
@@ -19,6 +20,8 @@ type Line = Result & { quantity: number };
 export function NewOrder() {
   const store = useStore();
   const router = useRouter();
+  const admin = useAdmin();
+  const [manualReward, setManualReward] = useState<"" | "percent" | "fixed">("");
   const { graphql, api } = useSession();
   const { data: settings } = useCheckoutSettings();
   const action = useApiAction();
@@ -111,6 +114,10 @@ export function NewOrder() {
         },
         paymentMethodId: text("payment"),
         note: text("note"),
+        voucherCode: text("voucher")?.toUpperCase(),
+        manualDiscount: manualReward
+          ? { reward: manualReward, value: Number(text("manualValue") ?? 0), reason: text("manualReason") ?? null }
+          : undefined,
       }),
     );
     if (result) router.push(`/admin/orders/${result.orderId}`);
@@ -259,7 +266,39 @@ export function NewOrder() {
           <span>Subtotal</span>
           <span>{formatMoney(subtotal, currency)}</span>
         </div>
-        <p className="text-xs text-muted-foreground">El envío y el total se calculan al crear el pedido.</p>
+        {admin.enabledModules.has("discounts") && (
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="voucher">Cupón (opcional)</Label>
+            <Input id="voucher" name="voucher" className="uppercase" placeholder="BIENVENIDA10" />
+          </div>
+        )}
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="manualReward">Descuento manual</Label>
+          <Select
+            id="manualReward"
+            value={manualReward}
+            onChange={(e) => setManualReward(e.target.value as typeof manualReward)}
+          >
+            <option value="">Sin descuento</option>
+            <option value="percent">Porcentaje</option>
+            <option value="fixed">Importe ({currency})</option>
+          </Select>
+        </div>
+        {manualReward && (
+          <>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="manualValue">{manualReward === "percent" ? "Porcentaje (%)" : `Importe (${currency})`}</Label>
+              <Input id="manualValue" name="manualValue" inputMode="decimal" required />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="manualReason">Motivo</Label>
+              <Input id="manualReason" name="manualReason" placeholder="Cliente habitual" />
+            </div>
+          </>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Las ofertas, el cupón, el envío y el total se calculan al crear el pedido.
+        </p>
         {action.error && <Alert variant="destructive">{action.error}</Alert>}
         <Button type="submit" disabled={action.pending || lines.length === 0 || !normalized}>
           {action.pending ? "Creando…" : "Crear pedido"}

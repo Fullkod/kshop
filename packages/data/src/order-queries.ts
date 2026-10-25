@@ -80,6 +80,20 @@ export const AdminOrderQuery = graphql(`
             lastName
             phone
           }
+          orderDiscountsCollection(first: 20) {
+            edges {
+              node {
+                id
+                kind
+                name
+                code
+                reward
+                value
+                amount
+                reason
+              }
+            }
+          }
           orderLinesCollection(orderBy: [{ sortOrder: AscNullsLast }], first: 100) {
             edges {
               node {
@@ -91,9 +105,11 @@ export const AdminOrderQuery = graphql(`
                 attributes
                 imageUrl
                 quantity
+                unitListPrice
                 unitPrice
                 compareAtPrice
                 lineTotal
+                promotionName
                 orderLineCosts {
                   unitCost
                   costCurrency
