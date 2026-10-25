@@ -4,3 +4,4 @@ export * from "./queries";
 export * from "./supabase";
 export type { ResultOf, VariablesOf } from "@graphql-typed-document-node/core";
 export * from "./catalog-queries";
+export * from "./storefront-queries";
