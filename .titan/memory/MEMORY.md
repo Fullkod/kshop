@@ -44,4 +44,4 @@
 - `prp-fase-1-catalogo.md` — Fase 1: catálogo (tipos, atributos, variantes, costo privado, monedas, categorías, colecciones, marcas, medias, almacenes/stock, Excel) (COMPLETADO 2026-10-25, commits hasta d6f1507)
 - `prp-fase-2-tienda-publica.md` — Fase 2: tienda pública (COMPLETADO 2026-10-25; Lighthouse en Vercel en el PRP)
 - `prp-fase-3-clientes-y-compra.md` — Fase 3: clientes y compra (COMPLETADO)
-- `prp-fase-4-avisos-y-descuentos.md` — Fase 4: promociones, cupones y avisos WhatsApp de plataforma (PENDIENTE de aprobación)
+- `prp-fase-4-avisos-y-descuentos.md` — Fase 4: promociones, cupones y avisos WhatsApp de plataforma (EN CURSO: 4.1–4.3 hechas)
