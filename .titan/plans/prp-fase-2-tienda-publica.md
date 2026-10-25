@@ -265,8 +265,12 @@ mensaje en español, happy path); paso 7–8 del happy path en el navegador; el 
 - `sitemap.xml` daba **404 en Vercel** (en local funcionaba): ver Aprendizajes.
 - **Re-medición tras el deploy (2026-10-25, 3 pasadas)**: listado 76 / 90 / 87, A11y/BP/SEO 100, **CLS 0** (fix
   confirmado), LCP 3,5–3,8 s (la imagen de Supabase Storage), TBT 110–430 ms (ruido de la máquina que mide).
-  `sitemap.xml` y `robots.txt` responden 200 por tienda. Siguiente mejora posible: LCP del listado (precargar la
-  primera imagen o servirla más pequeña).
+  `sitemap.xml` y `robots.txt` responden 200 por tienda.
+- **LCP del listado, diagnóstico**: la imagen ya es la de 480 px (6,7 KB) con `fetchPriority="high"`; el retraso es
+  de carga (1,2–2,8 s): el navegador la descubre cuando llega el trozo del listado en el stream. Ese trozo encadenaba
+  facetas (~80 ms en BD) → productos + facetas otra vez (misma consulta con otra clave de caché). Fix: sin filtros en
+  la URL, una sola consulta de facetas en paralelo con los productos (`Listing.tsx`). **Re-medir tras el deploy.**
+  Si no basta: optimizar `storefront_product_facets` (recorre `storefront_product_ids` una vez por atributo + 3).
 
 ## 🧠 Aprendizajes (Self-Annealing / Neural Network)
 

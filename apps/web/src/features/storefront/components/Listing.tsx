@@ -23,9 +23,16 @@ type Props = {
 
 /** Products of a listing page with its filter panel; everything comes from the URL (shareable, crawlable). */
 export async function Listing({ store, basePath, fixed = {}, searchParams, hideBrandFacet }: Props) {
+  // Common case, no filters in the URL: the listing only depends on `fixed`, so the products and the one
+  // facets query run in parallel (otherwise the attribute slugs must be known before filtering: LCP).
+  const unfiltered = Object.keys(searchParams).every((key) => key === "page" || key === "sort");
+  const plain = parseListingParams(searchParams, []);
   // Facets without the URL filters give every filterable attribute and brand of this listing.
-  const all = await getFacets(store.id, fixed);
-  const state = parseListingParams(searchParams, all.attributes);
+  const [all, unfilteredProducts] = await Promise.all([
+    getFacets(store.id, fixed),
+    unfiltered ? getProducts(store.id, fixed, plain.sort, plain.page) : null,
+  ]);
+  const state = unfiltered ? plain : parseListingParams(searchParams, all.attributes);
   const ids = listingFilterIds(state, all.attributes, all.brands);
   const filters: ProductFilters = {
     ...fixed,
@@ -37,10 +44,9 @@ export async function Listing({ store, basePath, fixed = {}, searchParams, hideB
     inStock: state.inStock,
     onSale: state.onSale,
   };
-  const [{ total, products }, facets] = await Promise.all([
-    getProducts(store.id, filters, state.sort, state.page),
-    getFacets(store.id, filters),
-  ]);
+  const [{ total, products }, facets] = unfilteredProducts
+    ? [unfilteredProducts, all]
+    : await Promise.all([getProducts(store.id, filters, state.sort, state.page), getFacets(store.id, filters)]);
   const pages = Math.max(1, Math.ceil(total / PRODUCTS_PER_PAGE));
   const href = (next: Partial<ListingState>) => `${basePath}${listingQuery({ ...state, page: 1, ...next })}`;
   const chips = activeFilters(state, all, hideBrandFacet);
