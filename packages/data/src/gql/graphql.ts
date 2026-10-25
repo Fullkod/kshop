@@ -200,6 +200,7 @@ export type OrdersFilter = {
   nodeId?: IdFilter | null | undefined;
   /** Negates a filter */
   not?: OrdersFilter | null | undefined;
+  notifyCustomer?: BooleanFilter | null | undefined;
   number?: IntFilter | null | undefined;
   /** Returns true if at least one of its inner filters is true, otherwise returns false */
   or?: Array<OrdersFilter> | null | undefined;
