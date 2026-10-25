@@ -96,6 +96,7 @@ export const CatalogStructureQuery = graphql(`
           slug
           description
           isPublished
+          rules
         }
       }
     }

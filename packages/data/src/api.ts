@@ -5,6 +5,12 @@ import type {
   CollectionInput,
   CreateStoreInput,
   CurrencyInput,
+  BannerInput,
+  HomeSectionInput,
+  MenuInput,
+  MenuLocation,
+  PageInput,
+  ThemeInput,
   ImportPreview,
   ImportProgress,
   ProductInput,
@@ -89,6 +95,10 @@ export type ImportJobInput = {
   mode?: "create_only" | "upsert";
   createMissing?: boolean;
 };
+
+/** Storefront content (/api/v1/stores/{storeId}/content/{resource}). */
+export type ContentResourceInputs = { banners: BannerInput; sections: HomeSectionInput; pages: PageInput };
+export type ContentResourceName = keyof ContentResourceInputs;
 
 /** A file returned by the API (Excel template/export). */
 export type DownloadedFile = { blob: Blob; fileName: string };
@@ -188,6 +198,22 @@ export function createApiClient(options: ApiClientOptions) {
           download(`${base}/excel/export?productTypeId=${productTypeId}`, "productos.xlsx"),
         createImport: (input: ImportJobInput) => request<ImportPreview>("POST", `${base}/imports`, input),
         runImport: (jobId: string) => request<ImportProgress>("POST", `${base}/imports/${jobId}/run`),
+      };
+    },
+    content: (storeId: string) => {
+      const base = `/stores/${storeId}/content`;
+      return {
+        create: <R extends ContentResourceName>(resource: R, input: ContentResourceInputs[R]) =>
+          request<{ id: string }>("POST", `${base}/${resource}`, input),
+        update: <R extends ContentResourceName>(resource: R, id: string, input: ContentResourceInputs[R]) =>
+          request<{ id: string }>("PATCH", `${base}/${resource}/${id}`, input),
+        remove: (resource: ContentResourceName, id: string) =>
+          request<null>("DELETE", `${base}/${resource}/${id}`),
+        reorder: (table: "banners" | "sections", ids: string[]) =>
+          request<null>("POST", `${base}/reorder`, { table, ids }),
+        saveTheme: (input: ThemeInput) => request<{ theme: ThemeInput }>("PUT", `${base}/theme`, input),
+        saveMenu: (location: MenuLocation, input: MenuInput) =>
+          request<null>("PUT", `${base}/menus/${location}`, input),
       };
     },
     platform: {

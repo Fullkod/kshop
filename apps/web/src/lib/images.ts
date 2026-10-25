@@ -32,6 +32,32 @@ async function toWebp(file: File, maxSide: number): Promise<Blob> {
 
 export type UploadedImage = { storageKey: string; url: string; thumbUrl: string };
 
+/** Banner sizes (decision D5): wide image for desktop, 768 px for phones. */
+export const BANNER_SIZES = { full: 1920, small: 768 } as const;
+
+/** Compresses and uploads a banner image (two sizes); returns the URL of the large one. */
+export async function uploadBannerImage(
+  supabase: SupabaseClient,
+  storeId: string,
+  file: File,
+): Promise<string> {
+  if (!file.type.startsWith("image/")) throw new Error("El archivo no es una imagen.");
+  if (file.size > MAX_INPUT_BYTES) throw new Error("La imagen pesa más de 15 MB.");
+  const [full, small] = await Promise.all([
+    toWebp(file, BANNER_SIZES.full),
+    toWebp(file, BANNER_SIZES.small),
+  ]);
+  const base = `stores/${storeId}/banners/${crypto.randomUUID()}`;
+  const bucket = supabase.storage.from("store-media");
+  const options = { contentType: "image/webp", cacheControl: "31536000", upsert: false };
+  const [a, b] = await Promise.all([
+    bucket.upload(`${base}-${BANNER_SIZES.full}.webp`, full, options),
+    bucket.upload(`${base}-${BANNER_SIZES.small}.webp`, small, options),
+  ]);
+  if (a.error || b.error) throw new Error("No se pudo subir la imagen.");
+  return bucket.getPublicUrl(`${base}-${BANNER_SIZES.full}.webp`).data.publicUrl;
+}
+
 /** Compresses and uploads a product image; returns what POST .../media expects. */
 export async function uploadProductImage(
   supabase: SupabaseClient,

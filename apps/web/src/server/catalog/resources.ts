@@ -161,6 +161,8 @@ const resources = {
       description: i.description ?? null,
       image_url: i.imageUrl ?? null,
       is_published: i.isPublished,
+      // Omitted keeps the current rules; null makes it manual.
+      ...(i.rules !== undefined && { rules: i.rules }),
     }),
   } satisfies CatalogResource<CollectionInput>,
   warehouses: {

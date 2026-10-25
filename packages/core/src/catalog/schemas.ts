@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { collectionRulesSchema } from "../storefront/content";
 import { currencyCodeSchema } from "../currency";
 
 // Inputs of /api/v1/stores/{storeId}/catalog/*. Shared by the web admin and the mobile admin app.
@@ -118,6 +119,8 @@ export const collectionInputSchema = z.object({
   description: optionalText(2000),
   imageUrl: z.url().optional(),
   isPublished: z.boolean().default(true),
+  /** Automatic collection (D8, phase 2): null = manual (products chosen one by one). */
+  rules: collectionRulesSchema.nullable().optional(),
 });
 export type CollectionInput = z.infer<typeof collectionInputSchema>;
 

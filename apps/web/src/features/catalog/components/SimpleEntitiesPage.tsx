@@ -5,7 +5,18 @@ import { Alert, Badge, Button, Card, FieldError, Input, Label } from "@kshop/ui"
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useApiAction, useCatalogApi, useCatalogStructure, type CatalogStructure } from "../use-catalog";
 
-type Field = { key: string; label: string; type: "text" | "textarea" | "checkbox"; placeholder?: string };
+type Field = {
+  key: string;
+  label: string;
+  type: "text" | "textarea" | "checkbox" | "select";
+  placeholder?: string;
+  /** Checkbox value of a new entity (default: checked). */
+  newDefault?: boolean;
+  /** Options of a select (from the catalog structure); "" is "none". */
+  options?: (data: CatalogStructure) => { value: string; label: string }[];
+  /** Section title shown above the field. */
+  group?: string;
+};
 type Row = { id: string; name: string } & Record<string, unknown>;
 
 export type SimpleEntityConfig<R extends "brands" | "collections" | "warehouses"> = {
@@ -93,16 +104,38 @@ export function SimpleEntitiesPage<R extends "brands" | "collections" | "warehou
             <h3 className="font-semibold sm:col-span-2">
               {editing === "new" ? `Nuevo ${config.singular}` : `Editar «${editing.name}»`}
             </h3>
-            {config.fields.map((f) =>
+            {config.fields.map((f) => [
+              f.group && (
+                <p key={`${f.key}-group`} className="mt-2 border-t pt-4 text-sm font-semibold sm:col-span-2">
+                  {f.group}
+                </p>
+              ),
               f.type === "checkbox" ? (
                 <label key={f.key} className="flex items-center gap-2 text-sm sm:col-span-2">
                   <input
                     type="checkbox"
                     name={f.key}
-                    defaultChecked={editing === "new" ? true : Boolean(editing[f.key])}
+                    defaultChecked={editing === "new" ? (f.newDefault ?? true) : Boolean(editing[f.key])}
                   />
                   {f.label}
                 </label>
+              ) : f.type === "select" ? (
+                <div key={f.key} className="flex flex-col gap-2">
+                  <Label htmlFor={f.key}>{f.label}</Label>
+                  <select
+                    id={f.key}
+                    name={f.key}
+                    defaultValue={editing === "new" ? "" : String(editing[f.key] ?? "")}
+                    className="h-10 rounded-md border bg-background px-3 text-sm"
+                  >
+                    <option value="">—</option>
+                    {(f.options?.(data) ?? []).map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               ) : (
                 <div
                   key={f.key}
@@ -132,7 +165,7 @@ export function SimpleEntitiesPage<R extends "brands" | "collections" | "warehou
                   <FieldError>{action.fieldErrors[f.key]}</FieldError>
                 </div>
               ),
-            )}
+            ])}
             {action.error && (
               <Alert variant="destructive" className="sm:col-span-2">
                 {action.error}

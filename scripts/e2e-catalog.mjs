@@ -270,6 +270,49 @@ async function run() {
   r = await ownerA("DELETE", `${A}/products/${productId}`);
   check("owner deletes the product -> 204", r.status === 204, r);
 
+  // Storefront content (phase 2): admins of the store only, store-scoped references.
+  const CA = `/stores/${storeA.id}/content`;
+  const CB = `/stores/${storeB.id}/content`;
+  const media = (storeId) =>
+    `${env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/store-media/stores/${storeId}/banners/x-1920.webp`;
+  r = await staffA("PUT", `${CA}/theme`, { preset: "warm" });
+  check("content: staff cannot change the theme -> 403", r.status === 403, r);
+  r = await ownerB("PUT", `${CA}/theme`, { preset: "warm" });
+  check("content: owner of B cannot change A -> 403", r.status === 403, r);
+  r = await ownerA("PUT", `${CA}/theme`, { preset: "nope" });
+  check("content: invalid preset -> 400", r.status === 400, r);
+  r = await ownerA("PUT", `${CA}/theme`, { preset: "warm", colors: { accent: "#112233" } });
+  check("content: theme saved -> 200", r.status === 200 && r.body.theme.colors.accent === "#112233", r);
+  r = await ownerA("POST", `${CA}/banners`, { imageUrl: media(storeB.id) });
+  check("content: banner image of another store -> 400", r.status === 400, r);
+  r = await ownerA("POST", `${CA}/banners`, {
+    imageUrl: media(storeA.id),
+    link: { type: "url", url: "javascript:x" },
+  });
+  check("content: banner link must be http(s) or a path -> 400", r.status === 400, r);
+  r = await ownerB("POST", `${CB}/banners`, { imageUrl: media(storeB.id), title: "B" });
+  check("content: banner of B -> 201", r.status === 201, r);
+  const bannerB = r.body.id;
+  r = await ownerA("POST", `${CA}/sections`, { type: "banner", bannerIds: [bannerB] });
+  check("content: section of A with a banner of B -> 4xx", r.status >= 400 && r.status < 500, r);
+  r = await ownerA("POST", `${CA}/sections`, { type: "rich_text", settings: { markdown: "**Hola**" } });
+  check("content: rich text section -> 201", r.status === 201, r);
+  r = await ownerA("POST", `${CA}/pages`, { title: "Envíos", slug: "envios", isPublished: true });
+  check("content: page -> 201", r.status === 201, r);
+  const pageId = r.body.id;
+  r = await ownerA("POST", `${CA}/pages`, { title: "Otra", slug: "envios" });
+  check("content: duplicated page slug -> 409", r.status === 409, r);
+  r = await ownerA("PUT", `${CA}/menus/header`, {
+    items: [{ label: "Envíos", link: { type: "page", targetId: pageId }, children: [] }],
+  });
+  check("content: header menu -> 204", r.status === 204, r);
+  r = await ownerA("PUT", `${CA}/menus/sidebar`, { items: [] });
+  check("content: unknown menu -> 400", r.status === 400, r);
+  r = await ownerA("POST", `${A}/collections`, { name: "Ofertas", rules: {} });
+  check("content: automatic collection without rules -> 400", r.status === 400, r);
+  r = await ownerA("POST", `${A}/collections`, { name: "Ofertas", rules: { onSale: true } });
+  check("content: automatic collection -> 201", r.status === 201, r);
+
   const failed = results.filter((ok) => !ok).length;
   console.log(`\n${results.length - failed}/${results.length} passed`);
   if (failed) process.exitCode = 1;

@@ -6,6 +6,7 @@ import { AttributesPage } from "@/features/catalog/components/AttributesPage";
 import { CategoriesPage } from "@/features/catalog/components/CategoriesPage";
 import { CurrenciesPage } from "@/features/catalog/components/CurrenciesPage";
 import { ProductTypesPage } from "@/features/catalog/components/ProductTypesPage";
+import { categoryOptions } from "@/features/catalog/use-catalog";
 import {
   SimpleEntitiesPage,
   type SimpleEntityConfig,
@@ -32,23 +33,105 @@ const brands: SimpleEntityConfig<"brands"> = {
   badges: (r) => (r.isPublished ? null : <Badge variant="muted">Oculta</Badge>),
 };
 
+// Automatic collections (phase 2, D8): rules flattened into form fields.
+type Rules = {
+  categoryId?: string;
+  brandId?: string;
+  tags?: string[];
+  onSale?: boolean;
+  newerThanDays?: number;
+  featured?: boolean;
+  inStock?: boolean;
+};
+const parseRules = (raw: unknown): Rules | null => {
+  if (typeof raw !== "string" || !raw) return null;
+  try {
+    return JSON.parse(raw) as Rules;
+  } catch {
+    return null;
+  }
+};
+
 const collections: SimpleEntityConfig<"collections"> = {
   resource: "collections",
   title: "Colecciones",
   singular: "colección",
-  description: "Grupos de productos elegidos a mano (Novedades, Ofertas…). Se asignan desde cada producto.",
+  description:
+    "Grupos de productos: manuales (Novedades, Ofertas… se asignan desde cada producto) o automáticas, que se llenan solas según unas reglas.",
   fields: [
     { key: "name", label: "Nombre", type: "text" },
     { key: "description", label: "Descripción (opcional)", type: "textarea" },
     { key: "isPublished", label: "Visible en la tienda", type: "checkbox" },
+    {
+      key: "auto",
+      label: "Automática: incluye los productos que cumplan todas las reglas de abajo",
+      type: "checkbox",
+      newDefault: false,
+      group: "Colección automática",
+    },
+    {
+      key: "ruleCategoryId",
+      label: "De la categoría (incluye subcategorías)",
+      type: "select",
+      options: (d) => categoryOptions(d.categories).map((c) => ({ value: c.id, label: c.label })),
+    },
+    {
+      key: "ruleBrandId",
+      label: "De la marca",
+      type: "select",
+      options: (d) => d.brands.map((b) => ({ value: b.id, label: b.name })),
+    },
+    { key: "ruleTags", label: "Con alguna de estas etiquetas (separadas por comas)", type: "text" },
+    { key: "ruleNewerThanDays", label: "Publicados en los últimos N días", type: "text", placeholder: "30" },
+    { key: "ruleOnSale", label: "En oferta (con precio anterior)", type: "checkbox", newDefault: false },
+    { key: "ruleFeatured", label: "Destacados", type: "checkbox", newDefault: false },
+    { key: "ruleInStock", label: "Con stock disponible", type: "checkbox", newDefault: false },
   ],
-  rows: (d) => d.collections,
-  toInput: (v) => ({
-    name: text(v.name),
-    description: text(v.description),
-    isPublished: v.isPublished === true,
-  }),
-  badges: (r) => (r.isPublished ? null : <Badge variant="muted">Oculta</Badge>),
+  rows: (d) =>
+    d.collections.map((c) => {
+      const rules = parseRules((c as { rules?: unknown }).rules);
+      return {
+        ...c,
+        auto: rules !== null,
+        ruleCategoryId: rules?.categoryId ?? "",
+        ruleBrandId: rules?.brandId ?? "",
+        ruleTags: rules?.tags?.join(", ") ?? "",
+        ruleNewerThanDays: rules?.newerThanDays ? String(rules.newerThanDays) : "",
+        ruleOnSale: rules?.onSale ?? false,
+        ruleFeatured: rules?.featured ?? false,
+        ruleInStock: rules?.inStock ?? false,
+      };
+    }),
+  toInput: (v) => {
+    const days = Number.parseInt(text(v.ruleNewerThanDays), 10);
+    const tags = text(v.ruleTags)
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    return {
+      name: text(v.name),
+      description: text(v.description),
+      isPublished: v.isPublished === true,
+      rules:
+        v.auto === true
+          ? {
+              ...(text(v.ruleCategoryId) && { categoryId: text(v.ruleCategoryId) }),
+              ...(text(v.ruleBrandId) && { brandId: text(v.ruleBrandId) }),
+              ...(tags.length && { tags }),
+              ...(Number.isFinite(days) && days > 0 && { newerThanDays: days }),
+              ...(v.ruleOnSale === true && { onSale: true }),
+              ...(v.ruleFeatured === true && { featured: true }),
+              ...(v.ruleInStock === true && { inStock: true }),
+            }
+          : null,
+    };
+  },
+  badges: (r) => (
+    <>
+      {r.auto ? <Badge>Automática</Badge> : null}
+      {r.isPublished ? null : <Badge variant="muted">Oculta</Badge>}
+    </>
+  ),
 };
 
 const warehouses: SimpleEntityConfig<"warehouses"> = {
