@@ -3,7 +3,6 @@ import { invalidateCatalog, requireCatalogAccess } from "@/server/catalog/access
 import { runImportBatch } from "@/server/catalog/excel";
 import { apiHandler, uuidParam } from "@/server/http";
 
-export const runtime = "nodejs";
 // A batch can download and convert image URLs.
 export const maxDuration = 300;
 

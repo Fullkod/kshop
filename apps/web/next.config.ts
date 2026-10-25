@@ -17,6 +17,8 @@ for (const file of [".env.local", ".env"]) {
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@kshop/core", "@kshop/data", "@kshop/ui"],
+  // Decision D1 (phase 2): `use cache` + cacheTag per store; static shells streamed with Partial Prerendering.
+  cacheComponents: true,
   // Inline the public configuration in the browser bundle.
   env: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",

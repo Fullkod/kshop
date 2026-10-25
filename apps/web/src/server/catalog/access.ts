@@ -22,7 +22,7 @@ export async function requireCatalogAccess(
 
 export const catalogCacheTag = (storeId: string) => `store:${storeId}:catalog`;
 
-/** The storefront (Phase 2) caches catalog reads per store; any write invalidates them. */
+/** The storefront caches catalog reads per store; any write expires them now (the next visit reads fresh data). */
 export function invalidateCatalog(storeId: string): void {
-  revalidateTag(catalogCacheTag(storeId), "max");
+  revalidateTag(catalogCacheTag(storeId), { expire: 0 });
 }

@@ -1,7 +1,7 @@
 import "server-only";
 import { currencyCodeSchema, type CurrencyCode, type StoreStatus } from "@kshop/core";
-import { createGraphqlClient, StoreBySlugQuery } from "@kshop/data";
-import { unstable_cache } from "next/cache";
+import { createGraphqlClient, StoreBySlugQuery, StoreSlugsQuery } from "@kshop/data";
+import { cacheLife, cacheTag } from "next/cache";
 import { supabaseConfig } from "@/env";
 
 export type PublicStore = {
@@ -36,9 +36,17 @@ async function fetchStoreBySlug(slug: string): Promise<PublicStore | null> {
 }
 
 /** Store lookup by slug, cached per store (invalidated with revalidateTag(storeCacheTag(slug))). */
-export function getStoreBySlug(slug: string): Promise<PublicStore | null> {
-  return unstable_cache(() => fetchStoreBySlug(slug), ["store-by-slug", slug], {
-    tags: [storeCacheTag(slug)],
-    revalidate: 300,
-  })();
+export async function getStoreBySlug(slug: string): Promise<PublicStore | null> {
+  "use cache";
+  cacheTag(storeCacheTag(slug));
+  cacheLife("hours");
+  return fetchStoreBySlug(slug);
+}
+
+/** Slugs prerendered at build time (generateStaticParams of the store routes); the rest render on first visit. */
+export async function listStoreSlugs(): Promise<string[]> {
+  "use cache";
+  cacheLife("hours");
+  const result = await graphql.query(StoreSlugsQuery, {}).toPromise();
+  return (result.data?.storesCollection?.edges ?? []).map((e) => e.node.slug);
 }

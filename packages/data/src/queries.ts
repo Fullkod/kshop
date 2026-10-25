@@ -20,6 +20,19 @@ export const StoreBySlugQuery = graphql(`
   }
 `);
 
+// Store slugs visible to anon (prerendered store routes).
+export const StoreSlugsQuery = graphql(`
+  query StoreSlugs {
+    storesCollection(filter: { status: { eq: active } }, first: 100) {
+      edges {
+        node {
+          slug
+        }
+      }
+    }
+  }
+`);
+
 // Active modules of a store for its staff (RLS: members and superadmin only).
 export const StoreEntitlementsQuery = graphql(`
   query StoreEntitlements($storeId: UUID!) {

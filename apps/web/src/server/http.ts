@@ -1,5 +1,6 @@
 import "server-only";
 import type { ApiErrorBody } from "@kshop/data";
+import { unstable_rethrow } from "next/navigation";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -32,6 +33,8 @@ export function apiHandler<TArgs extends unknown[]>(handler: (...args: TArgs) =>
     try {
       return await handler(...args);
     } catch (error) {
+      // Next's own interrupts (prerender bail-out of GET handlers, notFound…) must pass through.
+      unstable_rethrow(error);
       if (error instanceof HttpError) return errorResponse(error);
       if (error instanceof z.ZodError) {
         const { fieldErrors } = z.flattenError(error);

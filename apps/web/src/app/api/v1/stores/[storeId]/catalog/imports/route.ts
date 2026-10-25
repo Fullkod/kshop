@@ -4,8 +4,6 @@ import { requireCatalogAccess } from "@/server/catalog/access";
 import { createImportJob } from "@/server/catalog/excel";
 import { apiHandler, readJson } from "@/server/http";
 
-export const runtime = "nodejs";
-
 const bodySchema = z.object({
   /** Path in the private bucket store-imports: stores/{storeId}/imports/... (uploaded by the client). */
   fileKey: z.string().min(1).max(300),
