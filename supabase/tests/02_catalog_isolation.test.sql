@@ -220,7 +220,9 @@ select tests.check('anon: cannot read stocks', tests.throws('select * from publi
 select tests.check('anon: cannot read stock_movements', tests.throws('select * from public.stock_movements'));
 select tests.check('anon: cannot read warehouses', tests.throws('select * from public.warehouses'));
 select tests.check('anon: cannot read currency_rate_history', tests.throws('select * from public.currency_rate_history'));
-select tests.check('anon: cannot read products.search_vector', tests.throws('select search_vector from public.products'));
+-- search_vector is readable by anon since phase 2 (storefront_search_products returns products.*), only of public rows.
+select tests.eq('anon: search_vector only of published products',
+  (select count(search_vector) from public.products where id = tests.fx('a_draft'))::int, 0);
 select tests.check('anon: cannot read product_media.source_url', tests.throws('select source_url from public.product_media'));
 select tests.eq('anon: only sale currencies are visible',
   (select count(*) from public.store_currencies where store_id = tests.fx('store_a'))::int, 1);
