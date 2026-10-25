@@ -202,6 +202,7 @@ export type OrdersFilter = {
   subtotal?: BigFloatFilter | null | undefined;
   total?: BigFloatFilter | null | undefined;
   updatedAt?: DatetimeFilter | null | undefined;
+  voucherCode?: StringFilter | null | undefined;
   warehouseId?: UuidFilter | null | undefined;
 };
 
@@ -236,6 +237,7 @@ export type ProductsOrderBy = {
   maxPrice?: OrderByDirection | null | undefined;
   minPrice?: OrderByDirection | null | undefined;
   name?: OrderByDirection | null | undefined;
+  onSale?: OrderByDirection | null | undefined;
   primaryMediaUrl?: OrderByDirection | null | undefined;
   productTypeId?: OrderByDirection | null | undefined;
   publishedAt?: OrderByDirection | null | undefined;
