@@ -1,18 +1,60 @@
+import { CurrencyProvider } from "@/features/storefront/components/Currency";
+import { StoreFooter } from "@/features/storefront/components/StoreFooter";
+import { StoreHeader } from "@/features/storefront/components/StoreHeader";
+import { themeStyle } from "@/features/storefront/theme-style";
+import { getStorefrontShell, type NavLink } from "@/server/storefront/data";
 import { getStoreBySlug } from "@/server/stores";
 
-/** Public storefront. A suspended store shows a notice instead of its pages (its admin stays reachable). */
+/** Public storefront: store theme, header, footer. A suspended store shows a notice (its admin stays reachable). */
 export default async function StorefrontLayout({ children, params }: LayoutProps<"/s/[storeSlug]">) {
   const store = await getStoreBySlug((await params).storeSlug);
+  if (!store) return children;
 
-  if (store?.status === "suspended") {
+  if (store.status === "suspended") {
     return (
-      <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
-        <h1 className="text-3xl font-semibold">{store.name}</h1>
-        <p className="text-lg">Tienda temporalmente no disponible.</p>
-        <p className="text-muted-foreground">Vuelve a intentarlo más tarde.</p>
-      </main>
+      <div className="sf-root" style={themeStyle(store.theme)}>
+        <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
+          <h1 className="text-3xl font-semibold">{store.name}</h1>
+          <p className="text-lg">Tienda temporalmente no disponible.</p>
+          <p className="text-muted-foreground">Vuelve a intentarlo más tarde.</p>
+        </main>
+      </div>
     );
   }
 
-  return <>{children}</>;
+  const shell = await getStorefrontShell(store.id);
+  // Without a header menu, the top-level categories are the navigation.
+  const header: NavLink[] = shell.header.length
+    ? shell.header
+    : [
+        { label: "Productos", href: "/products", children: [] },
+        ...shell.categories
+          .filter((c) => !c.parentId)
+          .slice(0, 6)
+          .map((c) => ({
+            label: c.name,
+            href: `/category/${c.slug}`,
+            children: shell.categories
+              .filter((child) => child.parentId === c.id)
+              .map((child) => ({ label: child.name, href: `/category/${child.slug}`, children: [] })),
+          })),
+      ];
+
+  return (
+    <div className="sf-root flex min-h-dvh flex-col" style={themeStyle(store.theme)}>
+      <a
+        href="#content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:bg-background focus:p-2"
+      >
+        Saltar al contenido
+      </a>
+      <CurrencyProvider storeId={store.id} currencies={shell.currencies}>
+        <StoreHeader store={store} links={header} />
+        <main id="content" className="flex-1">
+          {children}
+        </main>
+        <StoreFooter store={store} links={shell.footer} />
+      </CurrencyProvider>
+    </div>
+  );
 }

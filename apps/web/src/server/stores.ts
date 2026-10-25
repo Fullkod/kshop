@@ -1,5 +1,11 @@
 import "server-only";
-import { currencyCodeSchema, type CurrencyCode, type StoreStatus } from "@kshop/core";
+import {
+  currencyCodeSchema,
+  resolveTheme,
+  type CurrencyCode,
+  type StoreStatus,
+  type Theme,
+} from "@kshop/core";
 import { createGraphqlClient, StoreBySlugQuery, StoreSlugsQuery } from "@kshop/data";
 import { cacheLife, cacheTag } from "next/cache";
 import { supabaseConfig } from "@/env";
@@ -12,6 +18,7 @@ export type PublicStore = {
   baseCurrency: CurrencyCode;
   whatsappPhone: string | null;
   logoUrl: string | null;
+  theme: Theme;
 };
 
 export const storeCacheTag = (slug: string) => `store:${slug}`;
@@ -32,6 +39,8 @@ async function fetchStoreBySlug(slug: string): Promise<PublicStore | null> {
     baseCurrency: currencyCodeSchema.parse(node.baseCurrency),
     whatsappPhone: node.whatsappPhone ?? null,
     logoUrl: node.logoUrl ?? null,
+    // pg_graphql returns jsonb as a JSON string.
+    theme: resolveTheme(node.theme ? JSON.parse(node.theme) : null),
   };
 }
 

@@ -370,3 +370,17 @@ export const StorefrontSitemapQuery = graphql(`
     }
   }
 `);
+
+/** Slugs of published products by id (typed links to products). */
+export const ProductSlugsQuery = graphql(`
+  query ProductSlugs($storeId: UUID!, $ids: [UUID!]!) {
+    productsCollection(filter: { storeId: { eq: $storeId }, id: { in: $ids } }, first: 100) {
+      edges {
+        node {
+          id
+          slug
+        }
+      }
+    }
+  }
+`);

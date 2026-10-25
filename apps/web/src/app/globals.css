@@ -2,3 +2,16 @@
 @import "@kshop/ui/styles.css";
 
 @source "../../../../packages/ui/src";
+
+/* Storefront: the store theme (CSS variables set by the layout) decides fonts and corner radius. */
+.sf-root {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--sf-body);
+}
+.sf-root h1,
+.sf-root h2,
+.sf-root h3,
+.sf-root .sf-heading {
+  font-family: var(--sf-heading);
+}
