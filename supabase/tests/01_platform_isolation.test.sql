@@ -101,7 +101,7 @@ select tests.eq('owner A: entitlements of A',
   (select count(*) from public.store_entitlements(tests.fx('store_a')))::int, 8);
 select tests.eq('owner A: entitlements of B are empty',
   (select count(*) from public.store_entitlements(tests.fx('store_b')))::int, 0);
-select tests.eq('owner A: limits of A', public.store_limits(tests.fx('store_a')), '{"max_staff": 2}'::jsonb);
+select tests.eq('owner A: limits of A', public.store_limits(tests.fx('store_a')), '{"max_staff": 2, "max_products": 300}'::jsonb);
 select tests.eq('owner A: limits of B are empty', public.store_limits(tests.fx('store_b')), '{}'::jsonb);
 select tests.check('owner A: cannot read private config', tests.throws('select * from private.store_private_config'));
 select tests.eq('owner A: cannot add members directly', tests.affected(format(

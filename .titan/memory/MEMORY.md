@@ -34,4 +34,5 @@
 
 - `arranque-y-fases.md` — Paso 0, convenciones y fases 0a–8 (cada fase → su PRP)
 - `prp-base.md` — Plantilla de PRP
-- `prp-fase-0b-cimientos.md` — Fase 0b: monorepo, esquema de plataforma + RLS + tests A/B, host → tienda, superadmin (PENDIENTE)
+- `prp-fase-0b-cimientos.md` — Fase 0b: monorepo, esquema de plataforma + RLS + tests A/B, host → tienda, superadmin (COMPLETADO 2026-10-24, commit 9fcd43f)
+- `prp-fase-1-catalogo.md` — Fase 1: catálogo (tipos, atributos, variantes, costo privado, monedas, categorías, colecciones, marcas, medias, almacenes/stock, Excel) (APROBADO 2026-10-25)

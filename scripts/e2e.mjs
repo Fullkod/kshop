@@ -126,7 +126,7 @@ async function api() {
   r = await call("GET", `/stores/${storeA.id}/entitlements`, ownerAToken);
   check(
     "owner A entitlements of A -> 200 with 8 modules",
-    r.status === 200 && r.body.modules.length === 8 && r.body.limits.max_staff === 2,
+    r.status === 200 && r.body.modules.length === 8 && r.body.limits.max_staff === 2 && r.body.limits.max_products === 300,
     r,
   );
   r = await call("GET", `/stores/${storeB.id}/entitlements`, ownerAToken);

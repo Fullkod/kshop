@@ -100,6 +100,7 @@ async function runTests(filter) {
     try {
       rows = await query(sql);
     } catch (error) {
+      total++;
       failed++;
       console.log(`not ok - ${file} crashed: ${error.message}`);
       continue;
