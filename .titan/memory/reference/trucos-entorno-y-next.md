@@ -36,3 +36,7 @@ Detalle de cada error en la sección «Aprendizajes» de los PRP de las fases 1 
   `next.config.ts` carga el `.env.local` de la raíz.
 - En Vercel solo van las variables que usa la app (`NEXT_PUBLIC_*`, `SUPABASE_SECRET_KEY`,
   `PLATFORM_CANONICAL_DOMAIN`); nunca `SUPABASE_ACCESS_TOKEN` ni contraseñas de E2E/demo.
+- El prerender del build consulta pg_graphql como `anon` (`statement_timeout=3s`). Con la concurrencia por
+  defecto de Next (8 páginas por worker × CPUs) la instancia de Supabase se satura y falla con 57014
+  (2026-10-25). Arreglo en `next.config.ts`: `staticGenerationMaxConcurrency: 2` + `staticGenerationRetryCount: 3`.
+  Diagnóstico: `query_logs` (postgrest_logs/postgres_logs) en la hora del build.

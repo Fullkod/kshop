@@ -84,4 +84,6 @@
 - [ ] iOS (cuando toque): cuenta de cada tienda vs app contenedor de la plataforma.
 - [ ] Logo, paleta y capitalización del logotipo (Kshop / kshop / KShop).
 - [ ] Permiso para desplegar en Vercel y medir Lighthouse de la tienda pública (Fase 2).
-- [ ] Remoto de GitHub: `origin` no devuelve ramas (2026-10-25); ¿repo recreado o sin acceso?
+- [x] Remoto de GitHub: `origin` no devolvía ramas; resuelto el 2026-10-25 (Roberto hizo push de `main`).
+- [ ] Vercel: primer deploy en `kshop-silk.vercel.app` (2026-10-25, cuenta Hobby de Claudia). La web da 404
+  porque ese host no es ni la plataforma ni una tienda; falta el dominio `kshop.fullkod.com` + `*.kshop.fullkod.com`.
