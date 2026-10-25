@@ -54,6 +54,18 @@ export function CurrencyProvider({
 
 export type PriceOverride = { currency: string; price: number };
 
+/** Formats a base-currency amount in the visitor's currency (override for that currency if any). */
+export function useFormatPrice(): (amount: number, overrides?: PriceOverride[]) => string {
+  const state = useContext(CurrencyContext);
+  return (amount, overrides) => {
+    if (!state || state.selected.isBase) return formatMoney(amount, state?.selected.currency ?? "CUP");
+    const { currency, rateToBase, rounding } = state.selected;
+    const value =
+      overrides?.find((o) => o.currency === currency)?.price ?? convertFromBase(amount, rateToBase, rounding);
+    return formatMoney(value, currency);
+  };
+}
+
 /** Price in the visitor's currency: the override for that currency if any, else converted from the base. */
 export function Price({
   amount,
@@ -64,15 +76,7 @@ export function Price({
   overrides?: PriceOverride[];
   className?: string;
 }) {
-  const state = useContext(CurrencyContext);
-  if (!state || state.selected.isBase) {
-    const base = state?.selected.currency ?? "CUP";
-    return <span className={className}>{formatMoney(amount, base)}</span>;
-  }
-  const { currency, rateToBase, rounding } = state.selected;
-  const value =
-    overrides?.find((o) => o.currency === currency)?.price ?? convertFromBase(amount, rateToBase, rounding);
-  return <span className={className}>{formatMoney(value, currency)}</span>;
+  return <span className={className}>{useFormatPrice()(amount, overrides)}</span>;
 }
 
 export function CurrencySelect() {

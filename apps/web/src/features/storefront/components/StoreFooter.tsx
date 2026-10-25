@@ -1,9 +1,7 @@
 import Link from "next/link";
 import type { PublicStore } from "@/server/stores";
 import type { NavLink } from "@/server/storefront/data";
-
-export const whatsappUrl = (phone: string, text?: string) =>
-  `https://wa.me/${phone.replace(/\D/g, "")}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
+import { whatsappUrl } from "./whatsapp";
 
 export function StoreFooter({ store, links }: { store: PublicStore; links: NavLink[] }) {
   const flat = links.flatMap((l) => [l, ...l.children]);

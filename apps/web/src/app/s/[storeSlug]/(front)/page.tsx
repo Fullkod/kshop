@@ -1,23 +1,43 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getStoreBySlug } from "@/server/stores";
+import type { Metadata } from "next";
+import { HomeSections } from "@/features/storefront/components/HomeSections";
+import { getHome, getProducts, type HomeSection } from "@/server/storefront/catalog";
+import { getStorefrontShell } from "@/server/storefront/data";
+import { requireStore, storeMetadata } from "@/server/storefront/page-helpers";
 
-// Placeholder home until the sections of phase 2.4.
+export async function generateMetadata({ params }: PageProps<"/s/[storeSlug]">): Promise<Metadata> {
+  const store = await requireStore(params);
+  return storeMetadata(store, { path: "/" });
+}
+
 export default async function StoreHomePage({ params }: PageProps<"/s/[storeSlug]">) {
-  const store = await getStoreBySlug((await params).storeSlug);
-  if (!store) notFound();
-
+  const store = await requireStore(params);
+  const sections = await getHome(store.id);
   return (
-    <section className="mx-auto flex max-w-6xl flex-col items-start gap-4 px-4 py-20 sm:px-6">
-      <h1 className="text-4xl font-semibold" data-testid="store-name">
-        Bienvenido a {store.name}
-      </h1>
-      <Link
-        href="/products"
-        className="rounded-[var(--sf-radius)] bg-primary px-5 py-3 font-medium text-primary-foreground hover:bg-primary/90"
-      >
-        Ver productos
-      </Link>
-    </section>
+    <>
+      <h1 className="sr-only">{store.name}</h1>
+      <HomeSections sections={sections.length ? sections : await defaultHome(store.id)} />
+    </>
   );
+}
+
+/** Home of a store that has not set up its sections: newest products and the categories. */
+async function defaultHome(storeId: string): Promise<HomeSection[]> {
+  const [{ products }, shell] = await Promise.all([
+    getProducts(storeId, {}, "newest", 1, 8),
+    getStorefrontShell(storeId),
+  ]);
+  const categories = shell.categories.filter((c) => !c.parentId);
+  const sections: HomeSection[] = [];
+  if (products.length) {
+    sections.push({
+      id: "default-new",
+      type: "product_carousel",
+      title: "Novedades",
+      href: "/products",
+      products,
+    });
+  }
+  if (categories.length)
+    sections.push({ id: "default-categories", type: "category_grid", title: "Categorías", categories });
+  return sections;
 }

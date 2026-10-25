@@ -1,0 +1,42 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { ListingPage, ListingSkeleton } from "@/features/storefront/components/ListingPage";
+import { getStorefrontShell } from "@/server/storefront/data";
+import { requireStore, storeMetadata } from "@/server/storefront/page-helpers";
+
+type Props = PageProps<"/s/[storeSlug]/collection/[slug]">;
+
+async function load({ params }: Pick<Props, "params">) {
+  const store = await requireStore(params);
+  const { slug } = await params;
+  const collection = (await getStorefrontShell(store.id)).collections.find((c) => c.slug === slug);
+  if (!collection) notFound();
+  return { store, collection };
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { store, collection } = await load({ params });
+  return storeMetadata(store, { title: collection.name, path: `/collection/${collection.slug}` });
+}
+
+export default function CollectionPage(props: Props) {
+  return (
+    <Suspense fallback={<ListingSkeleton />}>
+      <CollectionContent {...props} />
+    </Suspense>
+  );
+}
+
+async function CollectionContent({ params, searchParams }: Props) {
+  const { store, collection } = await load({ params });
+  return (
+    <ListingPage
+      store={store}
+      title={collection.name}
+      basePath={`/collection/${collection.slug}`}
+      fixed={{ collectionId: collection.id }}
+      searchParams={searchParams}
+    />
+  );
+}

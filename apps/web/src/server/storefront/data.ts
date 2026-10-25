@@ -31,6 +31,7 @@ export type StorefrontShell = {
   footer: NavLink[];
   categories: { id: string; parentId: string | null; name: string; slug: string; imageUrl: string | null }[];
   brands: { id: string; name: string; slug: string; logoUrl: string | null }[];
+  collections: { id: string; name: string; slug: string }[];
   currencies: StoreCurrency[];
   /** Slugs by id, to turn typed links (menus, banners) into paths. */
   slugs: Record<string, string>;
@@ -87,6 +88,7 @@ export async function getStorefrontShell(storeId: string): Promise<StorefrontShe
     footer: menu("footer"),
     categories,
     brands,
+    collections: nodes(d.collectionsCollection),
     currencies: nodes(d.storeCurrenciesCollection).map((c) => ({
       currency: currencyCodeSchema.parse(c.currency),
       isBase: c.isBase,
