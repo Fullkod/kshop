@@ -20,6 +20,11 @@ import type {
   StockInput,
   WarehouseInput,
   AdminOrderInput,
+  NotificationAudience,
+  NotificationContactInput,
+  PlatformWhatsappInput,
+  WhatsappMode,
+  WhatsappTemplateInput,
   CartVoucherInput,
   PromotionInput,
   VoucherInput,
@@ -141,7 +146,13 @@ export type CustomerAddress = {
   reference: string | null;
   isDefault: boolean;
 };
-export type RecoveryCodeResponse = { code: string; expiresAt: string; phone: string };
+export type RecoveryCodeResponse = {
+  code: string;
+  expiresAt: string;
+  phone: string;
+  /** The platform WhatsApp sent it (live mode); otherwise the staff sends it by wa.me. */
+  sentByWhatsapp: boolean;
+};
 
 /** Server-side cart (D8): prices in the cart currency, recomputed on every read. */
 export type CartLine = {
@@ -186,6 +197,17 @@ export type CartVoucher = {
   scope: VoucherScope | null;
   amount: number | null;
   error: string | null;
+};
+
+/** Superadmin: the platform WhatsApp (OpenWA); the API key is never returned. */
+export type PlatformWhatsapp = {
+  mode: WhatsappMode;
+  url: string | null;
+  session: string | null;
+  ratePerMinute: number;
+  storeRatePerMinute: number;
+  hasApiKey: boolean;
+  queue: { pending: number; failed24h: number; sent24h: number; simulated24h: number };
 };
 
 /** Discount of an order as frozen at checkout (promotion, voucher or manual). */
@@ -484,6 +506,24 @@ export function createApiClient(options: ApiClientOptions) {
         deleteVoucher: (id: string) => request<null>("DELETE", `${base}/vouchers/${id}`),
       };
     },
+    /** Admin: WhatsApp notices of the store (module whatsapp_notifications). */
+    notifications: (storeId: string) => {
+      const base = `/stores/${storeId}`;
+      return {
+        createContact: (input: NotificationContactInput) =>
+          request<{ id: string }>("POST", `${base}/notification-contacts`, input),
+        updateContact: (id: string, input: NotificationContactInput) =>
+          request<{ id: string }>("PATCH", `${base}/notification-contacts/${id}`, input),
+        deleteContact: (id: string) => request<null>("DELETE", `${base}/notification-contacts/${id}`),
+        saveTemplate: (input: WhatsappTemplateInput) =>
+          request<{ event: string; audience: NotificationAudience }>("PUT", `${base}/whatsapp-templates`, input),
+        restoreTemplate: (event: string, audience: NotificationAudience) =>
+          request<null>("DELETE", `${base}/whatsapp-templates?event=${event}&audience=${audience}`),
+        preview: (body: string, audience: NotificationAudience, orderId?: string) =>
+          request<{ text: string }>("POST", `${base}/whatsapp-templates/preview`, { body, audience, orderId }),
+        retry: (logId: string) => request<{ id: string }>("POST", `${base}/notifications/${logId}/retry`),
+      };
+    },
     /** Admin: customers of the store. */
     customers: (storeId: string) => ({
       setBlocked: (customerId: string, isBlocked: boolean) =>
@@ -505,6 +545,7 @@ export function createApiClient(options: ApiClientOptions) {
           request<{ address: CustomerAddress }>("PATCH", `${base}/addresses/${id}`, input),
         deleteAddress: (id: string) => request<null>("DELETE", `${base}/addresses/${id}`),
         orders: () => request<{ orders: CustomerOrderSummary[] }>("GET", `${base}/orders`),
+        order: (orderId: string) => request<{ publicToken: string }>("GET", `${base}/orders/${orderId}`),
       };
     },
     platform: {
@@ -513,6 +554,10 @@ export function createApiClient(options: ApiClientOptions) {
         request<CreateStoreResponse>("POST", "/platform/stores", input),
       updateStoreStatus: (storeId: string, status: StoreStatus) =>
         request<{ store: PlatformStore }>("PATCH", `/platform/stores/${storeId}`, { status }),
+      whatsapp: () => request<PlatformWhatsapp>("GET", "/platform/whatsapp"),
+      setWhatsapp: (input: PlatformWhatsappInput) => request<PlatformWhatsapp>("PUT", "/platform/whatsapp", input),
+      testWhatsapp: (phone: string, text: string) =>
+        request<{ status: string }>("POST", "/platform/whatsapp/test", { phone, text }),
     },
   };
 }

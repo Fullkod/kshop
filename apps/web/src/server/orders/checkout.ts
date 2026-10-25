@@ -239,7 +239,9 @@ export type PlaceOrderParams = {
   customerId: string | null;
   cartId: string | null;
   lines: { variant_id: string; quantity: number }[];
-  input: Pick<CheckoutInput, "idempotencyKey" | "currency" | "customer" | "shipping" | "paymentMethodId" | "note">;
+  input: Pick<CheckoutInput, "idempotencyKey" | "currency" | "customer" | "shipping" | "paymentMethodId" | "note"> & {
+    notifyCustomer?: boolean;
+  };
   createdBy?: string | null;
   /** Cart voucher (web) or the one typed by the staff (admin). */
   voucherCode?: string | null;
@@ -271,6 +273,7 @@ export async function placeOrder(storeId: string, params: PlaceOrderParams): Pro
       note: input.note ?? null,
       created_by: params.createdBy ?? null,
       voucher_code: params.voucherCode ?? null,
+      notify_customer: input.notifyCustomer ?? true,
       ...(params.manualDiscount && {
         manual_discount: {
           reward: params.manualDiscount.reward,

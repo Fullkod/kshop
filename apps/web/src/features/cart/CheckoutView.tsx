@@ -27,6 +27,7 @@ export function CheckoutView() {
   const [methodId, setMethodId] = useState("");
   const [paymentId, setPaymentId] = useState("");
   const [createAccount, setCreateAccount] = useState(false);
+  const [notifyCustomer, setNotifyCustomer] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, string[]>>({});
   const [pending, setPending] = useState(false);
@@ -100,6 +101,7 @@ export function CheckoutView() {
         paymentMethodId: paymentId || undefined,
         note: text("note"),
         createAccountPassword: !customer && createAccount ? String(data.get("password") ?? "") : undefined,
+        notifyCustomer,
       });
       if (result.account) await signIn(result.account);
       reset();
@@ -280,6 +282,16 @@ export function CheckoutView() {
             className="rounded-md border bg-background px-3 py-2 text-sm"
           />
         </section>
+
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={notifyCustomer}
+            onChange={(e) => setNotifyCustomer(e.target.checked)}
+            className="mt-1"
+          />
+          Recibir por WhatsApp los avisos de este pedido (confirmación, pago, envío)
+        </label>
 
         {!customer && (
           <section className="flex flex-col gap-3">

@@ -129,6 +129,8 @@ export const checkoutSchema = z.object({
   note: optionalText(1000),
   /** Optional account in the same step (D2): creates it with the checkout phone. */
   createAccountPassword: passwordSchema.optional(),
+  /** WhatsApp notices of the order to the customer (PRP-4 D19), on by default. */
+  notifyCustomer: z.boolean().default(true),
 });
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
 

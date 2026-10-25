@@ -217,7 +217,7 @@ export async function createRecoveryCode(
   storeId: string,
   customerId: string,
   staffUserId: string,
-): Promise<{ code: string; expiresAt: string; phone: string }> {
+): Promise<{ code: string; expiresAt: string; phone: string; sentByWhatsapp: boolean }> {
   const { data: customer, error } = await getServiceClient()
     .from("customers")
     .select("id, phone")
@@ -236,7 +236,15 @@ export async function createRecoveryCode(
     p_created_by: staffUserId,
   });
   if (createError) throw createError;
-  return { code, expiresAt: String(expiresAt), phone: customer.phone };
+  // With the platform WhatsApp live the code reaches the customer by itself (decision 24); otherwise the staff
+  // sends it by wa.me as before.
+  const { data: sent, error: notifyError } = await getServiceClient().rpc("notification_recovery_code", {
+    p_store_id: storeId,
+    p_phone: customer.phone,
+    p_code: code,
+  });
+  if (notifyError) throw notifyError;
+  return { code, expiresAt: String(expiresAt), phone: customer.phone, sentByWhatsapp: sent === true };
 }
 
 export async function resetCustomerPassword(

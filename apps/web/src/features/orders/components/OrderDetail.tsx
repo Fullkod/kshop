@@ -26,6 +26,7 @@ import { platformProtocol, publicEnv } from "@/env";
 import { useSession } from "@/lib/session";
 import { useStore } from "@/lib/store-context";
 import { useCheckoutSettings } from "../use-orders";
+import { OrderNotices } from "@/features/whatsapp-notifications/components/NotificationsPages";
 import { STATUS_VARIANT } from "./OrderList";
 
 // Payment evidence is private (staff of the store only): it is opened through a signed URL valid for 1 h.
@@ -263,6 +264,8 @@ export function OrderDetail({ orderId }: { orderId: string }) {
             }}
             signedUrl={signedEvidenceUrl}
           />
+
+          <OrderNotices orderId={order.id} />
 
           <Card>
             <h3 className="mb-3 font-semibold">Historial</h3>

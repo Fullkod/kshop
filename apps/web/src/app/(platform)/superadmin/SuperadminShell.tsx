@@ -35,6 +35,12 @@ export function SuperadminShell({ children }: { children: ReactNode }) {
             </span>
           </Link>
           <div className="flex items-center gap-4 text-sm">
+            <Link href="/superadmin" className="hover:underline">
+              Tiendas
+            </Link>
+            <Link href="/superadmin/whatsapp" className="hover:underline">
+              WhatsApp
+            </Link>
             <span className="hidden text-white/70 sm:inline">{session.user.email}</span>
             <Button
               variant="ghost"

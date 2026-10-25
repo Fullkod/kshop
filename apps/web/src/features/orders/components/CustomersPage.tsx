@@ -99,6 +99,7 @@ export function CustomersPage() {
           <span>
             Código para {code.name}: <strong className="font-mono text-lg tracking-widest">{code.code}</strong> (vale 60
             minutos y una sola vez).
+            {code.sentByWhatsapp && " Ya se lo enviamos por el WhatsApp de Kshop."}
           </span>
           <a
             href={whatsappLink(
@@ -109,7 +110,7 @@ export function CustomersPage() {
             rel="noopener noreferrer"
             className="font-medium underline"
           >
-            Enviar por WhatsApp
+            {code.sentByWhatsapp ? "Enviarlo también desde tu WhatsApp" : "Enviar por WhatsApp"}
           </a>
         </Alert>
       )}

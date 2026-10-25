@@ -114,6 +114,7 @@ export function NewOrder() {
         },
         paymentMethodId: text("payment"),
         note: text("note"),
+        notifyCustomer: true,
         voucherCode: text("voucher")?.toUpperCase(),
         manualDiscount: manualReward
           ? { reward: manualReward, value: Number(text("manualValue") ?? 0), reason: text("manualReason") ?? null }

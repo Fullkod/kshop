@@ -21,9 +21,11 @@ const dateTime = (iso: string) =>
     new Date(iso),
   );
 
-export function OrderView() {
+/** By the token in the URL (/order/{token}) or a given one (/account/orders/{id}). */
+export function OrderView({ token: givenToken }: { token?: string } = {}) {
   const store = useStore();
-  const { token } = useParams<{ token: string }>();
+  const params = useParams<{ token?: string }>();
+  const token = givenToken ?? params.token ?? "";
   const [order, setOrder] = useState<PublicOrder | null>(null);
   const [missing, setMissing] = useState(false);
   const isNew = useSyncExternalStore(noSubscribe, readIsNew, () => false);

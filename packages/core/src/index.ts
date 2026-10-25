@@ -7,4 +7,5 @@ export * from "./slug";
 export * from "./catalog";
 export * from "./orders";
 export * from "./discounts";
+export * from "./notifications";
 export * from "./storefront";

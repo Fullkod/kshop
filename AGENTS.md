@@ -118,6 +118,7 @@
 | `pnpm e2e:setup` · `pnpm e2e:api` · `pnpm e2e:cleanup` | Cuentas `@e2e.kshop.test`, checks de API y limpieza (con `pnpm dev` corriendo) |
 | `pnpm e2e:catalog` · `pnpm e2e:excel` · `pnpm e2e:excel-load` | API del catálogo (tiendas temporales), Excel e imágenes por URL (Tienda Demo) y carga de 1 000 filas (Tienda Demo, borra lo creado), con `pnpm dev` corriendo |
 | `pnpm e2e:orders` · `pnpm qa:orders` | API de clientes, carrito, checkout y pedidos (tiendas temporales) y QA en navegador del ciclo de compra en la Tienda Demo (playwright-core con el Chromium de la caché de Playwright o `QA_CHROMIUM_PATH`; capturas en `.titan/qa/fase-3/`), con `pnpm dev` corriendo |
+| `pnpm e2e:discounts` · `pnpm e2e:notifications` · `pnpm qa:discounts` · `pnpm qa:notifications` | Fase 4: API de promociones/cupones (carrera por el último uso) y de avisos WhatsApp en `dry_run` (tiendas temporales), y QA en navegador en la Tienda Demo (capturas en `.titan/qa/fase-4/`), con `pnpm dev` corriendo |
 | `pnpm demo:seed` | Crea/repara la tienda de pruebas permanente «Tienda Demo» (`demo.kshop.localhost:3000`) |
 
 Tras cada migración que toque tablas o funciones públicas: `pnpm test:rls`, `pnpm db:graphql-schema && pnpm codegen`.

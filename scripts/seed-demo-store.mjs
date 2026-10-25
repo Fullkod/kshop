@@ -182,5 +182,12 @@ const { error: voucherError } = await service.from("vouchers").upsert(
 );
 if (voucherError) throw voucherError;
 
+// WhatsApp notices (phase 4): the store's WhatsApp gets the new orders and is shown to customers.
+const { error: contactError } = await service.from("store_notification_contacts").upsert(
+  { store_id: store.id, name: "Tienda Demo", phone: "+5350000000", notify_new_order: true, show_to_customer: true },
+  { onConflict: "store_id,phone", ignoreDuplicates: true },
+);
+if (contactError) throw contactError;
+
 console.log(`Owner: ${DEMO.owner} (DEMO_OWNER_PASSWORD) · Staff: ${DEMO.staff} (DEMO_STAFF_PASSWORD)`);
 console.log("Admin: http://demo.kshop.localhost:3000/admin");
