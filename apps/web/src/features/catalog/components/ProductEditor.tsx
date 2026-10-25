@@ -4,6 +4,7 @@ import {
   catalogSlug,
   combinationKey,
   CURRENCY_CODES,
+  convertFromBase,
   convertToBase,
   formatMoney,
   marginPercent,
@@ -46,6 +47,11 @@ type VariantRow = {
   trackInventory: boolean;
   attributeValues: { attributeId: string; valueId: string }[];
   mediaId: string;
+  /** Price overrides in other selling currencies (multi_currency); "" = converted with the rate. */
+  prices: Partial<Record<CurrencyCode, { price: string; compareAtPrice: string }>>;
+  /** Stock in the non-default warehouses (multi_warehouse), and what was last saved. */
+  warehouseStock: Record<string, string>;
+  savedWarehouseStock: Record<string, string>;
 };
 
 type ProductAttrValue = { valueIds: string[]; text: string };
@@ -80,6 +86,9 @@ const emptyVariant = (currency: CurrencyCode): VariantRow => ({
   trackInventory: true,
   attributeValues: [],
   mediaId: "",
+  prices: {},
+  warehouseStock: {},
+  savedWarehouseStock: {},
 });
 
 function blankForm(structure: CatalogStructure, currency: CurrencyCode): Form {
@@ -109,7 +118,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
   const router = useRouter();
   const { graphql, supabase } = useSession();
   const { data: structure, error: structureError } = useCatalogStructure();
-  const { catalog, seesCosts, canDelete } = useCatalogApi();
+  const { catalog, seesCosts, canDelete, has } = useCatalogApi();
   const action = useApiAction();
   const [loadedForm, setForm] = useState<Form | null>(null);
   const [media, setMedia] = useState<ProductMedia[]>([]);
@@ -148,9 +157,13 @@ export function ProductEditor({ productId }: { productId?: string }) {
         }
         const variants: VariantRow[] = (p.productVariantsCollection?.edges ?? []).map(({ node: v }) => {
           const attributeValues = (v.variantAttributeValuesCollection?.edges ?? []).map((e) => e.node);
-          const stockRow = v.stocksCollection?.edges.find(
-            (e) => e.node.warehouseId === defaultWarehouseId,
-          )?.node;
+          const stocks = (v.stocksCollection?.edges ?? []).map((e) => e.node);
+          const stockRow = stocks.find((st) => st.warehouseId === defaultWarehouseId);
+          const warehouseStock = Object.fromEntries(
+            stocks
+              .filter((st) => st.warehouseId !== defaultWarehouseId)
+              .map((st) => [st.warehouseId, String(st.quantity)]),
+          );
           return {
             id: v.id,
             key: combinationKey(attributeValues),
@@ -164,6 +177,17 @@ export function ProductEditor({ productId }: { productId?: string }) {
             trackInventory: v.trackInventory,
             attributeValues,
             mediaId: v.variantMediaCollection?.edges[0]?.node.mediaId ?? "",
+            prices: Object.fromEntries(
+              (v.variantPricesCollection?.edges ?? []).map(({ node: vp }) => [
+                vp.currency,
+                {
+                  price: String(Number(vp.price)),
+                  compareAtPrice: vp.compareAtPrice != null ? String(Number(vp.compareAtPrice)) : "",
+                },
+              ]),
+            ),
+            warehouseStock,
+            savedWarehouseStock: warehouseStock,
           };
         });
         const axes: Record<string, string[]> = {};
@@ -325,6 +349,20 @@ export function ProductEditor({ productId }: { productId?: string }) {
             ? { price: num(v.cost)!, currency: v.costCurrency }
             : null
           : undefined,
+        // Without multi_currency the overrides are left untouched (the API would reject them).
+        prices: has("multi_currency")
+          ? Object.entries(v.prices).flatMap(([currency, p]) =>
+              p && num(p.price) != null
+                ? [
+                    {
+                      currency: currency as CurrencyCode,
+                      price: num(p.price)!,
+                      compareAtPrice: num(p.compareAtPrice) ?? null,
+                    },
+                  ]
+                : [],
+            )
+          : undefined,
         mediaIds: v.mediaId ? [v.mediaId] : [],
         attributeValues: v.attributeValues,
       })),
@@ -334,10 +372,22 @@ export function ProductEditor({ productId }: { productId?: string }) {
   async function save() {
     setSaved(false);
     const input = buildInput();
-    const result = await action.run(() =>
-      productId ? catalog.updateProduct(productId, input) : catalog.createProduct(input),
-    );
+    const result = await action.run(async () => {
+      const saved = productId
+        ? await catalog.updateProduct(productId, input)
+        : await catalog.createProduct(input);
+      // Stock in the other warehouses (multi_warehouse) goes through PUT stock, only what changed.
+      for (const v of form!.variants) {
+        if (!v.id || !v.trackInventory) continue;
+        for (const [warehouseId, value] of Object.entries(v.warehouseStock)) {
+          if (value === (v.savedWarehouseStock[warehouseId] ?? "0") || num(value) == null) continue;
+          await catalog.setStock({ variantId: v.id, warehouseId, quantity: num(value)! });
+        }
+      }
+      return saved;
+    });
     if (!result) return;
+    set({ variants: form!.variants.map((v) => ({ ...v, savedWarehouseStock: { ...v.warehouseStock } })) });
     if (!productId) {
       router.replace(`/admin/catalog/products/${result.id}`);
       return;
@@ -377,6 +427,17 @@ export function ProductEditor({ productId }: { productId?: string }) {
     if ((await action.run(() => catalog.deleteProduct(productId))) !== undefined)
       router.replace("/admin/catalog");
   }
+
+  const defaultWarehouse = structure.warehouses.find((w) => w.isDefault);
+  const extraWarehouses = structure.warehouses.filter((w) => !w.isDefault);
+  const sellCurrencies = structure.currencies.filter((c) => !c.isBase && c.sells);
+  const setPrice = (index: number, currency: CurrencyCode, price: string) =>
+    setVariant(index, {
+      prices: {
+        ...form.variants[index]!.prices,
+        [currency]: { compareAtPrice: "", ...form.variants[index]!.prices[currency], price },
+      },
+    });
 
   const rate = (currency: CurrencyCode) =>
     currency === baseCurrency ? 1 : structure.currencies.find((c) => c.currency === currency)?.rateToBase;
@@ -589,7 +650,10 @@ export function ProductEditor({ productId }: { productId?: string }) {
                   <th className="py-2 pr-2 font-medium">Precio ({baseCurrency})</th>
                   <th className="py-2 pr-2 font-medium">Antes</th>
                   {seesCosts && <th className="py-2 pr-2 font-medium">Costo</th>}
-                  <th className="py-2 pr-2 font-medium">Stock</th>
+                  <th className="py-2 pr-2 font-medium">
+                    Stock
+                    {extraWarehouses.length > 0 && has("multi_warehouse") && ` (${defaultWarehouse?.name})`}
+                  </th>
                   {media.length > 0 && <th className="py-2 pr-2 font-medium">Imagen</th>}
                 </tr>
               </thead>
@@ -749,6 +813,147 @@ export function ProductEditor({ productId }: { productId?: string }) {
           </div>
         )}
       </Card>
+
+      {form.variants.length > 0 && (
+        <Card className="flex flex-col gap-3" data-testid="variant-currency-prices">
+          <h3 className="flex items-center gap-2 font-semibold">
+            Precios en otras monedas {!has("multi_currency") && <Badge variant="gold">Pro</Badge>}
+          </h3>
+          {!has("multi_currency") ? (
+            <p className="text-sm text-muted-foreground">
+              Con el plan Pro puedes vender en USD o EUR y fijar un precio propio en cada moneda.
+            </p>
+          ) : sellCurrencies.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Activa «Vender en …» en la pestaña Monedas para fijar precios en otras monedas.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <p className="mb-2 text-sm text-muted-foreground">
+                Déjalo vacío para usar el precio en {baseCurrency} convertido con la tasa.
+              </p>
+              <table className="w-full text-left text-sm">
+                <thead className="text-muted-foreground">
+                  <tr>
+                    {type?.hasVariants && <th className="py-2 pr-2 font-medium">Variante</th>}
+                    {sellCurrencies.map((c) => (
+                      <th key={c.currency} className="py-2 pr-2 font-medium">
+                        Precio ({c.currency})
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {form.variants.map((v, i) => (
+                    <tr key={v.id ?? v.key} className="border-t">
+                      {type?.hasVariants && <td className="py-2 pr-2 whitespace-nowrap">{v.name}</td>}
+                      {sellCurrencies.map((c) => (
+                        <td key={c.currency} className="py-2 pr-2">
+                          <Input
+                            aria-label={`Precio en ${c.currency} ${v.name}`}
+                            inputMode="decimal"
+                            className="w-32"
+                            value={v.prices[c.currency]?.price ?? ""}
+                            placeholder={
+                              num(v.price) != null
+                                ? String(convertFromBase(num(v.price)!, c.rateToBase, c.rounding))
+                                : ""
+                            }
+                            onChange={(e) => setPrice(i, c.currency, e.target.value)}
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {form.variants.length > 0 && (
+        <Card className="flex flex-col gap-3" data-testid="warehouse-stock">
+          <h3 className="flex items-center gap-2 font-semibold">
+            Stock por almacén {!has("multi_warehouse") && <Badge variant="gold">Pro</Badge>}
+          </h3>
+          {!has("multi_warehouse") ? (
+            <p className="text-sm text-muted-foreground">
+              Con el plan Pro puedes tener varios almacenes y llevar el stock de cada uno.
+            </p>
+          ) : extraWarehouses.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Solo tienes el almacén «{defaultWarehouse?.name}». Crea más en la pestaña Almacenes.
+            </p>
+          ) : !productId ? (
+            <p className="text-sm text-muted-foreground">
+              Guarda el producto para repartir su stock entre almacenes. El stock de la tabla de arriba va a «
+              {defaultWarehouse?.name}».
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="text-muted-foreground">
+                  <tr>
+                    {type?.hasVariants && <th className="py-2 pr-2 font-medium">Variante</th>}
+                    <th className="py-2 pr-2 font-medium">{defaultWarehouse?.name}</th>
+                    {extraWarehouses.map((w) => (
+                      <th key={w.id} className="py-2 pr-2 font-medium">
+                        {w.name}
+                        {!w.isActive && " (inactivo)"}
+                      </th>
+                    ))}
+                    <th className="py-2 pr-2 font-medium">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {form.variants.map((v, i) => (
+                    <tr key={v.id ?? v.key} className="border-t">
+                      {type?.hasVariants && <td className="py-2 pr-2 whitespace-nowrap">{v.name}</td>}
+                      {!v.trackInventory ? (
+                        <td className="py-2 pr-2" colSpan={extraWarehouses.length + 2}>
+                          <Badge variant="muted">Sin control</Badge>
+                        </td>
+                      ) : (
+                        <>
+                          <td className="py-2 pr-2">{num(v.stock) ?? 0}</td>
+                          {extraWarehouses.map((w) => (
+                            <td key={w.id} className="py-2 pr-2">
+                              <Input
+                                aria-label={`Stock ${w.name} ${v.name}`}
+                                inputMode="numeric"
+                                className="w-20"
+                                value={v.warehouseStock[w.id] ?? "0"}
+                                disabled={!v.id}
+                                onChange={(e) =>
+                                  setVariant(i, {
+                                    warehouseStock: { ...v.warehouseStock, [w.id]: e.target.value },
+                                  })
+                                }
+                              />
+                            </td>
+                          ))}
+                          <td className="py-2 pr-2 font-medium">
+                            {(num(v.stock) ?? 0) +
+                              extraWarehouses.reduce(
+                                (n, w) => n + (num(v.warehouseStock[w.id] ?? "0") ?? 0),
+                                0,
+                              )}
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="mt-2 text-xs text-muted-foreground">
+                El stock de «{defaultWarehouse?.name}» se edita en la tabla de variantes. Las variantes nuevas
+                se pueden repartir después de guardar.
+              </p>
+            </div>
+          )}
+        </Card>
+      )}
 
       <Card className="flex flex-col gap-3">
         <h3 className="font-semibold">Imágenes</h3>
