@@ -57,14 +57,26 @@ Criterios de "listo" (verificar en ambos agentes):
 - Validación con Zod en toda entrada; operaciones de stock/órdenes en transacción con `for update`.
 - Sin `any` nuevo; secretos nunca en código ni en memoria.
 
-## Stack (propuesto, confirmar en Fase 0)
+## Stack (propuesto aquí; el confirmado en la Fase 0b está en `AGENTS.md`: SQL a mano, sin Drizzle; Next 16 con Cache Components desde la Fase 2)
 Monorepo (pnpm + Turborepo): `apps/web` (Next.js App Router, última estable), `packages/{ui,core,data}`,
 `supabase/` (esquema, migraciones, RLS, funciones, tests). Supabase (Postgres + Auth + Storage +
 pg_graphql), urql + graphql-codegen para lecturas, Drizzle o SQL para esquema y escrituras transaccionales,
 Tailwind + shadcn/ui, Vercel. Apps Capacitor (`apps/store-app`, `apps/admin-app`) se añaden en su fase.
 Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desarrollo separado de producción.
 
-## Fases (borrador — cada una se detalla en su PRP)
+## Estado (actualizado 2026-10-25)
+| Fase | Estado | PRP / memoria | Último commit |
+|------|--------|---------------|---------------|
+| 0a. Fábrica | Hecha | `project/2026-10-24-dual-agent-tooling.md` | — |
+| 0b. Cimientos | Hecha | `prp-fase-0b-cimientos.md` | `9fcd43f` |
+| 1. Catálogo | Hecha (incluye imágenes por URL en Excel y prueba de 1 000 filas) | `prp-fase-1-catalogo.md` | `0684e23` |
+| 2. Tienda pública | Hecha; **pendiente** medir Lighthouse en Vercel (requiere permiso de deploy) | `prp-fase-2-tienda-publica.md` | `f1b50e0` |
+| 3. Clientes y compra | Siguiente: falta su PRP | — | — |
+
+Todo está en commits locales sin push: el remoto `origin` (`Fullkod/kshop`) no devuelve ramas desde el
+2026-10-25; aclararlo con Roberto antes de subir nada.
+
+## Fases (cada una se detalla en su PRP)
 | Fase | Alcance | Verificación |
 |------|---------|--------------|
 | 0a. Fábrica | Titan Factory Claude Code + Codex, memoria `.titan/` sembrada (ver "Paso 0") | `tf-primer` OK en Claude Code y en Codex |

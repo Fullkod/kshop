@@ -51,7 +51,18 @@
     multimoneda en Pro, propuesta del módulo Finanzas. **Plan Base: 2 usuarios de staff.** El límite de
     productos se decide más adelante.
 
-## Recomendaciones de Claude (pendientes de confirmar)
+## Tomadas (2026-10-25, Roberto)
+21. **Fase 1 (catálogo)**: PRP aprobado tal cual (D1–D13). Límite de productos del plan Base = **300**
+    (provisional); Pro sin límite. Tienda de pruebas permanente «Tienda Demo» (ver `tienda-demo.md`).
+    «Cierra la fase 1»: se hicieron también las imágenes por URL del Excel y la prueba de 1 000 filas.
+22. **Fase 2 (tienda pública)**: PRP aprobado con estos cambios:
+    - **Código y URLs en inglés**; solo el texto que ve el usuario va en español
+      (`/products`, `/category/x`, `/product/x`, `/search`, `/page/x`, `?page=2&sort=price-asc`).
+    - **Cache Components** de Next 16 activado (también afecta al admin).
+    - Botón **«Pedir por WhatsApp»** en la ficha ya, aunque todavía no se puede probar de punta a punta.
+    - Rendimiento: **«mientras más, mejor»** (los umbrales del PRP son el mínimo).
+
+## Recomendaciones de Claude (confirmadas en la Fase 0b, ver `AGENTS.md`)
 - Next (App Router) + Supabase + Tailwind/shadcn, deploy en Vercel (wildcard de subdominios).
   Reutilizar componentes y flujos de klauShop.
 - Monorepo con paquetes compartidos (UI, core, data) para web y apps Capacitor.
@@ -72,3 +83,5 @@
 - [ ] Apps por tienda en Google Play: ¿todas bajo la cuenta de la plataforma o cada tienda con la suya? (ver riesgos en 07)
 - [ ] iOS (cuando toque): cuenta de cada tienda vs app contenedor de la plataforma.
 - [ ] Logo, paleta y capitalización del logotipo (Kshop / kshop / KShop).
+- [ ] Permiso para desplegar en Vercel y medir Lighthouse de la tienda pública (Fase 2).
+- [ ] Remoto de GitHub: `origin` no devuelve ramas (2026-10-25); ¿repo recreado o sin acceso?

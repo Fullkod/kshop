@@ -1,0 +1,29 @@
+# Trucos de entorno, Next 16 y pg_graphql (válidos para cualquier fase)
+
+Detalle de cada error en la sección «Aprendizajes» de los PRP de las fases 1 y 2.
+
+## Next 16 con Cache Components (activo desde la Fase 2)
+- Lecturas públicas: funciones con `"use cache"` + `cacheTag` por tienda (`store:{id}:catalog`,
+  `store:{id}:content`, `store:{slug}`) + `cacheLife`. Escrituras: `revalidateTag(tag, { expire: 0 })`.
+- Prohibido `export const runtime` en route handlers. `apiHandler` hace `unstable_rethrow(error)`.
+- Rutas con params: o `generateStaticParams` (nunca vacío) + `await params` fuera de `<Suspense>` (ISR), o todo
+  dentro de `<Suspense>`. `searchParams`, `cookies` y `headers` siempre dentro de `<Suspense>`.
+- Admin y superadmin son apps de cliente: su layout envuelve todo en `<Suspense>`.
+- En la tienda, leer `--fg/--bg/--ok…` directamente: los `--color-*` de `@theme inline` se resuelven en `:root`
+  (paleta del admin, cambia con el modo oscuro del sistema).
+
+## pg_graphql
+- `jsonb` llega como string JSON: `JSON.parse`. Enums en filtros sin comillas (`status: { eq: active }`).
+- No expone funciones con argumentos enum ni las que devuelven `table(...)`: usar `text` y `setof <tabla>`.
+- Admite `first` + `offset` + `totalCount` (paginación numerada) y `orderBy` sobre funciones `setof`.
+- Prettier reformatea el GraphQL embebido: correr `pnpm codegen` después de formatear.
+
+## Entorno de Roberto (Windows)
+- Node no resuelve `*.localhost` (ENOTFOUND): scripts → `http://localhost:3000`; el navegador sí.
+- El puerto 3100 es de otra app de Roberto: builds de prueba en 3200, compiladas con
+  `NEXT_PUBLIC_PLATFORM_DOMAIN=kshop.localhost:3200`.
+- `TaskStop` sobre `npx next start` deja vivo el proceso hijo: pararlo por puerto comprobando su línea de comandos.
+- Si el navegador del MCP de Playwright está ocupado por otra sesión: `playwright-core` (misma versión que el
+  Chromium de `%LOCALAPPDATA%\ms-playwright`) instalado en el scratchpad. Lighthouse igual, con `CHROME_PATH`.
+- En el Bash del agente los heredocs largos con comillas a veces fallan («unexpected EOF»): escribir el script
+  en un archivo del scratchpad y ejecutarlo.

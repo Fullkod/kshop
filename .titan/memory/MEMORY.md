@@ -10,7 +10,7 @@
 ## project/ — Proyectos y decisiones activas
 
 - [identidad-kshop.md](project/identidad-kshop.md) — Nombre, dominio kshop.fullkod.com, qué es, índice de los documentos de diseño
-- [decisiones.md](project/decisiones.md) — 2026-10-24: decisiones tomadas (0–20), recomendaciones pendientes y preguntas abiertas. LEER ANTES DE CADA FASE
+- [decisiones.md](project/decisiones.md) — Decisiones tomadas (0–22, hasta 2026-10-25), recomendaciones confirmadas y preguntas abiertas. LEER ANTES DE CADA FASE
 - [2026-10-24-estudio-klaushop-vs-dcabellos.md](project/2026-10-24-estudio-klaushop-vs-dcabellos.md) — Qué se adopta de cada uno y qué no
 - [modelo-de-datos.md](project/modelo-de-datos.md) — Esquema v0: plataforma, clientes, catálogo Saleor, monedas, carrito, órdenes, descuentos, temas, entregas, WhatsApp, Excel
 - [tenancy-dominios-auth.md](project/tenancy-dominios-auth.md) — Tienda por host, wildcard Vercel, email sintético por tienda, alta de tienda, storage
@@ -31,11 +31,12 @@
 
 ## reference/ — Dónde encontrar cosas
 
+- [trucos-entorno-y-next.md](reference/trucos-entorno-y-next.md) — Cache Components, pg_graphql y trucos del entorno de Roberto (puertos, *.localhost, Playwright, Lighthouse)
 - [fuentes.md](reference/fuentes.md) — Rutas de materiales, klauShop, dcabellos, apululu y Saleor, y para qué sirve cada uno
 
 ## Planes (`.titan/plans/`)
 
-- `arranque-y-fases.md` — Paso 0, convenciones y fases 0a–8 (cada fase → su PRP)
+- `arranque-y-fases.md` — Paso 0, convenciones, fases 0a–8 y tabla de estado (0a, 0b, 1 y 2 hechas; siguiente: Fase 3)
 - `prp-base.md` — Plantilla de PRP
 - `prp-fase-0b-cimientos.md` — Fase 0b: monorepo, esquema de plataforma + RLS + tests A/B, host → tienda, superadmin (COMPLETADO 2026-10-24, commit 9fcd43f)
 - `prp-fase-1-catalogo.md` — Fase 1: catálogo (tipos, atributos, variantes, costo privado, monedas, categorías, colecciones, marcas, medias, almacenes/stock, Excel) (COMPLETADO 2026-10-25, commits hasta d6f1507)
