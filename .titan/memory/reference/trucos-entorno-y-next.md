@@ -27,3 +27,12 @@ Detalle de cada error en la sección «Aprendizajes» de los PRP de las fases 1 
   Chromium de `%LOCALAPPDATA%\ms-playwright`) instalado en el scratchpad. Lighthouse igual, con `CHROME_PATH`.
 - En el Bash del agente los heredocs largos con comillas a veces fallan («unexpected EOF»): escribir el script
   en un archivo del scratchpad y ejecutarlo.
+
+## Vercel + Turborepo
+- Turbo corre en *strict env mode*: una variable del proyecto de Vercel que no esté en `turbo.json`
+  (`globalEnv` o `tasks.build.env`) **no llega al build**. `next build` importa los route handlers al
+  "Collecting page data" y `src/server/env.ts` valida `SUPABASE_SECRET_KEY` al importarse → el build falla
+  (2026-10-25). Toda variable nueva que lea la app va a `turbo.json`. En local no se nota porque
+  `next.config.ts` carga el `.env.local` de la raíz.
+- En Vercel solo van las variables que usa la app (`NEXT_PUBLIC_*`, `SUPABASE_SECRET_KEY`,
+  `PLATFORM_CANONICAL_DOMAIN`); nunca `SUPABASE_ACCESS_TOKEN` ni contraseñas de E2E/demo.
