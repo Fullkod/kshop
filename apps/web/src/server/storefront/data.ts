@@ -1,6 +1,12 @@
 import "server-only";
 import { currencyCodeSchema, linkHref, type CurrencyCode, type LinkType } from "@kshop/core";
-import { createGraphqlClient, ProductSlugsQuery, StorefrontShellQuery } from "@kshop/data";
+import {
+  createGraphqlClient,
+  type ResultOf,
+  ProductSlugsQuery,
+  StorefrontShellQuery,
+  StorefrontSitemapQuery,
+} from "@kshop/data";
 import { cacheLife, cacheTag } from "next/cache";
 import { supabaseConfig } from "@/env";
 import { catalogCacheTag } from "../catalog/access";
@@ -32,6 +38,7 @@ export type StorefrontShell = {
   categories: { id: string; parentId: string | null; name: string; slug: string; imageUrl: string | null }[];
   brands: { id: string; name: string; slug: string; logoUrl: string | null }[];
   collections: { id: string; name: string; slug: string }[];
+  pages: { id: string; slug: string; title: string }[];
   currencies: StoreCurrency[];
   /** Slugs by id, to turn typed links (menus, banners) into paths. */
   slugs: Record<string, string>;
@@ -89,6 +96,7 @@ export async function getStorefrontShell(storeId: string): Promise<StorefrontShe
     categories,
     brands,
     collections: nodes(d.collectionsCollection),
+    pages: nodes(d.pagesCollection),
     currencies: nodes(d.storeCurrenciesCollection).map((c) => ({
       currency: currencyCodeSchema.parse(c.currency),
       isBase: c.isBase,
@@ -104,4 +112,30 @@ export async function getProductSlugs(storeId: string, ids: string[]): Promise<R
   if (ids.length === 0) return {};
   const result = await anonGraphql.query(ProductSlugsQuery, { storeId, ids: [...new Set(ids)] }).toPromise();
   return Object.fromEntries(nodes(result.data?.productsCollection).map((p) => [p.id, p.slug]));
+}
+
+/** Paths of every public page of a store (sitemap), with the last change of products. */
+export async function getSitemapPaths(storeId: string): Promise<{ path: string; lastModified?: string }[]> {
+  "use cache";
+  storefrontCache(storeId);
+  const shell = await getStorefrontShell(storeId);
+  const paths: { path: string; lastModified?: string }[] = [
+    { path: "/" },
+    { path: "/products" },
+    ...shell.categories.map((c) => ({ path: `/category/${c.slug}` })),
+    ...shell.collections.map((c) => ({ path: `/collection/${c.slug}` })),
+    ...shell.brands.map((b) => ({ path: `/brand/${b.slug}` })),
+    ...shell.pages.map((p) => ({ path: `/page/${p.slug}` })),
+  ];
+  // Products, 100 per request (max_rows of pg_graphql).
+  let after: string | null = null;
+  for (let i = 0; i < 200; i++) {
+    const result = await anonGraphql.query(StorefrontSitemapQuery, { storeId, after }).toPromise();
+    const connection: ResultOf<typeof StorefrontSitemapQuery>["productsCollection"] | undefined =
+      result.data?.productsCollection;
+    for (const p of nodes(connection)) paths.push({ path: `/product/${p.slug}`, lastModified: p.updatedAt });
+    if (!connection?.pageInfo.hasNextPage) break;
+    after = connection.pageInfo.endCursor ?? null;
+  }
+  return paths;
 }

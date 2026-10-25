@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
-import { ListingPage, ListingSkeleton } from "@/features/storefront/components/ListingPage";
+import { ListingPage } from "@/features/storefront/components/ListingPage";
 import { getStorefrontShell } from "@/server/storefront/data";
-import { requireStore, storeMetadata } from "@/server/storefront/page-helpers";
+import { requireStore, staticSlugs, storeMetadata } from "@/server/storefront/page-helpers";
 
 type Props = PageProps<"/s/[storeSlug]/brand/[slug]">;
+
+// ISR: known slugs are prerendered, the rest are cached after their first visit.
+export async function generateStaticParams({ params }: { params: { storeSlug: string } }) {
+  return staticSlugs(params.storeSlug, (id) =>
+    getStorefrontShell(id).then((s) => s.brands.map((b) => b.slug)),
+  );
+}
 
 async function load({ params }: Pick<Props, "params">) {
   const store = await requireStore(params);
@@ -20,15 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return storeMetadata(store, { title: brand.name, path: `/brand/${brand.slug}` });
 }
 
-export default function BrandPage(props: Props) {
-  return (
-    <Suspense fallback={<ListingSkeleton />}>
-      <BrandContent {...props} />
-    </Suspense>
-  );
-}
-
-async function BrandContent({ params, searchParams }: Props) {
+export default async function BrandPage({ params, searchParams }: Props) {
   const { store, brand } = await load({ params });
   return (
     <ListingPage

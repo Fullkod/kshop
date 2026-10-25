@@ -1,14 +1,20 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 import { Breadcrumbs, type Crumb } from "@/features/storefront/components/ListingPage";
 import { ProductGrid } from "@/features/storefront/components/ProductCard";
 import { ProductView } from "@/features/storefront/components/ProductView";
 import { getProduct, getProducts } from "@/server/storefront/catalog";
 import { getStorefrontShell } from "@/server/storefront/data";
-import { requireStore, storeMetadata } from "@/server/storefront/page-helpers";
+import { requireStore, staticSlugs, storeMetadata } from "@/server/storefront/page-helpers";
 
 type Props = PageProps<"/s/[storeSlug]/product/[slug]">;
+
+// ISR: known slugs are prerendered, the rest are cached after their first visit.
+export async function generateStaticParams({ params }: { params: { storeSlug: string } }) {
+  return staticSlugs(params.storeSlug, (id) =>
+    getProducts(id, {}, "newest", 1, 20).then((r) => r.products.map((p) => p.slug)),
+  );
+}
 
 async function load({ params }: Pick<Props, "params">) {
   const store = await requireStore(params);
@@ -21,21 +27,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { store, product } = await load({ params });
   return storeMetadata(store, {
     title: product.seoTitle ?? product.name,
-    description: product.seoDescription ?? (product.description.slice(0, 160) || null),
+    description: product.seoDescription || product.description.slice(0, 160),
     path: `/product/${product.slug}`,
     image: product.media[0]?.url ?? null,
   });
 }
 
-export default function ProductPage(props: Props) {
-  return (
-    <Suspense fallback={<ProductSkeleton />}>
-      <ProductContent {...props} />
-    </Suspense>
-  );
-}
-
-async function ProductContent({ params }: Props) {
+export default async function ProductPage({ params }: Props) {
   const { store, product } = await load({ params });
   const shell = await getStorefrontShell(store.id);
 
@@ -112,23 +110,6 @@ async function ProductContent({ params }: Props) {
           <ProductGrid products={related} />
         </section>
       )}
-    </div>
-  );
-}
-
-function ProductSkeleton() {
-  return (
-    <div
-      className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 md:grid-cols-2"
-      aria-busy="true"
-      aria-label="Cargando"
-    >
-      <div className="aspect-[4/5] animate-pulse rounded-[var(--sf-radius)] bg-surface" />
-      <div className="flex flex-col gap-4">
-        <div className="h-8 w-2/3 animate-pulse rounded bg-surface" />
-        <div className="h-6 w-1/4 animate-pulse rounded bg-surface" />
-        <div className="h-12 w-full animate-pulse rounded bg-surface" />
-      </div>
     </div>
   );
 }

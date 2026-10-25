@@ -28,6 +28,10 @@ export function themeStyle(theme: Theme): CSSProperties {
     "--accent": c.accent,
     "--accent-fg": c.accentFg,
     "--accent-soft": `color-mix(in srgb, ${c.accent} 12%, ${c.background})`,
+    // Status colors too: the admin palette on :root switches with the OS dark mode, the store theme does not.
+    ...(theme.preset === "dark"
+      ? { "--ok": "#6fd39c", "--ok-bg": "#17321f", "--bad": "#ff8f95", "--bad-bg": "#3a1a1e" }
+      : { "--ok": "#1f7a4d", "--ok-bg": "#e3f4ea", "--bad": "#a3262e", "--bad-bg": "#fbe6e7" }),
     "--sf-heading": fontStack(theme.headingFont),
     "--sf-body": fontStack(theme.bodyFont),
     "--sf-radius": THEME_RADII[theme.radius],

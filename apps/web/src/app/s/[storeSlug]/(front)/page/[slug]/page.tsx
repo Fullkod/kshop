@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 import { Breadcrumbs } from "@/features/storefront/components/ListingPage";
 import { Markdown } from "@/features/storefront/components/Markdown";
 import { getPage } from "@/server/storefront/catalog";
-import { requireStore, storeMetadata } from "@/server/storefront/page-helpers";
+import { getStorefrontShell } from "@/server/storefront/data";
+import { requireStore, staticSlugs, storeMetadata } from "@/server/storefront/page-helpers";
 
 type Props = PageProps<"/s/[storeSlug]/page/[slug]">;
+
+// ISR: known slugs are prerendered, the rest are cached after their first visit.
+export async function generateStaticParams({ params }: { params: { storeSlug: string } }) {
+  return staticSlugs(params.storeSlug, (id) =>
+    getStorefrontShell(id).then((s) => s.pages.map((p) => p.slug)),
+  );
+}
 
 async function load({ params }: Pick<Props, "params">) {
   const store = await requireStore(params);
@@ -25,15 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default function StaticPage(props: Props) {
-  return (
-    <Suspense>
-      <PageContent {...props} />
-    </Suspense>
-  );
-}
-
-async function PageContent({ params }: Props) {
+export default async function StaticPage({ params }: Props) {
   const { page } = await load({ params });
   return (
     <article className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">

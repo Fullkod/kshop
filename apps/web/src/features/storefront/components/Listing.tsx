@@ -99,6 +99,7 @@ export async function Listing({ store, basePath, fixed = {}, searchParams, hideB
           </ul>
         )}
 
+        <h2 className="sr-only">Productos</h2>
         {products.length ? (
           <ProductGrid products={products} priorityCount={4} />
         ) : (

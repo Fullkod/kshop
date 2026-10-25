@@ -4,9 +4,10 @@
 @source "../../../../packages/ui/src";
 
 /* Storefront: the store theme (CSS variables set by the layout) decides fonts and corner radius. */
+/* --bg/--fg are read directly: the --color-* tokens resolve on :root (admin palette, dark mode included). */
 .sf-root {
-  background: var(--color-background);
-  color: var(--color-foreground);
+  background: var(--bg);
+  color: var(--fg);
   font-family: var(--sf-body);
 }
 .sf-root h1,

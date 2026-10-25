@@ -41,5 +41,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   // Skip Next internals and public files (anything with an extension: icons, logos, manifest).
-  matcher: ["/((?!_next/static|_next/image|.*\\.[a-zA-Z0-9]+$).*)"],
+  // The per-store sitemap and robots have an extension but are store pages too.
+  matcher: ["/((?!_next/static|_next/image|.*\\.[a-zA-Z0-9]+$).*)", "/sitemap.xml", "/robots.txt"],
 };
