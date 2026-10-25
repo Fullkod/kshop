@@ -20,6 +20,11 @@ import type {
   StockInput,
   WarehouseInput,
   CurrencyCode,
+  CustomerAddressInput,
+  CustomerLoginInput,
+  CustomerProfileInput,
+  CustomerRegisterInput,
+  CustomerResetInput,
   ModuleCode,
   PlanCode,
   StoreRole,
@@ -99,6 +104,29 @@ export type ImportJobInput = {
 /** Storefront content (/api/v1/stores/{storeId}/content/{resource}). */
 export type ContentResourceInputs = { banners: BannerInput; sections: HomeSectionInput; pages: PageInput };
 export type ContentResourceName = keyof ContentResourceInputs;
+
+/** Customer accounts (one per store, phone + password; D1–D6). */
+export type CustomerSession = { accessToken: string; refreshToken: string; expiresAt: number | null };
+export type CustomerProfile = {
+  id: string;
+  firstName: string;
+  lastName: string | null;
+  phone: string;
+  email: string | null;
+  acceptsMarketing: boolean;
+};
+export type CustomerAuthResponse = { session: CustomerSession; customer: CustomerProfile };
+export type CustomerAddress = {
+  id: string;
+  label: string | null;
+  recipient: string;
+  phone: string | null;
+  shippingZoneId: string | null;
+  address: string;
+  reference: string | null;
+  isDefault: boolean;
+};
+export type RecoveryCodeResponse = { code: string; expiresAt: string; phone: string };
 
 /** A file returned by the API (Excel template/export). */
 export type DownloadedFile = { blob: Blob; fileName: string };
@@ -214,6 +242,30 @@ export function createApiClient(options: ApiClientOptions) {
         saveTheme: (input: ThemeInput) => request<{ theme: ThemeInput }>("PUT", `${base}/theme`, input),
         saveMenu: (location: MenuLocation, input: MenuInput) =>
           request<null>("PUT", `${base}/menus/${location}`, input),
+      };
+    },
+    /** Storefront customer: sign-up, sign-in and password reset (no token needed). */
+    customerAuth: (storeId: string) => {
+      const base = `/stores/${storeId}/customer-auth`;
+      return {
+        register: (input: CustomerRegisterInput) => request<CustomerAuthResponse>("POST", `${base}/register`, input),
+        login: (input: CustomerLoginInput) => request<CustomerAuthResponse>("POST", `${base}/login`, input),
+        reset: (input: CustomerResetInput) => request<CustomerAuthResponse>("POST", `${base}/reset`, input),
+      };
+    },
+    /** Signed-in customer of the store (customer token). */
+    customer: (storeId: string) => {
+      const base = `/stores/${storeId}/customer`;
+      return {
+        me: () => request<{ customer: CustomerProfile }>("GET", base),
+        updateProfile: (input: CustomerProfileInput) =>
+          request<{ customer: CustomerProfile }>("PATCH", base, input),
+        addresses: () => request<{ addresses: CustomerAddress[] }>("GET", `${base}/addresses`),
+        createAddress: (input: CustomerAddressInput) =>
+          request<{ address: CustomerAddress }>("POST", `${base}/addresses`, input),
+        updateAddress: (id: string, input: CustomerAddressInput) =>
+          request<{ address: CustomerAddress }>("PATCH", `${base}/addresses/${id}`, input),
+        deleteAddress: (id: string) => request<null>("DELETE", `${base}/addresses/${id}`),
       };
     },
     platform: {

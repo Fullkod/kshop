@@ -1,0 +1,14 @@
+import type { Metadata } from "next";
+import { CustomerLoginForm } from "@/features/customer-account/AccountForms";
+
+export const metadata: Metadata = { title: "Entrar", robots: { index: false } };
+
+// Customer pages: static shell, the session lives in the browser (D6).
+export default function Page() {
+  return (
+    <div className="mx-auto w-full max-w-sm px-4 py-8 sm:py-12">
+      <h1 className="sf-heading mb-6 text-2xl font-semibold">Entrar a mi cuenta</h1>
+      <CustomerLoginForm />
+    </div>
+  );
+}

@@ -8,6 +8,8 @@ export type ApiUser = {
   email: string | null;
   isSuperadmin: boolean;
   accessToken: string;
+  /** Customer tokens carry { kind: "customer", store_id } (one account per store). */
+  appMetadata: Record<string, unknown>;
 };
 
 /** Validates `Authorization: Bearer <Supabase access token>` (web and mobile apps; no cookies). */
@@ -25,6 +27,7 @@ export async function getUserFromBearer(request: Request): Promise<ApiUser> {
     email: data.user.email ?? null,
     isSuperadmin: data.user.app_metadata?.role === "superadmin",
     accessToken,
+    appMetadata: data.user.app_metadata ?? {},
   };
 }
 

@@ -122,6 +122,23 @@ export function StoreHeader({ store, links }: { store: PublicStore; links: NavLi
             </svg>
           </Link>
           <CurrencySelect />
+          <Link
+            href="/account"
+            className="flex h-10 w-10 items-center justify-center rounded-[var(--sf-radius)] hover:bg-surface"
+            aria-label="Mi cuenta"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden
+            >
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21a8 8 0 0 1 16 0" />
+            </svg>
+          </Link>
         </div>
       </div>
     </header>

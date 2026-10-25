@@ -12,7 +12,8 @@ export type SupabaseConfig = {
  */
 export function createAuthClient(config: SupabaseConfig, storageKey?: string): SupabaseClient {
   return createClient(config.url, config.key, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey },
+    // Only pass storageKey when given: an explicit undefined makes supabase-js store under the key "undefined".
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, ...(storageKey && { storageKey }) },
   });
 }
 

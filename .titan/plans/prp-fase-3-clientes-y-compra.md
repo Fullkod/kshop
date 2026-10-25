@@ -280,6 +280,31 @@ navegador; el staff (rol `staff`) puede gestionar pedidos pero no entregas ni m�
 
 > Esta sección CRECE con cada error encontrado durante la implementación.
 
+### 2026-10-25: Datos solo para el staff con el mismo rol `authenticated`
+- **Error**: el PRP proponía ocultar `unit_cost`/`staff_note` al cliente con grants por columna, pero cliente y staff
+  son ambos `authenticated`: un grant por columna no distingue entre ellos.
+- **Fix**: costo en `order_line_costs` (política admin, como `variant_costs`) y notas internas como filas
+  `order_events.is_internal` que la RLS oculta al cliente.
+- **Aplicar en**: cualquier dato privado del staff en tablas que también lee el cliente.
+
+### 2026-10-25: `insert … returning` dentro de `from ( … )` no existe
+- **Error**: `42601 syntax error at or near "into"` en los tests SQL.
+- **Fix**: `with x as (insert … returning id) insert into pg_temp.fixtures select … from x`.
+
+### 2026-10-25: `createAuthClient` guardaba la sesión del staff con la clave "undefined"
+- **Error**: `storageKey: undefined` explícito hace que supabase-js use literalmente `"undefined"` como clave de
+  `localStorage` (desde la Fase 0b).
+- **Fix**: pasar `storageKey` solo si viene (`...(storageKey && { storageKey })`). El staff vuelve a iniciar sesión una vez.
+  La sesión del cliente usa `kshop-customer` y conviven en el mismo subdominio (QA en `.titan/qa/fase-3/`).
+
+### 2026-10-25: Cambiar la contraseña revoca las sesiones anteriores
+- **Hallazgo**: tras `auth.admin.updateUserById({ password })` el token viejo da 401 en `getUser`. Es lo deseado en una
+  recuperación; el E2E lo comprueba y usa el token que devuelve `/reset`.
+
+### 2026-10-25: Carrera por la última unidad
+- La Management API usa una sola conexión: la carrera entre dos checkouts se prueba con peticiones HTTP en paralelo
+  en `pnpm e2e:orders` (Fase 4), no en `test:rls`.
+
 ---
 
 ## Gotchas

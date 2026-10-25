@@ -5,4 +5,5 @@ export * from "./platform";
 export * from "./roles";
 export * from "./slug";
 export * from "./catalog";
+export * from "./orders";
 export * from "./storefront";
