@@ -38,3 +38,4 @@
 - `prp-base.md` — Plantilla de PRP
 - `prp-fase-0b-cimientos.md` — Fase 0b: monorepo, esquema de plataforma + RLS + tests A/B, host → tienda, superadmin (COMPLETADO 2026-10-24, commit 9fcd43f)
 - `prp-fase-1-catalogo.md` — Fase 1: catálogo (tipos, atributos, variantes, costo privado, monedas, categorías, colecciones, marcas, medias, almacenes/stock, Excel) (COMPLETADO 2026-10-25, commits hasta d6f1507)
+- `prp-fase-2-tienda-publica.md` — Fase 2: tienda pública (portada por secciones, listados con filtros, búsqueda, ficha, menús, páginas, temas, caché por tienda, SEO) (PENDIENTE de aprobación, D1–D14)
