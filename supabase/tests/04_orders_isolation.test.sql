@@ -262,3 +262,202 @@ select tests.eq('staff A: reads orders of A', (select count(*) from public.order
 select tests.eq('staff A: cannot read line costs (admin only)',
   (select count(*) from public.order_line_costs where store_id = tests.fx('store_a'))::int, 0);
 select tests.logout();
+
+-- ---------------------------------------------------------------------------
+-- Order functions (phase 3.2): checkout, idempotency, stock, states, payments, cancel, cart merge
+-- ---------------------------------------------------------------------------
+
+-- Catalog: type Ropa (Talla S/M as variants), product with S (4 units, cost 3 USD) and M (1 unit).
+create function pg_temp.seed_product(p_prefix text, p_store text, p_owner text, p_sku text) returns void
+language plpgsql as $$
+declare
+  v_attr uuid; v_s uuid; v_m uuid; v_type uuid; v_product uuid;
+begin
+  insert into public.attributes (store_id, name, slug) values (tests.fx(p_store), 'Talla', 'talla') returning id into v_attr;
+  insert into public.attribute_values (store_id, attribute_id, name, slug) values (tests.fx(p_store), v_attr, 'S', 's') returning id into v_s;
+  insert into public.attribute_values (store_id, attribute_id, name, slug) values (tests.fx(p_store), v_attr, 'M', 'm') returning id into v_m;
+  insert into public.product_types (store_id, name, slug, has_variants) values (tests.fx(p_store), 'Ropa', 'ropa', true)
+    returning id into v_type;
+  insert into public.product_type_attributes (store_id, product_type_id, attribute_id, scope, variant_selection)
+  values (tests.fx(p_store), v_type, v_attr, 'variant', true);
+  v_product := public.save_product(tests.fx(p_store), jsonb_build_object(
+    'product_type_id', v_type, 'name', 'Vestido ' || p_prefix, 'slug', 'vestido-' || rtrim(p_prefix, '_'), 'status', 'published',
+    'variants', jsonb_build_array(
+      jsonb_build_object('sku', p_sku || '-S', 'price', 1500, 'stock', 4,
+        'cost', jsonb_build_object('price', 3, 'currency', 'USD'),
+        'attribute_values', jsonb_build_array(jsonb_build_object('attribute_id', v_attr, 'value_id', v_s))),
+      jsonb_build_object('sku', p_sku || '-M', 'price', 1800, 'stock', 1,
+        'attribute_values', jsonb_build_array(jsonb_build_object('attribute_id', v_attr, 'value_id', v_m))))),
+    tests.fx(p_owner));
+  insert into pg_temp.fixtures values (p_prefix || 'product', v_product);
+  insert into pg_temp.fixtures select p_prefix || 'v_s', id from public.product_variants where sku = p_sku || '-S' and store_id = tests.fx(p_store);
+  insert into pg_temp.fixtures select p_prefix || 'v_m', id from public.product_variants where sku = p_sku || '-M' and store_id = tests.fx(p_store);
+end $$;
+
+select pg_temp.seed_product('fa_', 'store_a', 'owner_a', 'FA');
+select pg_temp.seed_product('fb_', 'store_b', 'owner_b', 'FB');
+-- Fixture orders took 1001-1003 in A by hand.
+insert into public.store_order_counters (store_id, last_number) values (tests.fx('store_a'), 1003);
+insert into pg_temp.fixtures select 'm_delivery', id from public.shipping_methods
+  where store_id = tests.fx('store_a') and type = 'delivery';
+insert into pg_temp.fixtures select 'm_agree', id from public.shipping_methods
+  where store_id = tests.fx('store_a') and type = 'to_agree';
+update public.shipping_methods set is_active = true where id = tests.fx('m_agree');
+insert into pg_temp.fixtures select 'pm_cash', id from public.payment_methods
+  where store_id = tests.fx('store_a') and name = 'Efectivo';
+
+create function pg_temp.checkout(p_store text, p_key text, p_lines jsonb, p_method text, p_extra jsonb default '{}')
+returns jsonb language sql as $$
+  select public.checkout_create_order(tests.fx(p_store), jsonb_build_object(
+    'idempotency_key', p_key, 'channel', 'web', 'currency', 'CUP', 'lines', p_lines,
+    'customer', jsonb_build_object('name', 'Invitada', 'phone', '+5353123456'),
+    'shipping', jsonb_build_object('method_id', tests.fx(p_method), 'zone_id', tests.fx('a_zone'), 'address', 'Calle 5 #12'),
+    'payment_method_id', tests.fx('pm_cash')) || p_extra);
+$$;
+
+create function pg_temp.lines(p_variant text, p_quantity int) returns jsonb language sql as $$
+  select jsonb_build_array(jsonb_build_object('variant_id', tests.fx(p_variant), 'quantity', p_quantity));
+$$;
+
+create function pg_temp.stock(p_variant text) returns text language sql as $$
+  select format('%s/%s/%s', s.quantity, s.quantity_allocated, v.stock_available)
+  from public.stocks s join public.product_variants v on v.id = s.variant_id where s.variant_id = tests.fx(p_variant);
+$$;
+
+-- Checkout with delivery: 2 x S + 1 x M (the last M).
+insert into pg_temp.fixtures select 'ord1', (pg_temp.checkout('store_a', 'key-ord-0001',
+  pg_temp.lines('fa_v_s', 2) || pg_temp.lines('fa_v_m', 1), 'm_delivery') ->> 'order_id')::uuid;
+select tests.eq('checkout: number continues the store counter', (select number from public.orders where id = tests.fx('ord1')), 1004);
+select tests.eq('checkout: totals (2x1500 + 1800 + shipping 200)',
+  (select format('%s+%s=%s', subtotal, shipping_total, total) from public.orders where id = tests.fx('ord1')), '4800.00+200.00=5000.00');
+select tests.eq('checkout: reserves stock (S: 4 units, 2 reserved)', pg_temp.stock('fa_v_s'), '4/2/2');
+select tests.eq('checkout: last M reserved, not available', pg_temp.stock('fa_v_m'), '1/1/0');
+select tests.eq('checkout: line snapshot with attributes', (select attributes -> 0 ->> 'value' from public.order_lines
+  where order_id = tests.fx('ord1') and sku = 'FA-S'), 'S');
+select tests.eq('checkout: line cost snapshot', (select format('%s %s', c.unit_cost, c.cost_currency)
+  from public.order_line_costs c join public.order_lines l on l.id = c.order_line_id
+  where l.order_id = tests.fx('ord1') and l.sku = 'FA-S'), '3.00 USD');
+select tests.eq('checkout: shipping snapshot', (select shipping_snapshot ->> 'address' from public.orders where id = tests.fx('ord1')),
+  'Calle 5 #12');
+select tests.eq('checkout: created event', (select count(*) from public.order_events where order_id = tests.fx('ord1') and type = 'created')::int, 1);
+
+-- Idempotency: the same key returns the same order without reserving again.
+select tests.eq('checkout: retry with the same key returns the same order', (pg_temp.checkout('store_a', 'key-ord-0001',
+  pg_temp.lines('fa_v_s', 2), 'm_delivery') ->> 'order_id')::uuid, tests.fx('ord1'));
+select tests.eq('checkout: retry does not reserve again', pg_temp.stock('fa_v_s'), '4/2/2');
+
+-- Stock and validation.
+select tests.check('checkout: more than available is rejected', tests.throws(
+  $$select pg_temp.checkout('store_a', 'key-ord-0002', pg_temp.lines('fa_v_s', 3), 'm_delivery')$$));
+select tests.eq('checkout: a rejected checkout leaves stock and counter untouched',
+  pg_temp.stock('fa_v_s') || ' ' || (select last_number from public.store_order_counters where store_id = tests.fx('store_a')), '4/2/2 1004');
+select tests.check('checkout: a variant of another store is rejected', tests.throws(
+  $$select pg_temp.checkout('store_a', 'key-ord-0003', pg_temp.lines('fb_v_s', 1), 'm_delivery')$$));
+select tests.check('checkout: delivery needs an address', tests.throws(
+  $$select pg_temp.checkout('store_a', 'key-ord-0004', pg_temp.lines('fa_v_s', 1), 'm_delivery',
+    jsonb_build_object('shipping', jsonb_build_object('method_id', tests.fx('m_delivery'), 'zone_id', tests.fx('a_zone'))))$$));
+select tests.check('checkout: payment method of another store is rejected', tests.throws(
+  $$select pg_temp.checkout('store_a', 'key-ord-0005', pg_temp.lines('fa_v_s', 1), 'm_delivery',
+    jsonb_build_object('payment_method_id', (select id from public.payment_methods where store_id = tests.fx('store_b') and is_active)))$$));
+select tests.check('checkout: bad phone is rejected', tests.throws(
+  $$select pg_temp.checkout('store_a', 'key-ord-0006', pg_temp.lines('fa_v_s', 1), 'm_delivery',
+    jsonb_build_object('customer', jsonb_build_object('name', 'X', 'phone', '5312')))$$));
+select tests.check('stock: allocated can never exceed quantity', tests.throws(format(
+  $$update public.stocks set quantity_allocated = quantity + 1 where variant_id = %L$$, tests.fx('fa_v_s'))));
+select public.set_products_status(tests.fx('store_a'), array[tests.fx('fa_product')], 'draft');
+select tests.check('checkout: draft products cannot be bought from the storefront', tests.throws(
+  $$select pg_temp.checkout('store_a', 'key-ord-0007', pg_temp.lines('fa_v_s', 1), 'm_delivery')$$));
+select tests.check('checkout: the admin channel can sell a draft product', not tests.throws(
+  $$select pg_temp.checkout('store_a', 'key-ord-0008', pg_temp.lines('fa_v_s', 1), 'm_delivery', '{"channel": "admin"}')$$));
+select public.set_products_status(tests.fx('store_a'), array[tests.fx('fa_product')], 'published');
+insert into pg_temp.fixtures select 'ord_admin', id from public.orders where idempotency_key = 'key-ord-0008';
+select tests.eq('admin channel recorded', (select channel::text from public.orders where id = tests.fx('ord_admin')), 'admin');
+
+-- Selling the last available units flips the product (S had 1 left after ord_admin; M already sold out).
+select tests.eq('checkout: flipped products when the product sells out', (pg_temp.checkout('store_a', 'key-ord-0009',
+  pg_temp.lines('fa_v_s', 1), 'm_delivery') -> 'flipped_product_ids' ->> 0)::uuid, tests.fx('fa_product'));
+insert into pg_temp.fixtures select 'ord2', id from public.orders where idempotency_key = 'key-ord-0009';
+select tests.eq('checkout: product summary shows out of stock', (select in_stock from public.products where id = tests.fx('fa_product')), false);
+
+-- "To agree": no total until the staff sets the shipping cost.
+select public.order_cancel(tests.fx('store_a'), tests.fx('ord_admin'), null, null);
+select public.set_stock_quantity(tests.fx('store_a'), tests.fx('fa_v_s'), tests.fx('wh_a'), 10, 'adjustment', null, null);
+insert into pg_temp.fixtures select 'ord3', (pg_temp.checkout('store_a', 'key-ord-0010',
+  pg_temp.lines('fa_v_s', 1), 'm_agree') ->> 'order_id')::uuid;
+select tests.eq('to agree: shipping and total are null', (select coalesce(shipping_total::text, 'null') || coalesce(total::text, 'null')
+  from public.orders where id = tests.fx('ord3')), 'nullnull');
+select tests.check('to agree: cannot confirm without shipping cost', tests.throws(format(
+  $$select public.order_transition(%L, %L, 'pending_payment', null)$$, tests.fx('store_a'), tests.fx('ord3'))));
+select tests.check('to agree: cannot mark paid without shipping cost', tests.throws(format(
+  $$select public.order_transition(%L, %L, 'paid', null)$$, tests.fx('store_a'), tests.fx('ord3'))));
+select public.order_set_shipping(tests.fx('store_a'), tests.fx('ord3'), 150, tests.fx('owner_a'));
+select tests.eq('to agree: total after setting shipping', (select total from public.orders where id = tests.fx('ord3')), 1650.00);
+select tests.eq('to agree: confirm after setting shipping',
+  (public.order_transition(tests.fx('store_a'), tests.fx('ord3'), 'pending_payment', tests.fx('owner_a'))).status, 'pending_payment');
+
+-- States and payments.
+select tests.check('transition: pending -> delivered is rejected', tests.throws(format(
+  $$select public.order_transition(%L, %L, 'delivered', null)$$, tests.fx('store_a'), tests.fx('ord1'))));
+select tests.check('transition: order of another store is not found', tests.throws(format(
+  $$select public.order_transition(%L, %L, 'pending_payment', null)$$, tests.fx('store_b'), tests.fx('ord1'))));
+select public.order_record_payment(tests.fx('store_a'), tests.fx('ord1'),
+  jsonb_build_object('amount', 1000, 'payment_method_id', tests.fx('pm_cash'), 'reference', 'TRF-1'), tests.fx('owner_a'));
+select tests.eq('payment: partial payment', (select format('%s %s', payment_status, paid_total) from public.orders
+  where id = tests.fx('ord1')), 'partially_paid 1000.00');
+select public.order_transition(tests.fx('store_a'), tests.fx('ord1'), 'paid', tests.fx('owner_a'));
+select tests.eq('paid: records the outstanding amount', (select format('%s %s', payment_status, paid_total) from public.orders
+  where id = tests.fx('ord1')), 'paid 5000.00');
+select tests.eq('paid: consumes the reservation (M sold: 0 units, 0 reserved)', pg_temp.stock('fa_v_m'), '0/0/0');
+select tests.eq('paid: sale movements recorded', (select sum(quantity) from public.stock_movements
+  where order_id = tests.fx('ord1') and type = 'sale')::int, -3);
+select public.order_transition(tests.fx('store_a'), tests.fx('ord1'), 'processing', null);
+select public.order_transition(tests.fx('store_a'), tests.fx('ord1'), 'shipped', null);
+select tests.eq('paid -> processing -> shipped', (select status::text from public.orders where id = tests.fx('ord1')), 'shipped');
+select tests.check('cancel: a shipped order cannot be cancelled', tests.throws(format(
+  $$select public.order_cancel(%L, %L, 'x', null)$$, tests.fx('store_a'), tests.fx('ord1'))));
+
+-- Cancel a pending order: releases the reservation.
+select public.order_cancel(tests.fx('store_a'), tests.fx('ord2'), 'Cliente no respondió', tests.fx('owner_a'));
+select tests.eq('cancel pending: reservation released', (select string_agg(status::text, ',') from public.inventory_reservations
+  where order_id = tests.fx('ord2')), 'released');
+select tests.eq('cancel pending: no refund without payments', (select count(*) from public.refunds where order_id = tests.fx('ord2'))::int, 0);
+
+-- Cancel a paid order: units go back and the refund is recorded.
+select public.order_transition(tests.fx('store_a'), tests.fx('ord3'), 'paid', tests.fx('owner_a'));
+select tests.eq('paid to-agree order consumed 1 unit (ord1 took 2 of 10)', pg_temp.stock('fa_v_s'), '7/0/7');
+select public.order_cancel(tests.fx('store_a'), tests.fx('ord3'), 'Devuelto', tests.fx('owner_a'));
+select tests.eq('cancel paid: units back in stock', pg_temp.stock('fa_v_s'), '8/0/8');
+select tests.eq('cancel paid: refund and payment status', (select format('%s %s', o.payment_status, r.amount)
+  from public.orders o join public.refunds r on r.order_id = o.id where o.id = tests.fx('ord3')), 'refunded 1650.00');
+select tests.eq('cancel paid: restock movement', (select sum(quantity) from public.stock_movements
+  where order_id = tests.fx('ord3') and type = 'cancel')::int, 1);
+
+-- Cart merge: the guest cart joins the customer's active cart.
+with g as (insert into public.carts (store_id) values (tests.fx('store_a')) returning id, token)
+insert into pg_temp.fixtures select 'guest_cart', id from g union all select 'guest_token', token from g;
+insert into public.cart_lines (store_id, cart_id, variant_id, quantity) values
+  (tests.fx('store_a'), tests.fx('guest_cart'), tests.fx('fa_v_s'), 2),
+  (tests.fx('store_a'), tests.fx('cart_a'), tests.fx('fa_v_s'), 1);
+select tests.eq('cart merge: returns the customer cart',
+  public.cart_merge(tests.fx('store_a'), tests.fx('guest_token'), tests.fx('c_a')), tests.fx('cart_a'));
+select tests.eq('cart merge: quantities added, guest cart removed', (select quantity from public.cart_lines
+  where cart_id = tests.fx('cart_a') and variant_id = tests.fx('fa_v_s')) * 10
+  + (select count(*) from public.carts where id = tests.fx('guest_cart'))::int, 30);
+select tests.eq('cart merge: a customer of B cannot take a cart of A',
+  public.cart_merge(tests.fx('store_b'), tests.fx('guest_token'), tests.fx('c_b')), null::uuid);
+
+-- Only service_role can call the write functions.
+select tests.login('owner_a');
+select tests.check('owner A: cannot call checkout_create_order directly', tests.throws(format(
+  $$select public.checkout_create_order(%L, '{}'::jsonb)$$, tests.fx('store_a'))));
+select tests.check('owner A: cannot call order_transition directly', tests.throws(format(
+  $$select public.order_transition(%L, %L, 'paid', null)$$, tests.fx('store_a'), tests.fx('ord1'))));
+select tests.logout();
+select tests.login('cust_a');
+select tests.check('customer A: cannot call order_cancel', tests.throws(format(
+  $$select public.order_cancel(%L, %L, 'x', null)$$, tests.fx('store_a'), tests.fx('o_a'))));
+select tests.logout();
+select tests.login_anon();
+select tests.check('anon: cannot call checkout_create_order', tests.throws(format(
+  $$select public.checkout_create_order(%L, '{}'::jsonb)$$, tests.fx('store_a'))));
+select tests.logout();
