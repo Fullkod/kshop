@@ -61,6 +61,10 @@
     - **Cache Components** de Next 16 activado (también afecta al admin).
     - Botón **«Pedir por WhatsApp»** en la ficha ya, aunque todavía no se puede probar de punta a punta.
     - Rendimiento: **«mientras más, mejor»** (los umbrales del PRP son el mínimo).
+23. **Fase 3 (clientes y compra)**: PRP aprobado: cliente entra con **teléfono** + contraseña, **sin verificar
+    el teléfono**; se compra **sin cuenta** (invitado); reservas **sin caducidad** (aviso > 48 h); **«Nuevo
+    pedido» desde el admin entra en la Fase 3**. Aún no hay instancia de OpenWA → el staff ve el código de
+    recuperación y lo manda por `wa.me`.
 
 ## Recomendaciones de Claude (confirmadas en la Fase 0b, ver `AGENTS.md`)
 - Next (App Router) + Supabase + Tailwind/shadcn, deploy en Vercel (wildcard de subdominios).
