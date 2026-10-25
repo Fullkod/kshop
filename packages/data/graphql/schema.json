@@ -16902,6 +16902,18 @@
             },
             {
               "args": [],
+              "name": "voucherScope",
+              "type": {
+                "kind": "ENUM",
+                "name": "VoucherScope",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
               "name": "orders",
               "type": {
                 "kind": "OBJECT",
@@ -17158,6 +17170,16 @@
               "defaultValue": null
             },
             {
+              "name": "voucherScope",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "VoucherScopeFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
               "name": "nodeId",
               "type": {
                 "kind": "INPUT_OBJECT",
@@ -17346,6 +17368,16 @@
             },
             {
               "name": "createdAt",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "voucherScope",
               "type": {
                 "kind": "ENUM",
                 "name": "OrderByDirection",

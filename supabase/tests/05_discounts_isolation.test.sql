@@ -154,3 +154,141 @@ select tests.eq('owner B: sees no promotion, voucher, usage or order discount of
   + (select count(*) from public.order_discounts where store_id = tests.fx('store_a'))::int, 0);
 select tests.eq('owner B: reads its own voucher', (select code from public.vouchers), 'SECRETO10');
 select tests.logout();
+
+-- ---------------------------------------------------------------------------
+-- Pricing engine (as the database owner = what the API does with service_role)
+-- ---------------------------------------------------------------------------
+
+-- Checkout options of A: delivery 200 and "to agree".
+with z as (insert into public.shipping_zones (store_id, name) values (tests.fx('store_a'), 'Centro') returning id)
+insert into pg_temp.fixtures select 'a_zone', id from z;
+with m as (
+  insert into public.shipping_methods (store_id, zone_id, type, name, price)
+  values (tests.fx('store_a'), tests.fx('a_zone'), 'delivery', 'Mensajería', 200) returning id
+) insert into pg_temp.fixtures select 'm_delivery', id from m;
+with m as (
+  insert into public.shipping_methods (store_id, zone_id, type, name)
+  values (tests.fx('store_a'), tests.fx('a_zone'), 'to_agree', 'A convenir') returning id
+) insert into pg_temp.fixtures select 'm_agree', id from m;
+insert into public.store_order_counters (store_id, last_number) values (tests.fx('store_a'), 1002);
+
+create function pg_temp.checkout(p_key text, p_quantity int, p_extra jsonb default '{}', p_method text default 'm_delivery')
+returns jsonb language sql as $$
+  select public.checkout_create_order(tests.fx('store_a'), jsonb_build_object(
+    'idempotency_key', p_key, 'currency', 'CUP',
+    'lines', jsonb_build_array(jsonb_build_object('variant_id', tests.fx('da_variant'), 'quantity', p_quantity)),
+    'customer', jsonb_build_object('name', 'Invitada', 'phone', '+5353123456'),
+    'shipping', jsonb_build_object('method_id', tests.fx(p_method), 'zone_id', tests.fx('a_zone'), 'address', 'Calle 5'))
+    || p_extra);
+$$;
+
+create function pg_temp.price(p_quantity int, p_extra jsonb default '{}') returns jsonb language sql as $$
+  select public.price_lines(tests.fx('store_a'), jsonb_build_object('currency', 'CUP',
+    'lines', jsonb_build_array(jsonb_build_object('variant_id', tests.fx('da_variant'), 'quantity', p_quantity))) || p_extra);
+$$;
+
+select private.refresh_store_promotions(tests.fx('store_a'));
+select tests.eq('promotions: 20 % materialized for the storefront',
+  (select format('%s %s', promo_price, promotion_name) from public.variant_promotions where variant_id = tests.fx('da_variant')),
+  '800.00 Rebajas');
+select tests.eq('promotions: product summary uses the effective price and is on sale',
+  (select format('%s %s', min_price, on_sale) from public.products where id = tests.fx('da_product')), '800.00 t');
+
+insert into public.promotions (store_id, name, reward, value) values (tests.fx('store_a'), 'Fija', 'fixed', 300);
+insert into public.promotion_targets (store_id, promotion_id, target_type, target_id)
+select tests.fx('store_a'), id, 'variant', tests.fx('da_variant') from public.promotions where name = 'Fija';
+insert into public.promotions (store_id, name, reward, value, starts_at, ends_at)
+values (tests.fx('store_a'), 'Pasada', 'percent', 90, now() - interval '2 days', now() - interval '1 day');
+insert into public.promotion_targets (store_id, promotion_id, target_type, target_id)
+select tests.fx('store_a'), id, 'product', tests.fx('da_product') from public.promotions where name = 'Pasada';
+select private.refresh_store_promotions(tests.fx('store_a'));
+select tests.eq('promotions: the lowest price wins, an ended one never applies',
+  (select format('%s %s', promo_price, promotion_name) from public.variant_promotions where variant_id = tests.fx('da_variant')),
+  '700.00 Fija');
+
+select tests.eq('price_lines: subtotal, list subtotal and savings',
+  (select format('%s %s %s', p ->> 'subtotal', p ->> 'list_subtotal', p ->> 'promotion_savings') from pg_temp.price(2) p),
+  '1400.00 2000.00 600.00');
+select tests.eq('price_lines: line keeps list price and promotion',
+  (select format('%s %s %s', l ->> 'list_price', l ->> 'unit_price', l -> 'promotion' ->> 'name')
+   from pg_temp.price(2) p, jsonb_array_elements(p -> 'lines') l), '1000.00 700.00 Fija');
+select tests.eq('price_lines: a specific voucher on the product (10 % of 1400)',
+  (pg_temp.price(2, '{"voucher_code": "secreto10"}') ->> 'discount_total')::numeric, 140.00);
+select tests.eq('price_lines: unknown voucher has a reason and no discount',
+  (select format('%s|%s', p -> 'voucher' ->> 'error', p ->> 'discount_total') from pg_temp.price(1, '{"voucher_code": "NOEXISTE"}') p),
+  'Este cupón no existe o ya no está activo|0');
+insert into public.vouchers (store_id, code, name, reward, value, min_subtotal)
+values (tests.fx('store_a'), 'MIN5000', 'Mínimo', 'percent', 10, 5000);
+select tests.check('price_lines: minimum subtotal not reached',
+  (pg_temp.price(1, '{"voucher_code": "MIN5000"}') -> 'voucher' ->> 'error') like 'El pedido mínimo para este cupón es 5%CUP');
+
+-- Checkout with the voucher: snapshot per line and per order, use counted.
+insert into pg_temp.fixtures select 'o_v1', (pg_temp.checkout('key-disc-0001', 2, '{"voucher_code": "Secreto10"}') ->> 'order_id')::uuid;
+select tests.eq('checkout: subtotal - voucher + shipping = total',
+  (select format('%s-%s+%s=%s %s', subtotal, discount_total, shipping_total, total, voucher_code) from public.orders where id = tests.fx('o_v1')),
+  '1400.00-140.00+200.00=1460.00 SECRETO10');
+select tests.eq('checkout: line snapshot (list, unit, saving, promotion)',
+  (select format('%s %s %s %s', unit_list_price, unit_price, discount_amount, promotion_name) from public.order_lines where order_id = tests.fx('o_v1')),
+  '1000.00 700.00 600.00 Fija');
+select tests.eq('checkout: order discounts breakdown',
+  (select string_agg(format('%s:%s', kind, amount), ' ' order by kind) from public.order_discounts where order_id = tests.fx('o_v1')),
+  'promotion:600.00 voucher:140.00');
+select tests.eq('checkout: voucher use counted', (select used_count from public.vouchers where id = tests.fx('da_voucher')), 1);
+
+-- Usage limits.
+insert into public.vouchers (store_id, code, name, reward, value, usage_limit) values (tests.fx('store_a'), 'UNA', 'Una vez', 'fixed', 50, 1);
+insert into pg_temp.fixtures select 'o_una', (pg_temp.checkout('key-disc-0002', 1, '{"voucher_code": "UNA"}') ->> 'order_id')::uuid;
+select tests.check('checkout: a voucher with no uses left is rejected',
+  tests.throws($$select pg_temp.checkout('key-disc-0003', 1, '{"voucher_code": "UNA"}')$$));
+select tests.eq('price_lines: no uses left', pg_temp.price(1, '{"voucher_code": "UNA"}') -> 'voucher' ->> 'error',
+  'Este cupón ya no está disponible');
+select public.order_cancel(tests.fx('store_a'), tests.fx('o_una'), 'x', null);
+select tests.eq('cancel: releases the voucher use',
+  (select format('%s %s', v.used_count, u.released_at is not null) from public.vouchers v join public.voucher_usages u on u.voucher_id = v.id
+   where v.code = 'UNA'), '0 t');
+insert into public.vouchers (store_id, code, name, reward, value, usage_per_customer)
+values (tests.fx('store_a'), 'PORCLIENTE', 'Por cliente', 'percent', 5, 1);
+insert into pg_temp.fixtures select 'o_pc', (pg_temp.checkout('key-disc-0004', 1, '{"voucher_code": "PORCLIENTE"}') ->> 'order_id')::uuid;
+select tests.eq('price_lines: the same phone already used it',
+  pg_temp.price(1, '{"voucher_code": "PORCLIENTE", "phone": "+5353123456"}') -> 'voucher' ->> 'error', 'Ya usaste este cupón');
+select public.order_cancel(tests.fx('store_a'), tests.fx('o_pc'), 'x', null);
+
+-- Shipping voucher with "to agree": no amount until the staff sets the shipping cost.
+insert into public.vouchers (store_id, code, name, scope, reward, value)
+values (tests.fx('store_a'), 'ENVIOGRATIS', 'Envío gratis', 'shipping', 'percent', 100);
+insert into pg_temp.fixtures select 'o_ship', (pg_temp.checkout('key-disc-0005', 1, '{"voucher_code": "ENVIOGRATIS"}', 'm_agree') ->> 'order_id')::uuid;
+select tests.eq('shipping voucher: pending while the shipping is to agree',
+  (select format('%s %s', discount_total, coalesce(total::text, 'null')) from public.orders where id = tests.fx('o_ship')), '0.00 null');
+select public.order_set_shipping(tests.fx('store_a'), tests.fx('o_ship'), 300, null);
+select tests.eq('shipping voucher: applied when the shipping is set',
+  (select format('%s %s %s', shipping_total, discount_total, total) from public.orders where id = tests.fx('o_ship')), '300.00 300.00 700.00');
+select public.order_cancel(tests.fx('store_a'), tests.fx('o_ship'), 'x', null);
+
+-- Manual discount: admin orders only.
+select tests.check('manual discount: rejected outside the admin',
+  tests.throws($$select pg_temp.checkout('key-disc-0006', 1, '{"manual_discount": {"reward": "fixed", "value": 100}}')$$));
+insert into pg_temp.fixtures select 'o_manual', (pg_temp.checkout('key-disc-0007', 1,
+  '{"channel": "admin", "manual_discount": {"reward": "percent", "value": 10, "reason": "Cliente habitual"}}') ->> 'order_id')::uuid;
+select tests.eq('manual discount: 10 % of 700 with its reason',
+  (select format('%s %s', amount, reason) from public.order_discounts where order_id = tests.fx('o_manual') and kind = 'manual'),
+  '70.00 Cliente habitual');
+select tests.eq('manual discount: in the order total',
+  (select format('%s %s', discount_total, total) from public.orders where id = tests.fx('o_manual')), '70.00 830.00');
+
+-- Module off: nothing applies, the data stays.
+update public.store_modules set enabled = false where store_id = tests.fx('store_a') and module_code = 'discounts';
+select tests.eq('module off: list price, voucher rejected',
+  (select format('%s|%s', p ->> 'subtotal', p -> 'voucher' ->> 'error') from pg_temp.price(1, '{"voucher_code": "SECRETO10"}') p),
+  '1000.00|Este cupón no existe o ya no está activo');
+select private.refresh_store_promotions(tests.fx('store_a'));
+select tests.eq('module off: no materialized promotion, promotions kept',
+  (select count(*) from public.variant_promotions where store_id = tests.fx('store_a'))::int
+  + (select count(*) from public.promotions where store_id = tests.fx('store_a'))::int, 3);
+update public.store_modules set enabled = true where store_id = tests.fx('store_a') and module_code = 'discounts';
+
+select tests.login('owner_a');
+select tests.check('owner A: cannot call price_lines directly', tests.throws(format(
+  $$select public.price_lines(%L, '{}'::jsonb)$$, tests.fx('store_a'))));
+select tests.check('owner A: cannot refresh promotions directly', tests.throws(format(
+  $$select public.refresh_promotions(%L)$$, tests.fx('store_a'))));
+select tests.logout();
