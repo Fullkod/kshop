@@ -1,6 +1,6 @@
 # PRP-1: Catálogo de Kshop
 
-> **Estado**: APROBADO (2026-10-25, Roberto: «sigamos con la siguiente fase») — D1–D13 tal cual; D4 provisional Base = 300, Pro sin límite
+> **Estado**: EN CURSO (2026-10-25) — 1.1 a 1.6 hechas, 1.7 (Excel) hecha en API, falta su pantalla; ver «Progreso» abajo. Aprobado por Roberto el 2026-10-25 (D1–D13 tal cual; D4 provisional Base = 300, Pro sin límite).
 > **Fecha**: 2026-10-24
 > **Proyecto**: Kshop
 > **Fase**: 1 (ver `arranque-y-fases.md`). Código de partida: commit `9fcd43f` (Fase 0b cerrada)
@@ -304,7 +304,35 @@ de 1 000 filas se importa sin timeouts.
 
 ---
 
+## Progreso (actualizado 2026-10-25)
+
+| Sub-fase | Estado | Commit / evidencia |
+|----------|--------|--------------------|
+| 1.1 Esquema del catálogo | Hecha | `83c5144` (+ migraciones 100200, 100300) |
+| 1.2 Tests de aislamiento del catálogo | Hecha: suite 02, 122/122 en total; contrapruebas OK | `83c5144` |
+| 1.3 Funciones, core y contrato | Hecha: Zod, matriz, SKU, precios (20 tests); cliente tipado en @kshop/data | `be4645d` |
+| 1.4 API v1 del catálogo | Hecha: `pnpm e2e:catalog` 30/30 | `be4645d` |
+| 1.5 Admin — estructura | Hecha (categorías, atributos, tipos, marcas, colecciones, almacenes, monedas) | `e6dd85b`, `a6b0cd1` |
+| 1.6 Admin — productos | Hecha: listado + editor con matriz, costo/margen, stock, imágenes WebP; probado en la Tienda Demo | `e6dd85b`, capturas `.titan/qa/fase-1/01–07` |
+| 1.7 Excel | API hecha: plantilla con desplegables, export, import con vista previa y lotes, upsert por SKU; `pnpm e2e:excel` 18/18. **Falta la pantalla** `/admin/excel-import` (asistente subir → vista previa → ejecutar con progreso; hoy muestra el placeholder) | commit de cierre de 1.7 |
+| 1.8 Validación final | Pendiente: pantalla Excel + E2E en navegador del Excel, stock por almacén (Pro) y overrides por moneda (Pro) en el editor, `pnpm build`, memoria/AGENTS | — |
+
+**Pendiente concreto para seguir (en este orden):**
+1. Pantalla `apps/web/src/app/s/[storeSlug]/admin/excel-import/page.tsx` (ruta real que sustituye al placeholder del módulo): elegir tipo → descargar plantilla / exportar (fetch con Bearer → blob) → subir a `store-imports` (`stores/{id}/imports/{uuid}-{nombre}`) con el cliente de sesión → `POST imports` → mostrar `ImportPreview` (crear/actualizar/saltar, errores por fila, lo que se creará, aviso de límite) → «Importar» llama a `imports/{jobId}/run` en bucle con barra de progreso → resumen. Añadir métodos al cliente de `@kshop/data`.
+2. Editor de producto, partes Pro: stock por almacén (con `multi_warehouse`, `PUT catalog/stock` por almacén) y precios por moneda (`prices` en la variante, con `multi_currency`). En Base: badge «Pro».
+3. Validación 1.8: E2E en navegador del flujo Excel con capturas en `.titan/qa/fase-1/`, `pnpm build`, cerrar PRP, memoria y `AGENTS.md`.
+
 ## 🧠 Aprendizajes (Self-Annealing / Neural Network)
+
+- **pg_graphql 1.6 no expone funciones con argumentos enum** (ni las que devuelven `table(...)`): usar `text` y `setof <tabla>`.
+- **Devolver `products.*` desde una función invoker** exige `select` en todas las columnas (incl. `search_vector`) para el rol que llama.
+- **`INSERT … RETURNING` no vale como subconsulta en FROM**: usar CTE `with x as (insert …) …`.
+- **Un `count` en la misma sentencia que llama a una función que escribe** usa el snapshot anterior: separar en dos sentencias.
+- **Triggers corren con el rol que escribe** (`service_role`): los helpers de `private` que llaman necesitan `execute` para ese rol.
+- **Prettier reformatea el GraphQL embebido**: correr `pnpm codegen` después de formatear; si no, los documentos tipados pasan a `unknown`. Verificar con códigos de salida, no con `grep` en una cadena `&&` (así se coló el commit `e6dd85b` con el typecheck roto, arreglado en `a6b0cd1`).
+- **PostgREST puede devolver un embed uno-a-uno como lista** (`variant_costs`): normalizar `Array.isArray(x) ? x[0] : x`.
+- **Leaked password protection (HIBP) de Supabase Auth requiere plan Pro de Supabase**: no se puede activar en el plan actual.
+- **Guiones de Playwright**: esperar la respuesta de la API y el elemento nuevo en la lista, no un botón que siempre está visible.
 
 > Esta sección CRECE con cada error encontrado durante la implementación.
 > El conocimiento persiste para futuros PRPs. El mismo error NUNCA ocurre dos veces.

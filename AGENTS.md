@@ -115,8 +115,11 @@
 | `pnpm db:graphql-schema` → `pnpm codegen` | Vuelca el esquema de pg_graphql (introspección solo en transacción) y regenera `packages/data/src/gql` |
 | `pnpm superadmin:create <email>` | Crea o promueve un superadmin |
 | `pnpm e2e:setup` · `pnpm e2e:api` · `pnpm e2e:cleanup` | Cuentas `@e2e.kshop.test`, checks de API y limpieza (con `pnpm dev` corriendo) |
+| `pnpm e2e:catalog` · `pnpm e2e:excel` | API del catálogo (tiendas temporales) y Excel (sobre la Tienda Demo), con `pnpm dev` corriendo |
+| `pnpm demo:seed` | Crea/repara la tienda de pruebas permanente «Tienda Demo» (`demo.kshop.localhost:3000`) |
 
 Tras cada migración que toque tablas o funciones públicas: `pnpm test:rls`, `pnpm db:graphql-schema && pnpm codegen`.
+Después de `prettier --write` también `pnpm codegen` (reformatea el GraphQL embebido). Verifica por código de salida, no con `grep`.
 
 ## Auto-blindaje
 
