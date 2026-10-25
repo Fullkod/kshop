@@ -25,7 +25,8 @@
     "e2e:cleanup": "node scripts/e2e.mjs cleanup",
     "demo:seed": "node scripts/seed-demo-store.mjs",
     "e2e:catalog": "node scripts/e2e-catalog.mjs",
-    "e2e:excel": "node scripts/e2e-excel.mjs"
+    "e2e:excel": "node scripts/e2e-excel.mjs",
+    "e2e:excel-load": "node scripts/e2e-excel-load.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

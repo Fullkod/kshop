@@ -734,6 +734,9 @@ function buildPayload(
   return payload;
 }
 
+/** Products of a batch applied at the same time (round trips to the database dominate). */
+const IMPORT_CONCURRENCY = 4;
+
 /** Adds the image URLs a product does not have yet (by stored URL or source URL); returns the problems. */
 async function importProductImages(storeId: string, productId: string, urls: string[]): Promise<string[]> {
   const db = getServiceClient();
@@ -820,16 +823,34 @@ export async function runImportBatch(
   let created = 0;
   let updated = 0;
   let skipped = 0;
-  for (const [key, g] of groups) {
-    let slug = catalogSlug(g.data.find((d) => d.name)?.name ?? key);
-    if (g.action === "create") {
-      const { count } = await db
+
+  // Slugs of the new products, checked once per batch (also against each other).
+  const slugs = new Map<string, string>();
+  const wanted = [...groups]
+    .filter(([, g]) => g.action === "create")
+    .map(([key, g]) => [key, catalogSlug(g.data.find((d) => d.name)?.name ?? key)] as const);
+  const { data: takenRows } = wanted.length
+    ? await db
         .from("products")
-        .select("id", { count: "exact", head: true })
+        .select("slug")
         .eq("store_id", storeId)
-        .eq("slug", slug);
-      if (count) slug = `${slug}-${catalogSlug(key) || Math.random().toString(36).slice(2, 6)}`.slice(0, 80);
-    }
+        .in(
+          "slug",
+          wanted.map(([, slug]) => slug),
+        )
+    : { data: [] };
+  const taken = new Set((takenRows ?? []).map((r) => r.slug));
+  for (const [key, slug] of wanted) {
+    const unique = taken.has(slug)
+      ? `${slug}-${catalogSlug(key) || Math.random().toString(36).slice(2, 6)}`.slice(0, 80)
+      : slug;
+    taken.add(unique);
+    slugs.set(key, unique);
+  }
+
+  // Each product is its own transaction and marks its rows when done, so a batch cut short can resume.
+  const applyGroup = async (key: string, g: { rows: number[]; data: ExcelRow[]; action: string }) => {
+    const slug = slugs.get(key) ?? catalogSlug(g.data.find((d) => d.name)?.name ?? key);
     const { data: result, error } = await db.rpc("import_product", {
       p_store_id: storeId,
       p_job_id: jobId,
@@ -872,7 +893,13 @@ export async function runImportBatch(
       .update({ applied_at: new Date().toISOString(), ...(errors.length && { errors, action: "skip" }) })
       .eq("job_id", jobId)
       .in("row_number", g.rows);
-  }
+  };
+  const queue = [...groups];
+  await Promise.all(
+    Array.from({ length: Math.min(IMPORT_CONCURRENCY, queue.length) }, async () => {
+      for (let next = queue.shift(); next; next = queue.shift()) await applyGroup(...next);
+    }),
+  );
 
   const { count: remaining } = await db
     .from("import_job_rows")
