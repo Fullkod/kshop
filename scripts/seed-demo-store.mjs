@@ -31,7 +31,10 @@ const additions = [];
 if (!env.DEMO_OWNER_PASSWORD) additions.push(`DEMO_OWNER_PASSWORD=${randomBytes(12).toString("base64url")}`);
 if (!env.DEMO_STAFF_PASSWORD) additions.push(`DEMO_STAFF_PASSWORD=${randomBytes(12).toString("base64url")}`);
 if (additions.length) {
-  appendFileSync(envPath, `\n# Permanent test store "Tienda Demo" (pnpm demo:seed)\n${additions.join("\n")}\n`);
+  appendFileSync(
+    envPath,
+    `\n# Permanent test store "Tienda Demo" (pnpm demo:seed)\n${additions.join("\n")}\n`,
+  );
   env = loadEnv();
 }
 
@@ -67,7 +70,11 @@ async function ensureUser(email, password) {
 const ownerId = await ensureUser(DEMO.owner, env.DEMO_OWNER_PASSWORD);
 const staffId = await ensureUser(DEMO.staff, env.DEMO_STAFF_PASSWORD);
 
-let { data: store, error } = await service.from("stores").select("id, status").eq("slug", DEMO.slug).maybeSingle();
+let { data: store, error } = await service
+  .from("stores")
+  .select("id, status")
+  .eq("slug", DEMO.slug)
+  .maybeSingle();
 if (error) throw error;
 
 if (!store) {
@@ -90,7 +97,10 @@ if (!store) {
   console.log(`Created store ${DEMO.name} (${store.id})`);
 } else {
   if (store.status !== "active") {
-    const { error: statusError } = await service.from("stores").update({ status: "active" }).eq("id", store.id);
+    const { error: statusError } = await service
+      .from("stores")
+      .update({ status: "active" })
+      .eq("id", store.id);
     if (statusError) throw statusError;
   }
   console.log(`Store ${DEMO.name} already exists (${store.id})`);
@@ -98,7 +108,10 @@ if (!store) {
 
 const { error: memberError } = await service
   .from("store_members")
-  .upsert({ store_id: store.id, user_id: staffId, role: "staff" }, { onConflict: "store_id,user_id", ignoreDuplicates: true });
+  .upsert(
+    { store_id: store.id, user_id: staffId, role: "staff" },
+    { onConflict: "store_id,user_id", ignoreDuplicates: true },
+  );
 if (memberError) throw memberError;
 
 console.log(`Owner: ${DEMO.owner} (DEMO_OWNER_PASSWORD) · Staff: ${DEMO.staff} (DEMO_STAFF_PASSWORD)`);

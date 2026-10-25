@@ -1,5 +1,16 @@
 import type {
+  AttributeInput,
+  BrandInput,
+  CategoryInput,
+  CollectionInput,
   CreateStoreInput,
+  CurrencyInput,
+  ProductInput,
+  ProductMediaInput,
+  ProductStatus,
+  ProductTypeInput,
+  StockInput,
+  WarehouseInput,
   CurrencyCode,
   ModuleCode,
   PlanCode,
@@ -47,6 +58,27 @@ export type CreateStoreResponse = {
   ownerWasCreated: boolean;
 };
 
+/** Simple catalog entities and their inputs (/api/v1/stores/{storeId}/catalog/{resource}). */
+export type CatalogResourceInputs = {
+  attributes: AttributeInput;
+  "product-types": ProductTypeInput;
+  categories: CategoryInput;
+  brands: BrandInput;
+  collections: CollectionInput;
+  warehouses: WarehouseInput;
+};
+export type CatalogResourceName = keyof CatalogResourceInputs;
+export type ReorderableTable =
+  "categories" | "collections" | "attributes" | "attribute_values" | "product_media";
+
+export type ProductMedia = {
+  id: string;
+  url: string;
+  thumbUrl: string | null;
+  alt: string | null;
+  sortOrder: number;
+};
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -78,7 +110,7 @@ export function createApiClient(options: ApiClientOptions) {
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
-    const data: unknown = await res.json().catch(() => null);
+    const data: unknown = res.status === 204 ? null : await res.json().catch(() => null);
     if (!res.ok) {
       const err = (data as ApiErrorBody | null)?.error;
       throw new ApiError(
@@ -95,6 +127,39 @@ export function createApiClient(options: ApiClientOptions) {
     me: () => request<MeResponse>("GET", "/me"),
     entitlements: (storeId: string) =>
       request<EntitlementsResponse>("GET", `/stores/${storeId}/entitlements`),
+    catalog: (storeId: string) => {
+      const base = `/stores/${storeId}/catalog`;
+      return {
+        create: <R extends CatalogResourceName>(resource: R, input: CatalogResourceInputs[R]) =>
+          request<{ id: string }>("POST", `${base}/${resource}`, input),
+        update: <R extends CatalogResourceName>(resource: R, id: string, input: CatalogResourceInputs[R]) =>
+          request<{ id: string }>("PATCH", `${base}/${resource}/${id}`, input),
+        remove: (resource: CatalogResourceName, id: string) =>
+          request<null>("DELETE", `${base}/${resource}/${id}`),
+        reorder: (table: ReorderableTable, ids: string[]) =>
+          request<null>("POST", `${base}/reorder`, { table, ids }),
+        createProduct: (input: ProductInput) => request<{ id: string }>("POST", `${base}/products`, input),
+        updateProduct: (id: string, input: ProductInput) =>
+          request<{ id: string }>("PUT", `${base}/products/${id}`, input),
+        deleteProduct: (id: string) => request<null>("DELETE", `${base}/products/${id}`),
+        setProductsStatus: (productIds: string[], status: ProductStatus) =>
+          request<{ updated: number }>("POST", `${base}/products/status`, { productIds, status }),
+        addMedia: (productId: string, input: ProductMediaInput) =>
+          request<ProductMedia>("POST", `${base}/products/${productId}/media`, input),
+        deleteMedia: (productId: string, mediaId: string) =>
+          request<null>("DELETE", `${base}/products/${productId}/media/${mediaId}`),
+        setStock: (input: StockInput) =>
+          request<{ quantity: number; quantityAllocated: number }>("PUT", `${base}/stock`, input),
+        setCurrency: (input: CurrencyInput) =>
+          request<{
+            currency: string;
+            isBase: boolean;
+            sells: boolean;
+            rateToBase: number;
+            rounding: number | null;
+          }>("PUT", `${base}/currencies`, input),
+      };
+    },
     platform: {
       listStores: () => request<{ stores: PlatformStore[] }>("GET", "/platform/stores"),
       createStore: (input: CreateStoreInput) =>

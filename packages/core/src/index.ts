@@ -4,3 +4,4 @@ export * from "./modules";
 export * from "./platform";
 export * from "./roles";
 export * from "./slug";
+export * from "./catalog";

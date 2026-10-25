@@ -23,7 +23,8 @@
     "e2e:setup": "node scripts/e2e.mjs setup",
     "e2e:api": "node scripts/e2e.mjs api",
     "e2e:cleanup": "node scripts/e2e.mjs cleanup",
-    "demo:seed": "node scripts/seed-demo-store.mjs"
+    "demo:seed": "node scripts/seed-demo-store.mjs",
+    "e2e:catalog": "node scripts/e2e-catalog.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

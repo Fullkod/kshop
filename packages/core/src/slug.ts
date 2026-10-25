@@ -42,13 +42,15 @@ export const storeSlugSchema = z
 
 /** Suggests a slug from a store name: "Tienda Ñandú 2" -> "tienda-nandu-2". */
 export function slugify(name: string): string {
-  return name
-    .normalize("NFD")
-    // Drop combining marks left by NFD (accents): "ú" -> "u".
-    .replace(/\p{M}/gu, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40)
-    .replace(/-+$/g, "");
+  return (
+    name
+      .normalize("NFD")
+      // Drop combining marks left by NFD (accents): "ú" -> "u".
+      .replace(/\p{M}/gu, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40)
+      .replace(/-+$/g, "")
+  );
 }
