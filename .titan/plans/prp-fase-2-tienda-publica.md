@@ -240,11 +240,31 @@ mensaje en español, happy path); paso 7–8 del happy path en el navegador; el 
 
 ---
 
+## Progreso (actualizado 2026-10-25)
+
+| Sub-fase | Estado | Commit / evidencia |
+|----------|--------|--------------------|
+| 2.1 Esquema de contenido | Hecha: banners, home_sections (+banners), menus/menu_items (2 niveles), pages; RLS por visibilidad/fechas; suite 03 (26 checks, contraprueba OK) | `7143805` |
+| 2.2 Lecturas SQL, core y data | Hecha: `storefront_search_products` + `storefront_product_facets` (+ reglas de colección), Zod de tema/contenido, filtros ⇄ URL, consultas públicas probadas como anon; `test:rls` 177/177, core 35 tests | `8ceaf7d`, `0f8d196` |
+| 2.3 Caché, tema y layout | Hecha: Cache Components activo (D1), `use cache` + tags por tienda, tema como variables CSS + 6 fuentes, cabecera/pie/menús, selector de moneda (D11) | `8382021`, `8375274` |
+| 2.4 Páginas públicas | Hecha: portada por secciones (+ por defecto), listados, búsqueda, ficha con variantes y «Pedir por WhatsApp», páginas; probado en navegador (390 px y escritorio) | `a1aa24c` |
+| 2.5 SEO y rendimiento | Hecha: robots/sitemap por tienda, canónicos, OG, JSON-LD, ISR en rutas con slug. Lighthouse móvil local: A11y/BP/SEO 100; rendimiento 82–93 con mucho ruido local (dev server + otra app en la misma máquina) → **medir en Vercel** | `bae3f5c` |
+| 2.6 Admin «Apariencia» y colecciones automáticas | Pendiente | — |
+| 2.7 Validación final | Pendiente (incluye Lighthouse en Vercel y el E2E del happy path con contenido creado desde el admin) | — |
+
 ## 🧠 Aprendizajes (Self-Annealing / Neural Network)
 
 > Esta sección CRECE con cada error encontrado durante la implementación.
 
-_(vacía)_
+- **Cache Components**: quitar `export const runtime` de todos los route handlers; `apiHandler` debe llamar `unstable_rethrow(error)` o registra como error el abandono del prerender de los GET.
+- **Rutas con params dinámicos**: o `generateStaticParams` (nunca vacío) y `await params` fuera de `<Suspense>` (ISR por URL), o todo dentro de `<Suspense>`. Admin/superadmin (cliente con `usePathname`) van dentro de `<Suspense>` en su layout.
+- **pg_graphql devuelve `jsonb` como string JSON** (facetas, `settings`, `theme`): `JSON.parse` al leer.
+- **Enums en filtros GraphQL** van sin comillas (`status: { eq: active }`).
+- **Devolver `products.*` a anon** exige `select (search_vector)` para anon (derivado de datos públicos).
+- **`--color-*` de `@theme inline` se resuelven en `:root`** (paleta del admin, con modo oscuro): la tienda lee `--fg/--bg/--ok…` directamente y el tema fija todos.
+- **`seoDescription` puede ser `""`**: usar `||`, no `??`, para caer en la descripción.
+- **`TaskStop` sobre `npx next start` deja vivo el proceso hijo de Next**: pararlo por puerto y comprobar su línea de comandos antes.
+- **El puerto 3100 lo usa otra app de Roberto**: para builds de prueba usar otro (3200) y compilar con `NEXT_PUBLIC_PLATFORM_DOMAIN` de ese puerto.
 
 ---
 
