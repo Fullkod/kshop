@@ -2,8 +2,8 @@
 
 PRP con progreso, decisiones y aprendizajes: `.titan/plans/prp-fase-2-tienda-publica.md`.
 Estado: hecha. Lighthouse en Vercel (2026-10-25): A11y/BP/SEO 100; rendimiento portada 97–98, ficha 89–93, listado
-81–82 por CLS (corregido con altura mínima del listado; re-medir tras el próximo deploy). `sitemap.xml` daba 404 en
-Vercel (route handler prerenderizado; fix con `connection()`). Detalle en el PRP.
+81–82 por CLS → tras el fix (altura mínima del listado) 76–90 con CLS 0; queda el LCP de la imagen (3,5–3,8 s).
+`sitemap.xml` daba 404 en Vercel (route handler prerenderizado; fix con `connection()`, confirmado 200). Detalle en el PRP.
 
 ## Decisiones de Roberto (2026-10-25)
 - «Pedir por WhatsApp» en la ficha ya (aún no se puede probar de punta a punta).

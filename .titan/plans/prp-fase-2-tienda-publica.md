@@ -263,6 +263,10 @@ mensaje en español, happy path); paso 7–8 del happy path en el navegador; el 
   1 y el pie sube a la vista. Fix: altura mínima `70svh` en la zona del listado (`ListingPage`). **Re-medir tras el
   próximo deploy.** El LCP del listado (imagen que llega en el stream) es lo siguiente a mirar si no llega a 90.
 - `sitemap.xml` daba **404 en Vercel** (en local funcionaba): ver Aprendizajes.
+- **Re-medición tras el deploy (2026-10-25, 3 pasadas)**: listado 76 / 90 / 87, A11y/BP/SEO 100, **CLS 0** (fix
+  confirmado), LCP 3,5–3,8 s (la imagen de Supabase Storage), TBT 110–430 ms (ruido de la máquina que mide).
+  `sitemap.xml` y `robots.txt` responden 200 por tienda. Siguiente mejora posible: LCP del listado (precargar la
+  primera imagen o servirla más pequeña).
 
 ## 🧠 Aprendizajes (Self-Annealing / Neural Network)
 

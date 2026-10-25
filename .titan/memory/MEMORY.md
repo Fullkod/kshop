@@ -22,7 +22,7 @@
 - [2026-10-24-dual-agent-tooling.md](project/2026-10-24-dual-agent-tooling.md) — Fase 0a: Claude Code + Codex copiados de klauShop, marketplace kshop, MCP Supabase con project ref propio
 - [2026-10-24-fase-0b-cimientos.md](project/2026-10-24-fase-0b-cimientos.md) — Fase 0b cerrada: D1–D7 confirmadas, Supabase online sin permiso por migración, trucos (introspección, urql POST, versiones de migración), cuentas
 - [2026-10-25-fase-1-catalogo.md](project/2026-10-25-fase-1-catalogo.md) — Fase 1 CERRADA: dónde está cada pieza del catálogo, pruebas y datos de la Tienda Demo
-- [2026-10-25-fase-2-tienda-publica.md](project/2026-10-25-fase-2-tienda-publica.md) — Fase 2 hecha (Lighthouse en Vercel medido; re-medir listado): decisiones (URLs en inglés, Cache Components, WhatsApp), dónde está cada pieza, invalidación
+- [2026-10-25-fase-2-tienda-publica.md](project/2026-10-25-fase-2-tienda-publica.md) — Fase 2 hecha (Lighthouse en Vercel medido; listado CLS 0, falta LCP): decisiones (URLs en inglés, Cache Components, WhatsApp), dónde está cada pieza, invalidación
 - [2026-10-25-fase-3-clientes-y-compra.md](project/2026-10-25-fase-3-clientes-y-compra.md) — Fase 3 hecha: dónde está cada pieza, pruebas, pendientes
 - [2026-10-25-fase-4-avisos-y-descuentos.md](project/2026-10-25-fase-4-avisos-y-descuentos.md) — Fase 4 hecha: motor de precios SQL, promociones, cupones y avisos WhatsApp (dry_run; falta OpenWA real)
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
