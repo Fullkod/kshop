@@ -246,7 +246,7 @@ export async function placeOrder(storeId: string, params: PlaceOrderParams): Pro
   if (error) mapDbError(error, "El pedido");
   const result = data as { order_id: string; public_token: string; created: boolean; flipped_product_ids: string[] };
   if (result.flipped_product_ids.length) invalidateCatalog(storeId);
-  return { order: await getPublicOrder(storeId, result.public_token), created: result.created };
+  return { orderId: result.order_id, order: await getPublicOrder(storeId, result.public_token), created: result.created };
 }
 
 export function emptyCartError(): HttpError {

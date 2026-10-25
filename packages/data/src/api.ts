@@ -19,8 +19,13 @@ import type {
   ProductTypeInput,
   StockInput,
   WarehouseInput,
+  AdminOrderInput,
   CartUpdateInput,
   CheckoutInput,
+  OrderPaymentInput,
+  PaymentMethodInput,
+  ShippingMethodInput,
+  ShippingZoneInput,
   CurrencyCode,
   CustomerAddressInput,
   CustomerLoginInput,
@@ -223,12 +228,29 @@ export type PublicOrder = {
 };
 
 export type CheckoutResponse = {
+  orderId: string;
   order: PublicOrder;
   /** false when the idempotency key matched an existing order (retry). */
   created: boolean;
   /** Set when the customer created an account in the same step. */
   account?: CustomerAuthResponse;
 };
+
+/** Admin: «Ventas de hoy» (day in America/Havana). */
+export type SalesToday = {
+  dayStart: string;
+  orders: { currency: string; orders: number; amount: number }[];
+  received: { currency: string; amount: number }[];
+  pending: number;
+};
+
+/** Admin: checkout settings resources (/api/v1/stores/{storeId}/checkout-settings/{resource}). */
+export type CheckoutSettingInputs = {
+  zones: ShippingZoneInput;
+  methods: ShippingMethodInput;
+  "payment-methods": PaymentMethodInput;
+};
+export type CheckoutSettingName = keyof CheckoutSettingInputs;
 
 export type CustomerOrderSummary = {
   code: string;
@@ -384,6 +406,39 @@ export function createApiClient(options: ApiClientOptions) {
       options: () => request<CheckoutOptions>("GET", `/stores/${storeId}/checkout`),
       place: (input: CheckoutInput) => request<CheckoutResponse>("POST", `/stores/${storeId}/checkout`, input),
       order: (token: string) => request<{ order: PublicOrder }>("GET", `/stores/${storeId}/checkout/orders/${token}`),
+    }),
+    /** Admin: shipping zones and methods, payment methods (admin+). */
+    checkoutSettings: (storeId: string) => {
+      const base = `/stores/${storeId}/checkout-settings`;
+      return {
+        create: <R extends CheckoutSettingName>(resource: R, input: CheckoutSettingInputs[R]) =>
+          request<{ id: string }>("POST", `${base}/${resource}`, input),
+        update: <R extends CheckoutSettingName>(resource: R, id: string, input: CheckoutSettingInputs[R]) =>
+          request<{ id: string }>("PATCH", `${base}/${resource}/${id}`, input),
+        remove: (resource: CheckoutSettingName, id: string) => request<null>("DELETE", `${base}/${resource}/${id}`),
+      };
+    },
+    /** Admin: orders (staff+). Reads go through pg_graphql (AdminOrdersQuery, AdminOrderQuery). */
+    orders: (storeId: string) => {
+      const base = `/stores/${storeId}/orders`;
+      const act = (orderId: string, action: string, body: unknown) =>
+        request<{ id: string }>("POST", `${base}/${orderId}/${action}`, body);
+      return {
+        create: (input: AdminOrderInput) => request<CheckoutResponse>("POST", base, input),
+        transition: (orderId: string, to: Exclude<OrderStatus, "cancelled">) => act(orderId, "transition", { to }),
+        setShipping: (orderId: string, amount: number) => act(orderId, "shipping", { amount }),
+        recordPayment: (orderId: string, input: OrderPaymentInput) => act(orderId, "payments", input),
+        cancel: (orderId: string, reason?: string) => act(orderId, "cancel", { reason }),
+        addNote: (orderId: string, text: string) => act(orderId, "notes", { text }),
+        salesToday: () => request<SalesToday>("GET", `${base}/sales-today`),
+      };
+    },
+    /** Admin: customers of the store. */
+    customers: (storeId: string) => ({
+      setBlocked: (customerId: string, isBlocked: boolean) =>
+        request<{ id: string; isBlocked: boolean }>("PATCH", `/stores/${storeId}/customers/${customerId}`, { isBlocked }),
+      recoveryCode: (customerId: string) =>
+        request<RecoveryCodeResponse>("POST", `/stores/${storeId}/customers/${customerId}/recovery-code`),
     }),
     /** Signed-in customer of the store (customer token). */
     customer: (storeId: string) => {

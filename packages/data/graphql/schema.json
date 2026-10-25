@@ -42225,6 +42225,22 @@
             },
             {
               "args": [],
+              "name": "orderPrefix",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
               "name": "whatsappPhone",
               "type": {
                 "kind": "SCALAR",
@@ -44459,6 +44475,16 @@
               "defaultValue": null
             },
             {
+              "name": "orderPrefix",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "StringFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
               "name": "whatsappPhone",
               "type": {
                 "kind": "INPUT_OBJECT",
@@ -44597,6 +44623,16 @@
             },
             {
               "name": "baseCurrency",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "orderPrefix",
               "type": {
                 "kind": "ENUM",
                 "name": "OrderByDirection",

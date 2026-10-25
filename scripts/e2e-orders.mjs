@@ -351,6 +351,113 @@ async function checkout({ anon, storeA, storeB, ownerIds }) {
   return { A, B, order };
 }
 
+async function admin({ anon, ownerA, staffA, ownerB, storeA, storeB }, { A, B, order }) {
+  const settings = `/stores/${storeA.id}/checkout-settings`;
+  const orders = `/stores/${storeA.id}/orders`;
+
+  let r = await anon("POST", `${settings}/zones`, { name: "Playa" });
+  check("settings: no token -> 401", r.status === 401, r);
+  r = await staffA("POST", `${settings}/zones`, { name: "Playa" });
+  check("settings: staff cannot edit shipping (admin) -> 403", r.status === 403, r);
+  r = await ownerB("POST", `${settings}/zones`, { name: "Playa" });
+  check("settings: owner of B cannot edit A -> 403", r.status === 403, r);
+  r = await ownerA("POST", `${settings}/unknown`, { name: "X" });
+  check("settings: unknown resource -> 404", r.status === 404, r);
+  r = await ownerA("POST", `${settings}/zones`, { name: "Playa" });
+  check("settings: owner creates a zone -> 201", r.status === 201, r);
+  const zoneId = r.body.id;
+  r = await ownerA("POST", `${settings}/methods`, { zoneId, type: "pickup", name: "Recogida" });
+  check("settings: pickup without point -> 400 with field", r.status === 400 && !!r.body.error.fields?.warehouseId, r);
+  r = await ownerA("POST", `${settings}/methods`, { zoneId: B.zoneId, type: "delivery", name: "X", price: 1 });
+  check("settings: a zone of another store is rejected -> 400", r.status === 400, r);
+  r = await ownerA("PATCH", `${settings}/zones/${zoneId}`, { name: "Playa y Miramar", isActive: false });
+  check("settings: owner updates a zone", r.status === 200, r);
+  r = await ownerA("POST", `${settings}/payment-methods`, { name: "Transfermóvil", currencies: ["CUP"] });
+  check("settings: owner creates a payment method", r.status === 201, r);
+  r = await ownerA("DELETE", `${settings}/zones/${zoneId}`);
+  check("settings: owner deletes a zone", r.status === 204, r);
+
+  await service.from("store_modules").update({ enabled: false }).eq("store_id", storeA.id).eq("module_code", "shipping");
+  r = await ownerA("POST", `${settings}/zones`, { name: "Sin módulo" });
+  check("settings: shipping module disabled -> 403 module_not_enabled",
+    r.status === 403 && r.body.error.code === "module_not_enabled", r);
+  r = await ownerA("POST", `${settings}/payment-methods`, { name: "Sigue funcionando" });
+  check("settings: payment methods only need orders", r.status === 201, r);
+  await service.from("store_modules").update({ enabled: true }).eq("store_id", storeA.id).eq("module_code", "shipping");
+
+  // New order from the admin (channel admin).
+  r = await staffA("POST", orders, {
+    idempotencyKey: key(),
+    lines: [{ variantId: A.variants.S, quantity: 1 }],
+    customer: { name: "Pedido por teléfono", phone: "5359990020" },
+    shipping: { zoneId: A.zoneId, methodId: A.agreeId },
+  });
+  check("new order from the admin (staff) -> 201", r.status === 201 && r.body.order.code.startsWith("OA-"), r);
+  const { data: adminOrder } = await service.from("orders").select("id, channel, created_by").eq("public_token", r.body.order.publicToken).single();
+  check("new order: channel admin and created_by set", adminOrder.channel === "admin" && !!adminOrder.created_by, adminOrder);
+  r = await ownerB("POST", orders, { idempotencyKey: key(), lines: [{ variantId: A.variants.S, quantity: 1 }], customer: { name: "X", phone: "5359990021" } });
+  check("new order: owner of B in A -> 403", r.status === 403, r);
+  r = await ownerA("POST", orders, { idempotencyKey: key(), lines: [], customer: { name: "X", phone: "5359990021" } });
+  check("new order: no lines -> 400", r.status === 400, r);
+
+  // Order life cycle.
+  const id = adminOrder.id;
+  r = await staffA("POST", `${orders}/${id}/transition`, { to: "delivered" });
+  check("transition: pending -> delivered -> 409 invalid_transition", r.status === 409 && r.body.error.code === "invalid_transition", r);
+  r = await staffA("POST", `${orders}/${id}/transition`, { to: "pending_payment" });
+  check("transition: to agree without cost -> 409 shipping_required", r.status === 409 && r.body.error.code === "shipping_required", r);
+  r = await staffA("POST", `${orders}/${id}/shipping`, { amount: 250 });
+  check("shipping cost set", r.status === 200, r);
+  r = await staffA("POST", `${orders}/${id}/transition`, { to: "pending_payment" });
+  check("transition: confirm after setting the cost", r.status === 200, r);
+  r = await staffA("POST", `${orders}/${id}/payments`, { amount: 500, reference: "TRF-9" });
+  check("payment recorded", r.status === 200, r);
+  r = await staffA("POST", `${orders}/${id}/payments`, { amount: 1, evidencePath: `stores/${storeB.id}/payments/x.jpg` });
+  check("payment evidence must be in the store's folder -> 404", r.status === 404, r);
+  r = await staffA("POST", `${orders}/${id}/notes`, { text: "Llamó para cambiar la hora" });
+  check("internal note added", r.status === 200, r);
+  r = await ownerB("POST", `${orders}/${id}/notes`, { text: "intruso" });
+  check("owner of B cannot touch orders of A -> 403", r.status === 403, r);
+  r = await ownerB("POST", `/stores/${storeB.id}/orders/${id}/transition`, { to: "paid" });
+  check("order of A is not found from B -> 404", r.status === 404, r);
+  r = await ownerB("POST", `/stores/${storeB.id}/orders/${id}/notes`, { text: "intruso" });
+  check("note on an order of A from B -> 404", r.status === 404, r);
+  r = await staffA("POST", `${orders}/${id}/transition`, { to: "paid" });
+  check("mark paid", r.status === 200, r);
+  const { data: paid } = await service.from("orders").select("payment_status, paid_total, total").eq("id", id).single();
+  check("mark paid records the rest (paid = total)", paid.payment_status === "paid" && Number(paid.paid_total) === Number(paid.total), paid);
+  for (const to of ["processing", "shipped"]) await staffA("POST", `${orders}/${id}/transition`, { to });
+  r = await staffA("POST", `${orders}/${id}/cancel`, { reason: "x" });
+  check("cancel a shipped order -> 409", r.status === 409, r);
+  r = await staffA("POST", `${orders}/${id}/transition`, { to: "delivered" });
+  check("delivered", r.status === 200, r);
+
+  // The customer view never shows internal notes.
+  const { data: pub } = await service.from("orders").select("public_token").eq("id", id).single();
+  r = await anon("GET", `/stores/${storeA.id}/checkout/orders/${pub.public_token}`);
+  check("public order hides internal notes", r.status === 200 && !JSON.stringify(r.body).includes("cambiar la hora"), r.body);
+
+  // Cancel the first web order (pending): releases the reservation.
+  const { data: first } = await service.from("orders").select("id").eq("public_token", order.publicToken).single();
+  r = await ownerA("POST", `${orders}/${first.id}/cancel`, { reason: "Cliente no respondió" });
+  check("cancel a pending order", r.status === 200, r);
+
+  r = await staffA("GET", `${orders}/sales-today`);
+  check("sales today: orders and money received today", r.status === 200 && r.body.orders.length > 0 && r.body.received.length > 0, r);
+  r = await ownerB("GET", `${orders}/sales-today`);
+  check("sales today of A from B -> 403", r.status === 403, r);
+
+  // Customers.
+  const { data: cust } = await service.from("customers").select("id").eq("store_id", storeA.id).limit(1).single();
+  r = await staffA("PATCH", `/stores/${storeA.id}/customers/${cust.id}`, { isBlocked: true });
+  check("block a customer: staff -> 403 (admin)", r.status === 403, r);
+  r = await ownerA("PATCH", `/stores/${storeA.id}/customers/${cust.id}`, { isBlocked: true });
+  check("block a customer: owner -> 200", r.status === 200 && r.body.isBlocked === true, r);
+  r = await ownerB("PATCH", `/stores/${storeB.id}/customers/${cust.id}`, { isBlocked: true });
+  check("customer of A not found from B -> 404", r.status === 404, r);
+  await service.from("customers").update({ is_blocked: false }).eq("id", cust.id);
+}
+
 async function run() {
   await cleanup();
   const ids = {};
@@ -373,7 +480,8 @@ async function run() {
     ownerIds: ids,
   };
   await customers(ctx);
-  await checkout(ctx);
+  const seeded = await checkout(ctx);
+  await admin(ctx, seeded);
 }
 
 try {
