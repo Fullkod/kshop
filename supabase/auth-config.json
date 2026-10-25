@@ -1,0 +1,6 @@
+{
+  "site_url": "https://kshop.fullkod.com",
+  "uri_allow_list": "http://kshop.localhost:3000/**,http://*.kshop.localhost:3000/**,https://kshop.fullkod.com/**,https://*.kshop.fullkod.com/**",
+  "disable_signup": true,
+  "password_min_length": 8
+}

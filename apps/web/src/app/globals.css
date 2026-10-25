@@ -1,0 +1,4 @@
+@import "tailwindcss";
+@import "@kshop/ui/styles.css";
+
+@source "../../../../packages/ui/src";

@@ -34,7 +34,9 @@
    archivo ganan**. Adapta el skill al proyecto; no migres el proyecto al skill.
 3. Trabajo por fases: una fase = un PRP en `.titan/plans/` aprobado por Roberto → implementación →
    verificación (typecheck, lint, tests, tests de RLS, prueba en navegador) → commit.
-4. **Nada de push, deploy ni cambios en servicios externos** (Supabase, Vercel, GitHub, DNS) sin permiso explícito.
+4. **Nada de push, deploy ni cambios en servicios externos** (Vercel, GitHub, DNS) sin permiso explícito.
+   Excepción (Roberto, 2026-10-24): el **Supabase online de Kshop** (dev y prod por ahora) admite migraciones,
+   tests y config de Auth sin pedir permiso cada vez.
 
 ## Los 4 comportamientos (anti-fallos de código)
 
@@ -44,19 +46,19 @@
 3. **Cambios quirúrgicos** — Toca solo lo necesario. Sigue el estilo existente.
 4. **Ejecución orientada a objetivos** — Criterios verificables e iterar hasta cumplirlos. Plan breve `Paso → verificar: check`.
 
-## Stack (propuesto; se confirma en la Fase 0b)
+## Stack (confirmado en la Fase 0b)
 
 | Capa | Tecnología |
 |------|------------|
 | Monorepo | **pnpm + Turborepo**. Paquetes `@kshop/*` |
-| Web | `apps/web`: **Next.js App Router** (última estable) — tienda pública (SSR/SEO), admin de tienda, superadmin y API `/api/v1` |
+| Web | `apps/web`: **Next.js 16** App Router (`proxy.ts`, no `middleware.ts`; leer `node_modules/next/dist/docs/`) — tienda pública (SSR/SEO), admin de tienda, superadmin y API `/api/v1` |
 | Apps móviles | `apps/store-app` (una por tienda) y `apps/admin-app`: **Vite + React + Capacitor** (se añaden en la Fase 7) |
 | Paquetes | `packages/ui` (shadcn/Tailwind, temas por tokens), `packages/core` (tipos, Zod, dinero/monedas, carrito, estados de orden), `packages/data` (cliente Supabase, documentos GraphQL + codegen, llamadas a la API) |
-| BD / Auth / Storage | **Supabase** (proyecto nuevo y propio, nunca el de klauShop; dev separado de prod) |
+| BD / Auth / Storage | **Supabase** (proyecto propio `siyiupetrjyzkumhdupy`, nunca el de klauShop; por ahora dev = prod) |
 | Lecturas | **pg_graphql** + urql + graphql-codegen; filtros facetados/búsqueda → funciones SQL |
-| Escrituras críticas | Servidor + transacción (Drizzle o funciones SQL) con `for update` |
-| Esquema | `supabase/`: migraciones, RLS, funciones y tests de RLS |
-| Estilos | Tailwind + shadcn/ui |
+| Escrituras críticas | Funciones SQL transaccionales (`for update` cuando toque) con `execute` solo para `service_role`, llamadas por RPC desde `/api/v1` |
+| Esquema | `supabase/migrations/*.sql` (SQL a mano, sin Drizzle) aplicadas con la Management API; tests de RLS en `supabase/tests/` |
+| Estilos | Tailwind v4 + componentes propios estilo shadcn en `@kshop/ui`; tokens de la marca (violeta #5B21B6, noche #24104F, dorado #F2B705; Outfit + DM Sans) |
 | Deploy | Vercel con wildcard `*.kshop.fullkod.com` (en local: `*.localhost`) |
 
 **Se aparta del Golden Path de Titan Factory:** sin Polar ni Prisma; suscripciones con cobro manual
@@ -100,7 +102,21 @@
 
 ## Comandos
 
-Se definen en la Fase 0b (monorepo). Hasta entonces el repo solo contiene la capa de agente.
+`.env.local` vive en la **raíz** (lo leen los scripts y `apps/web/next.config.ts`); plantilla en `.env.example`.
+
+| Comando | Qué hace |
+|---------|----------|
+| `pnpm dev` | Web en `http://kshop.localhost:3000` (plataforma) y `http://{slug}.kshop.localhost:3000` (tiendas) |
+| `pnpm typecheck` · `pnpm lint` · `pnpm test` · `pnpm build` | Calidad (Turborepo). El lint prohíbe `next/*` en `packages/*`, `"use server"` y `any` |
+| `pnpm db:status` · `pnpm db:migrate` | Estado / aplicar `supabase/migrations/*.sql` en el Supabase online (Management API, con historial) |
+| `pnpm test:rls` | Tests de aislamiento entre tiendas (`supabase/tests/*.test.sql`), en una transacción con rollback |
+| `pnpm db:query "<sql>"` | SQL ad hoc contra el proyecto |
+| `pnpm db:auth-config` | Aplica `supabase/auth-config.json` (site URL, redirects `*.kshop.localhost`, signup cerrado) |
+| `pnpm db:graphql-schema` → `pnpm codegen` | Vuelca el esquema de pg_graphql (introspección solo en transacción) y regenera `packages/data/src/gql` |
+| `pnpm superadmin:create <email>` | Crea o promueve un superadmin |
+| `pnpm e2e:setup` · `pnpm e2e:api` · `pnpm e2e:cleanup` | Cuentas `@e2e.kshop.test`, checks de API y limpieza (con `pnpm dev` corriendo) |
+
+Tras cada migración que toque tablas o funciones públicas: `pnpm test:rls`, `pnpm db:graphql-schema && pnpm codegen`.
 
 ## Auto-blindaje
 

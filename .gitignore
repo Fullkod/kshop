@@ -39,3 +39,6 @@ supabase/.branches/
 .claude/skills/**/node_modules
 CLAUDE.local.md
 .titan-toolkit-backups/
+
+# Playwright MCP session files (snapshots, console logs)
+.playwright-mcp/

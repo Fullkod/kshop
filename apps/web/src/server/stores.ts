@@ -1,0 +1,44 @@
+import "server-only";
+import { currencyCodeSchema, type CurrencyCode, type StoreStatus } from "@kshop/core";
+import { createGraphqlClient, StoreBySlugQuery } from "@kshop/data";
+import { unstable_cache } from "next/cache";
+import { supabaseConfig } from "@/env";
+
+export type PublicStore = {
+  id: string;
+  slug: string;
+  name: string;
+  status: StoreStatus;
+  baseCurrency: CurrencyCode;
+  whatsappPhone: string | null;
+  logoUrl: string | null;
+};
+
+export const storeCacheTag = (slug: string) => `store:${slug}`;
+
+// Anonymous pg_graphql read: only the public store card is visible to anon.
+const graphql = createGraphqlClient({ ...supabaseConfig, noCache: true });
+
+async function fetchStoreBySlug(slug: string): Promise<PublicStore | null> {
+  const result = await graphql.query(StoreBySlugQuery, { slug }).toPromise();
+  if (result.error) throw result.error;
+  const node = result.data?.storesCollection?.edges[0]?.node;
+  if (!node) return null;
+  return {
+    id: node.id,
+    slug: node.slug,
+    name: node.name,
+    status: node.status,
+    baseCurrency: currencyCodeSchema.parse(node.baseCurrency),
+    whatsappPhone: node.whatsappPhone ?? null,
+    logoUrl: node.logoUrl ?? null,
+  };
+}
+
+/** Store lookup by slug, cached per store (invalidated with revalidateTag(storeCacheTag(slug))). */
+export function getStoreBySlug(slug: string): Promise<PublicStore | null> {
+  return unstable_cache(() => fetchStoreBySlug(slug), ["store-by-slug", slug], {
+    tags: [storeCacheTag(slug)],
+    revalidate: 300,
+  })();
+}

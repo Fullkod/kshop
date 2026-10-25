@@ -1,0 +1,87 @@
+/*
+ * Kshop design tokens (brand manual, 2026-10-24): violet #5B21B6, night #24104F, gold #F2B705.
+ * Type: Outfit (display), DM Sans (text), JetBrains Mono (code). Stores override these tokens with their theme.
+ */
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-surface: var(--surface);
+  --color-muted-foreground: var(--muted);
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--accent);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-gold: var(--gold);
+  --color-night: var(--night);
+  --color-success: var(--ok);
+  --color-success-soft: var(--ok-bg);
+  --color-destructive: var(--bad);
+  --color-destructive-soft: var(--bad-bg);
+
+  --font-display: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+}
+
+:root {
+  --bg: #ffffff;
+  --fg: #17132a;
+  --surface: #f7f4fd;
+  --muted: #625c7a;
+  --line: #e3dcf3;
+  --accent: #5b21b6;
+  --accent-fg: #ffffff;
+  --accent-soft: #efeafb;
+  --gold: #f2b705;
+  --night: #24104f;
+  --ok: #1f7a4d;
+  --ok-bg: #e3f4ea;
+  --bad: #a3262e;
+  --bad-bg: #fbe6e7;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #120a28;
+    --fg: #f1edfa;
+    --surface: #1c1238;
+    --muted: #a79fc2;
+    --line: #2f2353;
+    --accent: #b79cff;
+    --accent-fg: #120a28;
+    --accent-soft: #261a4a;
+    --ok: #6fd39c;
+    --ok-bg: #17321f;
+    --bad: #ff8f95;
+    --bad-bg: #3a1a1e;
+    color-scheme: dark;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
