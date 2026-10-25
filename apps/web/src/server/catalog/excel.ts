@@ -18,6 +18,7 @@ import {
   type AttributeInputType,
   type ExcelRow,
   type ImportPreview,
+  type ImportProgress,
 } from "@kshop/core";
 import ExcelJS from "exceljs";
 import { mapDbError } from "../db-errors";
@@ -721,17 +722,6 @@ function buildPayload(
   }));
   return payload;
 }
-
-export type ImportProgress = {
-  status: string;
-  processedProducts: number;
-  totalProducts: number;
-  created: number;
-  updated: number;
-  skipped: number;
-  failed: { productKey: string; error: string }[];
-  done: boolean;
-};
 
 /** Applies the next batch of product groups (each one in its own transaction). */
 export async function runImportBatch(

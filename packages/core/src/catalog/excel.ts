@@ -138,3 +138,15 @@ export type ImportPreview = {
   toCreate: { categories: string[]; brands: string[]; collections: string[]; values: string[] };
   limit: { max: number | null; current: number; newProducts: number; exceeded: boolean };
 };
+
+/** Progress of an import job, returned by each POST .../imports/{jobId}/run batch. */
+export type ImportProgress = {
+  status: string;
+  processedProducts: number;
+  totalProducts: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  failed: { productKey: string; error: string }[];
+  done: boolean;
+};

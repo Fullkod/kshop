@@ -5,6 +5,8 @@ import type {
   CollectionInput,
   CreateStoreInput,
   CurrencyInput,
+  ImportPreview,
+  ImportProgress,
   ProductInput,
   ProductMediaInput,
   ProductStatus,
@@ -79,6 +81,18 @@ export type ProductMedia = {
   sortOrder: number;
 };
 
+export type ImportJobInput = {
+  /** Path in the private bucket store-imports: stores/{storeId}/imports/... */
+  fileKey: string;
+  fileName?: string;
+  productTypeId: string;
+  mode?: "create_only" | "upsert";
+  createMissing?: boolean;
+};
+
+/** A file returned by the API (Excel template/export). */
+export type DownloadedFile = { blob: Blob; fileName: string };
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -100,7 +114,7 @@ export type ApiClientOptions = {
 export function createApiClient(options: ApiClientOptions) {
   const doFetch = options.fetch ?? fetch;
 
-  async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  async function send(method: string, path: string, body?: unknown): Promise<Response> {
     const token = await options.getAccessToken();
     const res = await doFetch(`${options.baseUrl}/api/v1${path}`, {
       method,
@@ -110,9 +124,8 @@ export function createApiClient(options: ApiClientOptions) {
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
-    const data: unknown = res.status === 204 ? null : await res.json().catch(() => null);
     if (!res.ok) {
-      const err = (data as ApiErrorBody | null)?.error;
+      const err = ((await res.json().catch(() => null)) as ApiErrorBody | null)?.error;
       throw new ApiError(
         res.status,
         err?.code ?? "unknown",
@@ -120,7 +133,18 @@ export function createApiClient(options: ApiClientOptions) {
         err?.fields,
       );
     }
-    return data as T;
+    return res;
+  }
+
+  async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+    const res = await send(method, path, body);
+    return (res.status === 204 ? null : await res.json().catch(() => null)) as T;
+  }
+
+  async function download(path: string, fallbackName: string): Promise<DownloadedFile> {
+    const res = await send("GET", path);
+    const match = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "");
+    return { blob: await res.blob(), fileName: match?.[1] ?? fallbackName };
   }
 
   return {
@@ -158,6 +182,12 @@ export function createApiClient(options: ApiClientOptions) {
             rateToBase: number;
             rounding: number | null;
           }>("PUT", `${base}/currencies`, input),
+        excelTemplate: (productTypeId: string) =>
+          download(`${base}/excel/template?productTypeId=${productTypeId}`, "plantilla.xlsx"),
+        excelExport: (productTypeId: string) =>
+          download(`${base}/excel/export?productTypeId=${productTypeId}`, "productos.xlsx"),
+        createImport: (input: ImportJobInput) => request<ImportPreview>("POST", `${base}/imports`, input),
+        runImport: (jobId: string) => request<ImportProgress>("POST", `${base}/imports/${jobId}/run`),
       };
     },
     platform: {
