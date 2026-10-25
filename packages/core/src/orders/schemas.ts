@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { currencyCodeSchema } from "../currency";
+import { manualDiscountSchema, voucherCodeSchema } from "../discounts/schemas";
 import { phoneSchema } from "./phone";
 import { ORDER_STATUSES, SHIPPING_TYPES } from "./status";
 
@@ -190,6 +191,8 @@ export const adminOrderSchema = checkoutSchema
   .omit({ cartToken: true, createAccountPassword: true })
   .extend({
     customerId: uuid.optional(),
+    voucherCode: voucherCodeSchema.optional(),
+    manualDiscount: manualDiscountSchema.optional(),
     lines: z
       .array(z.object({ variantId: uuid, quantity: z.coerce.number().int().min(1).max(MAX_LINE_QUANTITY) }))
       .min(1, "Añade al menos un producto.")

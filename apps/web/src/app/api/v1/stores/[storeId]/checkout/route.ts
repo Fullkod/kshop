@@ -55,6 +55,7 @@ export const POST = apiHandler(async (request: Request, ctx: Ctx) => {
     cartId: cart?.cartId ?? null,
     lines: cart?.lines ?? [],
     input,
+    voucherCode: cart?.voucherCode ?? null,
   });
   return NextResponse.json({ ...result, account }, { status: result.created ? 201 : 200 });
 });

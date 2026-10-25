@@ -4,12 +4,13 @@ import {
   orderWhatsappText,
   whatsappLink,
   type CheckoutInput,
+  type ManualDiscountInput,
   type OrderChannel,
   type OrderStatus,
   type PaymentStatus,
   type ShippingType,
 } from "@kshop/core";
-import type { CheckoutOptions, CheckoutResponse, PublicOrder } from "@kshop/data";
+import type { CheckoutOptions, CheckoutResponse, OrderDiscount, PublicOrder } from "@kshop/data";
 import { hasModule } from "../auth";
 import { invalidateCatalog } from "../catalog/access";
 import { mapDbError } from "../db-errors";
@@ -99,6 +100,7 @@ type OrderRow = {
   subtotal: number;
   shipping_total: number | null;
   discount_total: number;
+  voucher_code: string | null;
   total: number | null;
   paid_total: number;
   customer_name: string;
@@ -115,9 +117,18 @@ type OrderRow = {
     attributes: { name: string; value: string }[];
     image_url: string | null;
     quantity: number;
+    unit_list_price: number | null;
     unit_price: number;
     line_total: number;
     sort_order: number;
+  }[];
+  order_discounts: {
+    kind: OrderDiscount["kind"];
+    name: string;
+    code: string | null;
+    reward: OrderDiscount["reward"];
+    value: number;
+    amount: number;
   }[];
   order_events: { type: string; payload: Record<string, unknown>; created_at: string; is_internal: boolean }[];
 };
@@ -137,9 +148,18 @@ function toPublicOrder(row: OrderRow): PublicOrder {
       attributes: l.attributes,
       imageUrl: l.image_url,
       quantity: l.quantity,
+      listPrice: num(l.unit_list_price),
       unitPrice: Number(l.unit_price),
       lineTotal: Number(l.line_total),
     }));
+  const discounts: OrderDiscount[] = row.order_discounts.map((d) => ({
+    kind: d.kind,
+    name: d.name,
+    code: d.code,
+    reward: d.reward,
+    value: Number(d.value),
+    amount: Number(d.amount),
+  }));
   const shipping = row.shipping_snapshot as PublicOrder["shipping"];
   const text = orderWhatsappText({
     code,
@@ -154,6 +174,8 @@ function toPublicOrder(row: OrderRow): PublicOrder {
     subtotal: Number(row.subtotal),
     shippingType: row.shipping_type ?? "to_agree",
     shippingTotal: num(row.shipping_total),
+    discountTotal: Number(row.discount_total),
+    voucherCode: row.voucher_code,
     total: num(row.total),
     shippingLabel: shipping.method ?? null,
     address: shipping.address ?? shipping.pickup_point?.name ?? null,
@@ -181,6 +203,7 @@ function toPublicOrder(row: OrderRow): PublicOrder {
       ? { name: row.payment_snapshot.name, instructions: row.payment_snapshot.instructions ?? null }
       : null,
     lines,
+    discounts,
     events: row.order_events
       .filter((e) => !e.is_internal && (e.type === "created" || e.type === "status_changed"))
       .sort((a, b) => a.created_at.localeCompare(b.created_at))
@@ -191,9 +214,11 @@ function toPublicOrder(row: OrderRow): PublicOrder {
 }
 
 const ORDER_SELECT = `id, number, public_token, status, payment_status, channel, currency, subtotal, shipping_total,
-  discount_total, total, paid_total, customer_name, customer_note, shipping_type, shipping_snapshot, payment_snapshot,
-  created_at, stores (name, slug, order_prefix, whatsapp_phone),
-  order_lines (product_name, variant_name, sku, attributes, image_url, quantity, unit_price, line_total, sort_order),
+  discount_total, voucher_code, total, paid_total, customer_name, customer_note, shipping_type, shipping_snapshot,
+  payment_snapshot, created_at, stores (name, slug, order_prefix, whatsapp_phone),
+  order_lines (product_name, variant_name, sku, attributes, image_url, quantity, unit_list_price, unit_price, line_total,
+    sort_order),
+  order_discounts (kind, name, code, reward, value, amount),
   order_events (type, payload, created_at, is_internal)`;
 
 /** Public order page by its unguessable token (no costs, no internal events, no phone). */
@@ -216,6 +241,10 @@ export type PlaceOrderParams = {
   lines: { variant_id: string; quantity: number }[];
   input: Pick<CheckoutInput, "idempotencyKey" | "currency" | "customer" | "shipping" | "paymentMethodId" | "note">;
   createdBy?: string | null;
+  /** Cart voucher (web) or the one typed by the staff (admin). */
+  voucherCode?: string | null;
+  /** Admin orders only (D10). */
+  manualDiscount?: ManualDiscountInput | null;
 };
 
 /** Calls checkout_create_order (one transaction) and expires the storefront cache only if availability flipped. */
@@ -241,6 +270,14 @@ export async function placeOrder(storeId: string, params: PlaceOrderParams): Pro
       payment_method_id: input.paymentMethodId ?? null,
       note: input.note ?? null,
       created_by: params.createdBy ?? null,
+      voucher_code: params.voucherCode ?? null,
+      ...(params.manualDiscount && {
+        manual_discount: {
+          reward: params.manualDiscount.reward,
+          value: params.manualDiscount.value,
+          reason: params.manualDiscount.reason ?? null,
+        },
+      }),
     },
   });
   if (error) mapDbError(error, "El pedido");

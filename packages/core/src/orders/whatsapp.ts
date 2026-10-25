@@ -13,6 +13,9 @@ export type WhatsappOrder = {
   subtotal: number;
   shippingType: ShippingType;
   shippingTotal: number | null;
+  /** Voucher and manual discount (promotions are already in the line totals). */
+  discountTotal?: number;
+  voucherCode?: string | null;
   total: number | null;
   shippingLabel?: string | null;
   address?: string | null;
@@ -36,6 +39,9 @@ export function orderWhatsappText(order: WhatsappOrder): string {
   const tail = [
     "",
     `Subtotal: ${money(order.subtotal)}`,
+    order.discountTotal
+      ? `Descuento${order.voucherCode ? ` (cupón ${order.voucherCode})` : ""}: -${money(order.discountTotal)}`
+      : null,
     `Entrega: ${order.shippingLabel ?? SHIPPING_TYPE_LABELS[order.shippingType]} (${shipping})`,
     order.total === null ? "Total: a confirmar con la tienda" : `*Total: ${money(order.total)}*`,
     order.address ? `Dirección: ${order.address}` : null,

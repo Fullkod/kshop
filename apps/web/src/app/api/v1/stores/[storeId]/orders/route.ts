@@ -16,6 +16,8 @@ export const POST = apiHandler(async (request: Request, ctx: RouteContext<"/api/
     lines: input.lines.map((l) => ({ variant_id: l.variantId, quantity: l.quantity })),
     input,
     createdBy: user.id,
+    voucherCode: input.voucherCode ?? null,
+    manualDiscount: input.manualDiscount ?? null,
   });
   return NextResponse.json(result, { status: result.created ? 201 : 200 });
 });

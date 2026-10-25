@@ -28,6 +28,7 @@
     "e2e:excel": "node scripts/e2e-excel.mjs",
     "e2e:excel-load": "node scripts/e2e-excel-load.mjs",
     "e2e:orders": "node scripts/e2e-orders.mjs",
+    "e2e:discounts": "node scripts/e2e-discounts.mjs",
     "qa:orders": "node scripts/qa-orders.mjs"
   },
   "devDependencies": {

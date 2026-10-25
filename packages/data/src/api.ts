@@ -20,6 +20,11 @@ import type {
   StockInput,
   WarehouseInput,
   AdminOrderInput,
+  CartVoucherInput,
+  PromotionInput,
+  VoucherInput,
+  VoucherScope,
+  DiscountReward,
   CartUpdateInput,
   CheckoutInput,
   OrderPaymentInput,
@@ -148,8 +153,11 @@ export type CartLine = {
   sku: string;
   imageUrl: string | null;
   quantity: number;
+  /** Price before the promotion (= unitPrice without one). */
+  listPrice: number;
   unitPrice: number;
   compareAtPrice: number | null;
+  promotionName: string | null;
   lineTotal: number;
   /** Units that can be bought now (0 = unavailable). */
   available: number;
@@ -160,9 +168,34 @@ export type Cart = {
   token: string | null;
   currency: CurrencyCode;
   lines: CartLine[];
+  /** Sum of the lines with their promotions. */
   subtotal: number;
+  /** Saving of the promotions (list prices - subtotal). */
+  promotionSavings: number;
+  /** Voucher typed in the cart: amount null = shipping voucher priced at checkout; error = why it does not apply. */
+  voucher: CartVoucher | null;
+  /** Voucher discount that applies now (0 when it does not apply). */
+  discountTotal: number;
   itemCount: number;
   hasIssues: boolean;
+};
+
+export type CartVoucher = {
+  code: string;
+  name: string | null;
+  scope: VoucherScope | null;
+  amount: number | null;
+  error: string | null;
+};
+
+/** Discount of an order as frozen at checkout (promotion, voucher or manual). */
+export type OrderDiscount = {
+  kind: "promotion" | "voucher" | "manual";
+  name: string;
+  code: string | null;
+  reward: DiscountReward;
+  value: number;
+  amount: number;
 };
 
 /** Active checkout options of a store; prices in the base currency. */
@@ -218,9 +251,12 @@ export type PublicOrder = {
     attributes: { name: string; value: string }[];
     imageUrl: string | null;
     quantity: number;
+    /** Price before the promotion (null in orders before phase 4). */
+    listPrice: number | null;
     unitPrice: number;
     lineTotal: number;
   }[];
+  discounts: OrderDiscount[];
   events: { type: string; to: OrderStatus | null; createdAt: string }[];
   storeName: string;
   /** wa.me link to the store with the order text (D17). */
@@ -400,6 +436,7 @@ export function createApiClient(options: ApiClientOptions) {
       return {
         get: (token?: string | null, currency?: string) => request<Cart>("GET", `${base}${query(token, currency)}`),
         update: (input: CartUpdateInput) => request<Cart>("PUT", base, input),
+        setVoucher: (input: CartVoucherInput) => request<Cart>("PUT", `${base}/voucher`, input),
       };
     },
     checkout: (storeId: string) => ({
@@ -431,6 +468,20 @@ export function createApiClient(options: ApiClientOptions) {
         cancel: (orderId: string, reason?: string) => act(orderId, "cancel", { reason }),
         addNote: (orderId: string, text: string) => act(orderId, "notes", { text }),
         salesToday: () => request<SalesToday>("GET", `${base}/sales-today`),
+      };
+    },
+    /** Admin: promotions and vouchers (module discounts, admin+). */
+    discounts: (storeId: string) => {
+      const base = `/stores/${storeId}`;
+      return {
+        createPromotion: (input: PromotionInput) => request<{ id: string }>("POST", `${base}/promotions`, input),
+        updatePromotion: (id: string, input: PromotionInput) =>
+          request<{ id: string }>("PUT", `${base}/promotions/${id}`, input),
+        deletePromotion: (id: string) => request<null>("DELETE", `${base}/promotions/${id}`),
+        createVoucher: (input: VoucherInput) => request<{ id: string }>("POST", `${base}/vouchers`, input),
+        updateVoucher: (id: string, input: VoucherInput) =>
+          request<{ id: string }>("PUT", `${base}/vouchers/${id}`, input),
+        deleteVoucher: (id: string) => request<null>("DELETE", `${base}/vouchers/${id}`),
       };
     },
     /** Admin: customers of the store. */

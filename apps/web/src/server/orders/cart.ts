@@ -1,13 +1,23 @@
 import "server-only";
-import { convertFromBase, MAX_LINE_QUANTITY, type CartUpdateInput, type CurrencyCode } from "@kshop/core";
+import { MAX_LINE_QUANTITY, type CartUpdateInput, type CurrencyCode, type VoucherScope } from "@kshop/core";
 import type { Cart, CartLine } from "@kshop/data";
+import { mapDbError } from "../db-errors";
 import { hasModule } from "../auth";
 import { mergeGuestCart } from "../customers/accounts";
 import { getServiceClient } from "../supabase";
 
-// Server-side cart (D8): guest token or customer, prices and availability always computed here.
+// Server-side cart (D8): guest token or customer, availability computed here and prices by the SQL pricing
+// engine (public.price_lines: promotions and the voucher, PRP-4 D1), the same one the checkout uses.
 
-type CartRow = { id: string; token: string; customer_id: string | null; currency: CurrencyCode | null };
+type CartRow = {
+  id: string;
+  token: string;
+  customer_id: string | null;
+  currency: CurrencyCode | null;
+  voucher_code: string | null;
+};
+
+const CART_COLUMNS = "id, token, customer_id, currency, voucher_code";
 
 export type CartOwner = { customerId: string | null; token: string | undefined };
 
@@ -37,7 +47,7 @@ async function findCart(storeId: string, owner: CartOwner): Promise<CartRow | nu
     await mergeGuestCart(storeId, owner.token, owner.customerId);
     const { data, error } = await service
       .from("carts")
-      .select("id, token, customer_id, currency")
+      .select(CART_COLUMNS)
       .eq("store_id", storeId)
       .eq("customer_id", owner.customerId)
       .eq("status", "active")
@@ -48,7 +58,7 @@ async function findCart(storeId: string, owner: CartOwner): Promise<CartRow | nu
   if (!owner.token) return null;
   const { data, error } = await service
     .from("carts")
-    .select("id, token, customer_id, currency")
+    .select(CART_COLUMNS)
     .eq("store_id", storeId)
     .eq("token", owner.token)
     .eq("status", "active")
@@ -64,60 +74,123 @@ type LineRow = {
   product_variants: {
     sku: string;
     name: string;
-    price: number;
-    compare_at_price: number | null;
     stock_available: number;
     track_inventory: boolean;
     product_id: string;
     products: { name: string; slug: string; status: string; primary_media_url: string | null } | null;
-    variant_prices: { currency: string; price: number; compare_at_price: number | null }[];
   } | null;
 };
 
-/** Lines with prices in the cart currency and stock problems flagged. */
+type PricedLine = {
+  variant_id: string;
+  list_price: number;
+  compare_at_price: number | null;
+  unit_price: number;
+  line_total: number;
+  promotion: { name: string } | null;
+};
+export type PricedLines = {
+  currency: CurrencyCode;
+  lines: PricedLine[];
+  list_subtotal: number;
+  subtotal: number;
+  promotion_savings: number;
+  voucher: {
+    code: string;
+    name: string | null;
+    scope: VoucherScope | null;
+    amount: number | null;
+    error: string | null;
+  } | null;
+  discount_total: number;
+};
+
+/** Prices of lines in a currency with promotions and an optional voucher (public.price_lines). */
+export async function priceLines(
+  storeId: string,
+  input: {
+    currency: string;
+    lines: { variant_id: string; quantity: number }[];
+    voucherCode?: string | null;
+    customerId?: string | null;
+    phone?: string | null;
+  },
+): Promise<PricedLines> {
+  const { data, error } = await getServiceClient().rpc("price_lines", {
+    p_store_id: storeId,
+    p_input: {
+      currency: input.currency,
+      lines: input.lines,
+      voucher_code: input.voucherCode ?? null,
+      customer_id: input.customerId ?? null,
+      phone: input.phone ?? null,
+    },
+  });
+  if (error) mapDbError(error);
+  return data as PricedLines;
+}
+
+/** Lines with prices in the cart currency (promotions and voucher included) and stock problems flagged. */
 export async function cartView(storeId: string, cart: CartRow | null, requestedCurrency?: string): Promise<Cart> {
   const currencies = await saleCurrencies(storeId);
   const currency = pickCurrency(currencies, requestedCurrency ?? cart?.currency);
-  if (!cart) return { token: null, currency: currency.currency, lines: [], subtotal: 0, itemCount: 0, hasIssues: false };
+  const empty: Cart = {
+    token: null,
+    currency: currency.currency,
+    lines: [],
+    subtotal: 0,
+    promotionSavings: 0,
+    voucher: null,
+    discountTotal: 0,
+    itemCount: 0,
+    hasIssues: false,
+  };
+  if (!cart) return empty;
 
   const { data, error } = await getServiceClient()
     .from("cart_lines")
     .select(
       `variant_id, quantity,
-       product_variants (sku, name, price, compare_at_price, stock_available, track_inventory, product_id,
-         products (name, slug, status, primary_media_url),
-         variant_prices (currency, price, compare_at_price))`,
+       product_variants (sku, name, stock_available, track_inventory, product_id,
+         products (name, slug, status, primary_media_url))`,
     )
     .eq("store_id", storeId)
     .eq("cart_id", cart.id)
     .order("added_at")
     .returns<LineRow[]>();
   if (error) throw error;
+  const rows = data.filter((row) => row.product_variants?.products);
+  if (!rows.length) return { ...empty, token: cart.customer_id ? null : cart.token };
 
-  const price = (base: number, override: number | null | undefined) =>
-    override ?? (currency.is_base ? Number(base) : convertFromBase(Number(base), Number(currency.rate_to_base), currency.rounding));
+  const priced = await priceLines(storeId, {
+    currency: currency.currency,
+    lines: rows.map((row) => ({ variant_id: row.variant_id, quantity: row.quantity })),
+    voucherCode: cart.voucher_code,
+    customerId: cart.customer_id,
+  });
+  const prices = new Map(priced.lines.map((l) => [l.variant_id, l]));
 
-  const lines: CartLine[] = data.flatMap((row) => {
-    const v = row.product_variants;
-    if (!v?.products) return [];
-    const override = v.variant_prices.find((p) => p.currency === currency.currency);
-    const unitPrice = price(v.price, override ? Number(override.price) : null);
-    const compare = override ? override.compare_at_price : v.compare_at_price;
-    const published = v.products.status === "published";
+  const lines: CartLine[] = rows.flatMap((row) => {
+    const v = row.product_variants!;
+    const p = prices.get(row.variant_id);
+    if (!p) return [];
+    const published = v.products!.status === "published";
     const available = !published ? 0 : v.track_inventory ? Math.max(0, v.stock_available) : MAX_LINE_QUANTITY;
     return [
       {
         variantId: row.variant_id,
         productId: v.product_id,
-        productSlug: v.products.slug,
-        productName: v.products.name,
+        productSlug: v.products!.slug,
+        productName: v.products!.name,
         variantName: v.name,
         sku: v.sku,
-        imageUrl: v.products.primary_media_url,
+        imageUrl: v.products!.primary_media_url,
         quantity: row.quantity,
-        unitPrice,
-        compareAtPrice: compare == null ? null : price(compare, override ? Number(compare) : null),
-        lineTotal: Math.round(unitPrice * row.quantity * 100) / 100,
+        listPrice: Number(p.list_price),
+        unitPrice: Number(p.unit_price),
+        compareAtPrice: p.compare_at_price == null ? null : Number(p.compare_at_price),
+        promotionName: p.promotion?.name ?? null,
+        lineTotal: Number(p.line_total),
         available,
         issue: available === 0 ? "unavailable" : available < row.quantity ? "insufficient" : null,
       },
@@ -128,7 +201,16 @@ export async function cartView(storeId: string, cart: CartRow | null, requestedC
     token: cart.customer_id ? null : cart.token,
     currency: currency.currency,
     lines,
-    subtotal: Math.round(lines.reduce((sum, l) => sum + l.lineTotal, 0) * 100) / 100,
+    subtotal: Number(priced.subtotal),
+    promotionSavings: Number(priced.promotion_savings),
+    voucher: priced.voucher && {
+      code: priced.voucher.code,
+      name: priced.voucher.name,
+      scope: priced.voucher.scope,
+      amount: priced.voucher.amount == null ? null : Number(priced.voucher.amount),
+      error: priced.voucher.error,
+    },
+    discountTotal: Number(priced.discount_total),
     itemCount: lines.reduce((sum, l) => sum + l.quantity, 0),
     hasIssues: lines.some((l) => l.issue !== null),
   };
@@ -146,7 +228,7 @@ export async function updateCart(storeId: string, owner: CartOwner, input: CartU
     const { data, error } = await service
       .from("carts")
       .insert({ store_id: storeId, customer_id: owner.customerId, currency: input.currency ?? null })
-      .select("id, token, customer_id, currency")
+      .select(CART_COLUMNS)
       .single<CartRow>();
     if (error) throw error;
     cart = data;
@@ -192,11 +274,24 @@ export async function updateCart(storeId: string, owner: CartOwner, input: CartU
   return cartView(storeId, cart, input.currency);
 }
 
+/** Sets or removes the voucher of the cart (validated when the cart is priced, again at checkout). */
+export async function setCartVoucher(storeId: string, owner: CartOwner, code: string | null): Promise<Cart> {
+  const cart = await findCart(storeId, owner);
+  if (!cart) return cartView(storeId, null);
+  const { error } = await getServiceClient().from("carts").update({ voucher_code: code }).eq("id", cart.id);
+  if (error) throw error;
+  return cartView(storeId, { ...cart, voucher_code: code });
+}
+
 /** Lines of the cart for the checkout function (server-side quantities, never the client's). */
 export async function cartLinesForCheckout(
   storeId: string,
   owner: CartOwner,
-): Promise<{ cartId: string; lines: { variant_id: string; quantity: number }[] } | null> {
+): Promise<{
+  cartId: string;
+  voucherCode: string | null;
+  lines: { variant_id: string; quantity: number }[];
+} | null> {
   const cart = await findCart(storeId, owner);
   if (!cart) return null;
   const { data, error } = await getServiceClient()
@@ -205,5 +300,5 @@ export async function cartLinesForCheckout(
     .eq("cart_id", cart.id)
     .returns<{ variant_id: string; quantity: number }[]>();
   if (error) throw error;
-  return data.length ? { cartId: cart.id, lines: data } : null;
+  return data.length ? { cartId: cart.id, voucherCode: cart.voucher_code, lines: data } : null;
 }
