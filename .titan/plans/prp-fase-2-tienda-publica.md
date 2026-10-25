@@ -1,6 +1,6 @@
 # PRP-2: Tienda pública de Kshop
 
-> **Estado**: APROBADO (2026-10-25) — Roberto: D13 sí (WhatsApp aún no se puede probar de punta a punta), D1 sí (Cache Components), D10 cambiada (URLs en inglés), Lighthouse: cuanto más alto mejor (los umbrales son el mínimo). Resto de D tal cual.
+> **Estado**: COMPLETADO salvo Lighthouse en Vercel (2026-10-25). APROBADO (2026-10-25) — Roberto: D13 sí (WhatsApp aún no se puede probar de punta a punta), D1 sí (Cache Components), D10 cambiada (URLs en inglés), Lighthouse: cuanto más alto mejor (los umbrales son el mínimo). Resto de D tal cual.
 > **Fecha**: 2026-10-25
 > **Proyecto**: Kshop
 > **Fase**: 2 (ver `arranque-y-fases.md`). Código de partida: commit `0684e23` (Fase 1 cerrada)
@@ -249,8 +249,8 @@ mensaje en español, happy path); paso 7–8 del happy path en el navegador; el 
 | 2.3 Caché, tema y layout | Hecha: Cache Components activo (D1), `use cache` + tags por tienda, tema como variables CSS + 6 fuentes, cabecera/pie/menús, selector de moneda (D11) | `8382021`, `8375274` |
 | 2.4 Páginas públicas | Hecha: portada por secciones (+ por defecto), listados, búsqueda, ficha con variantes y «Pedir por WhatsApp», páginas; probado en navegador (390 px y escritorio) | `a1aa24c` |
 | 2.5 SEO y rendimiento | Hecha: robots/sitemap por tienda, canónicos, OG, JSON-LD, ISR en rutas con slug. Lighthouse móvil local: A11y/BP/SEO 100; rendimiento 82–93 con mucho ruido local (dev server + otra app en la misma máquina) → **medir en Vercel** | `bae3f5c` |
-| 2.6 Admin «Apariencia» y colecciones automáticas | Pendiente | — |
-| 2.7 Validación final | Pendiente (incluye Lighthouse en Vercel y el E2E del happy path con contenido creado desde el admin) | — |
+| 2.6 Admin «Apariencia» y colecciones automáticas | Hecha: tema (presets, colores, fuentes, esquinas, aviso de contraste, vista previa), portada por secciones, banners (WebP 1920/768), menús de 2 niveles, páginas Markdown, colecciones automáticas; API `/content/*` (admin + módulo `themes`, invalida al instante); `e2e:catalog` 45/45; E2E en navegador 9/9 | `d9d1d69`, capturas `.titan/qa/fase-2/14–16` |
+| 2.7 Validación final | Hecha salvo Lighthouse en Vercel: typecheck, lint, test (core 35), build, `test:rls` 177/177, `e2e:catalog` 45/45, `e2e:excel` 22/22, E2E del happy path en navegador (390 px y escritorio). **Pendiente con permiso de Roberto**: desplegar en Vercel y medir Lighthouse allí (en local el rendimiento oscila 74–93 por ruido) | — |
 
 ## 🧠 Aprendizajes (Self-Annealing / Neural Network)
 
