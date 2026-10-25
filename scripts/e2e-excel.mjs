@@ -264,6 +264,62 @@ check(
   mv,
 );
 
+// 5. Image URLs: downloaded once, private addresses refused, not repeated on re-import.
+const { data: someMedia } = await service
+  .from("product_media")
+  .select("url")
+  .eq("store_id", store.id)
+  .limit(1)
+  .single();
+const imgBook = (await download("template")).wb;
+const imgSheet = imgBook.getWorksheet("Productos");
+const imgRow = imgSheet.getRow(2);
+imgRow.getCell(col["Código producto"]).value = `IMG${run}`;
+imgRow.getCell(col["Nombre"]).value = `Blusa Imagen ${run}`;
+imgRow.getCell(col["SKU"]).value = `IMG${run}-S`;
+imgRow.getCell(col["Talla"]).value = "S";
+imgRow.getCell(col["Color"]).value = "Rojo";
+imgRow.getCell(col["Precio"]).value = 1100;
+imgRow.getCell(col["Imágenes (URLs)"]).value = `${someMedia.url}, http://127.0.0.1:3000/logo.png`;
+const imgImport = await importFile(imgBook, "imagenes.xlsx", "upsert");
+check("images preview: one new product", imgImport.body.products?.create === 1, imgImport.body);
+const imgDone = await runAll(imgImport.body.jobId);
+check(
+  "private image URL refused with a warning",
+  imgDone?.created === 1 && imgDone.warnings?.length === 1 && /127\.0\.0\.1/.test(imgDone.warnings[0].error),
+  imgDone,
+);
+const mediaOf = async () => {
+  const { data: v } = await service
+    .from("product_variants")
+    .select("product_id")
+    .eq("store_id", store.id)
+    .eq("sku", `IMG${run}-S`)
+    .single();
+  const { data } = await service
+    .from("product_media")
+    .select("url, thumb_url, source_url")
+    .eq("product_id", v.product_id);
+  return data ?? [];
+};
+const media1 = await mediaOf();
+check(
+  "public image URL downloaded as WebP into the store's folder",
+  media1.length === 1 &&
+    media1[0].source_url === someMedia.url &&
+    media1[0].url.includes(`/stores/${store.id}/products/`) &&
+    media1[0].url.endsWith("-1600.webp") &&
+    media1[0].thumb_url?.endsWith("-480.webp"),
+  media1,
+);
+const imgAgain = await importFile(imgBook, "imagenes.xlsx", "upsert");
+const imgDone2 = await runAll(imgAgain.body.jobId);
+const media2 = await mediaOf();
+check("re-import does not download the image again", imgDone2?.updated === 1 && media2.length === 1, {
+  imgDone2,
+  media: media2.length,
+});
+
 const failed = results.filter((ok) => !ok).length;
 console.log(`\n${results.length - failed}/${results.length} passed`);
 if (failed) process.exitCode = 1;

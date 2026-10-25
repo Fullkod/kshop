@@ -4,6 +4,8 @@ import { runImportBatch } from "@/server/catalog/excel";
 import { apiHandler, uuidParam } from "@/server/http";
 
 export const runtime = "nodejs";
+// A batch can download and convert image URLs.
+export const maxDuration = 300;
 
 // POST /api/v1/stores/{storeId}/catalog/imports/{jobId}/run -> applies the next batch; call until done.
 export const POST = apiHandler(

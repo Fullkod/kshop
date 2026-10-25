@@ -18,7 +18,12 @@ type Step =
   | { name: "upload" }
   | { name: "preview"; preview: ImportPreview }
   | { name: "importing"; preview: ImportPreview; progress: ImportProgress | null }
-  | { name: "done"; progress: ImportProgress; failed: ImportProgress["failed"] };
+  | {
+      name: "done";
+      progress: ImportProgress;
+      failed: ImportProgress["failed"];
+      warnings: ImportProgress["warnings"];
+    };
 
 function saveFile({ blob, fileName }: DownloadedFile) {
   const url = URL.createObjectURL(blob);
@@ -87,6 +92,7 @@ export function ExcelImportPage() {
   async function runImport(preview: ImportPreview) {
     setStep({ name: "importing", preview, progress: null });
     const failed: ImportProgress["failed"] = [];
+    const warnings: ImportProgress["warnings"] = [];
     for (;;) {
       const progress = await action.run(() => catalog.runImport(preview.jobId));
       if (!progress) {
@@ -95,8 +101,9 @@ export function ExcelImportPage() {
         return;
       }
       failed.push(...progress.failed);
+      warnings.push(...progress.warnings);
       if (progress.done) {
-        setStep({ name: "done", progress, failed });
+        setStep({ name: "done", progress, failed, warnings });
         return;
       }
       setStep({ name: "importing", preview, progress });
@@ -241,6 +248,18 @@ export function ExcelImportPage() {
                 {step.failed.map((f) => (
                   <li key={f.productKey}>
                     {f.productKey}: {f.error}
+                  </li>
+                ))}
+              </ul>
+            </Alert>
+          )}
+          {step.warnings.length > 0 && (
+            <Alert>
+              <p className="font-medium">Importados con avisos ({step.warnings.length}):</p>
+              <ul className="mt-1 list-disc pl-5">
+                {step.warnings.map((w, i) => (
+                  <li key={i}>
+                    {w.productKey}: {w.error}
                   </li>
                 ))}
               </ul>

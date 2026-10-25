@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { excelRowSchema, IMPORT_MAX_IMAGES } from "./excel";
 import { convertFromBase, convertToBase, marginPercent } from "./pricing";
 import { productInputSchema, productTypeInputSchema } from "./schemas";
 import {
@@ -115,5 +116,45 @@ describe("schemas", () => {
       attributes: [{ attributeId: "4f6c2f5e-6a4b-4c1e-9f3a-2b8d7c6e5a41", scope: "variant" }],
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("excel rows", () => {
+  const row = {
+    productCode: "V1",
+    name: "Vestido",
+    description: "",
+    category: "",
+    brand: "",
+    collections: "",
+    tags: "",
+    status: "",
+    sku: "V1-S",
+    price: "1500",
+    compareAtPrice: "",
+    cost: "",
+    costCurrency: "",
+    stock: "",
+    attributes: {},
+  };
+
+  it("splits image URLs by commas, spaces and line breaks", () => {
+    const parsed = excelRowSchema.parse({
+      ...row,
+      images: "https://a.example/1.jpg, https://a.example/2.png\nhttp://b.example/3.webp",
+    });
+    expect(parsed.images).toEqual([
+      "https://a.example/1.jpg",
+      "https://a.example/2.png",
+      "http://b.example/3.webp",
+    ]);
+    expect(excelRowSchema.parse({ ...row, images: "" }).images).toEqual([]);
+  });
+
+  it("rejects non-http image URLs and too many images", () => {
+    expect(excelRowSchema.safeParse({ ...row, images: "ftp://a.example/1.jpg" }).success).toBe(false);
+    expect(excelRowSchema.safeParse({ ...row, images: "foto.jpg" }).success).toBe(false);
+    const many = Array.from({ length: IMPORT_MAX_IMAGES + 1 }, (_, i) => `https://a.example/${i}.jpg`);
+    expect(excelRowSchema.safeParse({ ...row, images: many.join(",") }).success).toBe(false);
   });
 });

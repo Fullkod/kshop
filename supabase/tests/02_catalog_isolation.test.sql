@@ -221,6 +221,7 @@ select tests.check('anon: cannot read stock_movements', tests.throws('select * f
 select tests.check('anon: cannot read warehouses', tests.throws('select * from public.warehouses'));
 select tests.check('anon: cannot read currency_rate_history', tests.throws('select * from public.currency_rate_history'));
 select tests.check('anon: cannot read products.search_vector', tests.throws('select search_vector from public.products'));
+select tests.check('anon: cannot read product_media.source_url', tests.throws('select source_url from public.product_media'));
 select tests.eq('anon: only sale currencies are visible',
   (select count(*) from public.store_currencies where store_id = tests.fx('store_a'))::int, 1);
 select tests.eq('anon: no tags/media/attributes of drafts',

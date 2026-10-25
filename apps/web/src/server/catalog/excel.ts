@@ -24,6 +24,7 @@ import ExcelJS from "exceljs";
 import { mapDbError } from "../db-errors";
 import { HttpError } from "../http";
 import { getServiceClient } from "../supabase";
+import { importImageFromUrl } from "./remote-images";
 
 // ---------------------------------------------------------------------------
 // Store structure (service client; the caller already passed requireCatalogAccess)
@@ -193,6 +194,7 @@ async function buildWorkbook(s: Structure, rows: ExportRow[]): Promise<Buffer> {
     "• Colecciones y Etiquetas: varios valores separados por comas.",
     `• Precio y Precio anterior en ${s.baseCurrency}. Costo con su moneda (CUP, USD o EUR).`,
     "• Stock: unidades en el almacén principal.",
+    "• Imágenes (URLs): enlaces públicos a las fotos del producto, separados por comas. Se descargan al importar; si ya se importaron antes no se repiten.",
     "• Al importar puedes crear automáticamente las categorías, marcas, colecciones y valores que falten.",
     "• Modo «actualizar»: si el SKU ya existe se actualizan sus datos; las celdas vacías no borran nada.",
   ].forEach((line, i) => (help.getCell(i + 1, 1).value = line));
@@ -220,6 +222,7 @@ type ExportProduct = {
     value_text: string | null;
     value_numeric: number | null;
   }[];
+  product_media: { url: string; sort_order: number }[];
   product_variants: {
     sku: string;
     price: number;
@@ -257,6 +260,7 @@ export async function buildExport(storeId: string, productTypeId: string): Promi
         `slug, name, description_plain, status, category_id, brand_id,
          product_tags(tag), collection_products(collection_id),
          product_attribute_values(attribute_id, value_id, value_text, value_numeric),
+         product_media(url, sort_order),
          product_variants(sku, price, compare_at_price, sort_order, variant_costs(cost_price, cost_currency),
            stocks(quantity, warehouse_id), variant_attribute_values(attribute_id, value_id))`,
       )
@@ -295,6 +299,13 @@ export async function buildExport(storeId: string, productTypeId: string): Promi
                 : null,
             tags: i === 0 ? p.product_tags.map((t) => t.tag).join(", ") : null,
             status: i === 0 ? STATUS_LABEL[p.status] : null,
+            images:
+              i === 0
+                ? [...p.product_media]
+                    .sort((a, b) => a.sort_order - b.sort_order)
+                    .map((m) => m.url)
+                    .join(", ")
+                : null,
             sku: v.sku,
             price: Number(v.price),
             compareAtPrice: v.compare_at_price != null ? Number(v.compare_at_price) : null,
@@ -723,6 +734,42 @@ function buildPayload(
   return payload;
 }
 
+/** Adds the image URLs a product does not have yet (by stored URL or source URL); returns the problems. */
+async function importProductImages(storeId: string, productId: string, urls: string[]): Promise<string[]> {
+  const db = getServiceClient();
+  const { data: existing } = await db
+    .from("product_media")
+    .select("url, source_url, sort_order")
+    .eq("store_id", storeId)
+    .eq("product_id", productId);
+  const known = new Set((existing ?? []).flatMap((m) => [m.url, m.source_url].filter(Boolean)));
+  let sort = Math.max(-1, ...(existing ?? []).map((m) => m.sort_order)) + 1;
+  const problems: string[] = [];
+  for (const source of [...new Set(urls)].filter((u) => !known.has(u))) {
+    try {
+      const image = await importImageFromUrl(storeId, source);
+      const { error } = await db.from("product_media").insert({
+        store_id: storeId,
+        product_id: productId,
+        storage_key: image.storageKey,
+        url: image.url,
+        thumb_url: image.thumbUrl,
+        source_url: source,
+        sort_order: sort++,
+      });
+      if (error) {
+        await db.storage
+          .from("store-media")
+          .remove([image.storageKey, image.storageKey.replace(/-1600\.webp$/, "-480.webp")]);
+        problems.push(`No se pudo registrar la imagen ${source}.`);
+      }
+    } catch (e) {
+      problems.push(e instanceof Error ? e.message : `No se pudo importar la imagen ${source}.`);
+    }
+  }
+  return problems;
+}
+
 /** Applies the next batch of product groups (each one in its own transaction). */
 export async function runImportBatch(
   storeId: string,
@@ -769,6 +816,7 @@ export async function runImportBatch(
   }
 
   const failed: ImportProgress["failed"] = [];
+  const warnings: ImportProgress["warnings"] = [];
   let created = 0;
   let updated = 0;
   let skipped = 0;
@@ -799,9 +847,26 @@ export async function runImportBatch(
       }
       failed.push({ productKey: key, error: message });
       errors = [message];
-    } else if (result === "created") created++;
-    else if (result === "updated") updated++;
-    else skipped++;
+    } else {
+      if (result === "created") created++;
+      else if (result === "updated") updated++;
+      else skipped++;
+      // Rows saved before the images column existed have no "images".
+      const images = g.data.find((d) => d.images?.length)?.images ?? [];
+      if (images.length && result !== "skipped") {
+        const { data: variant } = await db
+          .from("product_variants")
+          .select("product_id")
+          .eq("store_id", storeId)
+          .eq("sku", g.data[0]!.sku)
+          .maybeSingle();
+        if (variant) {
+          for (const problem of await importProductImages(storeId, variant.product_id, images)) {
+            warnings.push({ productKey: key, error: problem });
+          }
+        }
+      }
+    }
     await db
       .from("import_job_rows")
       .update({ applied_at: new Date().toISOString(), ...(errors.length && { errors, action: "skip" }) })
@@ -828,13 +893,14 @@ export async function runImportBatch(
     .eq("id", jobId)
     .select("*")
     .single();
-  return progress(updatedJob ?? job, failed, done);
+  return progress(updatedJob ?? job, failed, done, warnings);
 }
 
 function progress(
   job: Record<string, unknown>,
   failed: ImportProgress["failed"],
   done: boolean,
+  warnings: ImportProgress["warnings"] = [],
 ): ImportProgress {
   const created = Number(job.created_count ?? 0);
   const updated = Number(job.updated_count ?? 0);
@@ -847,6 +913,7 @@ function progress(
     updated,
     skipped,
     failed,
+    warnings,
     done,
   };
 }

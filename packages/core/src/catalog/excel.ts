@@ -11,6 +11,9 @@ export const EXCEL_HELP_SHEET = "Instrucciones";
 export const EXCEL_MAX_ROWS = 5000;
 /** Product groups applied per /run call (each one is its own transaction). */
 export const IMPORT_BATCH_SIZE = 25;
+/** Image URLs per product in the "Imágenes (URLs)" column, and the largest file downloaded. */
+export const IMPORT_MAX_IMAGES = 10;
+export const IMPORT_IMAGE_MAX_BYTES = 15 * 1024 * 1024;
 
 export const PRODUCT_COLUMNS = [
   { key: "productCode", header: "Código producto", width: 18 },
@@ -21,6 +24,7 @@ export const PRODUCT_COLUMNS = [
   { key: "collections", header: "Colecciones", width: 20 },
   { key: "tags", header: "Etiquetas", width: 20 },
   { key: "status", header: "Estado", width: 12 },
+  { key: "images", header: "Imágenes (URLs)", width: 40 },
 ] as const;
 
 export const VARIANT_COLUMNS = [
@@ -112,6 +116,19 @@ export const excelRowSchema = z
       return c as (typeof CURRENCY_CODES)[number];
     }),
     stock: optionalNumber("Stock", { int: true }),
+    /** Image URLs (separated by commas, spaces or line breaks); downloaded on import. */
+    images: z.string().transform((v, ctx) => {
+      const urls = v.split(/[\s,;]+/).filter(Boolean);
+      if (urls.length > IMPORT_MAX_IMAGES) {
+        ctx.addIssue({ code: "custom", message: `Máximo ${IMPORT_MAX_IMAGES} imágenes por producto.` });
+      }
+      for (const url of urls) {
+        if (!/^https?:\/\/[^\s/]+/i.test(url) || !URL.canParse(url)) {
+          ctx.addIssue({ code: "custom", message: `Imagen «${url}» no es una URL válida (http o https).` });
+        }
+      }
+      return urls;
+    }),
     /** Attribute name -> cell text. */
     attributes: z.record(z.string(), z.string()),
   })
@@ -148,5 +165,7 @@ export type ImportProgress = {
   updated: number;
   skipped: number;
   failed: { productKey: string; error: string }[];
+  /** Products imported with problems that did not stop them (e.g. an image that could not be downloaded). */
+  warnings: { productKey: string; error: string }[];
   done: boolean;
 };
