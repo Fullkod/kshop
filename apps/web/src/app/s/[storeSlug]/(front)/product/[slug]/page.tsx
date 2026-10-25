@@ -76,7 +76,7 @@ export default async function ProductPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
       <Breadcrumbs crumbs={[...crumbs, { label: product.name }]} />
-      <ProductView product={product} whatsappPhone={store.whatsappPhone} />
+      <ProductView product={product} />
 
       {(product.description || product.attributes.length > 0) && (
         <section className="grid gap-8 border-t pt-8 md:grid-cols-2 md:gap-12">

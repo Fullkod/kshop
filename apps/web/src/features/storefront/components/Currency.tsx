@@ -52,6 +52,11 @@ export function CurrencyProvider({
   );
 }
 
+/** Currency chosen by the visitor (the cart and the checkout are priced in it). */
+export function useSelectedCurrency(): StoreCurrency | null {
+  return useContext(CurrencyContext)?.selected ?? null;
+}
+
 export type PriceOverride = { currency: string; price: number };
 
 /** Formats a base-currency amount in the visitor's currency (override for that currency if any). */

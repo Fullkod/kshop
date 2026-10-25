@@ -301,6 +301,22 @@ navegador; el staff (rol `staff`) puede gestionar pedidos pero no entregas ni m�
 - **Hallazgo**: tras `auth.admin.updateUserById({ password })` el token viejo da 401 en `getUser`. Es lo deseado en una
   recuperación; el E2E lo comprueba y usa el token que devuelve `/reset`.
 
+### 2026-10-25: Checkout y multi-almacén (D10 corregida)
+- **Error**: en la QA de la Tienda Demo (Pro, 2 almacenes) el carrito veía 12 unidades (`stock_available` suma todos los
+  almacenes activos) pero el checkout solo reservaba en el almacén por defecto (5) → «Solo quedan 2» sin aviso previo.
+- **Fix**: `20261027100400_checkout_multi_warehouse.sql`: bloquea todas las filas de `stocks` activas de la variante
+  (por defecto primero, luego por id) y reparte la reserva por almacén. Pagar y cancelar ya recorrían las reservas por
+  almacén. Test SQL «4 + 2».
+- **Aplicar en**: cualquier cálculo de disponibilidad debe usar la misma regla que `stock_available`.
+
+### 2026-10-25: Valores aleatorios en el render con Cache Components
+- **Error**: `crypto.randomUUID()` en `useRef(...)` del checkout → «unstable value in a Client Component» al prerenderizar.
+- **Fix**: crear la clave de idempotencia en el primer envío (`ref.current ??= crypto.randomUUID()`).
+
+### 2026-10-25: Inserciones en bloque con PostgREST
+- **Error**: `insert([...])` con filas de distintas claves manda `null` en las que faltan (no el default) → `not-null`.
+- **Fix**: todas las filas con las mismas claves (en `demo:seed`).
+
 ### 2026-10-25: Carrera por la última unidad
 - La Management API usa una sola conexión: la carrera entre dos checkouts se prueba con peticiones HTTP en paralelo
   en `pnpm e2e:orders` (Fase 4), no en `test:rls`.

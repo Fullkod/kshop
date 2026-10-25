@@ -62,6 +62,12 @@ export function mapDbError(error: unknown, entity = "El registro"): never {
           "Llegaste al límite de productos de tu plan. Archiva alguno o mejora el plan.",
         );
       }
+      // Order functions (phase 3): Spanish message from SQL, status from the hint.
+      if (error.hint === "insufficient_stock") throw new HttpError(409, "insufficient_stock", error.message ?? "");
+      if (error.hint === "invalid_transition") throw new HttpError(409, "invalid_transition", error.message ?? "");
+      if (error.hint === "shipping_required") throw new HttpError(409, "shipping_required", error.message ?? "");
+      if (error.hint === "store_inactive") throw new HttpError(404, "not_found", error.message ?? "");
+      if (error.hint === "not_found") throw new HttpError(404, "not_found", error.message ?? `${entity} no existe.`);
       throw new HttpError(400, "invalid_data", error.message ?? "Operación no válida.");
     case "P0002":
       throw new HttpError(404, "not_found", `${entity} no existe.`);

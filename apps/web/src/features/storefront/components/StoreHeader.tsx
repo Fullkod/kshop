@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { PublicStore } from "@/server/stores";
 import type { NavLink } from "@/server/storefront/data";
+import { CartLink } from "@/features/cart/CartProvider";
 import { CurrencySelect } from "./Currency";
 
 /** Header: name/logo, menu (dropdowns on desktop, a <details> panel on mobile, no JS needed), search, currency. */
@@ -122,6 +123,7 @@ export function StoreHeader({ store, links }: { store: PublicStore; links: NavLi
             </svg>
           </Link>
           <CurrencySelect />
+          <CartLink />
           <Link
             href="/account"
             className="flex h-10 w-10 items-center justify-center rounded-[var(--sf-radius)] hover:bg-surface"

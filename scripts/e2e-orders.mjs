@@ -199,6 +199,158 @@ async function customers({ anon, ownerA, staffA, ownerB, storeA, storeB }) {
   return { custA: { ...custA, token: undefined }, custB };
 }
 
+// Catalog and checkout options of a store, written with the service client (the admin API arrives in phase 3.5).
+async function seedCatalog(store, ownerId, prefix) {
+  const { data: type, error: typeError } = await service
+    .from("product_types")
+    .insert({ store_id: store.id, name: "Simple", slug: "simple", has_variants: false })
+    .select("id")
+    .single();
+  if (typeError) throw typeError;
+  const variants = {};
+  for (const [key, price, stock] of [["S", 1500, 5], ["M", 900, 1]]) {
+    const { data: productId, error } = await service.rpc("save_product", {
+      p_store_id: store.id,
+      p_input: {
+        product_type_id: type.id,
+        name: `Producto ${key}`,
+        slug: `producto-${key.toLowerCase()}`,
+        status: "published",
+        variants: [{ sku: `${prefix}-${key}`, price, stock, cost: { price: 2, currency: "USD" } }],
+      },
+      p_user_id: ownerId,
+    });
+    if (error) throw error;
+    const { data: v } = await service.from("product_variants").select("id").eq("product_id", productId).single();
+    variants[key] = v.id;
+  }
+  const { data: zone } = await service.from("shipping_zones").insert({ store_id: store.id, name: "Centro" }).select("id").single();
+  const { data: delivery } = await service
+    .from("shipping_methods")
+    .insert({ store_id: store.id, zone_id: zone.id, type: "delivery", name: "Mensajería", price: 200 })
+    .select("id")
+    .single();
+  const { data: agree } = await service
+    .from("shipping_methods")
+    .insert({ store_id: store.id, zone_id: zone.id, type: "to_agree", name: "A convenir" })
+    .select("id")
+    .single();
+  const { data: cash } = await service
+    .from("payment_methods")
+    .insert({ store_id: store.id, name: "Efectivo", instructions: "Pagas al recibir." })
+    .select("id")
+    .single();
+  return { variants, zoneId: zone.id, deliveryId: delivery.id, agreeId: agree.id, cashId: cash.id };
+}
+
+const key = () => `e2e-${randomBytes(8).toString("hex")}`;
+
+async function checkout({ anon, storeA, storeB, ownerIds }) {
+  const A = await seedCatalog(storeA, ownerIds.ownerA, "OA");
+  const B = await seedCatalog(storeB, ownerIds.ownerB, "OB");
+  const cartA = `/stores/${storeA.id}/cart`;
+  const checkoutA = `/stores/${storeA.id}/checkout`;
+  const buyer = { name: "Invitada E2E", phone: "5359990010" };
+  const shipping = { zoneId: A.zoneId, methodId: A.deliveryId, address: "Calle 23 #45, Vedado" };
+
+  let r = await anon("PUT", cartA, { lines: [{ variantId: A.variants.S, quantity: 2 }], mode: "add" });
+  check("guest cart: first line creates the cart and returns a token",
+    r.status === 200 && !!r.body.token && r.body.subtotal === 3000 && r.body.itemCount === 2, r);
+  const token = r.body.token;
+  r = await anon("PUT", cartA, { token, lines: [{ variantId: B.variants.S, quantity: 1 }], mode: "add" });
+  check("guest cart: a variant of another store is ignored", r.status === 200 && r.body.lines.length === 1, r);
+  r = await anon("PUT", cartA, { token, lines: [{ variantId: A.variants.S, quantity: 9 }] });
+  check("guest cart: more than available is flagged", r.status === 200 && r.body.lines[0].issue === "insufficient", r);
+  r = await anon("PUT", cartA, { token, lines: [{ variantId: A.variants.S, quantity: 2 }] });
+  r = await anon("GET", `${cartA}?token=${token}`);
+  check("guest cart: read back by token", r.status === 200 && r.body.lines[0].quantity === 2, r);
+
+  r = await anon("GET", checkoutA);
+  check("checkout options: zones, methods and payment methods",
+    r.status === 200 && r.body.shippingEnabled && r.body.methods.length === 2 && r.body.paymentMethods.length === 1, r);
+
+  r = await anon("POST", checkoutA, { idempotencyKey: key(), cartToken: token, customer: { name: "", phone: "1" } });
+  check("checkout: invalid customer -> 400 with fields", r.status === 400 && !!r.body.error.fields, r);
+  r = await anon("POST", checkoutA, {
+    idempotencyKey: key(), cartToken: token, customer: buyer, shipping: { zoneId: A.zoneId, methodId: A.deliveryId },
+  });
+  check("checkout: delivery without address -> 400", r.status === 400, r);
+
+  const idem = key();
+  const body = { idempotencyKey: idem, cartToken: token, customer: buyer, shipping, paymentMethodId: A.cashId, note: "Llamar antes" };
+  r = await anon("POST", checkoutA, body);
+  check("checkout: guest order created (OA-1001, 3000 + 200)",
+    r.status === 201 && r.body.order.code === "OA-1001" && r.body.order.total === 3200, r);
+  const order = r.body.order;
+  check("checkout: WhatsApp link to the store with the order code",
+    !!order?.whatsappUrl && decodeURIComponent(order.whatsappUrl).includes("OA-1001"), order?.whatsappUrl);
+  r = await anon("POST", checkoutA, body);
+  check("checkout: retry with the same key returns the same order", r.status === 200 && r.body.order.code === "OA-1001" && !r.body.created, r);
+  r = await anon("GET", `${cartA}?token=${token}`);
+  check("checkout: the cart is converted (empty afterwards)", r.status === 200 && r.body.lines.length === 0, r);
+  const { data: stock } = await service.from("stocks").select("quantity, quantity_allocated").eq("variant_id", A.variants.S).single();
+  check("checkout: stock reserved (5 units, 2 reserved)", stock.quantity === 5 && stock.quantity_allocated === 2, stock);
+
+  r = await anon("GET", `${checkoutA}/orders/${order.publicToken}`);
+  check("public order by token", r.status === 200 && r.body.order.lines.length === 1 && r.body.order.note === "Llamar antes", r);
+  check("public order has no cost and no phone", !JSON.stringify(r.body).includes("unit_cost") && !JSON.stringify(r.body).includes("5359990010"), r.body);
+  r = await anon("GET", `/stores/${storeB.id}/checkout/orders/${order.publicToken}`);
+  check("public order token of A is not found in B -> 404", r.status === 404, r);
+  r = await anon("POST", checkoutA, { ...body, idempotencyKey: key() });
+  check("checkout with an empty cart -> 400", r.status === 400, r);
+
+  // Race for the last unit of M: two guest carts, two checkouts at the same time.
+  const tokens = [];
+  for (let i = 0; i < 2; i++) {
+    r = await anon("PUT", cartA, { lines: [{ variantId: A.variants.M, quantity: 1 }] });
+    tokens.push(r.body.token);
+  }
+  const race = await Promise.all(
+    tokens.map((t, i) =>
+      anon("POST", checkoutA, { idempotencyKey: key(), cartToken: t, customer: { ...buyer, name: `Carrera ${i}` }, shipping }),
+    ),
+  );
+  const statuses = race.map((x) => x.status).sort();
+  check("race for the last unit: one order, one 409 insufficient_stock",
+    statuses[0] === 201 && statuses[1] === 409 && race.some((x) => x.body.error?.code === "insufficient_stock"), race);
+  const { data: m } = await service.from("stocks").select("quantity, quantity_allocated").eq("variant_id", A.variants.M).single();
+  check("race: allocated never above quantity (1/1)", m.quantity === 1 && m.quantity_allocated === 1, m);
+
+  // "To agree" + account created in the same step.
+  r = await anon("PUT", cartA, { lines: [{ variantId: A.variants.S, quantity: 1 }] });
+  r = await anon("POST", checkoutA, {
+    idempotencyKey: key(),
+    cartToken: r.body.token,
+    customer: { name: "Nueva Cuenta", phone: "5359990011" },
+    shipping: { zoneId: A.zoneId, methodId: A.agreeId },
+    createAccountPassword: "cuenta-nueva-123",
+  });
+  check("checkout to agree: total pending, account created",
+    r.status === 201 && r.body.order.total === null && !!r.body.account?.session.accessToken, r);
+  const newCustomer = api(r.body.account?.session.accessToken);
+  r = await newCustomer("GET", `/stores/${storeA.id}/customer/orders`);
+  check("Mis pedidos: the new account sees its order", r.status === 200 && r.body.orders.length === 1 && r.body.orders[0].code === "OA-1003", r);
+  // The race loser rolled back: numbers have no gaps (1001, 1002 winner, 1003).
+  r = await anon("POST", checkoutA, {
+    idempotencyKey: key(), customer: { name: "X", phone: "5359990011" }, shipping, createAccountPassword: "otra-clave-123",
+  });
+  check("checkout creating an account for a taken phone -> 409", r.status === 409 && r.body.error.code === "phone_taken", r);
+
+  // Signed-in customer: the guest cart joins the customer's cart.
+  r = await anon("PUT", cartA, { lines: [{ variantId: A.variants.S, quantity: 1 }] });
+  const guestToken = r.body.token;
+  r = await newCustomer("GET", `${cartA}?token=${guestToken}`);
+  check("signed-in customer: the guest cart is merged", r.status === 200 && r.body.lines.length === 1 && r.body.token === null, r);
+  r = await newCustomer("GET", `/stores/${storeB.id}/cart`);
+  check("customer token of A on the cart of B -> 401", r.status === 401, r);
+
+  await service.from("stores").update({ status: "suspended" }).eq("id", storeA.id);
+  r = await anon("GET", checkoutA);
+  check("suspended store: no checkout -> 404", r.status === 404, r);
+  await service.from("stores").update({ status: "active" }).eq("id", storeA.id);
+  return { A, B, order };
+}
+
 async function run() {
   await cleanup();
   const ids = {};
@@ -218,8 +370,10 @@ async function run() {
     ownerB: api(await token(USERS.ownerB)),
     storeA,
     storeB,
+    ownerIds: ids,
   };
   await customers(ctx);
+  await checkout(ctx);
 }
 
 try {

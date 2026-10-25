@@ -296,8 +296,8 @@ end $$;
 
 select pg_temp.seed_product('fa_', 'store_a', 'owner_a', 'FA');
 select pg_temp.seed_product('fb_', 'store_b', 'owner_b', 'FB');
--- Fixture orders took 1001-1003 in A by hand.
-insert into public.store_order_counters (store_id, last_number) values (tests.fx('store_a'), 1003);
+-- Fixture orders took 1001-1003 in A and 1001 in B by hand.
+insert into public.store_order_counters (store_id, last_number) values (tests.fx('store_a'), 1003), (tests.fx('store_b'), 1001);
 insert into pg_temp.fixtures select 'm_delivery', id from public.shipping_methods
   where store_id = tests.fx('store_a') and type = 'delivery';
 insert into pg_temp.fixtures select 'm_agree', id from public.shipping_methods
@@ -445,6 +445,39 @@ select tests.eq('cart merge: quantities added, guest cart removed', (select quan
   + (select count(*) from public.carts where id = tests.fx('guest_cart'))::int, 30);
 select tests.eq('cart merge: a customer of B cannot take a cart of A',
   public.cart_merge(tests.fx('store_b'), tests.fx('guest_token'), tests.fx('c_b')), null::uuid);
+
+-- Multi-warehouse (Pro): the checkout reserves the default warehouse first, then the others, and agrees with
+-- stock_available (sum of every active warehouse).
+with w as (insert into public.warehouses (store_id, name) values (tests.fx('store_b'), 'Segundo') returning id)
+insert into pg_temp.fixtures select 'wh_b2', id from w;
+select public.set_stock_quantity(tests.fx('store_b'), tests.fx('fb_v_s'), tests.fx('wh_b2'), 3, 'adjustment', null, null);
+select tests.eq('multi-warehouse: stock_available sums both warehouses',
+  (select stock_available from public.product_variants where id = tests.fx('fb_v_s')), 7);
+insert into pg_temp.fixtures select 'ord_b_split', (public.checkout_create_order(tests.fx('store_b'), jsonb_build_object(
+  'idempotency_key', 'key-ord-b-split', 'currency', 'USD',
+  'lines', jsonb_build_array(jsonb_build_object('variant_id', tests.fx('fb_v_s'), 'quantity', 6)),
+  'customer', jsonb_build_object('name', 'Split', 'phone', '+5353123456'),
+  'shipping', jsonb_build_object('method_id', (select id from public.shipping_methods where store_id = tests.fx('store_b') and type = 'delivery'),
+    'zone_id', tests.fx('b_zone'), 'address', 'Calle 1'))) ->> 'order_id')::uuid;
+select tests.eq('multi-warehouse: 6 units reserved as 4 (default) + 2 (second)', (
+  select string_agg(r.quantity::text, '+' order by w.is_default desc)
+  from public.inventory_reservations r join public.warehouses w on w.id = r.warehouse_id
+  where r.order_id = tests.fx('ord_b_split')), '4+2');
+select tests.check('multi-warehouse: one more unit than available is rejected', tests.throws(format(
+  $$select public.checkout_create_order(%L, jsonb_build_object('currency', 'USD',
+    'lines', jsonb_build_array(jsonb_build_object('variant_id', %L, 'quantity', 2)),
+    'customer', jsonb_build_object('name', 'X', 'phone', '+5353123456'),
+    'shipping', jsonb_build_object('method_id', (select id from public.shipping_methods where store_id = %L and type = 'delivery'),
+      'zone_id', %L, 'address', 'Calle 1')))$$,
+  tests.fx('store_b'), tests.fx('fb_v_s'), tests.fx('store_b'), tests.fx('b_zone'))));
+select public.order_transition(tests.fx('store_b'), tests.fx('ord_b_split'), 'paid', null);
+select tests.eq('multi-warehouse: paying consumes in both warehouses', (
+  select string_agg(s.quantity || '/' || s.quantity_allocated, ' ' order by w.is_default desc)
+  from public.stocks s join public.warehouses w on w.id = s.warehouse_id where s.variant_id = tests.fx('fb_v_s')), '0/0 1/0');
+select public.order_cancel(tests.fx('store_b'), tests.fx('ord_b_split'), 'x', null);
+select tests.eq('multi-warehouse: cancelling a paid order restocks both warehouses', (
+  select string_agg(s.quantity || '/' || s.quantity_allocated, ' ' order by w.is_default desc)
+  from public.stocks s join public.warehouses w on w.id = s.warehouse_id where s.variant_id = tests.fx('fb_v_s')), '4/0 3/0');
 
 -- Only service_role can call the write functions.
 select tests.login('owner_a');

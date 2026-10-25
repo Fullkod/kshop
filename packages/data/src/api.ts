@@ -19,6 +19,8 @@ import type {
   ProductTypeInput,
   StockInput,
   WarehouseInput,
+  CartUpdateInput,
+  CheckoutInput,
   CurrencyCode,
   CustomerAddressInput,
   CustomerLoginInput,
@@ -26,7 +28,10 @@ import type {
   CustomerRegisterInput,
   CustomerResetInput,
   ModuleCode,
+  OrderStatus,
+  PaymentStatus,
   PlanCode,
+  ShippingType,
   StoreRole,
   StoreStatus,
 } from "@kshop/core";
@@ -127,6 +132,114 @@ export type CustomerAddress = {
   isDefault: boolean;
 };
 export type RecoveryCodeResponse = { code: string; expiresAt: string; phone: string };
+
+/** Server-side cart (D8): prices in the cart currency, recomputed on every read. */
+export type CartLine = {
+  variantId: string;
+  productId: string;
+  productSlug: string;
+  productName: string;
+  variantName: string;
+  sku: string;
+  imageUrl: string | null;
+  quantity: number;
+  unitPrice: number;
+  compareAtPrice: number | null;
+  lineTotal: number;
+  /** Units that can be bought now (0 = unavailable). */
+  available: number;
+  issue: "unavailable" | "insufficient" | null;
+};
+export type Cart = {
+  /** Guest handle to keep in the browser (null for customer carts). */
+  token: string | null;
+  currency: CurrencyCode;
+  lines: CartLine[];
+  subtotal: number;
+  itemCount: number;
+  hasIssues: boolean;
+};
+
+/** Active checkout options of a store; prices in the base currency. */
+export type CheckoutOptions = {
+  shippingEnabled: boolean;
+  zones: { id: string; name: string; description: string | null }[];
+  methods: {
+    id: string;
+    zoneId: string | null;
+    type: ShippingType;
+    name: string;
+    price: number;
+    freeOverSubtotal: number | null;
+    minDays: number | null;
+    maxDays: number | null;
+    pickupPoint: { name: string; address: string | null } | null;
+  }[];
+  paymentMethods: { id: string; name: string; currencies: string[]; instructions: string | null }[];
+};
+
+/** Order as the customer sees it (/order/{token}): no costs, no internal notes. */
+export type PublicOrder = {
+  code: string;
+  publicToken: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  createdAt: string;
+  currency: string;
+  subtotal: number;
+  shippingTotal: number | null;
+  discountTotal: number;
+  total: number | null;
+  paidTotal: number;
+  customerName: string;
+  note: string | null;
+  shippingType: ShippingType;
+  shipping: {
+    type?: ShippingType;
+    method?: string;
+    zone?: string;
+    recipient?: string;
+    address?: string;
+    reference?: string;
+    pickup_point?: { name: string; address: string | null };
+    min_days?: number;
+    max_days?: number;
+  };
+  paymentMethod: { name: string; instructions: string | null } | null;
+  lines: {
+    productName: string;
+    variantName: string;
+    sku: string;
+    attributes: { name: string; value: string }[];
+    imageUrl: string | null;
+    quantity: number;
+    unitPrice: number;
+    lineTotal: number;
+  }[];
+  events: { type: string; to: OrderStatus | null; createdAt: string }[];
+  storeName: string;
+  /** wa.me link to the store with the order text (D17). */
+  whatsappUrl: string | null;
+};
+
+export type CheckoutResponse = {
+  order: PublicOrder;
+  /** false when the idempotency key matched an existing order (retry). */
+  created: boolean;
+  /** Set when the customer created an account in the same step. */
+  account?: CustomerAuthResponse;
+};
+
+export type CustomerOrderSummary = {
+  code: string;
+  publicToken: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  currency: string;
+  total: number | null;
+  itemCount: number;
+  createdAt: string;
+};
 
 /** A file returned by the API (Excel template/export). */
 export type DownloadedFile = { blob: Blob; fileName: string };
@@ -253,6 +366,25 @@ export function createApiClient(options: ApiClientOptions) {
         reset: (input: CustomerResetInput) => request<CustomerAuthResponse>("POST", `${base}/reset`, input),
       };
     },
+    /** Cart of a guest (token) or of the signed-in customer. */
+    cart: (storeId: string) => {
+      const base = `/stores/${storeId}/cart`;
+      const query = (token?: string | null, currency?: string) => {
+        const params = new URLSearchParams();
+        if (token) params.set("token", token);
+        if (currency) params.set("currency", currency);
+        return params.size ? `?${params}` : "";
+      };
+      return {
+        get: (token?: string | null, currency?: string) => request<Cart>("GET", `${base}${query(token, currency)}`),
+        update: (input: CartUpdateInput) => request<Cart>("PUT", base, input),
+      };
+    },
+    checkout: (storeId: string) => ({
+      options: () => request<CheckoutOptions>("GET", `/stores/${storeId}/checkout`),
+      place: (input: CheckoutInput) => request<CheckoutResponse>("POST", `/stores/${storeId}/checkout`, input),
+      order: (token: string) => request<{ order: PublicOrder }>("GET", `/stores/${storeId}/checkout/orders/${token}`),
+    }),
     /** Signed-in customer of the store (customer token). */
     customer: (storeId: string) => {
       const base = `/stores/${storeId}/customer`;
@@ -266,6 +398,7 @@ export function createApiClient(options: ApiClientOptions) {
         updateAddress: (id: string, input: CustomerAddressInput) =>
           request<{ address: CustomerAddress }>("PATCH", `${base}/addresses/${id}`, input),
         deleteAddress: (id: string) => request<null>("DELETE", `${base}/addresses/${id}`),
+        orders: () => request<{ orders: CustomerOrderSummary[] }>("GET", `${base}/orders`),
       };
     },
     platform: {

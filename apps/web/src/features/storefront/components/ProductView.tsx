@@ -1,28 +1,22 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useCart } from "@/features/cart/CartProvider";
 import type { StorefrontProduct } from "@/server/storefront/catalog";
-import { Price, useFormatPrice } from "./Currency";
+import { Price } from "./Currency";
 import { imageSrcSet } from "./ProductCard";
-import { whatsappUrl } from "./whatsapp";
 
 type Variant = StorefrontProduct["variants"][number];
 
-/** Gallery + variant picker + price + «Pedir por WhatsApp» (D13; «Añadir al carrito» arrives in Phase 3). */
-export function ProductView({
-  product,
-  whatsappPhone,
-}: {
-  product: StorefrontProduct;
-  whatsappPhone: string | null;
-}) {
+/** Gallery + variant picker + price + «Añadir al carrito» (phase 3, D17: replaces «Pedir por WhatsApp»). */
+export function ProductView({ product }: { product: StorefrontProduct }) {
   const axes = useMemo(() => variantAxes(product.variants), [product.variants]);
   const initial = product.variants.find((v) => v.available) ?? product.variants[0];
   const [selected, setSelected] = useState<Record<string, string>>(() =>
     Object.fromEntries((initial?.options ?? []).map((o) => [o.attributeId, o.valueId])),
   );
   const variant = product.variants.find((v) => v.options.every((o) => selected[o.attributeId] === o.valueId));
-  const formatPrice = useFormatPrice();
 
   // Images of the chosen variant first.
   const media = useMemo(() => {
@@ -44,16 +38,6 @@ export function ProductView({
         v.options.some((o) => o.attributeId === attributeId && o.valueId === valueId) &&
         v.options.every((o) => o.attributeId === attributeId || selected[o.attributeId] === o.valueId),
     );
-
-  const message = (url: string) =>
-    [
-      `Hola, quiero pedir: ${product.name}${variant?.name ? ` (${variant.name})` : ""}`,
-      variant && `Precio: ${formatPrice(variant.price, variant.overrides)}`,
-      variant && `SKU: ${variant.sku}`,
-      url,
-    ]
-      .filter(Boolean)
-      .join("\n");
 
   return (
     <div className="grid gap-8 md:grid-cols-2 md:gap-12">
@@ -175,32 +159,82 @@ export function ProductView({
           )}
         </p>
 
-        {whatsappPhone && variant?.available ? (
-          <a
-            href={whatsappUrl(whatsappPhone, message(""))}
-            onClick={(e) => {
-              // The full page URL is only known in the browser.
-              e.currentTarget.href = whatsappUrl(whatsappPhone, message(window.location.href));
-            }}
-            target="_blank"
-            rel="noopener"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-[var(--sf-radius)] bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary/90"
-          >
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden>
-              <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.4a.5.5 0 0 0 0-.4l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.1.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.2c0-.1-.2-.2-.4-.3Z" />
-            </svg>
-            Pedir por WhatsApp
-          </a>
+        {variant?.available ? (
+          <AddToCart key={variant.id} variantId={variant.id} />
         ) : (
           <button
             type="button"
             disabled
             className="inline-flex h-12 items-center justify-center rounded-[var(--sf-radius)] bg-surface px-6 font-semibold text-muted-foreground"
           >
-            {variant?.available ? "Pedidos no disponibles" : "Agotado"}
+            Agotado
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+function AddToCart({ variantId }: { variantId: string }) {
+  const { add, pending } = useCart();
+  const [quantity, setQuantity] = useState(1);
+  const [status, setStatus] = useState<"idle" | "added" | "error">("idle");
+
+  async function onAdd() {
+    setStatus("idle");
+    try {
+      await add(variantId, quantity);
+      setStatus("added");
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex gap-3">
+        <div className="flex h-12 items-center rounded-[var(--sf-radius)] border">
+          <button
+            type="button"
+            className="h-full w-11 text-lg disabled:opacity-40"
+            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+            disabled={quantity <= 1}
+            aria-label="Quitar uno"
+          >
+            −
+          </button>
+          <span className="w-8 text-center font-medium" aria-live="polite" aria-label={`Cantidad: ${quantity}`}>
+            {quantity}
+          </span>
+          <button
+            type="button"
+            className="h-full w-11 text-lg"
+            onClick={() => setQuantity((q) => Math.min(99, q + 1))}
+            aria-label="Añadir uno"
+          >
+            +
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={onAdd}
+          disabled={pending}
+          className="inline-flex h-12 flex-1 items-center justify-center rounded-[var(--sf-radius)] bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+        >
+          {pending ? "Añadiendo…" : "Añadir al carrito"}
+        </button>
+      </div>
+      <p className="min-h-5 text-sm" role="status">
+        {status === "added" && (
+          <>
+            <span className="text-success">Añadido al carrito.</span>{" "}
+            <Link href="/cart" className="font-medium underline">
+              Ver carrito
+            </Link>
+          </>
+        )}
+        {status === "error" && <span className="text-destructive">No se pudo añadir. Inténtalo de nuevo.</span>}
+      </p>
     </div>
   );
 }

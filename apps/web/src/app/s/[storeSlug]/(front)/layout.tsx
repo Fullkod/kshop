@@ -1,3 +1,4 @@
+import { CartProvider } from "@/features/cart/CartProvider";
 import { CustomerSessionProvider } from "@/features/customer-account/CustomerSession";
 import { CurrencyProvider } from "@/features/storefront/components/Currency";
 import { StoreFooter } from "@/features/storefront/components/StoreFooter";
@@ -51,11 +52,13 @@ export default async function StorefrontLayout({ children, params }: LayoutProps
       </a>
       <CurrencyProvider storeId={store.id} currencies={shell.currencies}>
         <CustomerSessionProvider>
-          <StoreHeader store={store} links={header} />
-          <main id="content" className="flex-1">
-            {children}
-          </main>
-          <StoreFooter store={store} links={shell.footer} />
+          <CartProvider>
+            <StoreHeader store={store} links={header} />
+            <main id="content" className="flex-1">
+              {children}
+            </main>
+            <StoreFooter store={store} links={shell.footer} />
+          </CartProvider>
         </CustomerSessionProvider>
       </CurrencyProvider>
     </div>

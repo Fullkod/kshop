@@ -61,13 +61,18 @@ export async function requireStoreRole(
   return role;
 }
 
-/** API layer of the module check (UI uses entitlements, the database uses private.store_has_module). */
-export async function requireModule(storeId: string, code: ModuleCode): Promise<void> {
+/** Whether the store has an active module (service role: no membership needed). */
+export async function hasModule(storeId: string, code: ModuleCode): Promise<boolean> {
   const { data, error } = await getServiceClient()
     .rpc("store_entitlements", { p_store_id: storeId })
     .eq("module_code", code);
   if (error) throw error;
-  if (!data || data.length === 0) {
+  return !!data && data.length > 0;
+}
+
+/** API layer of the module check (UI uses entitlements, the database uses private.store_has_module). */
+export async function requireModule(storeId: string, code: ModuleCode): Promise<void> {
+  if (!(await hasModule(storeId, code))) {
     throw new HttpError(403, "module_not_enabled", "Esta función no está incluida en el plan de la tienda.");
   }
 }

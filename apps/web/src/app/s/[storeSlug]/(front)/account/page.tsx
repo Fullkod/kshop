@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AccountView } from "@/features/customer-account/AccountView";
+import { MyOrders } from "@/features/customer-account/MyOrders";
 
 export const metadata: Metadata = { title: "Mi cuenta", robots: { index: false } };
 
@@ -8,7 +9,7 @@ export default function Page() {
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:py-12">
       <h1 className="sf-heading mb-6 text-2xl font-semibold">Mi cuenta</h1>
-      <AccountView />
+      <AccountView orders={<MyOrders />} />
     </div>
   );
 }

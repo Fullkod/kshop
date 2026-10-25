@@ -114,5 +114,44 @@ const { error: memberError } = await service
   );
 if (memberError) throw memberError;
 
+// Checkout options (phase 3), created only when the store has none, so the staff can edit them freely.
+// PostgREST bulk inserts send null for keys missing in a row (no column default): every row has every key.
+const { count: zoneCount } = await service
+  .from("shipping_zones")
+  .select("id", { count: "exact", head: true })
+  .eq("store_id", store.id);
+if (!zoneCount) {
+  const { data: zones, error: zonesError } = await service
+    .from("shipping_zones")
+    .insert([
+      { store_id: store.id, name: "La Habana", sort_order: 1 },
+      { store_id: store.id, name: "Mayabeque y Artemisa", sort_order: 2 },
+    ])
+    .select("id, name");
+  if (zonesError) throw zonesError;
+  const habana = zones.find((z) => z.name === "La Habana").id;
+  const other = zones.find((z) => z.name !== "La Habana").id;
+  const { data: warehouse } = await service
+    .from("warehouses")
+    .update({ is_pickup_point: true, address: "Calle 23 #100, Vedado" })
+    .eq("store_id", store.id)
+    .eq("is_default", true)
+    .select("id")
+    .single();
+  const { error: methodsError } = await service.from("shipping_methods").insert([
+    { store_id: store.id, zone_id: habana, type: "delivery", name: "Mensajería", price: 500, free_over_subtotal: 20000, min_days: 1, max_days: 2, warehouse_id: null, sort_order: 1 },
+    { store_id: store.id, zone_id: other, type: "to_agree", name: "Mensajería (precio a convenir)", price: 0, warehouse_id: null, sort_order: 2 },
+    { store_id: store.id, zone_id: null, type: "pickup", name: "Recoger en la tienda", price: 0, warehouse_id: warehouse.id, sort_order: 3 },
+  ]);
+  if (methodsError) throw methodsError;
+  const { error: paymentsError } = await service.from("payment_methods").insert([
+    { store_id: store.id, name: "Efectivo al recibir", currencies: [], instructions: "Pagas al recibir el pedido.", sort_order: 1 },
+    { store_id: store.id, name: "Transferencia", currencies: ["CUP"], instructions: "Transfiere a la tarjeta que te enviamos por WhatsApp y manda el comprobante.", sort_order: 2 },
+    { store_id: store.id, name: "Zelle", currencies: ["USD"], instructions: "Te enviamos los datos de Zelle por WhatsApp.", sort_order: 3 },
+  ]);
+  if (paymentsError) throw paymentsError;
+  console.log("Created shipping zones, shipping methods and payment methods");
+}
+
 console.log(`Owner: ${DEMO.owner} (DEMO_OWNER_PASSWORD) · Staff: ${DEMO.staff} (DEMO_STAFF_PASSWORD)`);
 console.log("Admin: http://demo.kshop.localhost:3000/admin");
