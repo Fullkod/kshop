@@ -1,6 +1,7 @@
 # PRP-3: Clientes y compra en Kshop
 
-> **Estado**: APROBADO (2026-10-25, Roberto). D1–D18 tal cual, con estos ajustes:
+> **Estado**: EN CURSO — fases 1–5 hechas (commits 8201e1f, 769428a, d7cf1fb, 929a31f, 683be12), falta la 6.
+> Aprobado el 2026-10-25 por Roberto. D1–D18 tal cual, con estos ajustes:
 > - D1/D4: se entra con teléfono + contraseña; **el teléfono no se verifica** (no hay forma de confirmarlo aún).
 > - D5: sin OpenWA → el staff ve el código de recuperación en «Clientes» y lo manda por `wa.me`; el emisor
 >   OpenWA se conecta en la Fase 4.
@@ -351,4 +352,4 @@ navegador; el staff (rol `staff`) puede gestionar pedidos pero no entregas ni m�
 
 ---
 
-*PRP pendiente aprobación. No se ha modificado código.*
+*PRP aprobado; implementación en curso (ver Estado).*

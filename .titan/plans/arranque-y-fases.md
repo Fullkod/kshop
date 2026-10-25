@@ -71,7 +71,7 @@ Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desa
 | 0b. Cimientos | Hecha | `prp-fase-0b-cimientos.md` | `9fcd43f` |
 | 1. Catálogo | Hecha (incluye imágenes por URL en Excel y prueba de 1 000 filas) | `prp-fase-1-catalogo.md` | `0684e23` |
 | 2. Tienda pública | Hecha; **pendiente** medir Lighthouse en Vercel (requiere permiso de deploy) | `prp-fase-2-tienda-publica.md` | `f1b50e0` |
-| 3. Clientes y compra | Siguiente: falta su PRP | — | — |
+| 3. Clientes y compra | En curso: 3.1–3.5 hechas (PRP aprobado), falta 3.6 validación final | prp-fase-3-clientes-y-compra.md | 8201e1f…683be12 |
 
 Todo está en commits locales sin push: el remoto `origin` (`Fullkod/kshop`) no devuelve ramas desde el
 2026-10-25; aclararlo con Roberto antes de subir nada.

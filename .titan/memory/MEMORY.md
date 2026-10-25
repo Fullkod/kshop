@@ -23,6 +23,7 @@
 - [2026-10-24-fase-0b-cimientos.md](project/2026-10-24-fase-0b-cimientos.md) — Fase 0b cerrada: D1–D7 confirmadas, Supabase online sin permiso por migración, trucos (introspección, urql POST, versiones de migración), cuentas
 - [2026-10-25-fase-1-catalogo.md](project/2026-10-25-fase-1-catalogo.md) — Fase 1 CERRADA: dónde está cada pieza del catálogo, pruebas y datos de la Tienda Demo
 - [2026-10-25-fase-2-tienda-publica.md](project/2026-10-25-fase-2-tienda-publica.md) — Fase 2 hecha salvo Lighthouse en Vercel: decisiones (URLs en inglés, Cache Components, WhatsApp), dónde está cada pieza, invalidación
+- [2026-10-25-fase-3-clientes-y-compra.md](project/2026-10-25-fase-3-clientes-y-compra.md) — Fase 3 en curso (3.1–3.5 hechas, falta 3.6): dónde está cada pieza, pruebas, pendientes
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
 
 ## feedback/ — Correcciones y preferencias
@@ -36,9 +37,9 @@
 
 ## Planes (`.titan/plans/`)
 
-- `arranque-y-fases.md` — Paso 0, convenciones, fases 0a–8 y tabla de estado (0a, 0b, 1 y 2 hechas; siguiente: Fase 3)
+- `arranque-y-fases.md` — Paso 0, convenciones, fases 0a–8 y tabla de estado (0a, 0b, 1 y 2 hechas; Fase 3 en curso)
 - `prp-base.md` — Plantilla de PRP
 - `prp-fase-0b-cimientos.md` — Fase 0b: monorepo, esquema de plataforma + RLS + tests A/B, host → tienda, superadmin (COMPLETADO 2026-10-24, commit 9fcd43f)
 - `prp-fase-1-catalogo.md` — Fase 1: catálogo (tipos, atributos, variantes, costo privado, monedas, categorías, colecciones, marcas, medias, almacenes/stock, Excel) (COMPLETADO 2026-10-25, commits hasta d6f1507)
 - `prp-fase-2-tienda-publica.md` — Fase 2: tienda pública (COMPLETADO 2026-10-25 salvo Lighthouse en Vercel; commits hasta d9d1d69)
-- `prp-fase-3-clientes-y-compra.md` — Fase 3: cuentas por tienda, carrito, checkout WhatsApp, entregas, órdenes, reservas, pagos (PENDIENTE de aprobación)
+- `prp-fase-3-clientes-y-compra.md` — Fase 3: clientes y compra (EN CURSO: 3.1–3.5 hechas, falta 3.6; commits hasta 683be12)
