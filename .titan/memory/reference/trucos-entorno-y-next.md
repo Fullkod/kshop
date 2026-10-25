@@ -29,6 +29,10 @@ Detalle de cada error en la sección «Aprendizajes» de los PRP de las fases 1 
   en un archivo del scratchpad y ejecutarlo.
 
 ## Vercel + Turborepo
+- Route handlers con Cache Components: si todo lo que leen está en `use cache`, el build los **prerenderiza**; bajo
+  un segmento dinámico (`/s/[storeSlug]/…`) eso acabó en 404 en Vercel aunque `next start` local funcionaba. Usar
+  `await connection()` en el handler. Comprobar en la salida del build que salen como `ƒ`.
+- El puerto 3100 lo usa otra app de Roberto: para `next start` de prueba usar otro (p. ej. 3217).
 - Turbo corre en *strict env mode*: una variable del proyecto de Vercel que no esté en `turbo.json`
   (`globalEnv` o `tasks.build.env`) **no llega al build**. `next build` importa los route handlers al
   "Collecting page data" y `src/server/env.ts` valida `SUPABASE_SECRET_KEY` al importarse → el build falla

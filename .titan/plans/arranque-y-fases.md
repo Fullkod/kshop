@@ -70,7 +70,7 @@ Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desa
 | 0a. Fábrica | Hecha | `project/2026-10-24-dual-agent-tooling.md` | — |
 | 0b. Cimientos | Hecha | `prp-fase-0b-cimientos.md` | `9fcd43f` |
 | 1. Catálogo | Hecha (incluye imágenes por URL en Excel y prueba de 1 000 filas) | `prp-fase-1-catalogo.md` | `0684e23` |
-| 2. Tienda pública | Hecha; **pendiente** medir Lighthouse en Vercel (requiere permiso de deploy) | `prp-fase-2-tienda-publica.md` | `f1b50e0` |
+| 2. Tienda pública | Hecha. Lighthouse en Vercel: portada 97–98, ficha 89–93, listado 81–82 (CLS corregido, re-medir tras el próximo deploy) | `prp-fase-2-tienda-publica.md` | `f1b50e0` |
 | 3. Clientes y compra | Hecha (avisos automáticos por OpenWA en la Fase 4) | `prp-fase-3-clientes-y-compra.md` | ver PRP |
 
 El remoto `origin` (`Fullkod/kshop`) está al día hasta la Fase 2 (Roberto subió los commits); lo de la Fase 3

@@ -1,7 +1,9 @@
 # Fase 2 — tienda pública (2026-10-25)
 
 PRP con progreso, decisiones y aprendizajes: `.titan/plans/prp-fase-2-tienda-publica.md`.
-Estado: 2.1–2.6 hechas y validadas; solo falta medir Lighthouse en Vercel (requiere permiso de deploy).
+Estado: hecha. Lighthouse en Vercel (2026-10-25): A11y/BP/SEO 100; rendimiento portada 97–98, ficha 89–93, listado
+81–82 por CLS (corregido con altura mínima del listado; re-medir tras el próximo deploy). `sitemap.xml` daba 404 en
+Vercel (route handler prerenderizado; fix con `connection()`). Detalle en el PRP.
 
 ## Decisiones de Roberto (2026-10-25)
 - «Pedir por WhatsApp» en la ficha ya (aún no se puede probar de punta a punta).

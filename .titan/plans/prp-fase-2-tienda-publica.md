@@ -250,9 +250,28 @@ mensaje en español, happy path); paso 7–8 del happy path en el navegador; el 
 | 2.4 Páginas públicas | Hecha: portada por secciones (+ por defecto), listados, búsqueda, ficha con variantes y «Pedir por WhatsApp», páginas; probado en navegador (390 px y escritorio) | `a1aa24c` |
 | 2.5 SEO y rendimiento | Hecha: robots/sitemap por tienda, canónicos, OG, JSON-LD, ISR en rutas con slug. Lighthouse móvil local: A11y/BP/SEO 100; rendimiento 82–93 con mucho ruido local (dev server + otra app en la misma máquina) → **medir en Vercel** | `bae3f5c` |
 | 2.6 Admin «Apariencia» y colecciones automáticas | Hecha: tema (presets, colores, fuentes, esquinas, aviso de contraste, vista previa), portada por secciones, banners (WebP 1920/768), menús de 2 niveles, páginas Markdown, colecciones automáticas; API `/content/*` (admin + módulo `themes`, invalida al instante); `e2e:catalog` 45/45; E2E en navegador 9/9 | `d9d1d69`, capturas `.titan/qa/fase-2/14–16` |
-| 2.7 Validación final | Hecha salvo Lighthouse en Vercel: typecheck, lint, test (core 35), build, `test:rls` 177/177, `e2e:catalog` 45/45, `e2e:excel` 22/22, E2E del happy path en navegador (390 px y escritorio). **Pendiente con permiso de Roberto**: desplegar en Vercel y medir Lighthouse allí (en local el rendimiento oscila 74–93 por ruido) | — |
+| 2.7 Validación final | Hecha (Lighthouse en Vercel abajo): typecheck, lint, test (core 35), build, `test:rls` 177/177, `e2e:catalog` 45/45, `e2e:excel` 22/22, E2E del happy path en navegador (390 px y escritorio). **Pendiente con permiso de Roberto**: desplegar en Vercel y medir Lighthouse allí (en local el rendimiento oscila 74–93 por ruido) | — |
+
+### Lighthouse en Vercel (2026-10-25, móvil, `demo.kshop.fullkod.com`, 2 pasadas)
+| Página | Rendimiento | A11y / BP / SEO | LCP | CLS |
+|--------|-------------|-----------------|-----|-----|
+| Portada `/` | 97–98 | 100 / 100 / 100 | 1,7–2,0 s | 0 |
+| Listado `/category/vestidos` | 81–82 | 100 / 100 / 100 | 3,1–3,4 s | 0,176 |
+| Ficha `/product/vestido-nandu` | 89–93 | 100 / 100 / 100 | 3,0–3,3 s | 0 |
+
+- Listado por debajo de 90 por **CLS**: la categoría tiene 1 producto, el skeleton de 8 tarjetas se sustituye por
+  1 y el pie sube a la vista. Fix: altura mínima `70svh` en la zona del listado (`ListingPage`). **Re-medir tras el
+  próximo deploy.** El LCP del listado (imagen que llega en el stream) es lo siguiente a mirar si no llega a 90.
+- `sitemap.xml` daba **404 en Vercel** (en local funcionaba): ver Aprendizajes.
 
 ## 🧠 Aprendizajes (Self-Annealing / Neural Network)
+
+### 2026-10-25: `sitemap.xml` 404 en Vercel por prerender del route handler
+- **Error**: con Cache Components, un `GET` cuyos datos están todos en `use cache` se prerenderiza. El build lo
+  generó solo para un slug de relleno (`/s/-/sitemap.xml`, «Not found») y Vercel respondía 404 (`x-matched-path: /404`)
+  para las tiendas reales; `next start` en local sí lo servía.
+- **Fix**: `await connection()` al principio del handler (render por petición; los datos siguen cacheados por tienda).
+- **Aplicar en**: todo route handler bajo `/s/[storeSlug]/` que no lea `request`/`headers()`.
 
 > Esta sección CRECE con cada error encontrado durante la implementación.
 

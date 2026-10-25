@@ -37,15 +37,18 @@ export function ListingPage({
         {description && <p className="max-w-2xl text-muted-foreground">{description}</p>}
       </div>
       {intro}
-      <Suspense fallback={<ListingSkeleton />}>
-        <ResolvedListing
-          store={store}
-          basePath={basePath}
-          fixed={fixed}
-          searchParams={searchParams}
-          hideBrandFacet={hideBrandFacet}
-        />
-      </Suspense>
+      {/* Min height: a short listing replacing the 8-card skeleton would pull the footer up into view (CLS). */}
+      <div className="min-h-[70svh]">
+        <Suspense fallback={<ListingSkeleton />}>
+          <ResolvedListing
+            store={store}
+            basePath={basePath}
+            fixed={fixed}
+            searchParams={searchParams}
+            hideBrandFacet={hideBrandFacet}
+          />
+        </Suspense>
+      </div>
     </div>
   );
 }
