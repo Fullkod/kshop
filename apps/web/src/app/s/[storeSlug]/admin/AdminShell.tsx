@@ -91,6 +91,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }
 
   const { admin } = state;
+  // The most specific module path wins (Cupones lives under /admin/discounts).
+  const activePath = ADMIN_MODULES.map((m) => m.adminPath)
+    .filter((path) => pathname === path || pathname.startsWith(`${path}/`))
+    .sort((a, b) => b.length - a.length)[0];
 
   return (
     <AdminContext.Provider value={admin}>
@@ -129,7 +133,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   data-testid={`nav-${module.code}`}
                   className={cn(
                     "rounded-md px-3 py-2 text-sm whitespace-nowrap hover:bg-background",
-                    pathname.startsWith(module.adminPath) && "bg-background font-medium",
+                    activePath === module.adminPath && "bg-background font-medium",
                   )}
                 >
                   {module.label}

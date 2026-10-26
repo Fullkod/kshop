@@ -67,11 +67,15 @@ export function NewOrder() {
     if (!normalized) return;
     let cancelled = false;
     graphql
-      .query(AdminCustomersQuery, { filter: { storeId: { eq: store.id }, phone: { eq: normalized } }, first: 1 })
+      .query(AdminCustomersQuery, {
+        filter: { storeId: { eq: store.id }, phone: { eq: normalized } },
+        first: 1,
+      })
       .toPromise()
       .then((r) => {
         const c = r.data?.customersCollection?.edges[0]?.node;
-        if (!cancelled) setCustomer(c ? { id: c.id, name: `${c.firstName} ${c.lastName ?? ""}`.trim() } : null);
+        if (!cancelled)
+          setCustomer(c ? { id: c.id, name: `${c.firstName} ${c.lastName ?? ""}`.trim() } : null);
       });
     return () => {
       cancelled = true;
@@ -117,7 +121,11 @@ export function NewOrder() {
         notifyCustomer: true,
         voucherCode: text("voucher")?.toUpperCase(),
         manualDiscount: manualReward
-          ? { reward: manualReward, value: Number(text("manualValue") ?? 0), reason: text("manualReason") ?? null }
+          ? {
+              reward: manualReward,
+              value: Number(text("manualValue") ?? 0),
+              reason: text("manualReason") ?? null,
+            }
           : undefined,
       }),
     );
@@ -150,7 +158,13 @@ export function NewOrder() {
                       {r.available !== null && ` · ${r.available} disponibles`}
                     </span>
                   </span>
-                  <Button type="button" size="sm" variant="outline" disabled={r.available === 0} onClick={() => addLine(r)}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={r.available === 0}
+                    onClick={() => addLine(r)}
+                  >
                     Añadir
                   </Button>
                 </li>
@@ -170,13 +184,22 @@ export function NewOrder() {
                     max={999}
                     value={l.quantity}
                     onChange={(e) =>
-                      setLines((c) => c.map((x) => (x === l ? { ...x, quantity: Math.max(1, Number(e.target.value) || 1) } : x)))
+                      setLines((c) =>
+                        c.map((x) =>
+                          x === l ? { ...x, quantity: Math.max(1, Number(e.target.value) || 1) } : x,
+                        ),
+                      )
                     }
                     className="w-20"
                     aria-label={`Cantidad de ${l.label}`}
                   />
                   <span className="w-24 text-right">{formatMoney(l.price * l.quantity, currency)}</span>
-                  <Button type="button" size="sm" variant="ghost" onClick={() => setLines((c) => c.filter((x) => x !== l))}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setLines((c) => c.filter((x) => x !== l))}
+                  >
                     Quitar
                   </Button>
                 </li>
@@ -189,15 +212,32 @@ export function NewOrder() {
           <h2 className="font-semibold sm:col-span-2">Cliente</h2>
           <div className="flex flex-col gap-1">
             <Label htmlFor="phone">Teléfono</Label>
-            <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="5123 4567" required />
+            <Input
+              id="phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="5123 4567"
+              required
+            />
           </div>
           <div className="flex flex-col gap-1">
             <Label htmlFor="name">Nombre</Label>
-            <Input id="name" name="name" key={match?.id ?? "none"} defaultValue={match?.name ?? ""} required />
+            <Input
+              id="name"
+              name="name"
+              key={match?.id ?? "none"}
+              defaultValue={match?.name ?? ""}
+              required
+            />
           </div>
           {match && (
             <label className="flex items-center gap-2 text-sm sm:col-span-2">
-              <input type="checkbox" checked={linkCustomer} onChange={(e) => setLinkCustomer(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={linkCustomer}
+                onChange={(e) => setLinkCustomer(e.target.checked)}
+              />
               Vincular a la cuenta de {match.name} ({formatPhone(normalized ?? phone)})
             </label>
           )}
@@ -208,7 +248,14 @@ export function NewOrder() {
           {activeZones.length > 0 && (
             <div className="flex flex-col gap-1">
               <Label htmlFor="zone">Zona</Label>
-              <Select id="zone" value={zoneId} onChange={(e) => { setZoneId(e.target.value); setMethodId(""); }}>
+              <Select
+                id="zone"
+                value={zoneId}
+                onChange={(e) => {
+                  setZoneId(e.target.value);
+                  setMethodId("");
+                }}
+              >
                 <option value="">—</option>
                 {activeZones.map((z) => (
                   <option key={z.id} value={z.id}>
@@ -224,7 +271,8 @@ export function NewOrder() {
               <option value="">—</option>
               {methods.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.name} · {m.type === "to_agree" ? SHIPPING_TYPE_LABELS.to_agree : formatMoney(m.price, currency)}
+                  {m.name} ·{" "}
+                  {m.type === "to_agree" ? SHIPPING_TYPE_LABELS.to_agree : formatMoney(m.price, currency)}
                 </option>
               ))}
             </Select>
@@ -267,34 +315,39 @@ export function NewOrder() {
           <span>Subtotal</span>
           <span>{formatMoney(subtotal, currency)}</span>
         </div>
-        {admin.enabledModules.has("discounts") && (
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="voucher">Cupón (opcional)</Label>
-            <Input id="voucher" name="voucher" className="uppercase" placeholder="BIENVENIDA10" />
-          </div>
-        )}
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="manualReward">Descuento manual</Label>
-          <Select
-            id="manualReward"
-            value={manualReward}
-            onChange={(e) => setManualReward(e.target.value as typeof manualReward)}
-          >
-            <option value="">Sin descuento</option>
-            <option value="percent">Porcentaje</option>
-            <option value="fixed">Importe ({currency})</option>
-          </Select>
-        </div>
-        {manualReward && (
+        {/* Coupons and the manual discount come with the vouchers module (Pro or add-on). */}
+        {admin.enabledModules.has("vouchers") && (
           <>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="manualValue">{manualReward === "percent" ? "Porcentaje (%)" : `Importe (${currency})`}</Label>
-              <Input id="manualValue" name="manualValue" inputMode="decimal" required />
+              <Label htmlFor="voucher">Cupón (opcional)</Label>
+              <Input id="voucher" name="voucher" className="uppercase" placeholder="BIENVENIDA10" />
             </div>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="manualReason">Motivo</Label>
-              <Input id="manualReason" name="manualReason" placeholder="Cliente habitual" />
+              <Label htmlFor="manualReward">Descuento manual</Label>
+              <Select
+                id="manualReward"
+                value={manualReward}
+                onChange={(e) => setManualReward(e.target.value as typeof manualReward)}
+              >
+                <option value="">Sin descuento</option>
+                <option value="percent">Porcentaje</option>
+                <option value="fixed">Importe ({currency})</option>
+              </Select>
             </div>
+            {manualReward && (
+              <>
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor="manualValue">
+                    {manualReward === "percent" ? "Porcentaje (%)" : `Importe (${currency})`}
+                  </Label>
+                  <Input id="manualValue" name="manualValue" inputMode="decimal" required />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor="manualReason">Motivo</Label>
+                  <Input id="manualReason" name="manualReason" placeholder="Cliente habitual" />
+                </div>
+              </>
+            )}
           </>
         )}
         <p className="text-xs text-muted-foreground">

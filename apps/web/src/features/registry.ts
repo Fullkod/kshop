@@ -3,6 +3,7 @@ import { catalogModule } from "./catalog/module";
 import { ordersModule } from "./orders/module";
 import { shippingModule } from "./shipping/module";
 import { discountsModule } from "./discounts/module";
+import { vouchersModule } from "./vouchers/module";
 import { themesModule } from "./themes/module";
 import { excelImportModule } from "./excel-import/module";
 import { mobileAppModule } from "./mobile-app/module";
@@ -20,6 +21,7 @@ export const ADMIN_MODULES: readonly AdminModule[] = [
   ordersModule,
   shippingModule,
   discountsModule,
+  vouchersModule,
   themesModule,
   excelImportModule,
   mobileAppModule,

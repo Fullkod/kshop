@@ -354,7 +354,7 @@ export function CheckoutView() {
             <p className="text-xs text-muted-foreground">El cupón se descuenta del envío al confirmar el pedido.</p>
           )}
         </div>
-        <VoucherForm />
+        {cart.vouchersEnabled && <VoucherForm />}
         {cart.hasIssues && <Alert variant="destructive">Algunos productos cambiaron. Revisa tu carrito.</Alert>}
         {error && <Alert variant="destructive">{error}</Alert>}
         <Button type="submit" size="lg" disabled={pending || cart.hasIssues}>

@@ -292,43 +292,4 @@ Equipo, banners de trial/impago/suspensión, candados con precio (D21), modo sol
 | Fase | Estado | Commit |
 |------|--------|--------|
 | 5.1 Esquema y aislamiento | Hecha: `20261031100000_billing_schema.sql` (tipos, columnas en plans/stores/store_modules/subscriptions, `subscription_grants`, `platform_invoices` + líneas + pagos en USD, contador de numeración, `notification_log.dedupe_key`, config de cobro, RLS: owner/admin leen lo suyo, staff solo el estado, avisos `billing_*` ocultos al staff; catálogo: Base 5/50, Pro 12/120, módulo `vouchers` en Pro + suelto 2 USD, sueltos a 3 USD, Pro 10 de equipo; Tienda Demo `comped`). Suite 07 (24 tests); `test:rls` 394/394; romper la política de facturas hace fallar 6 tests | ver git |
-
-## 🧠 Aprendizajes (Self-Annealing / Neural Network)
-
-> Esta sección CRECE con cada error encontrado durante la implementación.
-> El conocimiento persiste para futuros PRPs. El mismo error NUNCA ocurre dos veces.
-
-_(vacío)_
-
----
-
-## Gotchas
-
-- [ ] `private.store_limit` y `store_limits` hoy solo leen `plan_limits`: cambiar su definición afecta al trigger de productos, a `excel.ts` (aviso antes de importar) y a los tests 01/02 que esperan `{"max_staff": 2, "max_products": 300}`; si `store_limits` cambia de forma (límite + uso), actualizar `AdminShell`, `admin/page.tsx`, `e2e.mjs` y la query de `@kshop/data` a la vez.
-- [ ] `store_modules` tiene pk `(store_id, module_code, source)`: un mismo módulo puede venir de plan, addon y grant a la vez; quitar el add-on no debe apagar el del plan (y viceversa). `store_entitlements` ya elige el más fuerte.
-- [ ] `create_store` copia `plan_modules` a mano: pasarla a `sync_plan_modules` para no tener dos caminos.
-- [ ] Bajar de plan con datos «Pro» vivos: revisar que el checkout (`checkout_create_order`, Fase 4) no reserve de almacenes no por defecto ni acepte monedas extra sin el módulo; que el editor de producto no intente guardar `variant_prices` (el trigger lo rechazaría y rompería guardar el producto); que la tienda pública no muestre el selector de monedas; que las colecciones/menús que apunten a algo de un módulo apagado no rompan.
-- [ ] `stores.status = suspended` ya cierra la tienda pública y el checkout en BD (`store_is_public`, checkout): no duplicar la regla; la suspensión por cobro solo tiene que poner ese estado + `suspended_reason`.
-- [ ] Al suspender o cambiar de plan, invalidar `storeCacheTag(slug)` (ya lo hace la ruta de estado) **y** el catálogo; el `billing_tick` corre en la BD y no puede invalidar la caché de Next: la tienda pública refleja la suspensión automática cuando expire su `cacheLife` (minutos) — aceptable o hace falta un endpoint de revalidación llamado por `pg_net` (decidir en la Fase 3).
-- [ ] `notification_log.order_id` puede ser null y el dedupe actual solo cubre órdenes: los avisos de cobro necesitan `dedupe_key` o se duplicarán en cada tick.
-- [ ] Las plantillas de cobro son de plataforma (`store_id` null): la API de plantillas de la tienda debe rechazar estos eventos para que una tienda no los sobrescriba.
-- [ ] Fechas de periodo y vencimiento en `America/Havana`; `pg_cron` corre en UTC. Meses de 28–31 días: anclar al día del mes con tope al último día (31 → 28/29/30).
-- [ ] Numeración `KS-AAAA-NNNN` global y sin huecos con concurrencia: secuencia por año o `for update` sobre un contador en `platform_config`.
-- [ ] El precio de costo, el de los planes y los importes de facturas no deben aparecer en lecturas públicas ni para el rol `staff` (grants por columna en `subscriptions`, como en `products`/`stores`; recordar el Aprendizaje de la Fase 4 sobre columnas nuevas en tablas con grants por columna).
-- [ ] La Tienda Demo es Pro y la usan los QA de fases anteriores: los tests de cobro y de bajada de plan usan **tiendas temporales**, nunca la Demo.
-- [ ] Equipo: `generateLink` crea el usuario en Auth fuera de la transacción SQL; si falla la función de alta (p. ej. `max_staff`), borrar la cuenta recién creada (mismo patrón que `createPlatformStore`). Comprobar el límite **antes** de generar el enlace y otra vez dentro de la transacción.
-
-## Anti-Patrones
-
-- NO borrar ni archivar datos de una tienda al bajar de plan, desactivar un módulo o suspenderla.
-- NO calcular precios de suscripción en dos sitios: una sola función SQL (`subscription_quote`).
-- NO recalcular facturas emitidas cuando cambia el plan, un precio o un grant (snapshot en las líneas).
-- NO integrar una pasarela de pago (Polar/Stripe) ni usar `tf-add-payments`: el cobro es manual (decisión 8).
-- NO bloquear el admin de una tienda suspendida por completo (debe poder pagar y exportar).
-- NO usar la Tienda Demo para probar suspensiones o bajadas de plan.
-- NO crear nuevos patrones si los de las fases 0b–4 funcionan (API `/api/v1` + Zod, `requireSuperadmin`, `requireStoreRole`, `requireModule`, funciones `service_role`, outbox de avisos).
-- NO ignorar errores de TypeScript ni introducir `any`.
-
----
-
-*PRP pendiente aprobación. No se ha modificado código.*
+| 5.2 Módulos, límites y equipo | Hecha: `20261031100100_entitlements_engine.sql` (`sync_plan_modules`, `change_plan`, `set_store_addon` con precio congelado y dependencias, `set_store_module_grant`, `store_limit` con override y límites de módulos, `store_limits`, `store_usage`, `storefront_features`, `store_member_add/update/remove` con `max_staff` y reglas de rol, `create_store` v3 con periodo; cupones y descuento manual tras el módulo `vouchers`: `voucher_evaluate`, `price_lines.vouchers_enabled`, trigger en `order_discounts`) + `…100200` (`store_limits` definer). App: módulo `vouchers` en el registro («Cupones», «Ofertas»), pestañas por módulo, API de cupones con `vouchers`, campo de cupón y descuento manual solo con el módulo, `Cart.vouchersEnabled`, tienda pública sin monedas extra sin `multi_currency`, errores `max_staff`/`module_dependency`/`forbidden`/`conflict`. Suite 07: 58 tests; `test:rls` 428/428; `e2e:discounts` 35/35 (Base sin cupones → 403 y sin campo; con el suelto sí), `e2e:orders` 94/94, `e2e:notifications` 29/29, `e2e:catalog` 45/45 | ver git |

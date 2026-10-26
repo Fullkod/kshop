@@ -154,3 +154,142 @@ select tests.eq('superadmin: reads the invoices of every test store', (select co
 select tests.eq('superadmin: still cannot write directly', tests.affected(format(
   $$update public.platform_invoices set status = 'paid' where id = %L$$, tests.fx('inv_a'))), -1);
 select tests.logout();
+
+-- ---------------------------------------------------------------------------
+-- Modules, limits and team (phase 5.2), as the database owner
+-- ---------------------------------------------------------------------------
+
+create function pg_temp.modules(p_store text) returns text language sql as $$
+  select coalesce(string_agg(module_code, ',' order by module_code), '')
+  from public.store_entitlements(tests.fx(p_store));
+$$;
+
+-- B (Pro) with Pro data: a second warehouse, a second sale currency, notice contacts and 3 products.
+insert into public.warehouses (store_id, name) values (tests.fx('store_b'), 'Almacén 2');
+insert into public.store_currencies (store_id, currency, is_base, sells, rate_to_base)
+values (tests.fx('store_b'), 'USD', false, true, 400);
+insert into public.store_notification_contacts (store_id, name, phone) values (tests.fx('store_b'), 'Dueño B', '+5355550002');
+with x as (
+  insert into public.product_types (store_id, name, slug) values (tests.fx('store_b'), 'Simple', 'simple') returning id
+) insert into pg_temp.fixtures select 'type_b', id from x;
+create function pg_temp.product(p_n int) returns uuid language sql as $$
+  select public.save_product(tests.fx('store_b'), jsonb_build_object(
+    'product_type_id', tests.fx('type_b'), 'name', 'Producto ' || p_n, 'slug', 'producto-' || p_n, 'status', 'published',
+    'variants', jsonb_build_array(jsonb_build_object('sku', 'BP' || p_n, 'price', 100, 'stock', 5))), tests.fx('owner_b'));
+$$;
+select pg_temp.product(n) from generate_series(1, 3) n;
+select tests.eq('Pro: every module, vouchers included', pg_temp.modules('store_b'),
+  'catalog,custom_domain,discounts,excel_import,finance,mobile_app,multi_currency,multi_warehouse,orders,sales_today,shipping,themes,vouchers,whatsapp_notifications');
+
+-- Down to Base: modules off in the database, every row and every piece of data kept.
+select public.change_plan(tests.fx('store_b'), 'base', 'month', tests.fx('root'));
+select tests.eq('Pro -> Base: only the Base modules',
+  pg_temp.modules('store_b'), 'catalog,discounts,excel_import,mobile_app,orders,sales_today,shipping,themes');
+select tests.eq('Pro -> Base: the plan rows are disabled, not deleted',
+  (select count(*) from public.store_modules where store_id = tests.fx('store_b') and source = 'plan')::int, 14);
+select tests.eq('Pro -> Base: warehouses, currencies, contacts and products kept',
+  (select count(*) from public.warehouses where store_id = tests.fx('store_b'))::text
+  || (select count(*) from public.store_currencies where store_id = tests.fx('store_b'))
+  || (select count(*) from public.store_notification_contacts where store_id = tests.fx('store_b'))
+  || (select count(*) from public.products where store_id = tests.fx('store_b')), '2213');
+select tests.check('Base: no more warehouses', tests.throws(format(
+  $$insert into public.warehouses (store_id, name) values (%L, 'Almacén 3')$$, tests.fx('store_b'))));
+select tests.check('Base: no more sale currencies', tests.throws(format(
+  $$insert into public.store_currencies (store_id, currency, is_base, sells, rate_to_base) values (%L, 'EUR', false, true, 450)$$,
+  tests.fx('store_b'))));
+select tests.eq('Base: the storefront sells only in the base currency and has no coupon field',
+  public.storefront_features(tests.fx('store_b')), '{"vouchers": false, "multi_currency": false}'::jsonb);
+select tests.eq('Base: the cart knows coupons are off',
+  (public.price_lines(tests.fx('store_b'), '{"lines": []}') ->> 'vouchers_enabled'), 'false');
+select tests.eq('Base: effective limits', public.store_limits(tests.fx('store_b')),
+  '{"max_staff": 2, "max_products": 300}'::jsonb);
+
+-- Back to Pro: everything is there again, the same.
+select public.change_plan(tests.fx('store_b'), 'pro', 'year', tests.fx('root'));
+select tests.eq('Base -> Pro: every module back', pg_temp.modules('store_b'),
+  'catalog,custom_domain,discounts,excel_import,finance,mobile_app,multi_currency,multi_warehouse,orders,sales_today,shipping,themes,vouchers,whatsapp_notifications');
+select tests.eq('Base -> Pro: yearly, Pro limits (no product limit)',
+  (select billing_interval::text from public.subscriptions where store_id = tests.fx('store_b'))
+  || ' ' || public.store_limits(tests.fx('store_b'))::text, 'year {"max_staff": 10}');
+update public.plans set yearly_price = null where code = 'base';
+select tests.check('a plan without yearly price cannot be yearly', tests.throws(format(
+  $$select public.change_plan(%L, 'base', 'year', null)$$, tests.fx('store_b'))));
+update public.plans set yearly_price = 50 where code = 'base';
+
+-- Add-ons on Base: price frozen, dependencies, only sellable modules.
+select public.change_plan(tests.fx('store_b'), 'base', 'month', null);
+select public.set_store_addon(tests.fx('store_b'), 'multi_currency', true, tests.fx('root'));
+update public.modules set addon_price = 9 where code = 'multi_currency';
+select tests.eq('add-on: active, with the price it was bought at',
+  (select format('%s %s %s', enabled, price, currency) from public.store_modules
+   where store_id = tests.fx('store_b') and module_code = 'multi_currency' and source = 'addon'), 't 3.00 USD');
+select tests.eq('add-on: the storefront sells in more currencies again',
+  public.storefront_features(tests.fx('store_b')) ->> 'multi_currency', 'true');
+select tests.check('add-on: a module that is not sold alone is rejected', tests.throws(format(
+  $$select public.set_store_addon(%L, 'catalog', true, null)$$, tests.fx('store_b'))));
+update public.store_modules set enabled = false where store_id = tests.fx('store_b') and module_code = 'orders';
+select tests.check('add-on: dependencies are checked (vouchers needs orders)', tests.throws(format(
+  $$select public.set_store_addon(%L, 'vouchers', true, null)$$, tests.fx('store_b'))));
+update public.store_modules set enabled = true where store_id = tests.fx('store_b') and module_code = 'orders';
+select public.set_store_addon(tests.fx('store_b'), 'multi_currency', false, null);
+select tests.eq('add-on removed: off, row kept',
+  (select format('%s %s', enabled, price) from public.store_modules
+   where store_id = tests.fx('store_b') and module_code = 'multi_currency' and source = 'addon'), 'f 3.00');
+update public.modules set addon_price = 3 where code = 'multi_currency';
+
+-- Grants: free, optionally until a date.
+select public.set_store_module_grant(tests.fx('store_b'), 'whatsapp_notifications', true, now() + interval '30 days',
+  'Prueba de avisos', tests.fx('root'));
+select tests.check('grant: the module is on', pg_temp.modules('store_b') like '%whatsapp_notifications%');
+select tests.check('grant: an end date in the past is rejected', tests.throws(format(
+  $$select public.set_store_module_grant(%L, 'finance', true, now() - interval '1 day', null, null)$$, tests.fx('store_b'))));
+update public.store_modules set ends_at = now() - interval '1 second', starts_at = now() - interval '1 day'
+where store_id = tests.fx('store_b') and module_code = 'whatsapp_notifications' and source = 'grant';
+select tests.check('grant: off once it ends', pg_temp.modules('store_b') not like '%whatsapp_notifications%');
+
+-- Limits: per-store override and usage.
+update public.subscriptions set limit_overrides = '{"max_products": 2}' where store_id = tests.fx('store_b');
+select tests.check('over the limit: no new products', tests.throws('select pg_temp.product(4)'));
+select tests.eq('over the limit: existing products are still editable', tests.affected(format(
+  $$update public.products set name = 'Producto editado' where store_id = %L and slug = 'producto-1'$$,
+  tests.fx('store_b'))), 1);
+select tests.eq('usage: products and team against their limits', public.store_usage(tests.fx('store_b')),
+  '{"max_staff": {"used": 0, "limit": 2}, "max_products": {"used": 3, "limit": 2}}'::jsonb);
+update public.subscriptions set limit_overrides = '{}' where store_id = tests.fx('store_b');
+select tests.check('override removed: products again', not tests.throws('select pg_temp.product(4)'));
+
+-- Team: max_staff counts admins and staff; roles decide who manages whom.
+select tests.create_user('member_1');
+select tests.create_user('member_2');
+select tests.create_user('member_3');
+select public.store_member_add(tests.fx('store_b'), tests.fx('member_1'), 'admin', tests.fx('owner_b'));
+select tests.check('team: an admin cannot add admins', tests.throws(format(
+  $$select public.store_member_add(%L, %L, 'admin', %L)$$, tests.fx('store_b'), tests.fx('member_2'), tests.fx('member_1'))));
+select public.store_member_add(tests.fx('store_b'), tests.fx('member_2'), 'staff', tests.fx('member_1'));
+select tests.check('team: Base allows 2 (owner not counted)', tests.throws(format(
+  $$select public.store_member_add(%L, %L, 'staff', %L)$$, tests.fx('store_b'), tests.fx('member_3'), tests.fx('owner_b'))));
+select tests.check('team: staff cannot manage the team', tests.throws(format(
+  $$select public.store_member_remove(%L, %L, %L)$$, tests.fx('store_b'), tests.fx('member_1'), tests.fx('member_2'))));
+select tests.check('team: nobody removes the owner', tests.throws(format(
+  $$select public.store_member_remove(%L, %L, %L)$$, tests.fx('store_b'), tests.fx('owner_b'), tests.fx('member_1'))));
+select tests.check('team: an admin cannot demote another admin', tests.throws(format(
+  $$select public.store_member_update(%L, %L, 'staff', %L)$$, tests.fx('store_b'), tests.fx('member_1'), tests.fx('member_1'))));
+select tests.check('team: an outsider cannot manage the team', tests.throws(format(
+  $$select public.store_member_add(%L, %L, 'staff', %L)$$, tests.fx('store_b'), tests.fx('member_3'), tests.fx('owner_a'))));
+select public.store_member_remove(tests.fx('store_b'), tests.fx('member_2'), tests.fx('member_1'));
+select tests.check('team: a free place again', not tests.throws(format(
+  $$select public.store_member_add(%L, %L, 'staff', %L)$$, tests.fx('store_b'), tests.fx('member_3'), tests.fx('owner_b'))));
+
+select tests.login('owner_b');
+select tests.check('owner: engine functions are server-only',
+  tests.throws(format($$select public.change_plan(%L, 'pro', 'month', null)$$, tests.fx('store_b')))
+  and tests.throws(format($$select public.set_store_addon(%L, 'vouchers', true, null)$$, tests.fx('store_b')))
+  and tests.throws(format($$select public.store_member_add(%L, %L, 'staff', %L)$$,
+    tests.fx('store_b'), tests.fx('member_2'), tests.fx('owner_b'))));
+select tests.eq('owner: reads its effective limits', public.store_limits(tests.fx('store_b')),
+  '{"max_staff": 2, "max_products": 300}'::jsonb);
+select tests.logout();
+
+select tests.login('owner_a');
+select tests.eq('owner of A: no limits of B', public.store_limits(tests.fx('store_b')), '{}'::jsonb);
+select tests.logout();

@@ -17,6 +17,8 @@ insert into pg_temp.fixtures (key, id)
 select 'store_b', (public.create_store(
   'Disc Test B', 'disc-test-b', tests.fx('owner_b'), 'USD', 'DB', '5352222222', 'pro', 0, 'kshop.fullkod.com', null)).id;
 insert into public.store_members (store_id, user_id, role) values (tests.fx('store_a'), tests.fx('staff_a'), 'staff');
+-- Coupons are not in Base since phase 5: A buys the vouchers add-on.
+select public.set_store_addon(tests.fx('store_a'), 'vouchers', true, null);
 
 select tests.create_user('cust_a', jsonb_build_object('kind', 'customer', 'store_id', tests.fx('store_a')));
 with x as (
@@ -276,7 +278,7 @@ select tests.eq('manual discount: in the order total',
   (select format('%s %s', discount_total, total) from public.orders where id = tests.fx('o_manual')), '70.00 830.00');
 
 -- Module off: nothing applies, the data stays.
-update public.store_modules set enabled = false where store_id = tests.fx('store_a') and module_code = 'discounts';
+update public.store_modules set enabled = false where store_id = tests.fx('store_a') and module_code in ('discounts', 'vouchers');
 select tests.eq('module off: list price, voucher rejected',
   (select format('%s|%s', p ->> 'subtotal', p -> 'voucher' ->> 'error') from pg_temp.price(1, '{"voucher_code": "SECRETO10"}') p),
   '1000.00|Este cupón no existe o ya no está activo');
@@ -284,7 +286,7 @@ select private.refresh_store_promotions(tests.fx('store_a'));
 select tests.eq('module off: no materialized promotion, promotions kept',
   (select count(*) from public.variant_promotions where store_id = tests.fx('store_a'))::int
   + (select count(*) from public.promotions where store_id = tests.fx('store_a'))::int, 3);
-update public.store_modules set enabled = true where store_id = tests.fx('store_a') and module_code = 'discounts';
+update public.store_modules set enabled = true where store_id = tests.fx('store_a') and module_code in ('discounts', 'vouchers');
 
 select tests.login('owner_a');
 select tests.check('owner A: cannot call price_lines directly', tests.throws(format(

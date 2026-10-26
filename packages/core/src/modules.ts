@@ -4,6 +4,7 @@ export const MODULE_CODES = [
   "orders",
   "shipping",
   "discounts",
+  "vouchers",
   "themes",
   "excel_import",
   "mobile_app",

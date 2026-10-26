@@ -103,6 +103,7 @@ export type PricedLines = {
     error: string | null;
   } | null;
   discount_total: number;
+  vouchers_enabled: boolean;
 };
 
 /** Prices of lines in a currency with promotions and an optional voucher (public.price_lines). */
@@ -142,6 +143,7 @@ export async function cartView(storeId: string, cart: CartRow | null, requestedC
     promotionSavings: 0,
     voucher: null,
     discountTotal: 0,
+    vouchersEnabled: false,
     itemCount: 0,
     hasIssues: false,
   };
@@ -211,6 +213,7 @@ export async function cartView(storeId: string, cart: CartRow | null, requestedC
       error: priced.voucher.error,
     },
     discountTotal: Number(priced.discount_total),
+    vouchersEnabled: priced.vouchers_enabled,
     itemCount: lines.reduce((sum, l) => sum + l.quantity, 0),
     hasIssues: lines.some((l) => l.issue !== null),
   };

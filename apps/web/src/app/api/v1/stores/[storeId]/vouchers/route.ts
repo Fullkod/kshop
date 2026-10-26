@@ -8,7 +8,7 @@ import { apiHandler, readJson } from "@/server/http";
 // { code, name, scope: order|specific|shipping, reward, value, minSubtotal?, minQuantity?, usageLimit?,
 //   usagePerCustomer?, startsAt?, endsAt?, isActive, targets: [{type, id}] (scope specific) }
 export const POST = apiHandler(async (request: Request, ctx: RouteContext<"/api/v1/stores/[storeId]/vouchers">) => {
-  const { storeId } = await requireCatalogAccess(request, (await ctx.params).storeId, "admin", "discounts");
+  const { storeId } = await requireCatalogAccess(request, (await ctx.params).storeId, "admin", "vouchers");
   const input = voucherSchema.parse(await readJson(request));
   return NextResponse.json({ id: await saveVoucher(storeId, null, input) }, { status: 201 });
 });

@@ -8,7 +8,7 @@ type Ctx = RouteContext<"/api/v1/stores/[storeId]/vouchers/[voucherId]">;
 
 async function resolve(request: Request, ctx: Ctx) {
   const params = await ctx.params;
-  const { storeId } = await requireCatalogAccess(request, params.storeId, "admin", "discounts");
+  const { storeId } = await requireCatalogAccess(request, params.storeId, "admin", "vouchers");
   return { storeId, id: uuidParam.parse(params.voucherId) };
 }
 

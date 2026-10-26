@@ -187,6 +187,8 @@ export type Cart = {
   voucher: CartVoucher | null;
   /** Voucher discount that applies now (0 when it does not apply). */
   discountTotal: number;
+  /** The store sells with coupons (vouchers module): otherwise there is no coupon field. */
+  vouchersEnabled: boolean;
   itemCount: number;
   hasIssues: boolean;
 };

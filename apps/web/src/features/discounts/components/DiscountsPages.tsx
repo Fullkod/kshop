@@ -76,10 +76,12 @@ type Voucher = {
   }[];
 };
 
-const nodes = <T,>(c: { edges: { node: T }[] } | null | undefined): T[] => (c?.edges ?? []).map((e) => e.node);
+const nodes = <T,>(c: { edges: { node: T }[] } | null | undefined): T[] =>
+  (c?.edges ?? []).map((e) => e.node);
 const num = (v: unknown) => (v == null ? null : Number(v));
-const targetsOf = (c: { edges: { node: { targetType: unknown; targetId: string } }[] } | null | undefined): Target[] =>
-  nodes(c).map((t) => ({ type: String(t.targetType) as DiscountTarget, id: t.targetId }));
+const targetsOf = (
+  c: { edges: { node: { targetType: unknown; targetId: string } }[] } | null | undefined,
+): Target[] => nodes(c).map((t) => ({ type: String(t.targetType) as DiscountTarget, id: t.targetId }));
 
 function useCanEdit() {
   const admin = useAdmin();
@@ -91,7 +93,8 @@ function status(item: { isActive: boolean; startsAt: string; endsAt: string | nu
   const now = Date.now();
   if (!item.isActive) return { label: "Pausada", variant: "muted" as const };
   if (new Date(item.startsAt).getTime() > now) return { label: "Programada", variant: "gold" as const };
-  if (item.endsAt && new Date(item.endsAt).getTime() <= now) return { label: "Terminada", variant: "muted" as const };
+  if (item.endsAt && new Date(item.endsAt).getTime() <= now)
+    return { label: "Terminada", variant: "muted" as const };
   return { label: "Activa", variant: "success" as const };
 }
 
@@ -99,7 +102,9 @@ const dateText = (iso: string) =>
   new Date(iso).toLocaleString("es", { dateStyle: "short", timeStyle: "short", timeZone: "America/Havana" });
 
 function dates(item: { startsAt: string; endsAt: string | null }) {
-  return item.endsAt ? `${dateText(item.startsAt)} → ${dateText(item.endsAt)}` : `Desde ${dateText(item.startsAt)}`;
+  return item.endsAt
+    ? `${dateText(item.startsAt)} → ${dateText(item.endsAt)}`
+    : `Desde ${dateText(item.startsAt)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -107,15 +112,19 @@ function dates(item: { startsAt: string; endsAt: string | null }) {
 // ---------------------------------------------------------------------------
 
 const SECTIONS = [
-  { href: "/admin/discounts", label: "Promociones" },
-  { href: "/admin/discounts/vouchers", label: "Cupones" },
+  { href: "/admin/discounts", label: "Promociones", module: "discounts" },
+  { href: "/admin/discounts/vouchers", label: "Cupones", module: "vouchers" },
 ] as const;
 
+/** Tabs of the sections the plan includes (nothing to switch to when there is only one). */
 export function DiscountsNav() {
   const pathname = usePathname();
+  const admin = useAdmin();
+  const sections = SECTIONS.filter((s) => admin.enabledModules.has(s.module));
+  if (sections.length < 2) return null;
   return (
     <nav className="-mx-1 mb-6 flex gap-1 overflow-x-auto border-b pb-2" aria-label="Secciones de descuentos">
-      {SECTIONS.map((s) => (
+      {sections.map((s) => (
         <Link
           key={s.href}
           href={s.href}
@@ -165,7 +174,10 @@ function useTargetNames(productIds: string[]) {
       .toPromise();
     if (r.error || !r.data) return null;
     return {
-      category: nodes(r.data.categoriesCollection).map((c) => ({ id: c.id, name: `${"— ".repeat(c.depth)}${c.name}` })),
+      category: nodes(r.data.categoriesCollection).map((c) => ({
+        id: c.id,
+        name: `${"— ".repeat(c.depth)}${c.name}`,
+      })),
       collection: nodes(r.data.collectionsCollection),
       brand: nodes(r.data.brandsCollection),
       product: nodes(r.data.productsCollection),
@@ -186,13 +198,22 @@ function targetName(names: TargetNames | null, t: Target): string {
 // Target picker
 // ---------------------------------------------------------------------------
 
-function TargetPicker({ value, onChange, names }: { value: Target[]; onChange: (t: Target[]) => void; names: TargetNames | null }) {
+function TargetPicker({
+  value,
+  onChange,
+  names,
+}: {
+  value: Target[];
+  onChange: (t: Target[]) => void;
+  names: TargetNames | null;
+}) {
   const store = useStore();
   const { graphql } = useSession();
   const [type, setType] = useState<Exclude<DiscountTarget, "variant">>("category");
   const [query, setQuery] = useState("");
   const [found, setFound] = useState<{ id: string; name: string }[]>([]);
-  const add = (t: Target) => !value.some((v) => v.type === t.type && v.id === t.id) && onChange([...value, t]);
+  const add = (t: Target) =>
+    !value.some((v) => v.type === t.type && v.id === t.id) && onChange([...value, t]);
 
   useEffect(() => {
     const q = query.trim();
@@ -214,8 +235,12 @@ function TargetPicker({ value, onChange, names }: { value: Target[]; onChange: (
       {value.length > 0 && (
         <ul className="flex flex-wrap gap-2" aria-label="Se aplica a">
           {value.map((t) => (
-            <li key={`${t.type}:${t.id}`} className="flex items-center gap-1 rounded-full border px-3 py-1 text-sm">
-              <span className="text-muted-foreground">{DISCOUNT_TARGET_LABELS[t.type]}:</span> {targetName(names, t)}
+            <li
+              key={`${t.type}:${t.id}`}
+              className="flex items-center gap-1 rounded-full border px-3 py-1 text-sm"
+            >
+              <span className="text-muted-foreground">{DISCOUNT_TARGET_LABELS[t.type]}:</span>{" "}
+              {targetName(names, t)}
               <button
                 type="button"
                 className="ml-1 text-muted-foreground hover:text-foreground"
@@ -229,7 +254,12 @@ function TargetPicker({ value, onChange, names }: { value: Target[]; onChange: (
         </ul>
       )}
       <div className="flex flex-wrap gap-2">
-        <Select value={type} onChange={(e) => setType(e.target.value as typeof type)} aria-label="Tipo" className="w-36">
+        <Select
+          value={type}
+          onChange={(e) => setType(e.target.value as typeof type)}
+          aria-label="Tipo"
+          className="w-36"
+        >
           <option value="category">Categoría</option>
           <option value="collection">Colección</option>
           <option value="brand">Marca</option>
@@ -265,7 +295,12 @@ function TargetPicker({ value, onChange, names }: { value: Target[]; onChange: (
           {found.map((p) => (
             <li key={p.id} className="flex items-center justify-between gap-2 px-3 py-2">
               <span className="truncate">{p.name}</span>
-              <Button type="button" size="sm" variant="outline" onClick={() => add({ type: "product", id: p.id })}>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => add({ type: "product", id: p.id })}
+              >
                 Añadir
               </Button>
             </li>
@@ -280,7 +315,19 @@ function TargetPicker({ value, onChange, names }: { value: Target[]; onChange: (
 // Shared form fields
 // ---------------------------------------------------------------------------
 
-function Field({ id, label, error, children, wide }: { id: string; label: string; error?: string; children: ReactNode; wide?: boolean }) {
+function Field({
+  id,
+  label,
+  error,
+  children,
+  wide,
+}: {
+  id: string;
+  label: string;
+  error?: string;
+  children: ReactNode;
+  wide?: boolean;
+}) {
   return (
     <div className={cn("flex flex-col gap-1", wide && "sm:col-span-2")}>
       <Label htmlFor={id}>{label}</Label>
@@ -290,7 +337,13 @@ function Field({ id, label, error, children, wide }: { id: string; label: string
   );
 }
 
-function RewardFields({ reward, setReward, value, currency, errors }: {
+function RewardFields({
+  reward,
+  setReward,
+  value,
+  currency,
+  errors,
+}: {
   reward: DiscountReward;
   setReward: (r: DiscountReward) => void;
   value: number | null;
@@ -300,19 +353,36 @@ function RewardFields({ reward, setReward, value, currency, errors }: {
   return (
     <>
       <Field id="reward" label="Tipo de descuento">
-        <Select id="reward" name="reward" value={reward} onChange={(e) => setReward(e.target.value as DiscountReward)}>
+        <Select
+          id="reward"
+          name="reward"
+          value={reward}
+          onChange={(e) => setReward(e.target.value as DiscountReward)}
+        >
           <option value="percent">Porcentaje</option>
           <option value="fixed">Importe fijo ({currency})</option>
         </Select>
       </Field>
-      <Field id="value" label={reward === "percent" ? "Porcentaje (%)" : `Importe (${currency})`} error={errors.value}>
+      <Field
+        id="value"
+        label={reward === "percent" ? "Porcentaje (%)" : `Importe (${currency})`}
+        error={errors.value}
+      >
         <Input id="value" name="value" inputMode="decimal" defaultValue={value ?? ""} required />
       </Field>
     </>
   );
 }
 
-function DateFields({ startsAt, endsAt, errors }: { startsAt?: string; endsAt: string | null; errors: Record<string, string> }) {
+function DateFields({
+  startsAt,
+  endsAt,
+  errors,
+}: {
+  startsAt?: string;
+  endsAt: string | null;
+  errors: Record<string, string>;
+}) {
   return (
     <>
       <Field id="startsAt" label="Empieza (hora de Cuba)" error={errors.startsAt}>
@@ -326,7 +396,8 @@ function DateFields({ startsAt, endsAt, errors }: { startsAt?: string; endsAt: s
 }
 
 const formText = (data: FormData, name: string) => String(data.get(name) ?? "").trim();
-const formNumber = (data: FormData, name: string) => (formText(data, name) === "" ? null : Number(formText(data, name)));
+const formNumber = (data: FormData, name: string) =>
+  formText(data, name) === "" ? null : Number(formText(data, name));
 
 // ---------------------------------------------------------------------------
 // Promotions
@@ -355,7 +426,9 @@ export function PromotionsPage() {
       targets: targetsOf(p.promotionTargetsCollection),
     }));
   }, [graphql, store.id]);
-  const names = useTargetNames((data ?? []).flatMap((p) => p.targets.filter((t) => t.type === "product").map((t) => t.id)));
+  const names = useTargetNames(
+    (data ?? []).flatMap((p) => p.targets.filter((t) => t.type === "product").map((t) => t.id)),
+  );
   const currency = settings?.baseCurrency ?? "CUP";
   const discounts = api.discounts(store.id);
 
@@ -366,8 +439,8 @@ export function PromotionsPage() {
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Rebajas automáticas: la tienda muestra el precio tachado y la etiqueta. Si a un producto le tocan varias, se
-          aplica la que deja el precio más bajo.
+          Rebajas automáticas: la tienda muestra el precio tachado y la etiqueta. Si a un producto le tocan
+          varias, se aplica la que deja el precio más bajo.
         </p>
         {canEdit && !editing && <Button onClick={() => setEditing("new")}>Nueva promoción</Button>}
       </div>
@@ -381,7 +454,9 @@ export function PromotionsPage() {
           pending={action.pending}
           onCancel={() => setEditing(null)}
           onSave={async (input, id) => {
-            const ok = await action.run(() => (id ? discounts.updatePromotion(id, input) : discounts.createPromotion(input)));
+            const ok = await action.run(() =>
+              id ? discounts.updatePromotion(id, input) : discounts.createPromotion(input),
+            );
             if (ok) {
               setEditing(null);
               reload();
@@ -413,7 +488,9 @@ export function PromotionsPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={async () => (await action.run(() => discounts.deletePromotion(p.id))) !== undefined && reload()}
+                      onClick={async () =>
+                        (await action.run(() => discounts.deletePromotion(p.id))) !== undefined && reload()
+                      }
                     >
                       Borrar
                     </Button>
@@ -428,7 +505,15 @@ export function PromotionsPage() {
   );
 }
 
-function PromotionForm({ promotion, currency, names, errors, pending, onCancel, onSave }: {
+function PromotionForm({
+  promotion,
+  currency,
+  names,
+  errors,
+  pending,
+  onCancel,
+  onSave,
+}: {
   promotion: Promotion | null;
   currency: string;
   names: TargetNames | null;
@@ -465,12 +550,31 @@ function PromotionForm({ promotion, currency, names, errors, pending, onCancel, 
       <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
         <h3 className="font-semibold sm:col-span-2">{promotion ? "Editar promoción" : "Nueva promoción"}</h3>
         <Field id="name" label="Nombre (lo ve el cliente)" error={errors.name}>
-          <Input id="name" name="name" defaultValue={promotion?.name ?? ""} placeholder="Black Friday" required />
+          <Input
+            id="name"
+            name="name"
+            defaultValue={promotion?.name ?? ""}
+            placeholder="Black Friday"
+            required
+          />
         </Field>
         <Field id="priority" label="Prioridad (desempate)" error={errors.priority}>
-          <Input id="priority" name="priority" type="number" min={-100} max={100} defaultValue={promotion?.priority ?? 0} />
+          <Input
+            id="priority"
+            name="priority"
+            type="number"
+            min={-100}
+            max={100}
+            defaultValue={promotion?.priority ?? 0}
+          />
         </Field>
-        <RewardFields reward={reward} setReward={setReward} value={promotion?.value ?? null} currency={currency} errors={errors} />
+        <RewardFields
+          reward={reward}
+          setReward={setReward}
+          value={promotion?.value ?? null}
+          currency={currency}
+          errors={errors}
+        />
         <DateFields startsAt={promotion?.startsAt} endsAt={promotion?.endsAt ?? null} errors={errors} />
         <Field id="description" label="Descripción interna (opcional)" error={errors.description} wide>
           <Input id="description" name="description" defaultValue={promotion?.description ?? ""} />
@@ -535,11 +639,15 @@ export function VouchersPage() {
         phone: u.phone,
         createdAt: u.createdAt,
         released: !!u.releasedAt,
-        order: u.orders ? { id: u.orders.id, number: u.orders.number, customerName: u.orders.customerName } : null,
+        order: u.orders
+          ? { id: u.orders.id, number: u.orders.number, customerName: u.orders.customerName }
+          : null,
       })),
     }));
   }, [graphql, store.id]);
-  const names = useTargetNames((data ?? []).flatMap((v) => v.targets.filter((t) => t.type === "product").map((t) => t.id)));
+  const names = useTargetNames(
+    (data ?? []).flatMap((v) => v.targets.filter((t) => t.type === "product").map((t) => t.id)),
+  );
   const currency = settings?.baseCurrency ?? "CUP";
   const discounts = api.discounts(store.id);
 
@@ -550,8 +658,8 @@ export function VouchersPage() {
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Códigos que el cliente escribe en el carrito. Un cupón por pedido, compatible con las promociones. El uso se
-          cuenta al crear el pedido y se devuelve si se cancela.
+          Códigos que el cliente escribe en el carrito. Un cupón por pedido, compatible con las promociones.
+          El uso se cuenta al crear el pedido y se devuelve si se cancela.
         </p>
         {canEdit && !editing && <Button onClick={() => setEditing("new")}>Nuevo cupón</Button>}
       </div>
@@ -565,7 +673,9 @@ export function VouchersPage() {
           pending={action.pending}
           onCancel={() => setEditing(null)}
           onSave={async (input, id) => {
-            const ok = await action.run(() => (id ? discounts.updateVoucher(id, input) : discounts.createVoucher(input)));
+            const ok = await action.run(() =>
+              id ? discounts.updateVoucher(id, input) : discounts.createVoucher(input),
+            );
             if (ok) {
               setEditing(null);
               reload();
@@ -598,7 +708,11 @@ export function VouchersPage() {
                       {v.usagePerCustomer !== null && ` · ${v.usagePerCustomer} por cliente`} · {dates(v)}
                     </span>
                   </span>
-                  <Button size="sm" variant="ghost" onClick={() => setUsagesOf(usagesOf === v.id ? null : v.id)}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setUsagesOf(usagesOf === v.id ? null : v.id)}
+                  >
                     Usos
                   </Button>
                   {canEdit && (
@@ -609,7 +723,9 @@ export function VouchersPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={async () => (await action.run(() => discounts.deleteVoucher(v.id))) !== undefined && reload()}
+                        onClick={async () =>
+                          (await action.run(() => discounts.deleteVoucher(v.id))) !== undefined && reload()
+                        }
                       >
                         {v.usedCount > 0 || v.usages.length > 0 ? "Desactivar" : "Borrar"}
                       </Button>
@@ -618,19 +734,28 @@ export function VouchersPage() {
                 </div>
                 {usagesOf === v.id && (
                   <ul className="rounded-md border text-sm">
-                    {v.usages.length === 0 && <li className="px-3 py-2 text-muted-foreground">Sin usos todavía.</li>}
+                    {v.usages.length === 0 && (
+                      <li className="px-3 py-2 text-muted-foreground">Sin usos todavía.</li>
+                    )}
                     {v.usages.map((u) => (
-                      <li key={u.id} className="flex flex-wrap justify-between gap-2 border-b px-3 py-2 last:border-b-0">
+                      <li
+                        key={u.id}
+                        className="flex flex-wrap justify-between gap-2 border-b px-3 py-2 last:border-b-0"
+                      >
                         <span>
                           {u.order ? (
                             <Link href={`/admin/orders/${u.order.id}`} className="underline">
-                              {settings ? orderCode(settings.orderPrefix, u.order.number) : `#${u.order.number}`}
+                              {settings
+                                ? orderCode(settings.orderPrefix, u.order.number)
+                                : `#${u.order.number}`}
                             </Link>
                           ) : (
                             "—"
                           )}{" "}
                           · {u.order?.customerName ?? u.phone}
-                          {u.released && <span className="text-muted-foreground"> (cancelado, uso devuelto)</span>}
+                          {u.released && (
+                            <span className="text-muted-foreground"> (cancelado, uso devuelto)</span>
+                          )}
                         </span>
                         <span>
                           −{formatMoney(u.amount, u.currency)} · {dateText(u.createdAt)}
@@ -648,7 +773,15 @@ export function VouchersPage() {
   );
 }
 
-function VoucherForm({ voucher, currency, names, errors, pending, onCancel, onSave }: {
+function VoucherForm({
+  voucher,
+  currency,
+  names,
+  errors,
+  pending,
+  onCancel,
+  onSave,
+}: {
   voucher: Voucher | null;
   currency: string;
   names: TargetNames | null;
@@ -690,7 +823,14 @@ function VoucherForm({ voucher, currency, names, errors, pending, onCancel, onSa
       <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
         <h3 className="font-semibold sm:col-span-2">{voucher ? "Editar cupón" : "Nuevo cupón"}</h3>
         <Field id="code" label="Código" error={errors.code}>
-          <Input id="code" name="code" defaultValue={voucher?.code ?? ""} placeholder="BIENVENIDA10" className="uppercase" required />
+          <Input
+            id="code"
+            name="code"
+            defaultValue={voucher?.code ?? ""}
+            placeholder="BIENVENIDA10"
+            className="uppercase"
+            required
+          />
         </Field>
         <Field id="name" label="Nombre" error={errors.name}>
           <Input id="name" name="name" defaultValue={voucher?.name ?? ""} placeholder="Bienvenida" required />
@@ -704,7 +844,13 @@ function VoucherForm({ voucher, currency, names, errors, pending, onCancel, onSa
             ))}
           </Select>
         </Field>
-        <RewardFields reward={reward} setReward={setReward} value={voucher?.value ?? null} currency={currency} errors={errors} />
+        <RewardFields
+          reward={reward}
+          setReward={setReward}
+          value={voucher?.value ?? null}
+          currency={currency}
+          errors={errors}
+        />
         {scope === "shipping" && (
           <p className="text-xs text-muted-foreground sm:col-span-2">Envío gratis = porcentaje 100.</p>
         )}
@@ -716,16 +862,39 @@ function VoucherForm({ voucher, currency, names, errors, pending, onCancel, onSa
           </div>
         )}
         <Field id="minSubtotal" label={`Pedido mínimo (${currency}, opcional)`} error={errors.minSubtotal}>
-          <Input id="minSubtotal" name="minSubtotal" inputMode="decimal" defaultValue={voucher?.minSubtotal ?? ""} />
+          <Input
+            id="minSubtotal"
+            name="minSubtotal"
+            inputMode="decimal"
+            defaultValue={voucher?.minSubtotal ?? ""}
+          />
         </Field>
         <Field id="minQuantity" label="Mínimo de productos (opcional)" error={errors.minQuantity}>
-          <Input id="minQuantity" name="minQuantity" type="number" min={1} defaultValue={voucher?.minQuantity ?? ""} />
+          <Input
+            id="minQuantity"
+            name="minQuantity"
+            type="number"
+            min={1}
+            defaultValue={voucher?.minQuantity ?? ""}
+          />
         </Field>
         <Field id="usageLimit" label="Usos en total (opcional)" error={errors.usageLimit}>
-          <Input id="usageLimit" name="usageLimit" type="number" min={1} defaultValue={voucher?.usageLimit ?? ""} />
+          <Input
+            id="usageLimit"
+            name="usageLimit"
+            type="number"
+            min={1}
+            defaultValue={voucher?.usageLimit ?? ""}
+          />
         </Field>
         <Field id="usagePerCustomer" label="Usos por cliente (opcional)" error={errors.usagePerCustomer}>
-          <Input id="usagePerCustomer" name="usagePerCustomer" type="number" min={1} defaultValue={voucher?.usagePerCustomer ?? ""} />
+          <Input
+            id="usagePerCustomer"
+            name="usagePerCustomer"
+            type="number"
+            min={1}
+            defaultValue={voucher?.usagePerCustomer ?? ""}
+          />
         </Field>
         <DateFields startsAt={voucher?.startsAt} endsAt={voucher?.endsAt ?? null} errors={errors} />
         <label className="flex items-center gap-2 text-sm sm:col-span-2">

@@ -183,6 +183,20 @@ async function run() {
 
   // ---- Vouchers ----
   const voucher = { code: "Bienvenida10", name: "Bienvenida", reward: "percent", value: 10, minSubtotal: 2000, usagePerCustomer: 1 };
+  // Phase 5: coupons are not in Base; the store buys the vouchers add-on.
+  r = await anon("GET", `${base}/cart?token=${cartToken}`);
+  check("Base: the cart has no coupon field", r.status === 200 && r.body.vouchersEnabled === false, r.body);
+  r = await ownerA("POST", `${base}/vouchers`, voucher);
+  check("Base without the add-on: vouchers -> 403 module_not_enabled",
+    r.status === 403 && r.body.error.code === "module_not_enabled", r);
+  {
+    const { error } = await service.rpc("set_store_addon", {
+      p_store_id: storeA.id, p_module_code: "vouchers", p_enabled: true, p_user_id: null,
+    });
+    if (error) throw error;
+  }
+  r = await anon("GET", `${base}/cart?token=${cartToken}`);
+  check("with the add-on: the cart shows the coupon field", r.status === 200 && r.body.vouchersEnabled === true, r.body);
   r = await staffA("POST", `${base}/vouchers`, voucher);
   check("vouchers: staff -> 403", r.status === 403, r);
   r = await ownerA("POST", `${base}/vouchers`, voucher);
@@ -270,12 +284,12 @@ async function run() {
   check("storefront checkout ignores a manual discount in the body", r.status === 201 && r.body.order?.discountTotal === 240, r.body);
 
   // Module off: no prices change, admin endpoints 403, data kept.
-  await service.from("store_modules").update({ enabled: false }).eq("store_id", storeA.id).eq("module_code", "discounts");
+  await service.from("store_modules").update({ enabled: false }).eq("store_id", storeA.id).in("module_code", ["discounts", "vouchers"]);
   r = await ownerA("POST", `${base}/promotions`, promo);
   check("module off: promotions -> 403 module_not_enabled", r.status === 403 && r.body.error.code === "module_not_enabled", r);
   r = await anon("PUT", `${base}/cart`, { lines: [{ variantId: S.variantId, quantity: 1 }], mode: "add" });
   check("module off: the cart uses the list price", r.status === 200 && r.body.lines[0]?.unitPrice === 1500, r.body);
-  await service.from("store_modules").update({ enabled: true }).eq("store_id", storeA.id).eq("module_code", "discounts");
+  await service.from("store_modules").update({ enabled: true }).eq("store_id", storeA.id).in("module_code", ["discounts", "vouchers"]);
 
   // Delete: a used voucher is deactivated, a promotion goes away and prices come back.
   const { data: used } = await service.from("vouchers").select("id").eq("store_id", storeA.id).eq("code", "BIENVENIDA10").single();

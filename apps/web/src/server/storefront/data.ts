@@ -40,6 +40,8 @@ export type StorefrontShell = {
   collections: { id: string; name: string; slug: string }[];
   pages: { id: string; slug: string; title: string }[];
   currencies: StoreCurrency[];
+  /** What the plan turns on in the storefront (multi_currency, vouchers). */
+  features: { multiCurrency: boolean; vouchers: boolean };
   /** Slugs by id, to turn typed links (menus, banners) into paths. */
   slugs: Record<string, string>;
 };
@@ -52,6 +54,8 @@ export async function getStorefrontShell(storeId: string): Promise<StorefrontShe
   const result = await anonGraphql.query(StorefrontShellQuery, { storeId }).toPromise();
   if (result.error || !result.data) throw result.error ?? new Error("Storefront shell not available");
   const d = result.data;
+  // pg_graphql returns jsonb as a JSON string.
+  const features = JSON.parse(d.storefrontFeatures ?? "{}") as { multi_currency?: boolean; vouchers?: boolean };
 
   const categories = nodes(d.categoriesCollection).map((c) => ({
     id: c.id,
@@ -97,12 +101,16 @@ export async function getStorefrontShell(storeId: string): Promise<StorefrontShe
     brands,
     collections: nodes(d.collectionsCollection),
     pages: nodes(d.pagesCollection),
-    currencies: nodes(d.storeCurrenciesCollection).map((c) => ({
-      currency: currencyCodeSchema.parse(c.currency),
-      isBase: c.isBase,
-      rateToBase: Number(c.rateToBase),
-      rounding: c.rounding == null ? null : Number(c.rounding),
-    })),
+    // Without multi_currency (e.g. after moving down to Base) the extra currencies are kept but not offered.
+    currencies: nodes(d.storeCurrenciesCollection)
+      .filter((c) => c.isBase || features.multi_currency)
+      .map((c) => ({
+        currency: currencyCodeSchema.parse(c.currency),
+        isBase: c.isBase,
+        rateToBase: Number(c.rateToBase),
+        rounding: c.rounding == null ? null : Number(c.rounding),
+      })),
+    features: { multiCurrency: !!features.multi_currency, vouchers: !!features.vouchers },
     slugs,
   };
 }

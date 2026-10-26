@@ -62,6 +62,11 @@ export function mapDbError(error: unknown, entity = "El registro"): never {
           "Llegaste al límite de productos de tu plan. Archiva alguno o mejora el plan.",
         );
       }
+      // Phase 5: plans, add-ons and team (Spanish message from SQL).
+      if (error.hint === "max_staff") throw new HttpError(409, "limit_reached", error.message ?? "");
+      if (error.hint === "module_dependency") throw new HttpError(409, "module_dependency", error.message ?? "");
+      if (error.hint === "forbidden") throw new HttpError(403, "forbidden", error.message ?? "");
+      if (error.hint === "conflict") throw new HttpError(409, "conflict", error.message ?? "");
       // Order functions (phase 3): Spanish message from SQL, status from the hint.
       if (error.hint === "insufficient_stock") throw new HttpError(409, "insufficient_stock", error.message ?? "");
       if (error.hint === "invalid_transition") throw new HttpError(409, "invalid_transition", error.message ?? "");

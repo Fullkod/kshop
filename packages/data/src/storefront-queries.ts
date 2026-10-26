@@ -6,6 +6,7 @@ import { graphql } from "./gql";
 /** Header/footer: menus, top-level categories (fallback navigation), sale currencies and published pages. */
 export const StorefrontShellQuery = graphql(`
   query StorefrontShell($storeId: UUID!) {
+    storefrontFeatures(pStoreId: $storeId)
     menusCollection(filter: { storeId: { eq: $storeId } }, first: 2) {
       edges {
         node {

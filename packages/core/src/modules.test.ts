@@ -12,8 +12,9 @@ const migrations = readdirSync(migrationsDir)
 
 describe("TypeScript constants mirror the database", () => {
   it("MODULE_CODES matches the seeded public.modules", () => {
-    const seed = migrations.match(/insert into public\.modules[\s\S]*?on conflict/)?.[0] ?? "";
-    const codes = [...seed.matchAll(/^\s*\('([a-z_]+)'/gm)].map((m) => m[1]);
+    // Every insert into public.modules (phase 0b seed, later modules such as vouchers in phase 5).
+    const seeds = [...migrations.matchAll(/insert into public\.modules[\s\S]*?on conflict/g)].map((m) => m[0]);
+    const codes = seeds.flatMap((seed) => [...seed.matchAll(/^\s*(?:values )?\('([a-z_]+)'/gm)].map((m) => m[1]));
     expect(codes.sort()).toEqual([...MODULE_CODES].sort());
   });
 

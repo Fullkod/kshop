@@ -35,7 +35,7 @@ export function CartView() {
       </ul>
       <aside className="flex h-fit flex-col gap-4 rounded-[var(--sf-radius)] border p-4">
         <CartTotals cart={cart} money={money} />
-        <VoucherForm />
+        {cart.vouchersEnabled && <VoucherForm />}
         <p className="text-sm text-muted-foreground">La entrega se calcula en el siguiente paso.</p>
         {cart.hasIssues && (
           <Alert variant="destructive">Ajusta los productos marcados antes de continuar.</Alert>
