@@ -1,6 +1,6 @@
 # PRP-5: Suscripciones y módulos en Kshop
 
-> **Estado**: APROBADO (2026-10-25) con las respuestas de Roberto (ver «Decisiones de Roberto»); en implementación
+> **Estado**: EN CURSO (2026-10-25): 5.1–5.5 hechas (commits `1aeb6ea` … `6b52dc8`); 5.6 validación final pausada por Roberto. APROBADO con sus respuestas (ver «Decisiones de Roberto»)
 > **Fecha**: 2026-10-25
 > **Proyecto**: Kshop
 > **Fase**: 5 (ver `arranque-y-fases.md`). Código de partida: commit `72e440a` (Fase 4 cerrada salvo OpenWA real)

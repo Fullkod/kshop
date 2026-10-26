@@ -1,5 +1,0 @@
-http://qa-billing.kshop.localhost:3000/ :: Failed to load resource: the server responded with a status of 404 (Not Found)
-
-http://qa-billing.kshop.localhost:3000/ :: Failed to load resource: the server responded with a status of 404 (Not Found)
-
-http://qa-billing.kshop.localhost:3000/ :: Failed to load resource: the server responded with a status of 404 (Not Found)
