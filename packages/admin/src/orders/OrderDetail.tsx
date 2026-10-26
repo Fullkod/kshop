@@ -19,14 +19,11 @@ import {
 } from "@kshop/core";
 import { AdminOrderQuery, type ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, Card, cn, Input, Label, Select } from "@kshop/ui";
-import Link from "next/link";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { useApiAction } from "@/features/catalog/use-catalog";
-import { platformProtocol, publicEnv } from "@/env";
-import { useSession } from "@/lib/session";
-import { useStore } from "@kshop/storefront";
-import { useCheckoutSettings } from "../use-orders";
-import { OrderNotices } from "@/features/whatsapp-notifications/components/NotificationsPages";
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useApiAction } from "../catalog/use-catalog";
+import { useSession } from "../session";
+import { Link, useStore } from "@kshop/storefront";
+import { useCheckoutSettings } from "./use-orders";
 import { STATUS_VARIANT } from "./OrderList";
 
 // Payment evidence is private (staff of the store only): it is opened through a signed URL valid for 1 h.
@@ -65,9 +62,10 @@ const EVENT_LABELS: Record<string, string> = {
   note: "Nota interna",
 };
 
-export function OrderDetail({ orderId }: { orderId: string }) {
+/** `notices` renders below the payments (the web passes the WhatsApp notices log of the order). */
+export function OrderDetail({ orderId, notices }: { orderId: string; notices?: (orderId: string) => ReactNode }) {
   const store = useStore();
-  const { graphql, api, supabase } = useSession();
+  const { graphql, api, supabase, config } = useSession();
   const { data: settings } = useCheckoutSettings();
   const action = useApiAction();
   const [order, setOrder] = useState<OrderNode | null>(null);
@@ -119,7 +117,7 @@ export function OrderDetail({ orderId }: { orderId: string }) {
   const events = nodes(order.orderEventsCollection);
   const payments = nodes(order.paymentsCollection).map((p) => ({ ...p, currency: String(p.currency) }));
   const refunds = nodes(order.refundsCollection).map((r) => ({ ...r, currency: String(r.currency) }));
-  const publicUrl = `${storePublicOrigin(store, publicEnv.platformDomain, platformProtocol)}/order/${order.publicToken}`;
+  const publicUrl = `${storePublicOrigin(store, config.platformDomain, config.protocol)}/order/${order.publicToken}`;
   const customerText = `Hola, ${order.customerName}. Tu pedido ${code} en ${store.name} está: ${ORDER_STATUS_LABELS[status]}.${
     total !== null && paid < total && status !== "cancelled" ? ` Total: ${money(total)}.` : ""
   }\n${publicUrl}`;
@@ -187,7 +185,6 @@ export function OrderDetail({ orderId }: { orderId: string }) {
                   <li key={l.id} className="flex gap-3 py-3 text-sm">
                     <div className="h-14 w-12 shrink-0 overflow-hidden rounded bg-surface">
                       {l.imageUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element -- snapshot URL
                         <img src={l.imageUrl} alt="" width={48} height={56} className="h-full w-full object-cover" />
                       )}
                     </div>
@@ -265,7 +262,7 @@ export function OrderDetail({ orderId }: { orderId: string }) {
             signedUrl={signedEvidenceUrl}
           />
 
-          <OrderNotices orderId={order.id} />
+          {notices?.(order.id)}
 
           <Card>
             <h3 className="mb-3 font-semibold">Historial</h3>

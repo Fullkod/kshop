@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@import "@kshop/ui/styles.css";
+
+@source "../../../packages/ui/src";
+@source "../../../packages/admin/src";
+@source ".";
+
+/* Kshop fonts (bundled, no network): same variables as next/font sets on the web. */
+:root {
+  --font-outfit: "Outfit Variable";
+  --font-dm-sans: "DM Sans Variable";
+}
+
+html,
+body {
+  overscroll-behavior-y: none;
+}
+/* Safe areas (status bar, gesture bar) around the app. */
+.app-root {
+  padding-top: env(safe-area-inset-top);
+}
+.app-tabs {
+  padding-bottom: env(safe-area-inset-bottom);
+}

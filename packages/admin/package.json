@@ -1,0 +1,31 @@
+{
+  "name": "@kshop/admin",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./admin-context": "./src/admin-context.ts",
+    "./images": "./src/images.ts",
+    "./catalog/use-catalog": "./src/catalog/use-catalog.ts",
+    "./orders/use-orders": "./src/orders/use-orders.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@kshop/core": "workspace:*",
+    "@kshop/data": "workspace:*",
+    "@kshop/storefront": "workspace:*",
+    "@kshop/ui": "workspace:*",
+    "@supabase/supabase-js": "^2.118.0",
+    "@urql/core": "^6.0.3"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "react": "^19.3.1"
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { ProductList } from "@/features/catalog/components/ProductList";
+import { ProductList } from "@kshop/admin";
 
 export default function CatalogProductsPage() {
   return <ProductList />;

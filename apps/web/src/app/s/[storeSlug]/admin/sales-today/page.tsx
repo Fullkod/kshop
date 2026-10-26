@@ -1,7 +1,7 @@
 "use client";
 
 import { Alert } from "@kshop/ui";
-import { SalesTodayCard } from "@/features/sales-today/SalesTodayCard";
+import { SalesTodayCard } from "@kshop/admin";
 import { useAdmin } from "../admin-context";
 
 export default function AdminSalesTodayPage() {

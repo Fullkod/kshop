@@ -2,7 +2,7 @@
 
 import { Card } from "@kshop/ui";
 import { ADMIN_MODULES } from "@/features/registry";
-import { SalesTodayCard } from "@/features/sales-today/SalesTodayCard";
+import { SalesTodayCard } from "@kshop/admin";
 import { useStore } from "@kshop/storefront";
 import { useAdmin } from "./admin-context";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { ProductEditor } from "@/features/catalog/components/ProductEditor";
+import { ProductEditor } from "@kshop/admin";
 
 export default function NewProductPage() {
   return <ProductEditor />;

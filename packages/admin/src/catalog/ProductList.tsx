@@ -3,11 +3,10 @@
 import { formatMoney, type ProductStatus } from "@kshop/core";
 import { AdminProductsQuery, type ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, buttonVariants, Card, Input, Select } from "@kshop/ui";
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useSession } from "@/lib/session";
-import { useStore } from "@kshop/storefront";
-import { categoryOptions, useApiAction, useCatalogApi, useCatalogStructure } from "../use-catalog";
+import { useSession } from "../session";
+import { Link, useStore } from "@kshop/storefront";
+import { categoryOptions, useApiAction, useCatalogApi, useCatalogStructure } from "./use-catalog";
 
 type Row = NonNullable<ResultOf<typeof AdminProductsQuery>["adminSearchProducts"]>["edges"][number]["node"];
 
@@ -199,7 +198,6 @@ export function ProductList() {
                         className="flex items-center gap-3 hover:underline"
                       >
                         {r.primaryMediaUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element -- Supabase public thumbnail
                           <img src={r.primaryMediaUrl} alt="" className="h-10 w-10 rounded object-cover" />
                         ) : (
                           <span className="h-10 w-10 rounded bg-surface" />

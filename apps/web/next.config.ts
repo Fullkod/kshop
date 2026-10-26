@@ -16,7 +16,7 @@ for (const file of [".env.local", ".env"]) {
 }
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@kshop/core", "@kshop/data", "@kshop/ui", "@kshop/storefront"],
+  transpilePackages: ["@kshop/admin", "@kshop/core", "@kshop/data", "@kshop/ui", "@kshop/storefront"],
   // Decision D1 (phase 2): `use cache` + cacheTag per store; static shells streamed with Partial Prerendering.
   cacheComponents: true,
   // Build-time prerendering queries pg_graphql as anon (statement_timeout 3s): the default concurrency (8 pages

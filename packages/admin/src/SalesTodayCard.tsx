@@ -3,10 +3,9 @@
 import { formatMoney } from "@kshop/core";
 import type { SalesToday } from "@kshop/data";
 import { Card } from "@kshop/ui";
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useSession } from "@/lib/session";
-import { useStore } from "@kshop/storefront";
+import { useSession } from "./session";
+import { Link, useStore } from "@kshop/storefront";
 
 /** «Ventas de hoy» (D16, module sales_today): orders and money received today in America/Havana. */
 export function SalesTodayCard() {

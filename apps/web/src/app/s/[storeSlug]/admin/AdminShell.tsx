@@ -1,7 +1,6 @@
 "use client";
 
-import { formatUsd, isModuleCode, ROLE_LABELS, type ModuleCode } from "@kshop/core";
-import { StoreEntitlementsQuery } from "@kshop/data";
+import { formatUsd, ROLE_LABELS } from "@kshop/core";
 import { Alert, Badge, Button, cn } from "@kshop/ui";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -9,7 +8,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ADMIN_MODULES } from "@/features/registry";
 import { useSession } from "@/lib/session";
 import { useStore } from "@kshop/storefront";
-import { AdminContext, type AdminState } from "./admin-context";
+import { AdminContext, loadAdminState, type AdminState } from "./admin-context";
 import { AccountBanner } from "./AccountBanner";
 
 // Store account pages (owner/admin), after the modules.
@@ -42,44 +41,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        const me = await api.me();
-        const membership = me.stores.find((s) => s.id === store.id);
-        if (!membership && !me.isSuperadmin) {
-          if (!cancelled) setState({ kind: "forbidden" });
-          return;
-        }
-        // Entitlements are read through pg_graphql; RLS returns them only to the store's staff.
-        const result = await graphql.query(StoreEntitlementsQuery, { storeId: store.id }).toPromise();
-        if (result.error) throw result.error;
-        const codes = (result.data?.storeEntitlements?.edges ?? [])
-          .map((e) => e.node.moduleCode)
-          .filter(isModuleCode);
-        // The look is set up by the platform: the superadmin always has «Apariencia» (phase 5, Roberto).
-        if (me.isSuperadmin && !codes.includes("themes")) codes.push("themes");
-        const limits = JSON.parse(result.data?.storeLimits ?? "{}") as Record<string, number>;
-        const subscription = result.data?.subscriptionsCollection?.edges[0]?.node ?? null;
-        const addonPrices: AdminState["addonPrices"] = {};
-        for (const { node } of result.data?.modulesCollection?.edges ?? []) {
-          if (isModuleCode(node.code) && node.addonPrice != null)
-            addonPrices[node.code] = Number(node.addonPrice);
-        }
-        if (!cancelled) {
-          setState({
-            kind: "ready",
-            admin: {
-              role: membership?.role ?? null,
-              enabledModules: new Set<ModuleCode>(codes),
-              limits,
-              isSuperadmin: me.isSuperadmin,
-              subscription: subscription && {
-                status: subscription.status,
-                trialEndsAt: subscription.trialEndsAt ?? null,
-              },
-              storeStatus: result.data?.storesCollection?.edges[0]?.node.status ?? "active",
-              addonPrices,
-            },
-          });
-        }
+        const admin = await loadAdminState(api, graphql, store.id);
+        if (!cancelled) setState(admin ? { kind: "ready", admin } : { kind: "forbidden" });
       } catch {
         if (!cancelled) setState({ kind: "error" });
       }

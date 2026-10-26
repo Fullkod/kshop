@@ -1,12 +1,17 @@
-// Browser QA of the phase 7 apps: the store app bundle of the Tienda Demo in Chromium at 390 px (the same React code
-// the APK runs; native plugins fall back to the web). Needs `pnpm dev` (API) and the store app's Vite server:
+// Browser QA of the phase 7 apps: the store app bundle of the Tienda Demo and the admin app in Chromium at 390 px
+// (the same React code the APKs run; native plugins fall back to the web). Needs `pnpm dev` (API) and the Vite
+// servers of both apps:
 //   pnpm --filter @kshop/store-app dev        (http://localhost:5173, KSHOP_STORE=demo)
+//   pnpm --filter @kshop/admin-app dev        (http://localhost:5174)
 //   pnpm qa:apps
 // 1. Home, listing, product, cart and checkout as a guest → the order is created with channel «app».
 // 2. Sign up and «Mi cuenta» (session kept by the app).
 // 3. Offline: a page seen before is shown from the device with «Sin conexión».
 // 4. app_info (intercepted): newer version → «Actualizar»; no mobile_app → not available; suspended store.
-// Screenshots in .titan/qa/fase-7/. The QA order is cancelled and the QA customer deleted at the end.
+// 5. Admin app: the owner signs in, confirms the app order, changes a stock and uploads a photo (file); the staff
+//    member does not see costs; without the catalog module (entitlements intercepted) «Productos» is gone.
+// Screenshots in .titan/qa/fase-7/. The QA order is cancelled, the stock and photos put back and the QA customer
+// deleted at the end.
 
 import { createClient } from "@supabase/supabase-js";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -24,6 +29,7 @@ for (const line of existsSync(join(root, ".env.local"))
 }
 
 const APP = env.QA_STORE_APP_URL ?? "http://localhost:5173";
+const ADMIN = env.QA_ADMIN_APP_URL ?? "http://localhost:5174";
 const OUT = join(root, ".titan/qa/fase-7");
 const GUEST_PHONE = "5359990700";
 const PHONE = "5359990701";
@@ -34,6 +40,19 @@ const service = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_K
   auth: { persistSession: false, autoRefreshToken: false },
 });
 const { data: store } = await service.from("stores").select("id").eq("slug", "demo").single();
+const { data: product } = await service
+  .from("products")
+  .select("id")
+  .eq("store_id", store.id)
+  .eq("slug", "vestido-nandu")
+  .single();
+const { data: variants } = await service.from("product_variants").select("id").eq("product_id", product.id);
+const variantIds = variants.map((v) => v.id);
+const { data: stockBefore } = await service
+  .from("stocks")
+  .select("variant_id, warehouse_id, quantity")
+  .in("variant_id", variantIds);
+const { data: mediaBefore } = await service.from("product_media").select("id").eq("product_id", product.id);
 const startedAt = new Date().toISOString();
 
 const results = [];
@@ -98,6 +117,23 @@ const fakeAppInfo = (page, body) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }),
   );
 
+/** Admin app signed in as a staff member of the Tienda Demo (picks it when the account has several stores). */
+async function signIn(email, password, screenshot, setup) {
+  const page = await newPhone();
+  if (setup) await setup(page);
+  await page.goto(ADMIN);
+  await page.fill("#email", email);
+  await page.fill("#password", password);
+  if (screenshot) await shot(page, screenshot);
+  await page.getByRole("button", { name: "Entrar" }).click();
+  const picker = page.getByTestId("store-picker");
+  const storeName = page.getByTestId("admin-store-name");
+  await Promise.race([picker.waitFor({ timeout: 30000 }), storeName.waitFor({ timeout: 30000 })]);
+  if (await picker.isVisible()) await picker.getByRole("button", { name: /Tienda Demo/ }).click();
+  await storeName.waitFor({ timeout: 30000 });
+  return page;
+}
+
 const phone = await newPhone();
 
 try {
@@ -142,7 +178,7 @@ try {
   const token = new URL(phone.url()).pathname.split("/").pop();
   const { data: order } = await service
     .from("orders")
-    .select("channel")
+    .select("id, channel")
     .eq("public_token", token)
     .single();
   check("checkout: the order is created with channel «app»", order?.channel === "app", order?.channel);
@@ -211,6 +247,95 @@ try {
   await suspended.getByText("Tienda temporalmente no disponible.").waitFor({ timeout: 20000 });
   check("suspended store: the notice", true);
 
+  // 5. Admin app.
+  const owner = await signIn("dueno@demo.kshop.test", env.DEMO_OWNER_PASSWORD, "10-admin-login-390");
+  check(
+    "admin: the owner signs in to the Tienda Demo",
+    (await owner.getByTestId("admin-store-name").innerText()).includes("Tienda Demo"),
+  );
+  check(
+    "admin: «Abrir el panel completo» points to the web admin",
+    (await owner.getByTestId("open-panel").getAttribute("href"))?.endsWith("/admin"),
+  );
+  await shot(owner, "11-admin-inicio-390");
+
+  await owner.getByRole("navigation", { name: "Secciones" }).getByRole("link", { name: "Pedidos" }).click();
+  const appOrder = owner.getByRole("link", { name: /QA App Invitada/ }).first();
+  await appOrder.waitFor({ timeout: 30000 });
+  check("admin: the app order is in the list", true);
+  await shot(owner, "12-admin-pedidos-390");
+  await appOrder.click();
+  await owner.getByRole("button", { name: "Confirmar" }).click();
+  let confirmed = null;
+  for (let i = 0; i < 30 && confirmed?.status !== "pending_payment"; i++) {
+    if (i) await new Promise((r) => setTimeout(r, 500));
+    ({ data: confirmed } = await service.from("orders").select("status").eq("id", order.id).single());
+  }
+  await owner.getByRole("button", { name: "Confirmar" }).waitFor({ state: "detached", timeout: 20000 });
+  check("admin: the owner confirms the order", confirmed?.status === "pending_payment", confirmed?.status);
+  await shot(owner, "13-admin-pedido-390");
+
+  await owner.goto(`${ADMIN}/admin/catalog/products/${product.id}`);
+  const stockInput = owner.locator('input[aria-label^="Stock "]:not([aria-label="Stock para todas"])').first();
+  await stockInput.waitFor({ timeout: 30000 });
+  const costInputs = await owner.locator('input[aria-label^="Costo "]').count();
+  await stockInput.fill("37");
+  await owner.getByTestId("save-product").click();
+  await owner.getByRole("button", { name: "Guardar" }).waitFor({ timeout: 20000 });
+  let stockSaved = false;
+  for (let i = 0; i < 20 && !stockSaved; i++) {
+    const { data: stocks } = await service.from("stocks").select("quantity").in("variant_id", variantIds);
+    stockSaved = stocks.some((s) => s.quantity === 37);
+    if (!stockSaved) await new Promise((r) => setTimeout(r, 500));
+  }
+  check("admin: the owner changes a stock", stockSaved);
+  check("admin: the owner sees the costs", costInputs > 0, costInputs);
+  await owner.getByTestId("media-input").setInputFiles({
+    name: "qa-foto.png",
+    mimeType: "image/png",
+    // 1×1 PNG: the same upload path as the camera's (compressed to WebP).
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+      "base64",
+    ),
+  });
+  await owner
+    .getByTestId("product-media")
+    .locator("img")
+    .nth((mediaBefore ?? []).length)
+    .waitFor({ timeout: 30000 });
+  check("admin: the owner uploads a photo", true);
+  await shot(owner, "14-admin-producto-390");
+
+  const staff = await signIn("empleado@demo.kshop.test", env.DEMO_STAFF_PASSWORD);
+  await staff.goto(`${ADMIN}/admin/catalog/products/${product.id}`);
+  await staff.locator('input[aria-label^="Stock "]').first().waitFor({ timeout: 30000 });
+  check(
+    "admin: the staff member does not see costs",
+    (await staff.locator('input[aria-label^="Costo "]').count()) === 0,
+  );
+  await shot(staff, "15-admin-empleado-390");
+
+  // Without the catalog module: the entitlements read (pg_graphql) answered without it.
+  const noCatalog = await signIn("empleado@demo.kshop.test", env.DEMO_STAFF_PASSWORD, null, async (page) =>
+    page.route("**/graphql/v1", async (route) => {
+      if (!route.request().postData()?.includes("StoreEntitlements")) return route.continue();
+      const response = await route.fetch();
+      const body = await response.json();
+      const edges = body.data?.storeEntitlements?.edges;
+      if (edges) body.data.storeEntitlements.edges = edges.filter((e) => e.node.moduleCode !== "catalog");
+      await route.fulfill({ response, json: body });
+    }),
+  );
+  const productsTab = await noCatalog
+    .getByRole("navigation", { name: "Secciones" })
+    .getByText("Productos")
+    .count();
+  await noCatalog.goto(`${ADMIN}/admin/catalog`);
+  await noCatalog.getByText("Esto está en el panel completo").waitFor({ timeout: 20000 });
+  check("admin: without the catalog module «Productos» is not shown", productsTab === 0, productsTab);
+  await shot(noCatalog, "16-admin-sin-modulo-390");
+
   if (errors.length) writeFileSync(join(OUT, "console-errors.txt"), errors.join("\n\n"));
   check("no console errors", errors.length === 0, errors.map((e) => e.slice(0, 300)).join(" | "));
 } catch (error) {
@@ -235,6 +360,25 @@ try {
     });
   }
   await removeQaCustomers();
+  for (const s of stockBefore ?? []) {
+    await service
+      .from("stocks")
+      .update({ quantity: s.quantity })
+      .eq("variant_id", s.variant_id)
+      .eq("warehouse_id", s.warehouse_id);
+  }
+  const keep = new Set((mediaBefore ?? []).map((m) => m.id));
+  const { data: mediaAfter } = await service
+    .from("product_media")
+    .select("id, storage_key")
+    .eq("product_id", product.id);
+  for (const m of (mediaAfter ?? []).filter((m) => !keep.has(m.id))) {
+    await service.from("product_media").delete().eq("id", m.id);
+    if (m.storage_key)
+      await service.storage
+        .from("store-media")
+      .remove([m.storage_key, m.storage_key.replace(/-1600\.webp$/, "-480.webp")]);
+  }
 }
 
 const failed = results.filter((ok) => !ok).length;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { ProductEditor } from "@/features/catalog/components/ProductEditor";
+import { ProductEditor } from "@kshop/admin";
 
 export default function EditProductPage() {
   const { productId } = useParams<{ productId: string }>();

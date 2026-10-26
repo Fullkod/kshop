@@ -16,12 +16,11 @@ import {
 } from "@kshop/core";
 import { AdminOrdersQuery, type VariablesOf } from "@kshop/data";
 import { Alert, Badge, Button, Card, Input, cn } from "@kshop/ui";
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useApiAction } from "@/features/catalog/use-catalog";
-import { useSession } from "@/lib/session";
-import { useStore } from "@kshop/storefront";
-import { useCheckoutSettings } from "../use-orders";
+import { useApiAction } from "../catalog/use-catalog";
+import { useSession } from "../session";
+import { Link, useStore } from "@kshop/storefront";
+import { useCheckoutSettings } from "./use-orders";
 
 type Filter = VariablesOf<typeof AdminOrdersQuery>["filter"];
 type Row = {
@@ -50,7 +49,8 @@ export const STATUS_VARIANT: Record<OrderStatus, "default" | "muted" | "success"
   cancelled: "destructive",
 };
 
-export function OrderList() {
+/** `refreshEvery` (ms): reloads the list while it is open (admin app, PRP-7 D9: no push notifications). */
+export function OrderList({ refreshEvery }: { refreshEvery?: number } = {}) {
   const store = useStore();
   const { graphql, api } = useSession();
   const { data: settings } = useCheckoutSettings();
@@ -71,6 +71,12 @@ export function OrderList() {
     if (/^\d{1,9}$/.test(q) && Number(q) >= 1000) return { ...base, number: { eq: Number(q) } };
     return { ...base, or: [{ customerName: { ilike: `%${q}%` } }, { customerPhone: { ilike: `%${q.replace(/\D/g, "") || q}%` } }] };
   };
+
+  useEffect(() => {
+    if (!refreshEvery) return;
+    const timer = setInterval(() => setVersion((v) => v + 1), refreshEvery);
+    return () => clearInterval(timer);
+  }, [refreshEvery]);
 
   async function load(after: string | null) {
     const result = await graphql.query(AdminOrdersQuery, { filter: filter(), first: PAGE_SIZE, after }).toPromise();

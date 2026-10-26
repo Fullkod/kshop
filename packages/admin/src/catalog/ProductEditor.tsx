@@ -18,11 +18,10 @@ import {
 } from "@kshop/core";
 import { ProductDetailQuery, type ProductMedia } from "@kshop/data";
 import { Alert, Badge, Button, Card, FieldError, Input, Label, Select } from "@kshop/ui";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { uploadProductImage } from "@/lib/images";
-import { useSession } from "@/lib/session";
-import { useStore } from "@kshop/storefront";
+import { uploadProductImage } from "../images";
+import { useSession } from "../session";
+import { useRouter, useStore } from "@kshop/storefront";
 import {
   categoryOptions,
   useApiAction,
@@ -30,7 +29,7 @@ import {
   useCatalogStructure,
   type Attribute,
   type CatalogStructure,
-} from "../use-catalog";
+} from "./use-catalog";
 import { STATUS_LABELS } from "./ProductList";
 
 type VariantRow = {
@@ -116,7 +115,7 @@ const num = (v: string) => (v.trim() === "" ? undefined : Number(v.replace(",", 
 export function ProductEditor({ productId }: { productId?: string }) {
   const store = useStore();
   const router = useRouter();
-  const { graphql, supabase } = useSession();
+  const { graphql, supabase, config } = useSession();
   const { data: structure, error: structureError } = useCatalogStructure();
   const { catalog, seesCosts, canDelete, has } = useCatalogApi();
   const action = useApiAction();
@@ -395,7 +394,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
     setSaved(true);
   }
 
-  async function onUpload(files: FileList | null) {
+  async function onUpload(files: FileList | File[] | null) {
     if (!files || !productId) return;
     setUploading(true);
     try {
@@ -964,7 +963,6 @@ export function ProductEditor({ productId }: { productId?: string }) {
             <div className="flex flex-wrap gap-3" data-testid="product-media">
               {media.map((m, i) => (
                 <div key={m.id} className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- Supabase public image */}
                   <img
                     src={m.thumbUrl ?? m.url}
                     alt={m.alt ?? ""}
@@ -993,6 +991,20 @@ export function ProductEditor({ productId }: { productId?: string }) {
               />
               {uploading ? "Subiendo…" : "Subir imágenes (se comprimen automáticamente)"}
             </label>
+            {config.takePhoto && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-fit"
+                disabled={uploading}
+                onClick={async () => {
+                  const photo = await config.takePhoto!().catch(() => null);
+                  if (photo) await onUpload([photo]);
+                }}
+              >
+                Tomar foto
+              </Button>
+            )}
           </>
         )}
       </Card>

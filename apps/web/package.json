@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@kshop/admin": "workspace:*",
     "@kshop/core": "workspace:*",
     "@kshop/data": "workspace:*",
     "@kshop/storefront": "workspace:*",

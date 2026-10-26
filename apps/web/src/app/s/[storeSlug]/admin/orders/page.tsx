@@ -1,6 +1,6 @@
 "use client";
 
-import { OrderList } from "@/features/orders/components/OrderList";
+import { OrderList } from "@kshop/admin";
 
 export default function OrdersPage() {
   return <OrderList />;
