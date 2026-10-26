@@ -293,3 +293,185 @@ select tests.logout();
 select tests.login('owner_a');
 select tests.eq('owner of A: no limits of B', public.store_limits(tests.fx('store_b')), '{}'::jsonb);
 select tests.logout();
+
+-- ---------------------------------------------------------------------------
+-- Billing cycle (phase 5.3) with a simulated clock: now() is fixed inside the test transaction
+-- ---------------------------------------------------------------------------
+
+update private.platform_config set value = '"dry_run"' where key = 'whatsapp_mode';
+update private.platform_config set value = '"5350000001"' where key = 'support_whatsapp';
+select tests.create_user('owner_c');
+insert into pg_temp.fixtures (key, id)
+select 'store_c', (public.create_store(
+  'Billing Test C', 'billing-test-c', tests.fx('owner_c'), 'CUP', 'BC', '+5353333333', 'base', 14, 'kshop.fullkod.com', null)).id;
+
+create function pg_temp.tick(p_days numeric) returns jsonb language sql as $$
+  select public.billing_tick(now() + make_interval(secs => p_days * 86400));
+$$;
+create function pg_temp.state(p_store text) returns text language sql as $$
+  select format('%s/%s', sub.status, s.status) from public.subscriptions sub join public.stores s on s.id = sub.store_id
+  where sub.store_id = tests.fx(p_store);
+$$;
+create function pg_temp.invoices(p_store text) returns text language sql as $$
+  select coalesce(string_agg(format('%s:%s', total, status), ' ' order by period_start, issued_at), '')
+  from public.platform_invoices where store_id = tests.fx(p_store);
+$$;
+create function pg_temp.notices(p_store text) returns text language sql as $$
+  select coalesce(string_agg(event, ' ' order by created_at, event), '')
+  from public.notification_log where store_id = tests.fx(p_store) and event like 'billing\_%';
+$$;
+
+select tests.eq('new store: a 14-day trial is the first period', (
+  select format('%s %s', status, current_period_end = trial_ends_at) from public.subscriptions
+  where store_id = tests.fx('store_c')), 'trialing t');
+select pg_temp.tick(1);
+select tests.eq('day 1: nothing to bill during the trial', pg_temp.invoices('store_c'), '');
+
+select pg_temp.tick(11);
+select tests.eq('day 11 (5 days before the end): the first invoice, 5 USD of Base', pg_temp.invoices('store_c'), '5.00:pending');
+select tests.check('invoice: number KS-YYYY-NNNN, period from the end of the trial, due in 7 days', (
+  select i.number ~ '^KS-[0-9]{4}-[0-9]{4}$' and i.period_start = s.trial_ends_at
+    and i.due_at = now() + interval '18 days' and i.period_end = s.trial_ends_at + interval '1 month'
+  from public.platform_invoices i join public.subscriptions s on s.store_id = i.store_id
+  where i.store_id = tests.fx('store_c')));
+select tests.eq('invoice lines: the plan, snapshot', (
+  select string_agg(format('%s|%s|%s', kind, description, amount), ',') from public.platform_invoice_lines
+  where store_id = tests.fx('store_c')), 'plan|Plan Base (mensual)|5.00');
+select tests.eq('notices: trial ending and invoice issued', pg_temp.notices('store_c'),
+  'billing_invoice_issued billing_trial_ending');
+select tests.check('notice text: store name, invoice, amount, due date, how to pay and the support number', (
+  select message like '*Kshop · Billing Test C*%' and message like '%KS-%de 5 USD%' and message like '%vence el %'
+    and message like '%Pagas en efectivo%' and message like '%Soporte: +5350000001%' and recipient = '+5353333333'
+    and status = 'simulated'
+  from public.notification_log where store_id = tests.fx('store_c') and event = 'billing_invoice_issued'));
+
+select pg_temp.tick(11);
+select pg_temp.tick(11.5);
+select tests.eq('the tick is idempotent: no second invoice or notice', pg_temp.invoices('store_c') || ' / ' || pg_temp.notices('store_c'),
+  '5.00:pending / billing_invoice_issued billing_trial_ending');
+
+select pg_temp.tick(15);
+select tests.eq('day 15: the trial ended into the first period (not due yet)', pg_temp.state('store_c'), 'active/active');
+select pg_temp.tick(17.5);
+select tests.eq('the day before it is due: a reminder', pg_temp.notices('store_c'),
+  'billing_invoice_issued billing_invoice_reminder billing_trial_ending');
+select pg_temp.tick(19);
+select tests.eq('due without payment: past_due, the store still sells', pg_temp.state('store_c'), 'past_due/active');
+select tests.check('past_due notice says until when', (
+  select message like '%se suspenderá%' from public.notification_log
+  where store_id = tests.fx('store_c') and event = 'billing_past_due'));
+select pg_temp.tick(24);
+select tests.eq('within the grace days: still open', pg_temp.state('store_c'), 'past_due/active');
+select pg_temp.tick(25);
+select tests.eq('after the grace days: suspended by billing', pg_temp.state('store_c') || ' ' || (
+  select suspended_reason::text from public.stores where id = tests.fx('store_c')), 'suspended/suspended billing');
+select tests.check('suspended: the storefront is closed', public.storefront_features(tests.fx('store_c')) is null);
+select pg_temp.tick(26);
+select tests.eq('suspension notice only once', (select count(*) from public.notification_log
+  where store_id = tests.fx('store_c') and event = 'billing_store_suspended')::int, 1);
+
+select tests.check('payment: zero is rejected', tests.throws(format(
+  $$select public.record_platform_payment(%L, 0, 'cash', null, null, null, null)$$,
+  (select id from public.platform_invoices where store_id = tests.fx('store_c')))));
+select tests.eq('partial payment: still pending, still suspended', (
+  select (public.record_platform_payment(id, 2, 'cash', null, 'Primera parte', now() + interval '26 days', tests.fx('root')) ->> 'status')
+  from public.platform_invoices where store_id = tests.fx('store_c')) || ' ' || pg_temp.state('store_c'),
+  'pending suspended/suspended');
+select tests.eq('the rest in cash: paid and reactivated at once', (
+  select (public.record_platform_payment(id, 3, 'cash', null, null, now() + interval '26 days', tests.fx('root')) ->> 'reactivated')
+  from public.platform_invoices where store_id = tests.fx('store_c')) || ' ' || pg_temp.state('store_c')
+  || ' ' || pg_temp.invoices('store_c'), 'true active/active 5.00:paid');
+select tests.eq('payment notices, one per payment', (select count(*) from public.notification_log
+  where store_id = tests.fx('store_c') and event = 'billing_payment_received')::int, 2);
+select tests.check('paid invoice: no more payments', tests.throws(format(
+  $$select public.record_platform_payment(%L, 1, 'cash', null, null, null, null)$$,
+  (select id from public.platform_invoices where store_id = tests.fx('store_c')))));
+
+-- Quotes: add-ons, yearly, discount, frozen price.
+select public.set_store_addon(tests.fx('store_c'), 'vouchers', true, null);
+select tests.eq('quote: plan + add-on', (select format('%s %s', q ->> 'subtotal', q ->> 'total')
+  from public.subscription_quote(tests.fx('store_c')) q), '7.00 7.00');
+select public.subscription_add_grant(tests.fx('store_c'), 'discount_percent', 50, 'Socio fundador', null, tests.fx('root'));
+select public.subscription_add_grant(tests.fx('store_c'), 'discount_percent', 20, 'Otro', null, tests.fx('root'));
+select tests.eq('quote: the best discount (they do not add up)', (
+  select format('%s %s %s', q ->> 'discount', q ->> 'total', q -> 'lines' -> 2 ->> 'description')
+  from public.subscription_quote(tests.fx('store_c')) q), '3.50 3.50 Descuento del 50 % · Socio fundador');
+update public.subscription_grants set revoked_at = now() where store_id = tests.fx('store_c');
+select public.subscription_add_grant(tests.fx('store_c'), 'price_lock', 4, 'Fundador: precio de lanzamiento', null, null);
+update public.plans set price = 8 where code = 'base';
+select tests.eq('founder: frozen price although the plan goes up', (
+  select format('%s %s', q -> 'lines' -> 0 ->> 'amount', q -> 'lines' -> 0 ->> 'description')
+  from public.subscription_quote(tests.fx('store_c')) q), '4.00 Plan Base (mensual) · precio congelado');
+select tests.eq('another Base store pays the new price', (
+  public.subscription_quote(tests.fx('store_b')) -> 'lines' -> 0 ->> 'amount'), '8.00');
+update public.plans set price = 5 where code = 'base';
+update public.subscription_grants set revoked_at = now() where store_id = tests.fx('store_c');
+select public.change_plan(tests.fx('store_c'), 'base', 'year', null);
+select tests.eq('yearly: 50 + add-on for 10 months', (select format('%s %s', q -> 'lines' -> 1 ->> 'amount', q ->> 'total')
+  from public.subscription_quote(tests.fx('store_c')) q), '20.00 70.00');
+select public.change_plan(tests.fx('store_c'), 'base', 'month', null);
+select public.set_store_addon(tests.fx('store_c'), 'vouchers', false, null);
+select public.subscription_update(tests.fx('store_c'), '{"price_override": 3}', null);
+select tests.eq('price override', public.subscription_quote(tests.fx('store_c')) ->> 'total', '3.00');
+select public.subscription_update(tests.fx('store_c'), '{"price_override": null}', null);
+
+-- Free days move the period and the invoices already issued for it.
+select pg_temp.tick(40);
+select tests.eq('day 40: the invoice of the next period is out', pg_temp.invoices('store_c'), '5.00:paid 5.00:pending');
+select public.subscription_add_grant(tests.fx('store_c'), 'free_days', 30, 'Regalo', null, tests.fx('root'));
+select tests.check('free days: the period and the open invoice move 30 days', (
+  select s.current_period_end = i.period_start and i.period_start = (
+    select period_end from public.platform_invoices where store_id = tests.fx('store_c') and status = 'paid') + interval '30 days'
+  from public.subscriptions s join public.platform_invoices i on i.store_id = s.store_id and i.status = 'pending'
+  where s.store_id = tests.fx('store_c')));
+
+-- Adjust and void.
+select public.platform_invoice_adjust((select id from public.platform_invoices where store_id = tests.fx('store_c')
+  and status = 'pending'), 'Configuración de dominio', 2, tests.fx('root'));
+select tests.eq('adjustment: a line and a new total', pg_temp.invoices('store_c'), '5.00:paid 7.00:pending');
+select tests.check('void: a paid invoice cannot be voided', tests.throws(format(
+  $$select public.platform_invoice_void(%L, 'x', null)$$,
+  (select id from public.platform_invoices where store_id = tests.fx('store_c') and status = 'paid'))));
+select public.platform_invoice_void((select id from public.platform_invoices where store_id = tests.fx('store_c')
+  and status = 'pending'), 'Error', tests.fx('root'));
+select public.platform_invoice_issue(tests.fx('store_c'), tests.fx('root'));
+select tests.eq('void and reissue: a new invoice for the same period', pg_temp.invoices('store_c'),
+  '5.00:paid 5.00:pending 7.00:void');
+select tests.eq('every invoice: lines add up to the total', (
+  select count(*) from public.platform_invoices i
+  where i.store_id in (tests.fx('store_a'), tests.fx('store_b'), tests.fx('store_c'))
+    and i.total <> (select sum(amount) from public.platform_invoice_lines l where l.invoice_id = i.id))::int, 0);
+
+-- Other stores: without trial, comped, manual suspension.
+select tests.create_user('owner_d');
+insert into pg_temp.fixtures (key, id)
+select 'store_d', (public.create_store(
+  'Billing Test D', 'billing-test-d', tests.fx('owner_d'), 'CUP', 'BD', '+5354444444', 'pro', 0, 'kshop.fullkod.com', null)).id;
+select public.billing_tick(now() + interval '1 hour');
+select tests.eq('a store without trial is billed for its current month at once (Pro, 12 USD)', (
+  select format('%s %s', i.total, i.period_start = s.current_period_start)
+  from public.platform_invoices i join public.subscriptions s on s.store_id = i.store_id
+  where i.store_id = tests.fx('store_d')), '12.00 t');
+select public.subscription_update(tests.fx('store_a'), '{"comped": true}', null);
+select pg_temp.tick(60);
+select tests.eq('comped: never billed', (select count(*) from public.platform_invoices
+  where store_id = tests.fx('store_a') and issued_at > now() + interval '50 days')::int, 0);
+update public.stores set status = 'suspended', suspended_reason = 'manual' where id = tests.fx('store_c');
+select pg_temp.tick(90);
+select public.record_platform_payment(i.id, i.total, 'cash', null, null, null, null)
+from public.platform_invoices i where i.store_id = tests.fx('store_c') and i.status = 'pending';
+select tests.eq('paying does not lift a manual suspension', (select format('%s %s', status, suspended_reason)
+  from public.stores where id = tests.fx('store_c')), 'suspended manual');
+
+-- Only the server runs billing.
+select tests.login('owner_c');
+select tests.check('owner: no quote, payments, ticks, grants or settings from the API roles',
+  tests.throws(format($$select public.subscription_quote(%L)$$, tests.fx('store_c')))
+  and tests.throws('select public.billing_tick()')
+  and tests.throws(format($$select public.subscription_add_grant(%L, 'free_days', 365, null, null, null)$$, tests.fx('store_c')))
+  and tests.throws(format($$select public.subscription_update(%L, '{"comped": true}', null)$$, tests.fx('store_c')))
+  and tests.throws(format($$select public.record_platform_payment(%L, 5, 'cash', null, null, null, null)$$,
+    (select id from public.platform_invoices limit 1))));
+select tests.eq('owner C: reads its invoices and lines', (select count(*) from public.platform_invoices)::int > 0
+  and (select count(*) from public.platform_invoices where store_id <> tests.fx('store_c'))::int = 0, true);
+select tests.logout();
