@@ -79,6 +79,19 @@ const optionalNumber = (label: string, opts: { int?: boolean } = {}) =>
     return opts.int ? n : Math.round(n * 100) / 100;
   });
 
+/** Extra columns keyed by currency or warehouse id: cell text -> number, empty cells left out. */
+const numberCells = (label: string, opts: { int?: boolean }) =>
+  z.record(z.string(), z.string()).transform((cells, ctx) => {
+    const out: Record<string, number> = {};
+    for (const [key, text] of Object.entries(cells)) {
+      const parsed = optionalNumber(label, opts).safeParse(text);
+      if (!parsed.success) {
+        for (const issue of parsed.error.issues) ctx.addIssue({ code: "custom", message: issue.message });
+      } else if (parsed.data !== undefined) out[key] = parsed.data;
+    }
+    return out;
+  });
+
 /** Raw cell texts of one row (all values read as text to keep leading zeros in SKUs). */
 export const excelRowSchema = z
   .object({
@@ -131,6 +144,9 @@ export const excelRowSchema = z
     }),
     /** Attribute name -> cell text. */
     attributes: z.record(z.string(), z.string()),
+    /** Phase 6: «Precio USD»… (multi_currency) and «Stock {almacén}» (multi_warehouse); empty cells change nothing. */
+    prices: numberCells("Precio", {}).default({}),
+    stocks: numberCells("Stock", { int: true }).default({}),
   })
   .superRefine((row, ctx) => {
     if (row.cost !== undefined && !row.costCurrency) {

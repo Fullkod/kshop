@@ -1,0 +1,362 @@
+// Phase 6 API checks (Pro modules: warehouses, currencies, finance, custom domain) against the running app
+// (pnpm dev) and the online Supabase project. Creates temporary stores pro-e2e-a (Pro) and pro-e2e-b (Base) with
+// @e2e.kshop.test accounts and removes everything at the end (also on failure).
+//
+//   node scripts/e2e-pro.mjs
+
+import { createClient } from "@supabase/supabase-js";
+import ExcelJS from "exceljs";
+import { randomBytes } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const env = { ...process.env };
+for (const line of existsSync(join(root, ".env.local"))
+  ? readFileSync(join(root, ".env.local"), "utf8").split(/\r?\n/)
+  : []) {
+  const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
+  if (match && !env[match[1]]) env[match[1]] = match[2].trim();
+}
+
+const APP = env.E2E_APP_URL ?? "http://localhost:3000";
+const PASSWORD = randomBytes(12).toString("base64url");
+const USERS = {
+  ownerA: "pro-owner-a@e2e.kshop.test",
+  staffA: "pro-staff-a@e2e.kshop.test",
+  ownerB: "pro-owner-b@e2e.kshop.test",
+};
+const SLUGS = ["pro-e2e-a", "pro-e2e-b"];
+
+const service = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
+
+const results = [];
+function check(name, ok, detail) {
+  results.push(ok);
+  console.log(
+    `${ok ? "ok" : "not ok"} - ${name}${ok || detail === undefined ? "" : ` (${JSON.stringify(detail).slice(0, 300)})`}`,
+  );
+}
+
+async function cleanup() {
+  await service.from("stores").delete().in("slug", SLUGS);
+  const { data } = await service.auth.admin.listUsers({ perPage: 1000 });
+  for (const u of data?.users ?? []) {
+    if (Object.values(USERS).includes(u.email)) await service.auth.admin.deleteUser(u.id);
+  }
+}
+
+async function token(email) {
+  const client = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
+    auth: { persistSession: false },
+  });
+  const { data, error } = await client.auth.signInWithPassword({ email, password: PASSWORD });
+  if (error) throw error;
+  return data.session.access_token;
+}
+
+function api(tokenValue) {
+  return async (method, path, body) => {
+    const res = await fetch(`${APP}/api/v1${path}`, {
+      method,
+      headers: {
+        ...(tokenValue && { Authorization: `Bearer ${tokenValue}` }),
+        ...(body && { "Content-Type": "application/json" }),
+      },
+      body: body && JSON.stringify(body),
+    });
+    return { status: res.status, body: res.status === 204 ? null : await res.json().catch(() => null) };
+  };
+}
+
+async function createStore(name, slug, ownerId, prefix, plan) {
+  const { data, error } = await service
+    .rpc("create_store", {
+      p_name: name,
+      p_slug: slug,
+      p_owner_id: ownerId,
+      p_base_currency: "CUP",
+      p_order_prefix: prefix,
+      p_whatsapp_phone: "5350000000",
+      p_plan_code: plan,
+      p_trial_days: 0,
+      p_platform_domain: "kshop.fullkod.com",
+      p_created_by: null,
+    })
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+const spanish = (r) =>
+  typeof r.body?.error?.message === "string" && /[a-záéíóúñ]/i.test(r.body.error.message);
+
+/** Simple product type + one published product per SKU, stock in the default warehouse. */
+async function seedProducts(storeId, ownerId) {
+  const { data: type, error } = await service
+    .from("product_types")
+    .insert({ store_id: storeId, name: "Simple", slug: "simple" })
+    .select("id")
+    .single();
+  if (error) throw error;
+  const variants = {};
+  for (const [sku, name, price, stock] of [
+    ["GOR-1", "Gorra", 1000, 4],
+    ["BOL-1", "Bolso", 3000, 2],
+  ]) {
+    const { error: saveError } = await service.rpc("save_product", {
+      p_store_id: storeId,
+      p_input: {
+        product_type_id: type.id,
+        name,
+        slug: name.toLowerCase(),
+        status: "published",
+        variants: [{ sku, price, stock, cost: { price: 2, currency: "USD" } }],
+      },
+      p_user_id: ownerId,
+    });
+    if (saveError) throw saveError;
+    const { data: v } = await service.from("product_variants").select("id").eq("store_id", storeId).eq("sku", sku).single();
+    variants[sku] = v.id;
+  }
+  return { typeId: type.id, variants };
+}
+
+async function run() {
+  await cleanup();
+  const ids = {};
+  for (const [k, email] of Object.entries(USERS)) {
+    const { data, error } = await service.auth.admin.createUser({ email, password: PASSWORD, email_confirm: true });
+    if (error) throw error;
+    ids[k] = data.user.id;
+  }
+  const storeA = await createStore("Pro E2E A", SLUGS[0], ids.ownerA, "PA", "pro");
+  const storeB = await createStore("Pro E2E B", SLUGS[1], ids.ownerB, "PB", "base");
+  await service.from("store_members").insert({ store_id: storeA.id, user_id: ids.staffA, role: "staff" });
+  const ownerA = api(await token(USERS.ownerA));
+  const staffA = api(await token(USERS.staffA));
+  const ownerB = api(await token(USERS.ownerB));
+  const A = `/stores/${storeA.id}`;
+  const B = `/stores/${storeB.id}`;
+  const { typeId, variants } = await seedProducts(storeA.id, ids.ownerA);
+  const { data: whMain } = await service
+    .from("warehouses")
+    .select("id")
+    .eq("store_id", storeA.id)
+    .eq("is_default", true)
+    .single();
+
+  // ---- Warehouses (multi_warehouse) ----
+  let r = await ownerA("POST", `${A}/catalog/warehouses`, { name: "Norte", address: "Calle 5" });
+  check("warehouses: a Pro store creates a second warehouse -> 201", r.status === 201, r);
+  const whNorth = r.body?.id;
+  r = await ownerB("POST", `${B}/catalog/warehouses`, { name: "Otro" });
+  check("warehouses: a Base store cannot add warehouses -> 403", r.status === 403, r);
+  r = await ownerB("GET", `${B}/warehouses`);
+  check("warehouses: Base store -> 403 module_not_enabled", r.status === 403 && r.body?.error?.code === "module_not_enabled", r);
+  r = await ownerB("GET", `${A}/warehouses`);
+  check("warehouses: owner of B on A -> 403", r.status === 403, r);
+
+  r = await ownerA("PUT", `${A}/catalog/stock`, { variantId: variants["GOR-1"], warehouseId: whNorth, quantity: 5 });
+  check("stock: 5 units in Norte", r.status === 200 && r.body?.quantity === 5, r);
+  r = await staffA("GET", `${A}/warehouses`);
+  const north = r.body?.warehouses?.find((w) => w.id === whNorth);
+  const main = r.body?.warehouses?.find((w) => w.isDefault);
+  check(
+    "overview: staff sees units per warehouse (Principal 6, Norte 5)",
+    r.status === 200 && north?.units === 5 && main?.units === 6,
+    r.body,
+  );
+
+  // Zones served by each warehouse.
+  const { data: zone } = await service
+    .from("shipping_zones")
+    .insert({ store_id: storeA.id, name: "Norte" })
+    .select("id")
+    .single();
+  r = await staffA("PUT", `${A}/warehouses/zones/${zone.id}`, { warehouseIds: [whNorth] });
+  check("zones: staff cannot change them -> 403", r.status === 403, r);
+  r = await ownerA("PUT", `${A}/warehouses/zones/${zone.id}`, { warehouseIds: [whNorth, whMain.id] });
+  check("zones: owner sets Norte then Principal -> 200", r.status === 200, r);
+  r = await ownerA("GET", `${A}/warehouses`);
+  check(
+    "zones: the order is kept",
+    JSON.stringify(r.body?.zones?.find((z) => z.id === zone.id)?.warehouseIds) === JSON.stringify([whNorth, whMain.id]),
+    r.body?.zones,
+  );
+  const { data: whB } = await service.from("warehouses").select("id").eq("store_id", storeB.id).single();
+  r = await ownerA("PUT", `${A}/warehouses/zones/${zone.id}`, { warehouseIds: [whB.id] });
+  check("zones: a warehouse of another store -> 400 in Spanish", r.status === 400 && spanish(r), r);
+
+  // Transfers.
+  r = await staffA("GET", `${A}/warehouses/${whNorth}/stock?q=gorra`);
+  check(
+    "transfer form: Norte has 5 free caps",
+    r.status === 200 && r.body?.rows?.[0]?.sku === "GOR-1" && r.body.rows[0].quantity === 5,
+    r.body,
+  );
+  r = await staffA("POST", `${A}/warehouses/transfers`, {
+    fromWarehouseId: whNorth,
+    toWarehouseId: whMain.id,
+    lines: [{ variantId: variants["GOR-1"], quantity: 3 }],
+    note: "Reponer tienda",
+  });
+  check("transfer: 3 caps Norte -> Principal -> 201", r.status === 201 && r.body?.units === 3, r);
+  const transferId = r.body?.transferId;
+  r = await staffA("POST", `${A}/warehouses/transfers`, {
+    fromWarehouseId: whNorth,
+    toWarehouseId: whMain.id,
+    lines: [{ variantId: variants["GOR-1"], quantity: 3 }],
+  });
+  check(
+    "transfer: more than the free units -> 409 with the free units",
+    r.status === 409 && r.body?.error?.code === "insufficient_stock" && /2 unidades libres/.test(r.body.error.message),
+    r,
+  );
+  r = await staffA("POST", `${A}/warehouses/transfers`, {
+    fromWarehouseId: whNorth,
+    toWarehouseId: whNorth,
+    lines: [{ variantId: variants["GOR-1"], quantity: 1 }],
+  });
+  check("transfer: same warehouse -> 400", r.status === 400, r);
+  r = await staffA("GET", `${A}/warehouses/movements?type=transfer_in`);
+  check(
+    "movements: the transfer is listed with its note and user",
+    r.status === 200 &&
+      r.body?.movements?.length === 1 &&
+      r.body.movements[0].transferId === transferId &&
+      r.body.movements[0].quantity === 3 &&
+      r.body.movements[0].note === "Reponer tienda" &&
+      r.body.movements[0].userEmail === USERS.staffA,
+    r.body,
+  );
+  r = await staffA("GET", `${A}/warehouses/movements?warehouseId=${whNorth}`);
+  check(
+    "movements: filter by warehouse (adjustment +5, transfer -3)",
+    r.body?.movements?.map((m) => m.quantity).sort().join() === "-3,5",
+    r.body,
+  );
+
+  // Two transfers of the last free unit at the same time: one wins.
+  r = await ownerA("PUT", `${A}/catalog/stock`, { variantId: variants["BOL-1"], warehouseId: whNorth, quantity: 1 });
+  const race = await Promise.all(
+    [0, 1].map(() =>
+      staffA("POST", `${A}/warehouses/transfers`, {
+        fromWarehouseId: whNorth,
+        toWarehouseId: whMain.id,
+        lines: [{ variantId: variants["BOL-1"], quantity: 1 }],
+      }),
+    ),
+  );
+  check(
+    "transfer race: the last unit moves once (201 + 409)",
+    race.map((x) => x.status).sort().join() === "201,409",
+    race.map((x) => x.status),
+  );
+  const { data: bagStock } = await service.from("stocks").select("quantity").eq("variant_id", variants["BOL-1"]);
+  check("transfer race: no stock lost nor duplicated (3 bags in total)", bagStock.reduce((s, x) => s + x.quantity, 0) === 3, bagStock);
+
+  // ---- Currencies (multi_currency) ----
+  const priceIn = async (currency) => {
+    const { data } = await service.rpc("price_lines", {
+      p_store_id: storeA.id,
+      p_input: { currency, lines: [{ variant_id: variants["GOR-1"], quantity: 1 }] },
+    });
+    return Number(data?.subtotal);
+  };
+  r = await ownerA("PUT", `${A}/catalog/currencies`, { currency: "USD", rateToBase: 250, sells: true });
+  check("currencies: sell in USD at 250", r.status === 200, r);
+  const usdAt250 = await priceIn("USD");
+  r = await ownerA("PUT", `${A}/catalog/currencies`, { currency: "USD", rateToBase: 500, sells: true });
+  const usdAt500 = await priceIn("USD");
+  check("rates: the converted price follows the rate (4 USD -> 2 USD)", usdAt250 === 4 && usdAt500 === 2, {
+    usdAt250,
+    usdAt500,
+  });
+  r = await staffA("GET", `${A}/currencies/rates`);
+  check("rates: staff -> 403", r.status === 403, r);
+  r = await ownerB("GET", `${B}/currencies/rates`);
+  check("rates: Base store -> 403 module_not_enabled", r.status === 403 && r.body?.error?.code === "module_not_enabled", r);
+  r = await ownerA("GET", `${A}/currencies/rates`);
+  const usd = r.body?.currencies?.find((c) => c.currency === "USD");
+  check(
+    "rates: USD with its history (500, 250) and who set it",
+    r.status === 200 &&
+      usd?.rateToBase === 500 &&
+      usd.history.map((h) => h.rate).join() === "500,250" &&
+      usd.history[0].setBy === USERS.ownerA,
+    usd,
+  );
+  check(
+    "rates: elTOQUE suggestion only with a token",
+    env.ELTOQUE_API_TOKEN ? typeof usd?.suggested === "number" : usd?.suggested === null || typeof usd?.suggested === "number",
+    { suggested: usd?.suggested, reference: r.body?.reference },
+  );
+
+  // ---- Excel: «Precio USD» and «Stock Norte» columns ----
+  const auth = { Authorization: `Bearer ${await token(USERS.ownerA)}` };
+  const exportRes = await fetch(`${APP}/api/v1${A}/catalog/excel/export?productTypeId=${typeId}`, { headers: auth });
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(await exportRes.arrayBuffer());
+  const sheet = wb.getWorksheet("Productos");
+  const headers = sheet.getRow(1).values.filter(Boolean);
+  check("excel: export has «Precio USD» and «Stock Norte»", headers.includes("Precio USD") && headers.includes("Stock Norte"), headers);
+  const col = Object.fromEntries(headers.map((h) => [h, sheet.getRow(1).values.indexOf(h)]));
+  let capRow;
+  sheet.eachRow((row, n) => {
+    if (n > 1 && row.getCell(col["SKU"]).text === "GOR-1") capRow = row;
+  });
+  check("excel: Norte stock exported (2)", capRow?.getCell(col["Stock Norte"]).text === "2", capRow?.values);
+  capRow.getCell(col["Precio USD"]).value = 3;
+  capRow.getCell(col["Stock Norte"]).value = 7;
+  const key = `stores/${storeA.id}/imports/${crypto.randomUUID()}-pro.xlsx`;
+  const { error: uploadError } = await createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
+    auth: { persistSession: false },
+    global: { headers: auth },
+  })
+    .storage.from("store-imports")
+    .upload(key, Buffer.from(await wb.xlsx.writeBuffer()), {
+      contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+  if (uploadError) throw uploadError;
+  r = await ownerA("POST", `${A}/catalog/imports`, {
+    fileKey: key,
+    fileName: "pro.xlsx",
+    productTypeId: typeId,
+    mode: "upsert",
+    createMissing: false,
+  });
+  check("excel: import preview", r.status === 201 || r.status === 200, r);
+  let done;
+  for (let i = 0; i < 20 && !done?.done; i++) done = (await ownerA("POST", `${A}/catalog/imports/${r.body?.jobId}/run`)).body;
+  const { data: fixed } = await service.from("variant_prices").select("price").eq("variant_id", variants["GOR-1"]).eq("currency", "USD");
+  const { data: northStock } = await service
+    .from("stocks")
+    .select("quantity")
+    .eq("variant_id", variants["GOR-1"])
+    .eq("warehouse_id", whNorth)
+    .single();
+  check(
+    "excel: import sets the fixed USD price (3) and Norte stock (7)",
+    done?.done && Number(fixed?.[0]?.price) === 3 && northStock?.quantity === 7,
+    { done, fixed, northStock },
+  );
+  check("rates: a fixed price does not follow the rate", (await priceIn("USD")) === 3);
+  r = await ownerA("GET", `${A}/currencies/rates`);
+  check("rates: one product with a fixed USD price", r.body?.currencies?.find((c) => c.currency === "USD")?.fixedPrices === 1, r.body);
+}
+
+try {
+  await run();
+} catch (error) {
+  console.error(error);
+  results.push(false);
+} finally {
+  await cleanup();
+}
+const failed = results.filter((ok) => !ok).length;
+console.log(`\n${results.length - failed}/${results.length} passed`);
+process.exit(failed ? 1 : 0);

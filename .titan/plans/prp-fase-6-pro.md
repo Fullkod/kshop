@@ -337,11 +337,31 @@ Sustituyen a la propuesta donde chocan.
 
 ---
 
+## Progreso
+
+| Fase | Estado | Commit |
+|------|--------|--------|
+| 6.1 Esquema y aislamiento | Hecha: `20261101100000_pro_schema.sql` (`warehouse_shipping_zones`, `stock_movements.transfer_id`, `order_line_costs.cost_rate_to_base` con trigger y relleno de las 42 líneas existentes, `expenses`, `private.market_rates`, columnas de `store_domains` con un dominio propio por tienda). Suite 08; romper la política de gastos hace fallar 4 tests | `82da209` |
+| 6.2 Multi-almacén y multimoneda | Hecha: `…100100_warehouse_engine` (disponible y reserva solo del almacén principal sin el módulo, D13; reserva por punto de recogida / zona / resto con reparto, D12; `set_zone_warehouses`; `transfer_stock` con el mismo orden de bloqueo que el checkout; caché de elTOQUE), `…100200_pro_readers`, `…100300_import_variant_extras`. API `/stores/{id}/warehouses{,/zones/{id},/{id}/stock,/transfers,/movements}` y `/currencies/rates`; pantallas Almacenes (Resumen con zonas, Traspasar, Movimientos) y Monedas (tasa, sugerencia elTOQUE, historial, precios fijos); Excel con «Precio {moneda}» y «Stock {almacén}». `test:rls` 512/512, `e2e:pro` 30/30 (incluye carrera por la última unidad e import del Excel), `qa:pro` 7/7, `e2e:{orders,catalog,excel,discounts}` en verde | ver git |
+
 ## 🧠 Aprendizajes (Self-Annealing / Neural Network)
 
 > Esta sección CRECE con cada error encontrado durante la implementación.
 
-_(vacía)_
+### 2026-10-26: El trigger de borrado no admite `NEW` en su `WHEN`
+- **Error**: `DELETE trigger's WHEN condition cannot reference NEW values` al crear un trigger `insert or update or delete` con `when (coalesce(new.x, old.x) = …)`.
+- **Fix**: sin `WHEN`; la función mira `tg_op` y compara `old`/`new` dentro.
+- **Aplicar en**: cualquier trigger de fila que cubra borrados.
+
+### 2026-10-26: `insert … returning` no va dentro de un subselect
+- **Error**: `syntax error at or near "into"` con `insert into fixtures select … from (insert … returning id) z`.
+- **Fix**: CTE: `with z as (insert … returning id) insert into fixtures select … from z`.
+- **Aplicar en**: fixtures de los tests SQL.
+
+### 2026-10-26: El token de elTOQUE de LensSpace no se puede copiar
+- **Error**: está guardado como secreto de Edge Function en el Supabase de LensSpace (solo se ve su huella).
+- **Fix**: Kshop lo lee de `ELTOQUE_API_TOKEN` (servidor); sin él la pantalla funciona sin sugerencia. Roberto lo pone en `.env.local` y en Vercel.
+- **Aplicar en**: cualquier secreto compartido entre proyectos.
 
 ---
 

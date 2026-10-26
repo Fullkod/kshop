@@ -99,6 +99,102 @@ select tests.eq('subdomains are still created verified',
   (select status from public.store_domains where store_id = tests.fx('store_b') and type = 'subdomain'), 'verified');
 
 -- ---------------------------------------------------------------------------
+-- Multi-warehouse engine (phase 6.2): reservation by zone, transfers, module off
+-- ---------------------------------------------------------------------------
+
+with t as (insert into public.product_types (store_id, name, slug) values (tests.fx('store_a'), 'Simple', 'simple')
+  returning id)
+insert into pg_temp.fixtures select 'type_a', id from t;
+insert into pg_temp.fixtures select 'product_a', public.save_product(tests.fx('store_a'), jsonb_build_object(
+  'product_type_id', tests.fx('type_a'), 'name', 'Gorra', 'slug', 'gorra', 'status', 'published',
+  'variants', jsonb_build_array(jsonb_build_object('sku', 'GOR', 'price', 1000, 'stock', 2))), tests.fx('owner_a'));
+insert into pg_temp.fixtures select 'var_a', id from public.product_variants where store_id = tests.fx('store_a') and sku = 'GOR';
+with w as (insert into public.warehouses (store_id, name) values (tests.fx('store_a'), 'Norte') returning id)
+insert into pg_temp.fixtures select 'wh_a2', id from w;
+select public.set_stock_quantity(tests.fx('store_a'), tests.fx('var_a'), tests.fx('wh_a2'), 5, 'adjustment', null, null);
+with z as (insert into public.shipping_zones (store_id, name) values (tests.fx('store_a'), 'Norte') returning id)
+insert into pg_temp.fixtures select 'zone_a2', id from z;
+with m as (insert into public.shipping_methods (store_id, zone_id, type, name, price)
+  values (tests.fx('store_a'), tests.fx('zone_a'), 'delivery', 'Centro', 100) returning id)
+insert into pg_temp.fixtures select 'method_a', id from m;
+with m as (insert into public.shipping_methods (store_id, zone_id, type, name, price)
+  values (tests.fx('store_a'), tests.fx('zone_a2'), 'delivery', 'Norte', 100) returning id)
+insert into pg_temp.fixtures select 'method_a2', id from m;
+select public.set_zone_warehouses(tests.fx('store_a'), tests.fx('zone_a2'), array[tests.fx('wh_a2')]);
+
+create function pg_temp.buy(p_key text, p_method text, p_zone text, p_qty int) returns uuid
+language sql as $$
+  select (public.checkout_create_order(tests.fx('store_a'), jsonb_build_object(
+    'idempotency_key', p_key, 'currency', 'CUP',
+    'lines', jsonb_build_array(jsonb_build_object('variant_id', tests.fx('var_a'), 'quantity', p_qty)),
+    'customer', jsonb_build_object('name', 'Ana', 'phone', '+5353123456'),
+    'shipping', jsonb_build_object('method_id', tests.fx(p_method), 'zone_id', tests.fx(p_zone), 'address', 'Calle 1')))
+    ->> 'order_id')::uuid;
+$$;
+
+select tests.eq('stock: with the module both warehouses count',
+  (select stock_available from public.product_variants where id = tests.fx('var_a')), 7);
+insert into pg_temp.fixtures values ('ord_north', pg_temp.buy('key-pro-north', 'method_a2', 'zone_a2', 3));
+select tests.eq('zone Norte reserves from its warehouse',
+  (select string_agg(w.name || ':' || r.quantity, ' ') from public.inventory_reservations r
+   join public.warehouses w on w.id = r.warehouse_id where r.order_id = tests.fx('ord_north')), 'Norte:3');
+select tests.eq('the order keeps the warehouse that serves it',
+  (select warehouse_id from public.orders where id = tests.fx('ord_north')), tests.fx('wh_a2'));
+-- Centro has no warehouses of its own after this: default first, then the others (the order may split).
+select public.set_zone_warehouses(tests.fx('store_a'), tests.fx('zone_a'), '{}');
+insert into pg_temp.fixtures values ('ord_center', pg_temp.buy('key-pro-center', 'method_a', 'zone_a', 4));
+select tests.eq('a zone without warehouses takes the default one first, then the rest', (
+  select string_agg(w.name || ':' || r.quantity, ' ' order by w.is_default desc) from public.inventory_reservations r
+  join public.warehouses w on w.id = r.warehouse_id where r.order_id = tests.fx('ord_center')), 'Principal:2 Norte:2');
+select tests.check('a zone cannot use a warehouse of another store', tests.throws(format(
+  $$select public.set_zone_warehouses(%L, %L, array[%L]::uuid[])$$,
+  tests.fx('store_a'), tests.fx('zone_a2'), tests.fx('wh_b'))));
+
+select tests.check('transfer: reserved units do not move', tests.throws(format(
+  $$select public.transfer_stock(%L, %L, %L, '[{"variant_id": "%s", "quantity": 1}]', null, null)$$,
+  tests.fx('store_a'), tests.fx('wh_a2'), tests.fx('wh_a'), tests.fx('var_a'))));
+select public.set_stock_quantity(tests.fx('store_a'), tests.fx('var_a'), tests.fx('wh_a2'), 8, 'adjustment', null, null);
+insert into pg_temp.fixtures select 'transfer_a', (public.transfer_stock(tests.fx('store_a'), tests.fx('wh_a2'),
+  tests.fx('wh_a'), jsonb_build_array(jsonb_build_object('variant_id', tests.fx('var_a'), 'quantity', 3)), 'Reponer', null)
+  ->> 'transfer_id')::uuid;
+select tests.eq('transfer: two movements with the same id', (
+  select string_agg(type::text || ':' || quantity, ' ' order by quantity) from public.stock_movements
+  where transfer_id = tests.fx('transfer_a')), 'transfer_out:-3 transfer_in:3');
+select tests.eq('transfer: stock moved (default 5/2, Norte 5/5)', (
+  select string_agg(s.quantity || '/' || s.quantity_allocated, ' ' order by w.is_default desc) from public.stocks s
+  join public.warehouses w on w.id = s.warehouse_id where s.variant_id = tests.fx('var_a')), '5/2 5/5');
+select tests.check('transfer: not to the same warehouse', tests.throws(format(
+  $$select public.transfer_stock(%L, %L, %L, '[{"variant_id": "%s", "quantity": 1}]', null, null)$$,
+  tests.fx('store_a'), tests.fx('wh_a'), tests.fx('wh_a'), tests.fx('var_a'))));
+select tests.check('transfer: not more than the free units', tests.throws(format(
+  $$select public.transfer_stock(%L, %L, %L, '[{"variant_id": "%s", "quantity": 4}]', null, null)$$,
+  tests.fx('store_a'), tests.fx('wh_a'), tests.fx('wh_a2'), tests.fx('var_a'))));
+select tests.check('transfer: not to a warehouse of another store', tests.throws(format(
+  $$select public.transfer_stock(%L, %L, %L, '[{"variant_id": "%s", "quantity": 1}]', null, null)$$,
+  tests.fx('store_a'), tests.fx('wh_a'), tests.fx('wh_b'), tests.fx('var_a'))));
+
+-- Down to Base: only the default warehouse sells (D13); nothing is deleted.
+select public.change_plan(tests.fx('store_a'), 'base', 'month', tests.fx('owner_a'));
+select tests.eq('module off: available counts only the default warehouse',
+  (select stock_available from public.product_variants where id = tests.fx('var_a')), 3);
+insert into pg_temp.fixtures values ('ord_base', pg_temp.buy('key-pro-base', 'method_a2', 'zone_a2', 1));
+select tests.eq('module off: the zone of Norte reserves from the default warehouse',
+  (select string_agg(w.name || ':' || r.quantity, ' ') from public.inventory_reservations r
+   join public.warehouses w on w.id = r.warehouse_id where r.order_id = tests.fx('ord_base')), 'Principal:1');
+select tests.check('module off: no transfers nor zone changes',
+  tests.throws(format($$select public.transfer_stock(%L, %L, %L, '[{"variant_id": "%s", "quantity": 1}]', null, null)$$,
+    tests.fx('store_a'), tests.fx('wh_a'), tests.fx('wh_a2'), tests.fx('var_a')))
+  and tests.throws(format($$select public.set_zone_warehouses(%L, %L, '{}')$$, tests.fx('store_a'), tests.fx('zone_a2'))));
+select tests.eq('module off: the zone rows are kept',
+  (select count(*) from public.warehouse_shipping_zones where zone_id = tests.fx('zone_a2'))::int, 1);
+select public.set_stock_quantity(tests.fx('store_a'), tests.fx('var_a'), tests.fx('wh_a2'), 6, 'adjustment', null, null);
+select tests.eq('module off: stock added to Norte is not for sale',
+  (select stock_available from public.product_variants where id = tests.fx('var_a')), 2);
+select public.change_plan(tests.fx('store_a'), 'pro', 'month', tests.fx('owner_a'));
+select tests.eq('module back: both warehouses count again (2 + 1)',
+  (select stock_available from public.product_variants where id = tests.fx('var_a')), 3);
+
+-- ---------------------------------------------------------------------------
 -- Isolation
 -- ---------------------------------------------------------------------------
 

@@ -21,6 +21,7 @@ import {
   type ImportProgress,
 } from "@kshop/core";
 import ExcelJS from "exceljs";
+import { hasModule } from "../auth";
 import { mapDbError } from "../db-errors";
 import { HttpError } from "../http";
 import { getServiceClient } from "../supabase";
@@ -45,13 +46,18 @@ type Structure = {
   brands: { id: string; name: string }[];
   collections: { id: string; name: string }[];
   baseCurrency: string;
+  /** Phase 6: «Precio {moneda}» per extra sale currency (multi_currency). */
+  saleCurrencies: string[];
+  /** Phase 6: «Stock {almacén}» per other active warehouse (multi_warehouse). */
+  extraWarehouses: { id: string; name: string }[];
 };
 
 const norm = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").trim().toLowerCase();
 
 async function loadStructure(storeId: string, productTypeId: string): Promise<Structure> {
   const db = getServiceClient();
-  const [type, typeAttrs, categories, brands, collections, currencies] = await Promise.all([
+  const [type, typeAttrs, categories, brands, collections, currencies, sale, warehouses, multiCurrency, multiWarehouse] =
+    await Promise.all([
     db
       .from("product_types")
       .select("id, name, has_variants")
@@ -68,6 +74,16 @@ async function loadStructure(storeId: string, productTypeId: string): Promise<St
     db.from("brands").select("id, name").eq("store_id", storeId),
     db.from("collections").select("id, name").eq("store_id", storeId),
     db.from("store_currencies").select("currency").eq("store_id", storeId).eq("is_base", true).single(),
+    db.from("store_currencies").select("currency").eq("store_id", storeId).eq("is_base", false).eq("sells", true),
+    db
+      .from("warehouses")
+      .select("id, name")
+      .eq("store_id", storeId)
+      .eq("is_default", false)
+      .eq("is_active", true)
+      .order("name"),
+    hasModule(storeId, "multi_currency"),
+    hasModule(storeId, "multi_warehouse"),
   ]);
   if (!type.data)
     throw new HttpError(400, "invalid_reference", "El tipo de producto no existe en esta tienda.");
@@ -110,6 +126,8 @@ async function loadStructure(storeId: string, productTypeId: string): Promise<St
     brands: brands.data ?? [],
     collections: collections.data ?? [],
     baseCurrency: currencies.data?.currency ?? "CUP",
+    saleCurrencies: multiCurrency ? (sale.data ?? []).map((c) => c.currency as string).sort() : [],
+    extraWarehouses: multiWarehouse ? (warehouses.data ?? []) : [],
   };
 }
 
@@ -126,13 +144,30 @@ function categoryPaths(categories: Structure["categories"]): Map<string, string>
 // Template / export
 // ---------------------------------------------------------------------------
 
+type Extra = { kind: "prices" | "stocks"; id: string };
+
 function columnsFor(s: Structure) {
+  const plain = { attr: undefined as TypeAttr | undefined, extra: undefined as Extra | undefined };
   return [
-    ...PRODUCT_COLUMNS.map((c) => ({ ...c, attr: undefined as TypeAttr | undefined })),
-    ...s.productAttrs.map((a) => ({ key: `attr:${a.id}`, header: a.name, width: 16, attr: a })),
-    ...VARIANT_COLUMNS.slice(0, 1).map((c) => ({ ...c, attr: undefined as TypeAttr | undefined })),
-    ...s.variantAttrs.map((a) => ({ key: `attr:${a.id}`, header: a.name, width: 12, attr: a })),
-    ...VARIANT_COLUMNS.slice(1).map((c) => ({ ...c, attr: undefined as TypeAttr | undefined })),
+    ...PRODUCT_COLUMNS.map((c) => ({ ...c, ...plain })),
+    ...s.productAttrs.map((a) => ({ key: `attr:${a.id}`, header: a.name, width: 16, ...plain, attr: a })),
+    ...VARIANT_COLUMNS.slice(0, 1).map((c) => ({ ...c, ...plain })),
+    ...s.variantAttrs.map((a) => ({ key: `attr:${a.id}`, header: a.name, width: 12, ...plain, attr: a })),
+    ...VARIANT_COLUMNS.slice(1).map((c) => ({ ...c, ...plain })),
+    ...s.saleCurrencies.map((c) => ({
+      key: `price:${c}`,
+      header: `Precio ${c}`,
+      width: 12,
+      ...plain,
+      extra: { kind: "prices", id: c } as Extra,
+    })),
+    ...s.extraWarehouses.map((w) => ({
+      key: `stock:${w.id}`,
+      header: `Stock ${w.name}`,
+      width: 12,
+      ...plain,
+      extra: { kind: "stocks", id: w.id } as Extra,
+    })),
   ];
 }
 
@@ -194,6 +229,14 @@ async function buildWorkbook(s: Structure, rows: ExportRow[]): Promise<Buffer> {
     "• Colecciones y Etiquetas: varios valores separados por comas.",
     `• Precio y Precio anterior en ${s.baseCurrency}. Costo con su moneda (CUP, USD o EUR).`,
     "• Stock: unidades en el almacén principal.",
+    ...(s.saleCurrencies.length
+      ? [
+          `• ${s.saleCurrencies.map((c) => `Precio ${c}`).join(", ")}: precio fijo en esa moneda. Vacío: se convierte con la tasa.`,
+        ]
+      : []),
+    ...(s.extraWarehouses.length
+      ? ["• Stock {almacén}: unidades en cada uno de los demás almacenes."]
+      : []),
     "• Imágenes (URLs): enlaces públicos a las fotos del producto, separados por comas. Se descargan al importar; si ya se importaron antes no se repiten.",
     "• Al importar puedes crear automáticamente las categorías, marcas, colecciones y valores que falten.",
     "• Modo «actualizar»: si el SKU ya existe se actualizan sus datos; las celdas vacías no borran nada.",
@@ -230,6 +273,7 @@ type ExportProduct = {
     sort_order: number;
     variant_costs:
       { cost_price: number; cost_currency: string } | { cost_price: number; cost_currency: string }[] | null;
+    variant_prices: { currency: string; price: number }[];
     stocks: { quantity: number; warehouse_id: string }[];
     variant_attribute_values: { attribute_id: string; value_id: string }[];
   }[];
@@ -262,7 +306,8 @@ export async function buildExport(storeId: string, productTypeId: string): Promi
          product_attribute_values(attribute_id, value_id, value_text, value_numeric),
          product_media(url, sort_order),
          product_variants(sku, price, compare_at_price, sort_order, variant_costs(cost_price, cost_currency),
-           stocks(quantity, warehouse_id), variant_attribute_values(attribute_id, value_id))`,
+           variant_prices(currency, price), stocks(quantity, warehouse_id),
+           variant_attribute_values(attribute_id, value_id))`,
       )
       .eq("store_id", storeId)
       .eq("product_type_id", productTypeId)
@@ -313,6 +358,13 @@ export async function buildExport(storeId: string, productTypeId: string): Promi
             costCurrency: cost?.cost_currency ?? null,
             stock: v.stocks.find((st) => st.warehouse_id === wh?.id)?.quantity ?? 0,
           };
+          for (const c of s.saleCurrencies) {
+            const fixed = v.variant_prices.find((x) => x.currency === c);
+            row[`price:${c}`] = fixed ? Number(fixed.price) : null;
+          }
+          for (const w of s.extraWarehouses) {
+            row[`stock:${w.id}`] = v.stocks.find((st) => st.warehouse_id === w.id)?.quantity ?? 0;
+          }
           for (const a of s.productAttrs) row[`attr:${a.id}`] = i === 0 ? productAttr(a.id) : null;
           for (const a of s.variantAttrs) {
             const value = v.variant_attribute_values.find((x) => x.attribute_id === a.id);
@@ -369,18 +421,20 @@ async function parseWorkbook(buffer: ArrayBuffer, s: Structure): Promise<ParsedR
     if (rowNumber === 1) return;
     const raw: Record<string, string> = {};
     const attributes: Record<string, string> = {};
+    const extras: Record<Extra["kind"], Record<string, string>> = { prices: {}, stocks: {} };
     let empty = true;
     for (const [col, c] of colKey) {
       const text = row.getCell(col).text?.trim() ?? "";
       if (text) empty = false;
       if (c.attr) attributes[c.attr.id] = text;
+      else if (c.extra) extras[c.extra.kind][c.extra.id] = text;
       else raw[c.key] = text;
     }
     if (empty) return;
     const input = Object.fromEntries(
       [...PRODUCT_COLUMNS, ...VARIANT_COLUMNS].map((c) => [c.key, raw[c.key] ?? ""]),
     );
-    const result = excelRowSchema.safeParse({ ...input, attributes });
+    const result = excelRowSchema.safeParse({ ...input, attributes, ...extras });
     parsed.push({
       row: rowNumber,
       key: productKey({ productCode: raw.productCode ?? "", name: raw.name ?? "" }),
@@ -872,6 +926,17 @@ export async function runImportBatch(
       if (result === "created") created++;
       else if (result === "updated") updated++;
       else skipped++;
+      // Phase 6: fixed prices per currency and stock in the other warehouses (rows saved before have none).
+      const extras = g.data.filter((d) => Object.keys(d.prices ?? {}).length || Object.keys(d.stocks ?? {}).length);
+      if (extras.length && result !== "skipped") {
+        const { error: extrasError } = await db.rpc("import_variant_extras", {
+          p_store_id: storeId,
+          p_job_id: jobId,
+          p_variants: extras.map((d) => ({ sku: d.sku, prices: d.prices ?? {}, stocks: d.stocks ?? {} })),
+          p_user_id: userId,
+        });
+        if (extrasError) warnings.push({ productKey: key, error: extrasError.message });
+      }
       // Rows saved before the images column existed have no "images".
       const images = g.data.find((d) => d.images?.length)?.images ?? [];
       if (images.length && result !== "skipped") {

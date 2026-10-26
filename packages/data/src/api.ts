@@ -19,6 +19,9 @@ import type {
   ProductTypeInput,
   StockInput,
   WarehouseInput,
+  StockMovementQuery,
+  StockMovementType,
+  StockTransferInput,
   AdminOrderInput,
   NotificationAudience,
   NotificationContactInput,
@@ -494,6 +497,72 @@ export type TeamResponse = { members: TeamMember[]; usage: StoreUsage["maxStaff"
 
 export type TeamInviteResponse = { member: TeamMember; accessLink: string; accountWasCreated: boolean };
 
+// Phase 6: Admin › Almacenes (multi_warehouse) and Admin › Monedas (multi_currency).
+export type WarehouseSummary = {
+  id: string;
+  name: string;
+  address: string | null;
+  isDefault: boolean;
+  isActive: boolean;
+  isPickupPoint: boolean;
+  variants: number;
+  units: number;
+  reserved: number;
+};
+
+export type ZoneWarehouses = { id: string; name: string; isActive: boolean; warehouseIds: string[] };
+
+export type WarehousesOverview = { warehouses: WarehouseSummary[]; zones: ZoneWarehouses[] };
+
+export type WarehouseStockRow = {
+  variantId: string;
+  productName: string;
+  variantName: string;
+  sku: string;
+  quantity: number;
+  allocated: number;
+};
+
+export type StockMovement = {
+  id: string;
+  createdAt: string;
+  type: StockMovementType;
+  quantity: number;
+  warehouseName: string;
+  productName: string;
+  variantName: string;
+  sku: string;
+  note: string | null;
+  orderId: string | null;
+  orderNumber: number | null;
+  transferId: string | null;
+  userEmail: string | null;
+};
+
+export type StockMovementsPage = { movements: StockMovement[]; total: number; page: number; pageSize: number };
+
+export type CurrencyRateEntry = { rate: number; setAt: string; setBy: string | null };
+
+export type StoreCurrencyRates = {
+  currency: CurrencyCode;
+  isBase: boolean;
+  sells: boolean;
+  rateToBase: number;
+  rounding: number | null;
+  updatedAt: string;
+  /** Products with a fixed price in this currency (they do not follow the rate). */
+  fixedPrices: number;
+  history: CurrencyRateEntry[];
+  /** elTOQUE informal rate as rate_to_base, when the token is set and the base currency allows it. */
+  suggested: number | null;
+};
+
+export type CurrencyRatesResponse = {
+  baseCurrency: CurrencyCode;
+  currencies: StoreCurrencyRates[];
+  reference: { source: "eltoque"; date: string } | null;
+};
+
 export type ApiClientOptions = {
   /** Origin of the web app ("" for same-origin calls in the browser). */
   baseUrl: string;
@@ -712,6 +781,31 @@ export function createApiClient(options: ApiClientOptions) {
         remove: (userId: string) => request<null>("DELETE", `${base}/${userId}`),
       };
     },
+    warehouses: (storeId: string) => {
+      const base = `/stores/${storeId}/warehouses`;
+      return {
+        overview: () => request<WarehousesOverview>("GET", base),
+        setZone: (zoneId: string, warehouseIds: string[]) =>
+          request<{ zoneId: string; warehouseIds: string[] }>("PUT", `${base}/zones/${zoneId}`, { warehouseIds }),
+        stock: (warehouseId: string, query = "") =>
+          request<{ rows: WarehouseStockRow[] }>(
+            "GET",
+            `${base}/${warehouseId}/stock?${new URLSearchParams({ q: query })}`,
+          ),
+        transfer: (input: StockTransferInput) =>
+          request<{ transferId: string; variants: number; units: number }>("POST", `${base}/transfers`, input),
+        movements: (query: Partial<StockMovementQuery> = {}) =>
+          request<StockMovementsPage>(
+            "GET",
+            `${base}/movements?${new URLSearchParams(
+              Object.entries(query).flatMap(([k, v]) => (v === undefined || v === "" ? [] : [[k, String(v)]])),
+            )}`,
+          ),
+      };
+    },
+    currencyRates: (storeId: string) => ({
+      get: () => request<CurrencyRatesResponse>("GET", `/stores/${storeId}/currencies/rates`),
+    }),
     customers: (storeId: string) => ({
       setBlocked: (customerId: string, isBlocked: boolean) =>
         request<{ id: string; isBlocked: boolean }>("PATCH", `/stores/${storeId}/customers/${customerId}`, {
