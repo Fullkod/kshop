@@ -94,8 +94,8 @@
 - Temas por **tokens** (colores, fuentes, logo, secciones de home), no código por tienda.
 
 ## Preguntas abiertas
-- [ ] DNS: delegar la subzona `kshop.fullkod.com` a Vercel para el wildcard (ver 04).
-- [ ] ¿Dominio propio por tienda (`klaushop.com`)? ¿En qué plan?
+- [x] DNS: `kshop.fullkod.com` y `*.kshop.fullkod.com` funcionan en Vercel (Roberto, 2026-10-26: configurado y probado).
+- [x] Dominio propio por tienda: módulo `custom_domain` (Pro o suelto); lo pide el dueño y la tienda paga su dominio (Fase 6).
 - [ ] Proveedor de email para la alternativa de recuperación (Resend u otro).
 - [ ] ¿Checkout solo por WhatsApp o también pago online por tienda en el futuro?
 - [ ] Límite de productos por plan, staff del Pro, y precios de planes y módulos sueltos (más adelante).
@@ -105,5 +105,6 @@
 - [ ] Logo, paleta y capitalización del logotipo (Kshop / kshop / KShop).
 - [ ] Permiso para desplegar en Vercel y medir Lighthouse de la tienda pública (Fase 2).
 - [x] Remoto de GitHub: `origin` no devolvía ramas; resuelto el 2026-10-25 (Roberto hizo push de `main`).
-- [ ] Vercel: primer deploy en `kshop-silk.vercel.app` (2026-10-25, cuenta Hobby de Claudia). La web da 404
-  porque ese host no es ni la plataforma ni una tienda; falta el dominio `kshop.fullkod.com` + `*.kshop.fullkod.com`.
+- [x] Vercel: primer deploy en `kshop-silk.vercel.app` (2026-10-25, cuenta Hobby de Claudia). La web da 404
+  porque ese host no es ni la plataforma ni una tienda; resuelto con `kshop.fullkod.com` + `*.kshop.fullkod.com` (2026-10-26).
+- [ ] Vercel: la cuenta es Hobby (no comercial, dominios limitados); pasar a Pro o a una cuenta de Fullkod antes de vender dominios propios.
