@@ -1,6 +1,6 @@
 # PRP-7: Apps — app de tienda y app de administración con Capacitor
 
-> **Estado**: PENDIENTE (esperando las respuestas de Roberto en «Preguntas para Roberto»)
+> **Estado**: APROBADO (2026-10-26) con las respuestas de Roberto (ver «Decisiones de Roberto»)
 > **Fecha**: 2026-10-26
 > **Proyecto**: Kshop
 > **Fase**: 7 (ver `arranque-y-fases.md`). Código de partida: commit `805f83e` (Fase 6 cerrada)
@@ -124,7 +124,7 @@ el Base de 5 USD. klauShop (tienda nº 1 en la Fase 8) tendrá su app.
 
 | # | Decisión | Propuesta | Alternativa |
 |---|----------|-----------|-------------|
-| D11 | **Dónde se compila** | Script `pnpm app:build <slug>` (y `pnpm app:build-admin`): genera la config, iconos, `npx cap sync android` y `gradlew assembleRelease`, firma y deja el APK. En esta fase se ejecuta **en el PC de Roberto** tras instalar JDK 21 y Android SDK (command-line tools). **Ver pregunta 3** | GitHub Actions (botón «Generar app» del superadmin → workflow → APK subido): más cómodo, pero toca GitHub (secretos, keystore) y necesita permiso |
+| D11 | **Dónde se compila** | **GitHub Actions** (Roberto, respuesta 3): workflow `android-app.yml` con el slug → config, iconos, `npx cap sync android`, `gradlew assembleRelease`, firma, artefacto; `pnpm app:publish <slug>` lo publica desde aquí. Ver «Decisiones de Roberto» | GitHub Actions (botón «Generar app» del superadmin → workflow → APK subido): más cómodo, pero toca GitHub (secretos, keystore) y necesita permiso |
 | D12 | **Firma** | Un keystore **por app** (tienda), guardado **fuera del repo** (`%USERPROFILE%\.kshop\keystores\{slug}.jks`) con su contraseña en `.env.local`/gestor de Roberto; copia de seguridad obligatoria (sin él no se puede actualizar la app). Así una tienda grande puede pasar luego a su propia cuenta de Play. **Ver pregunta 4** | Un keystore de la plataforma para todas (más simple; pero todas quedan atadas a la misma clave) |
 | D13 | **Dónde se publica el APK** | Bucket `store-media` en `stores/{store_id}/app/{appId}-{version}.apk` (público, como los logos) + fila en `store_app_builds`. La tienda tiene la página `/app` (botón «Descargar para Android», QR, cómo instalar un APK) y un aviso discreto en Android. Listo para subir a Apklis a mano. Google Play **no** en esta fase | Google Play ya (riesgo de cuenta del familiar, `app-movil.md`) |
 | D14 | **Quién la pide** | El dueño ve Admin › App móvil (estado, versión, enlace, QR, «Pedir mi app»); el superadmin ve Superadmin › Apps (pendientes, generar/registrar versión, subir APK). En v1 el superadmin genera con el script y registra el APK desde su pantalla. **Ver pregunta 5** | Solo el superadmin, sin que el dueño pida nada |
@@ -228,7 +228,25 @@ de Roberto (criterios de éxito); `/app` ofrece la descarga y la quita sin el m�
 
 ---
 
-## Preguntas para Roberto
+## Decisiones de Roberto (2026-10-26)
+
+1. **D1**: app de tienda **empaquetada** (el código dentro del teléfono).
+2. **D2**: admin solo con lo esencial del móvil + «Abrir el panel completo».
+3. **D11**: se compila en **GitHub Actions**. Flujo para no subir secretos de la plataforma a GitHub: el workflow
+   (`workflow_dispatch` con el slug) lee la ficha **pública** de la tienda (clave publicable), genera config, icono y
+   splash, compila y **firma** con el keystore de esa app guardado como secreto de Actions, y deja el APK como
+   artefacto. Desde aquí `pnpm app:publish <slug>` lo descarga con `gh`, lo sube a `store-media` y lo registra en
+   `store_app_builds`. La clave de servicio de Supabase **nunca** va a GitHub. Hace falta subir el código (push) para
+   que el workflow exista: se pide permiso en la 7.4.
+4. **D12**: un keystore **por app**; original y copia en una **carpeta local** de Roberto (fuera del repo); copia en
+   los secretos de Actions (`ANDROID_KEYSTORE_{SLUG}` en base64 + contraseña) para firmar.
+5. **D14**: el icono sale **solo del logo** de la tienda (sobre su color de fondo); si el logo es horizontal (logotipo
+   con texto), la inicial de la tienda sobre su color. El dueño no sube icono.
+6. **D9**: sin push en esta fase; para después.
+7. **D13**: APK directo desde la tienda y listo para Apklis; Google Play más adelante.
+8. «Kshop Admin» con el logo de Kshop. La **app de klauShop** se puede generar como prueba en esta fase.
+
+## Preguntas para Roberto (respondidas arriba)
 
 1. **App de tienda (D1)**: ¿empaquetada (propuesta: rápida con mala conexión, funciona sin conexión, menos riesgo en
    Google Play; hay que rehacer las pantallas de la tienda para la app) o la **web dentro de la app** (lista en días,
