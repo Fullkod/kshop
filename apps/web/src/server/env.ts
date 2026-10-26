@@ -11,12 +11,23 @@ const serverEnvSchema = z.object({
   canonicalPlatformDomain: z.string().min(1),
   /** elTOQUE API token (informal market rates, shown as a suggestion). Without it no suggestion is shown. */
   elToqueToken: z.string().min(1).optional(),
+  /** Vercel Domains API for custom domains (phase 6.4). Without a token the domains run in dry_run. */
+  vercel: z
+    .object({ token: z.string().min(1), projectId: z.string().min(1), teamId: z.string().optional() })
+    .optional(),
 });
 
 export const serverEnv = serverEnvSchema.parse({
   supabaseSecretKey: process.env.SUPABASE_SECRET_KEY,
   canonicalPlatformDomain: process.env.PLATFORM_CANONICAL_DOMAIN ?? "kshop.fullkod.com",
   elToqueToken: process.env.ELTOQUE_API_TOKEN || undefined,
+  vercel: process.env.VERCEL_DOMAINS_TOKEN
+    ? {
+        token: process.env.VERCEL_DOMAINS_TOKEN,
+        projectId: process.env.VERCEL_DOMAINS_PROJECT_ID,
+        teamId: process.env.VERCEL_DOMAINS_TEAM_ID || undefined,
+      }
+    : undefined,
 });
 
 export const serviceSupabaseConfig = { url: publicEnv.supabaseUrl, key: serverEnv.supabaseSecretKey };

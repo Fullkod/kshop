@@ -1,6 +1,6 @@
 # PRP-6: Pro — finanzas, multi-almacén, multimoneda y dominio propio
 
-> **Estado**: EN CURSO (2026-10-26): 6.1–6.3 hechas; **pausado por Roberto** antes de la 6.4 (dominio propio). APROBADO con las respuestas de Roberto (ver «Decisiones de Roberto»)
+> **Estado**: EN CURSO (2026-10-26): 6.1–6.4 hechas; falta la 6.5 (validación final). APROBADO con las respuestas de Roberto (ver «Decisiones de Roberto»)
 > **Fecha**: 2026-10-26
 > **Proyecto**: Kshop
 > **Fase**: 6 (ver `arranque-y-fases.md`). Código de partida: commit `f33e8eb` (Fase 5 cerrada)
@@ -344,7 +344,7 @@ Sustituyen a la propuesta donde chocan.
 | 6.1 Esquema y aislamiento | Hecha: `20261101100000_pro_schema.sql` (`warehouse_shipping_zones`, `stock_movements.transfer_id`, `order_line_costs.cost_rate_to_base` con trigger y relleno de las 42 líneas existentes, `expenses`, `private.market_rates`, columnas de `store_domains` con un dominio propio por tienda). Suite 08; romper la política de gastos hace fallar 4 tests | `82da209` |
 | 6.2 Multi-almacén y multimoneda | Hecha: `…100100_warehouse_engine` (disponible y reserva solo del almacén principal sin el módulo, D13; reserva por punto de recogida / zona / resto con reparto, D12; `set_zone_warehouses`; `transfer_stock` con el mismo orden de bloqueo que el checkout; caché de elTOQUE), `…100200_pro_readers`, `…100300_import_variant_extras`. API `/stores/{id}/warehouses{,/zones/{id},/{id}/stock,/transfers,/movements}` y `/currencies/rates`; pantallas Almacenes (Resumen con zonas, Traspasar, Movimientos) y Monedas (tasa, sugerencia elTOQUE, historial, precios fijos); Excel con «Precio {moneda}» y «Stock {almacén}». `test:rls` 512/512, `e2e:pro` 30/30 (incluye carrera por la última unidad e import del Excel), `qa:pro` 7/7, `e2e:{orders,catalog,excel,discounts}` en verde | ver git |
 | 6.3 Finanzas | Hecha: `…100400_finance_engine` (`finance_summary`, `finance_daily` = cierre del día con todas las monedas, `finance_margin` por producto/categoría/marca, `finance_breakdown`, `finance_inventory`; `private.rate_at`) + `…100500_finance_rate_periods` (la tasa de la moneda elegida como tramos unidos por fecha: con 20 000 pedidos/30 días el resumen bajó de 1,8–2,6 s a ~200 ms; diario 72 ms, margen 152 ms, desglose 63 ms; sin tabla resumen, D5). API `/stores/{id}/finance/{summary,daily,margin,breakdown,inventory,expenses[/{id}],export}` (owner/admin + `finance`); `@kshop/ui` `BarChart` en SVG; pantallas Resumen (KPIs, gráfico, cierre del día), Margen, Inventario, Desglose, Gastos; «Ver todo en» la moneda que elija el dueño; exportar a Excel (una hoja por vista). Suite 08: «los informes cuadran» con CUP/USD, cancelado, envío a convenir, pagos, devolución, gastos y cambio de tasa posterior; `test:rls` 526/526, `e2e:pro` 49/49 (informes = sumas directas de la BD de pedidos hechos por la API), `qa:pro` 14/14 | ver git |
-| 6.4 Dominio propio | **Pendiente** (siguiente) | — |
+| 6.4 Dominio propio | Hecha: `…100600_custom_domains` (`private.store_custom_domain` = verificado + tienda activa + módulo; `store_public_url` v2; RPC anon `resolve_store_domain(host)` → slug/dominio/`live` y `resolve_store_custom_domain(slug)`). El subdominio sigue `is_primary`: el origen público se calcula, así apagar el módulo no cambia datos (D21 sin mover `is_primary`). Proxy con caché de 60 s (también los «no existe»): subdominio → 308 al dominio salvo `/admin`; dominio `/admin` o no vivo → 307 al subdominio; `www.` → 308; redirecciones con `no-store` para no dejar bucles en caché al apagar el módulo. `storePublicOrigin` (core) en canonical, sitemap, robots, enlace del pedido y detalle del pedido en el admin. `server/vercel-domains.ts` (API v10/v9/v6, `www` con redirección) en `dry_run` sin `VERCEL_DOMAINS_TOKEN` — **sin probar contra Vercel**. Admin › Dominio propio (alta, registros DNS, Comprobar, Quitar) y Superadmin › Dominios. `test:rls` 533/533, `e2e:pro` 74/74 (proxy con cabecera Host), `qa:pro` 18/18, `e2e:orders` 94/94, core 59/59. Advisors: solo las dos RPC anon del proxy, a propósito | ver git |
 | 6.5 Validación final | Pendiente | — |
 
 ## 🧠 Aprendizajes (Self-Annealing / Neural Network)
@@ -390,6 +390,21 @@ Sustituyen a la propuesta donde chocan.
 - **Error**: está guardado como secreto de Edge Function en el Supabase de LensSpace (solo se ve su huella).
 - **Fix**: Kshop lo lee de `ELTOQUE_API_TOKEN` (servidor); sin él la pantalla funciona sin sugerencia. Roberto lo pone en `.env.local` y en Vercel.
 - **Aplicar en**: cualquier secreto compartido entre proyectos.
+
+### 2026-10-26: pg_graphql no expuso el campo calculado `_custom_domain(rec stores)`
+- **Error**: la función con el tipo fila no apareció en el esquema (ni `customDomain` ni `_customDomain`).
+- **Fix**: la ficha pública lee el dominio con la RPC anon `resolve_store_custom_domain` en paralelo a la consulta GraphQL; la función se quitó.
+- **Aplicar en**: no contar con campos calculados de pg_graphql en este proyecto sin probarlos primero.
+
+### 2026-10-26: `allowedDevOrigins: ["*.localhost"]` recarga la página sin fin en dev
+- **Error**: con ese patrón Fast Refresh recompilaba en cada carga y el login del admin nunca se hidrataba (la QA no pasaba del login).
+- **Fix**: dejar `*.kshop.localhost`; los dominios de prueba (`x.localhost`) cargan sus recursos del mismo origen y funcionan sin estar en la lista.
+- **Aplicar en**: cualquier cambio de `allowedDevOrigins`.
+
+### 2026-10-26: La caché del proxy y las pruebas
+- **Error (evitado)**: el proxy guarda 60 s también los «no existe»; pedir el dominio antes de verificarlo dejaría la prueba en 404 un minuto.
+- **Fix**: E2E/QA no piden ningún host de la tienda antes de verificar; «módulo apagado» se prueba con otra tienda y un dominio nuevo.
+- **Aplicar en**: pruebas de todo lo que pase por el proxy.
 
 ---
 

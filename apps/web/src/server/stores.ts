@@ -19,6 +19,8 @@ export type PublicStore = {
   whatsappPhone: string | null;
   logoUrl: string | null;
   theme: Theme;
+  /** Live custom domain (verified, module on, store active) or null: the store is served on its subdomain. */
+  customDomain: string | null;
 };
 
 export const storeCacheTag = (slug: string) => `store:${slug}`;
@@ -26,8 +28,27 @@ export const storeCacheTag = (slug: string) => `store:${slug}`;
 // Anonymous pg_graphql read: only the public store card is visible to anon.
 const graphql = createGraphqlClient({ ...supabaseConfig, noCache: true });
 
+/** Live custom domain of a store (anon RPC, the domain is public once live), or null. */
+export async function fetchStoreCustomDomain(slug: string): Promise<string | null> {
+  const res = await fetch(`${supabaseConfig.url}/rest/v1/rpc/resolve_store_custom_domain`, {
+    method: "POST",
+    headers: {
+      apikey: supabaseConfig.key,
+      Authorization: `Bearer ${supabaseConfig.key}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ p_slug: slug }),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`resolve_store_custom_domain failed (${res.status})`);
+  return (await res.json()) as string | null;
+}
+
 async function fetchStoreBySlug(slug: string): Promise<PublicStore | null> {
-  const result = await graphql.query(StoreBySlugQuery, { slug }).toPromise();
+  const [result, customDomain] = await Promise.all([
+    graphql.query(StoreBySlugQuery, { slug }).toPromise(),
+    fetchStoreCustomDomain(slug),
+  ]);
   if (result.error) throw result.error;
   const node = result.data?.storesCollection?.edges[0]?.node;
   if (!node) return null;
@@ -41,6 +62,7 @@ async function fetchStoreBySlug(slug: string): Promise<PublicStore | null> {
     logoUrl: node.logoUrl ?? null,
     // pg_graphql returns jsonb as a JSON string.
     theme: resolveTheme(node.theme ? JSON.parse(node.theme) : null),
+    customDomain,
   };
 }
 

@@ -3,6 +3,8 @@
 //   1. Almacenes (1280 px): overview, zone served by Norte, transfer, movements; the overview at 390 px.
 //   2. Monedas (1280 px): change the USD rate and see the history.
 //   3. Finanzas (1280 and 390 px): summary with the daily close, everything in USD, margin, inventory, expenses.
+//   4. Dominio propio (dry_run): connect {slug}.localhost, see the DNS records, check it, open the store on it (390 px)
+//      and the subdomain redirecting there.
 //
 //   node scripts/qa-pro.mjs
 
@@ -117,7 +119,12 @@ async function seed() {
     .insert({ store_id: store.id, name: "Norte", address: "Calle 5 e/ 6 y 8" })
     .select("id")
     .single();
-  const { data: cap } = await service.from("product_variants").select("id").eq("store_id", store.id).eq("sku", "GOR-1").single();
+  const { data: cap } = await service
+    .from("product_variants")
+    .select("id")
+    .eq("store_id", store.id)
+    .eq("sku", "GOR-1")
+    .single();
   await service.rpc("set_stock_quantity", {
     p_store_id: store.id,
     p_variant_id: cap.id,
@@ -138,17 +145,29 @@ async function seed() {
   });
 
   // Orders of the last 10 days (CUP and USD), most paid, for Finanzas.
-  const { data: bag } = await service.from("product_variants").select("id").eq("store_id", store.id).eq("sku", "BOL-1").single();
+  const { data: bag } = await service
+    .from("product_variants")
+    .select("id")
+    .eq("store_id", store.id)
+    .eq("sku", "BOL-1")
+    .single();
   await service.rpc("set_stock_quantity", {
     p_store_id: store.id,
     p_variant_id: bag.id,
-    p_warehouse_id: (await service.from("warehouses").select("id").eq("store_id", store.id).eq("is_default", true).single()).data.id,
+    p_warehouse_id: (
+      await service.from("warehouses").select("id").eq("store_id", store.id).eq("is_default", true).single()
+    ).data.id,
     p_quantity: 40,
     p_type: "adjustment",
     p_note: null,
     p_user_id: owner.user.id,
   });
-  const { data: main } = await service.from("warehouses").select("id").eq("store_id", store.id).eq("is_default", true).single();
+  const { data: main } = await service
+    .from("warehouses")
+    .select("id")
+    .eq("store_id", store.id)
+    .eq("is_default", true)
+    .single();
   await service.rpc("set_stock_quantity", {
     p_store_id: store.id,
     p_variant_id: cap.id,
@@ -192,8 +211,20 @@ async function seed() {
     }
   }
   await service.from("expenses").insert([
-    { store_id: store.id, spent_on: new Date(Date.now() - 2 * 86_400_000).toISOString().slice(0, 10), category: "Alquiler", amount: 5000, currency: "CUP" },
-    { store_id: store.id, spent_on: new Date(Date.now() - 5 * 86_400_000).toISOString().slice(0, 10), category: "Envases y bolsas", amount: 3, currency: "USD" },
+    {
+      store_id: store.id,
+      spent_on: new Date(Date.now() - 2 * 86_400_000).toISOString().slice(0, 10),
+      category: "Alquiler",
+      amount: 5000,
+      currency: "CUP",
+    },
+    {
+      store_id: store.id,
+      spent_on: new Date(Date.now() - 5 * 86_400_000).toISOString().slice(0, 10),
+      category: "Envases y bolsas",
+      amount: 3,
+      currency: "USD",
+    },
   ]);
   return store;
 }
@@ -236,12 +267,18 @@ try {
   await login(admin, `${BASE}/admin`, OWNER, `${BASE}/admin`);
   await admin.goto(`${BASE}/admin/multi-warehouse`);
   await admin.getByTestId("warehouse-Norte").waitFor({ timeout: 20000 });
-  check("overview: Norte with 6 units", (await admin.getByTestId("warehouse-Norte").innerText()).includes("6"));
+  check(
+    "overview: Norte with 6 units",
+    (await admin.getByTestId("warehouse-Norte").innerText()).includes("6"),
+  );
   const zone = admin.getByTestId("zone-Centro Habana");
   await zone.getByRole("combobox").selectOption({ label: "Norte" });
   await zone.getByRole("button", { name: "Guardar" }).click();
   await zone.getByText("Guardado.").waitFor({ timeout: 15000 });
-  check("zones: Centro Habana served by Norte", (await zone.innerText()).includes("1.\nNorte") || (await zone.innerText()).includes("Norte"));
+  check(
+    "zones: Centro Habana served by Norte",
+    (await zone.innerText()).includes("1.\nNorte") || (await zone.innerText()).includes("Norte"),
+  );
   await shot(admin, "01-almacenes-resumen-1280");
 
   await admin.getByRole("link", { name: "Traspasar" }).click();
@@ -293,12 +330,19 @@ try {
   const sold = await admin.getByTestId("kpi-sold").innerText();
   check("finance: sold in CUP and USD", sold.includes("CUP") && sold.includes("USD"), sold);
   const days = await admin.getByTestId("daily-close").locator("tbody tr").count();
-  check("finance: the daily close of the last 7 days (one row per day with activity)", days >= 5 && days <= 7, days);
+  check(
+    "finance: the daily close of the last 7 days (one row per day with activity)",
+    days >= 5 && days <= 7,
+    days,
+  );
   await shot(admin, "06-finanzas-resumen-1280");
   await admin.selectOption("#finance-currency", "USD");
   await admin.waitForURL(/currency=USD/);
   await admin.locator('[data-testid="finance-summary"][aria-busy="false"]').waitFor({ timeout: 15000 });
-  check("finance: everything in USD on request", (await admin.getByTestId("kpi-collected").innerText()).includes("USD"));
+  check(
+    "finance: everything in USD on request",
+    (await admin.getByTestId("kpi-collected").innerText()).includes("USD"),
+  );
 
   await admin.getByRole("link", { name: "Margen" }).click();
   await admin.getByTestId("margin-rows").getByText("Bolso").waitFor({ timeout: 15000 });
@@ -317,19 +361,55 @@ try {
   await admin.fill("#expense-amount", "450");
   await admin.getByRole("button", { name: "Añadir gasto" }).click();
   await admin.getByTestId("expenses").getByText("Mensajería").waitFor({ timeout: 15000 });
-  check("expenses: added from the form", (await admin.getByTestId("expenses-total").innerText()).includes("CUP"));
+  check(
+    "expenses: added from the form",
+    (await admin.getByTestId("expenses-total").innerText()).includes("CUP"),
+  );
   await shot(admin, "09-finanzas-gastos-1280");
 
   await phone.goto(`${BASE}/admin/finance`);
   await phone.getByTestId("kpi-sold").waitFor({ timeout: 20000 });
-  const financeOverflow = await phone.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  const financeOverflow = await phone.evaluate(
+    () => document.documentElement.scrollWidth - window.innerWidth,
+  );
   check("finance at 390 px: no horizontal scroll of the page", financeOverflow <= 1, financeOverflow);
   await shot(phone, "10-finanzas-390");
+
+  // 4. Dominio propio. Chrome resolves any *.localhost; the domain is new, so the proxy has nothing cached for it.
+  const DOMAIN = `${SLUG}.localhost`;
+  await admin.goto(`${BASE}/admin/custom-domain`);
+  await admin.fill("#domain", DOMAIN);
+  await admin.getByRole("button", { name: "Conectar dominio" }).click();
+  await admin.getByTestId("dns-records").waitFor({ timeout: 20000 });
+  check(
+    "domain: DNS records to set",
+    (await admin.getByTestId("dns-records").innerText()).includes("76.76.21.21"),
+  );
+  await shot(admin, "11-dominio-dns-1280");
+  await admin.getByRole("button", { name: "Comprobar" }).click();
+  await admin.getByText("¡Listo!").waitFor({ timeout: 20000 });
+  check(
+    "domain: verified and active",
+    (await admin.getByTestId("custom-domain").innerText()).includes("Activo"),
+  );
+  await shot(admin, "12-dominio-activo-1280");
+  await phone.goto(`http://${DOMAIN}:3000/`);
+  await phone.getByText("QA Pro").first().waitFor({ timeout: 30000 });
+  check(
+    "domain: the store is served on its domain",
+    new URL(phone.url()).host === `${DOMAIN}:3000`,
+    phone.url(),
+  );
+  await shot(phone, "13-tienda-en-su-dominio-390");
+  await phone.goto(`${BASE}/`);
+  await phone.waitForLoadState("domcontentloaded");
+  check("domain: the subdomain redirects to it", new URL(phone.url()).host === `${DOMAIN}:3000`, phone.url());
 
   if (errors.length) writeFileSync(join(OUT, "console-errors.txt"), errors.join("\n\n"));
   check("no console errors", errors.length === 0, errors.map((e) => e.slice(0, 300)).join(" | "));
 } catch (error) {
   check("flow", false, error);
+  if (errors.length) console.log(errors.map((e) => e.slice(0, 500)).join("\n"));
   await shot(admin, "error-admin");
   await shot(phone, "error-movil");
 } finally {

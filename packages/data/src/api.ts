@@ -1,5 +1,8 @@
 import type {
   AttributeInput,
+  CustomDomainInput,
+  CustomDomainStatus,
+  DnsRecord,
   BrandInput,
   CategoryInput,
   CollectionInput,
@@ -676,6 +679,24 @@ export type CurrencyRatesResponse = {
   reference: { source: "eltoque"; date: string } | null;
 };
 
+export type CustomDomain = {
+  id: string;
+  domain: string;
+  status: CustomDomainStatus;
+  dnsRecords: DnsRecord[];
+  verifiedAt: string | null;
+  checkedAt: string | null;
+  lastError: string | null;
+  createdAt: string;
+  /** Served right now (verified, module on, store active). */
+  live: boolean;
+};
+
+/** dry_run: no Vercel token, domains are simulated (local dev). */
+export type CustomDomainResponse = { domain: CustomDomain | null; mode: "dry_run" | "live" };
+
+export type PlatformDomain = CustomDomain & { storeId: string; storeName: string; storeSlug: string };
+
 export type ApiClientOptions = {
   /** Origin of the web app ("" for same-origin calls in the browser). */
   baseUrl: string;
@@ -941,6 +962,13 @@ export function createApiClient(options: ApiClientOptions) {
     currencyRates: (storeId: string) => ({
       get: () => request<CurrencyRatesResponse>("GET", `/stores/${storeId}/currencies/rates`),
     }),
+    customDomain: (storeId: string) => ({
+      get: () => request<CustomDomainResponse>("GET", `/stores/${storeId}/custom-domain`),
+      request: (input: CustomDomainInput) =>
+        request<{ domain: CustomDomain }>("POST", `/stores/${storeId}/custom-domain`, input),
+      check: () => request<{ domain: CustomDomain }>("POST", `/stores/${storeId}/custom-domain/check`),
+      remove: () => request<null>("DELETE", `/stores/${storeId}/custom-domain`),
+    }),
     customers: (storeId: string) => ({
       setBlocked: (customerId: string, isBlocked: boolean) =>
         request<{ id: string; isBlocked: boolean }>("PATCH", `/stores/${storeId}/customers/${customerId}`, {
@@ -972,6 +1000,10 @@ export function createApiClient(options: ApiClientOptions) {
         request<CreateStoreResponse>("POST", "/platform/stores", input),
       updateStoreStatus: (storeId: string, status: StoreStatus) =>
         request<{ store: PlatformStore }>("PATCH", `/platform/stores/${storeId}`, { status }),
+      domains: () =>
+        request<{ domains: PlatformDomain[]; mode: "dry_run" | "live" }>("GET", "/platform/domains"),
+      checkDomain: (id: string) => request<null>("POST", `/platform/domains/${id}/check`),
+      removeDomain: (id: string) => request<null>("DELETE", `/platform/domains/${id}`),
       whatsapp: () => request<PlatformWhatsapp>("GET", "/platform/whatsapp"),
       setWhatsapp: (input: PlatformWhatsappInput) =>
         request<PlatformWhatsapp>("PUT", "/platform/whatsapp", input),

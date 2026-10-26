@@ -323,6 +323,40 @@ select tests.check('finance: a period of more than a year is rejected', tests.th
   $$select public.finance_summary(%L, '2025-01-01', '2026-06-01', 'CUP')$$, tests.fx('store_c'))));
 
 -- ---------------------------------------------------------------------------
+-- Custom domains (phase 6.4): live only while verified, store active and module on (D19–D23)
+-- ---------------------------------------------------------------------------
+
+select tests.eq('domain: pending is not resolved nor used in links',
+  (select count(*) from public.resolve_store_domain('tienda-a.example.com'))::text
+  || coalesce(public.resolve_store_custom_domain('pro-test-a'), '-')
+  || private.store_public_url(tests.fx('store_a')), '0-https://pro-test-a.kshop.fullkod.com');
+update public.store_domains set status = 'verified', verified_at = now()
+where store_id = tests.fx('store_a') and type = 'custom';
+select tests.eq('domain: verified resolves (also www.) and becomes the public url',
+  (select string_agg(format('%s|%s|%s', slug, domain, live::text), ' ')
+   from (select * from public.resolve_store_domain('Tienda-A.example.com')
+         union all select * from public.resolve_store_domain('www.tienda-a.example.com')) r)
+  || ' ' || public.resolve_store_custom_domain('pro-test-a') || ' ' || private.store_public_url(tests.fx('store_a')),
+  'pro-test-a|tienda-a.example.com|true pro-test-a|tienda-a.example.com|true tienda-a.example.com '
+  || 'https://tienda-a.example.com');
+select tests.eq('domain: another host or a subdomain of the domain is not resolved',
+  (select count(*) from public.resolve_store_domain('shop.tienda-a.example.com'))::int
+  + (select count(*) from public.resolve_store_domain('pro-test-b.kshop.fullkod.com'))::int, 0);
+select public.change_plan(tests.fx('store_a'), 'base', 'month', tests.fx('owner_a'));
+select tests.eq('domain: module off → not live, links back to the subdomain, row kept',
+  (select live::text from public.resolve_store_domain('tienda-a.example.com'))
+  || coalesce(public.resolve_store_custom_domain('pro-test-a'), '-') || private.store_public_url(tests.fx('store_a'))
+  || (select count(*) from public.store_domains where store_id = tests.fx('store_a') and type = 'custom'),
+  'false-https://pro-test-a.kshop.fullkod.com1');
+select public.change_plan(tests.fx('store_a'), 'pro', 'month', tests.fx('owner_a'));
+update public.stores set status = 'suspended' where id = tests.fx('store_a');
+select tests.eq('domain: suspended store → not live',
+  (select live::text from public.resolve_store_domain('tienda-a.example.com')), 'false');
+update public.stores set status = 'active' where id = tests.fx('store_a');
+select tests.eq('domain: module back → live again',
+  (select live::text from public.resolve_store_domain('tienda-a.example.com')), 'true');
+
+-- ---------------------------------------------------------------------------
 -- Isolation
 -- ---------------------------------------------------------------------------
 
@@ -334,6 +368,8 @@ select tests.check('anon: no zones, expenses, movements, costs nor domains',
   and tests.throws('select count(*) from public.order_line_costs')
   and tests.throws('select count(*) from public.store_domains'));
 select tests.check('anon: market rates are server only', tests.throws('select count(*) from private.market_rates'));
+select tests.eq('anon: resolves a live domain to its slug only',
+  (select slug from public.resolve_store_domain('tienda-a.example.com')), 'pro-test-a');
 select tests.logout();
 
 select tests.login('cust_a');

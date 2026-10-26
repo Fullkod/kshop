@@ -11,7 +11,7 @@ import {
   orderCode,
   PAYMENT_STATUS_LABELS,
   SHIPPING_TYPE_LABELS,
-  storeOrigin,
+  storePublicOrigin,
   whatsappLink,
   type OrderStatus,
   type PaymentStatus,
@@ -119,7 +119,7 @@ export function OrderDetail({ orderId }: { orderId: string }) {
   const events = nodes(order.orderEventsCollection);
   const payments = nodes(order.paymentsCollection).map((p) => ({ ...p, currency: String(p.currency) }));
   const refunds = nodes(order.refundsCollection).map((r) => ({ ...r, currency: String(r.currency) }));
-  const publicUrl = `${storeOrigin(store.slug, publicEnv.platformDomain, platformProtocol)}/order/${order.publicToken}`;
+  const publicUrl = `${storePublicOrigin(store, publicEnv.platformDomain, platformProtocol)}/order/${order.publicToken}`;
   const customerText = `Hola, ${order.customerName}. Tu pedido ${code} en ${store.name} está: ${ORDER_STATUS_LABELS[status]}.${
     total !== null && paid < total && status !== "cancelled" ? ` Total: ${money(total)}.` : ""
   }\n${publicUrl}`;

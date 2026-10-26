@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "",
     NEXT_PUBLIC_PLATFORM_DOMAIN: process.env.NEXT_PUBLIC_PLATFORM_DOMAIN ?? "",
   },
-  // Store subdomains in local dev (tienda-a.kshop.localhost) load dev assets from the platform origin.
+  // Store subdomains (tienda-a.kshop.localhost) and test custom domains (mitienda.localhost) in local dev.
   allowedDevOrigins: ["*.kshop.localhost", "kshop.localhost"],
   turbopack: { root: repoRoot },
 };

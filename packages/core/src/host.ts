@@ -27,3 +27,22 @@ export function parseHost(rawHost: string, platformDomain: string): HostTarget {
 export function storeOrigin(slug: string, platformDomain: string, protocol: "http" | "https"): string {
   return `${protocol}://${slug}.${platformDomain}`;
 }
+
+/** Host without the port: "mitienda.localhost:3000" -> "mitienda.localhost". */
+export function hostWithoutPort(host: string): string {
+  return host.trim().toLowerCase().replace(/:\d+$/, "");
+}
+
+/**
+ * Public origin of a store: its live custom domain (PRP-6 D21) or its subdomain. In local dev the custom domain
+ * takes the port of the platform domain ("mitienda.localhost" -> http://mitienda.localhost:3000).
+ */
+export function storePublicOrigin(
+  store: { slug: string; customDomain?: string | null },
+  platformDomain: string,
+  protocol: "http" | "https",
+): string {
+  if (!store.customDomain) return storeOrigin(store.slug, platformDomain, protocol);
+  const port = platformDomain.match(/:\d+$/)?.[0] ?? "";
+  return `${protocol}://${store.customDomain}${port}`;
+}

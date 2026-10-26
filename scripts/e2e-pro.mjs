@@ -7,6 +7,7 @@
 import { createClient } from "@supabase/supabase-js";
 import ExcelJS from "exceljs";
 import { randomBytes } from "node:crypto";
+import http from "node:http";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -26,6 +27,7 @@ const USERS = {
   ownerA: "pro-owner-a@e2e.kshop.test",
   staffA: "pro-staff-a@e2e.kshop.test",
   ownerB: "pro-owner-b@e2e.kshop.test",
+  root: "pro-root@e2e.kshop.test",
 };
 const SLUGS = ["pro-e2e-a", "pro-e2e-b"];
 
@@ -91,6 +93,21 @@ async function createStore(name, slug, ownerId, prefix, plan) {
   return data;
 }
 
+// GET through the proxy with a given Host (custom domains need no DNS). No redirects are followed.
+function hostGet(host, path) {
+  const { hostname, port } = new URL(APP);
+  return new Promise((resolve, reject) => {
+    const req = http.request({ hostname, port, path, headers: { Host: host } }, (res) => {
+      let body = "";
+      res.setEncoding("utf8");
+      res.on("data", (c) => (body += c));
+      res.on("end", () => resolve({ status: res.statusCode, location: res.headers.location ?? null, body }));
+    });
+    req.on("error", reject);
+    req.end();
+  });
+}
+
 const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Havana" }).format(new Date());
 
 const spanish = (r) =>
@@ -121,7 +138,12 @@ async function seedProducts(storeId, ownerId) {
       p_user_id: ownerId,
     });
     if (saveError) throw saveError;
-    const { data: v } = await service.from("product_variants").select("id").eq("store_id", storeId).eq("sku", sku).single();
+    const { data: v } = await service
+      .from("product_variants")
+      .select("id")
+      .eq("store_id", storeId)
+      .eq("sku", sku)
+      .single();
     variants[sku] = v.id;
   }
   return { typeId: type.id, variants };
@@ -131,7 +153,12 @@ async function run() {
   await cleanup();
   const ids = {};
   for (const [k, email] of Object.entries(USERS)) {
-    const { data, error } = await service.auth.admin.createUser({ email, password: PASSWORD, email_confirm: true });
+    const { data, error } = await service.auth.admin.createUser({
+      email,
+      password: PASSWORD,
+      email_confirm: true,
+      ...(k === "root" && { app_metadata: { role: "superadmin" } }),
+    });
     if (error) throw error;
     ids[k] = data.user.id;
   }
@@ -158,11 +185,19 @@ async function run() {
   r = await ownerB("POST", `${B}/catalog/warehouses`, { name: "Otro" });
   check("warehouses: a Base store cannot add warehouses -> 403", r.status === 403, r);
   r = await ownerB("GET", `${B}/warehouses`);
-  check("warehouses: Base store -> 403 module_not_enabled", r.status === 403 && r.body?.error?.code === "module_not_enabled", r);
+  check(
+    "warehouses: Base store -> 403 module_not_enabled",
+    r.status === 403 && r.body?.error?.code === "module_not_enabled",
+    r,
+  );
   r = await ownerB("GET", `${A}/warehouses`);
   check("warehouses: owner of B on A -> 403", r.status === 403, r);
 
-  r = await ownerA("PUT", `${A}/catalog/stock`, { variantId: variants["GOR-1"], warehouseId: whNorth, quantity: 5 });
+  r = await ownerA("PUT", `${A}/catalog/stock`, {
+    variantId: variants["GOR-1"],
+    warehouseId: whNorth,
+    quantity: 5,
+  });
   check("stock: 5 units in Norte", r.status === 200 && r.body?.quantity === 5, r);
   r = await staffA("GET", `${A}/warehouses`);
   const north = r.body?.warehouses?.find((w) => w.id === whNorth);
@@ -186,7 +221,8 @@ async function run() {
   r = await ownerA("GET", `${A}/warehouses`);
   check(
     "zones: the order is kept",
-    JSON.stringify(r.body?.zones?.find((z) => z.id === zone.id)?.warehouseIds) === JSON.stringify([whNorth, whMain.id]),
+    JSON.stringify(r.body?.zones?.find((z) => z.id === zone.id)?.warehouseIds) ===
+      JSON.stringify([whNorth, whMain.id]),
     r.body?.zones,
   );
   const { data: whB } = await service.from("warehouses").select("id").eq("store_id", storeB.id).single();
@@ -215,7 +251,9 @@ async function run() {
   });
   check(
     "transfer: more than the free units -> 409 with the free units",
-    r.status === 409 && r.body?.error?.code === "insufficient_stock" && /2 unidades libres/.test(r.body.error.message),
+    r.status === 409 &&
+      r.body?.error?.code === "insufficient_stock" &&
+      /2 unidades libres/.test(r.body.error.message),
     r,
   );
   r = await staffA("POST", `${A}/warehouses/transfers`, {
@@ -238,12 +276,19 @@ async function run() {
   r = await staffA("GET", `${A}/warehouses/movements?warehouseId=${whNorth}`);
   check(
     "movements: filter by warehouse (adjustment +5, transfer -3)",
-    r.body?.movements?.map((m) => m.quantity).sort().join() === "-3,5",
+    r.body?.movements
+      ?.map((m) => m.quantity)
+      .sort()
+      .join() === "-3,5",
     r.body,
   );
 
   // Two transfers of the last free unit at the same time: one wins.
-  r = await ownerA("PUT", `${A}/catalog/stock`, { variantId: variants["BOL-1"], warehouseId: whNorth, quantity: 1 });
+  r = await ownerA("PUT", `${A}/catalog/stock`, {
+    variantId: variants["BOL-1"],
+    warehouseId: whNorth,
+    quantity: 1,
+  });
   const race = await Promise.all(
     [0, 1].map(() =>
       staffA("POST", `${A}/warehouses/transfers`, {
@@ -255,11 +300,21 @@ async function run() {
   );
   check(
     "transfer race: the last unit moves once (201 + 409)",
-    race.map((x) => x.status).sort().join() === "201,409",
+    race
+      .map((x) => x.status)
+      .sort()
+      .join() === "201,409",
     race.map((x) => x.status),
   );
-  const { data: bagStock } = await service.from("stocks").select("quantity").eq("variant_id", variants["BOL-1"]);
-  check("transfer race: no stock lost nor duplicated (3 bags in total)", bagStock.reduce((s, x) => s + x.quantity, 0) === 3, bagStock);
+  const { data: bagStock } = await service
+    .from("stocks")
+    .select("quantity")
+    .eq("variant_id", variants["BOL-1"]);
+  check(
+    "transfer race: no stock lost nor duplicated (3 bags in total)",
+    bagStock.reduce((s, x) => s + x.quantity, 0) === 3,
+    bagStock,
+  );
 
   // ---- Currencies (multi_currency) ----
   const priceIn = async (currency) => {
@@ -281,7 +336,11 @@ async function run() {
   r = await staffA("GET", `${A}/currencies/rates`);
   check("rates: staff -> 403", r.status === 403, r);
   r = await ownerB("GET", `${B}/currencies/rates`);
-  check("rates: Base store -> 403 module_not_enabled", r.status === 403 && r.body?.error?.code === "module_not_enabled", r);
+  check(
+    "rates: Base store -> 403 module_not_enabled",
+    r.status === 403 && r.body?.error?.code === "module_not_enabled",
+    r,
+  );
   r = await ownerA("GET", `${A}/currencies/rates`);
   const usd = r.body?.currencies?.find((c) => c.currency === "USD");
   check(
@@ -294,18 +353,26 @@ async function run() {
   );
   check(
     "rates: elTOQUE suggestion only with a token",
-    env.ELTOQUE_API_TOKEN ? typeof usd?.suggested === "number" : usd?.suggested === null || typeof usd?.suggested === "number",
+    env.ELTOQUE_API_TOKEN
+      ? typeof usd?.suggested === "number"
+      : usd?.suggested === null || typeof usd?.suggested === "number",
     { suggested: usd?.suggested, reference: r.body?.reference },
   );
 
   // ---- Excel: «Precio USD» and «Stock Norte» columns ----
   const auth = { Authorization: `Bearer ${await token(USERS.ownerA)}` };
-  const exportRes = await fetch(`${APP}/api/v1${A}/catalog/excel/export?productTypeId=${typeId}`, { headers: auth });
+  const exportRes = await fetch(`${APP}/api/v1${A}/catalog/excel/export?productTypeId=${typeId}`, {
+    headers: auth,
+  });
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(await exportRes.arrayBuffer());
   const sheet = wb.getWorksheet("Productos");
   const headers = sheet.getRow(1).values.filter(Boolean);
-  check("excel: export has «Precio USD» and «Stock Norte»", headers.includes("Precio USD") && headers.includes("Stock Norte"), headers);
+  check(
+    "excel: export has «Precio USD» and «Stock Norte»",
+    headers.includes("Precio USD") && headers.includes("Stock Norte"),
+    headers,
+  );
   const col = Object.fromEntries(headers.map((h) => [h, sheet.getRow(1).values.indexOf(h)]));
   let capRow;
   sheet.eachRow((row, n) => {
@@ -315,10 +382,14 @@ async function run() {
   capRow.getCell(col["Precio USD"]).value = 3;
   capRow.getCell(col["Stock Norte"]).value = 7;
   const key = `stores/${storeA.id}/imports/${crypto.randomUUID()}-pro.xlsx`;
-  const { error: uploadError } = await createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
-    auth: { persistSession: false },
-    global: { headers: auth },
-  })
+  const { error: uploadError } = await createClient(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: { persistSession: false },
+      global: { headers: auth },
+    },
+  )
     .storage.from("store-imports")
     .upload(key, Buffer.from(await wb.xlsx.writeBuffer()), {
       contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -333,8 +404,13 @@ async function run() {
   });
   check("excel: import preview", r.status === 201 || r.status === 200, r);
   let done;
-  for (let i = 0; i < 20 && !done?.done; i++) done = (await ownerA("POST", `${A}/catalog/imports/${r.body?.jobId}/run`)).body;
-  const { data: fixed } = await service.from("variant_prices").select("price").eq("variant_id", variants["GOR-1"]).eq("currency", "USD");
+  for (let i = 0; i < 20 && !done?.done; i++)
+    done = (await ownerA("POST", `${A}/catalog/imports/${r.body?.jobId}/run`)).body;
+  const { data: fixed } = await service
+    .from("variant_prices")
+    .select("price")
+    .eq("variant_id", variants["GOR-1"])
+    .eq("currency", "USD");
   const { data: northStock } = await service
     .from("stocks")
     .select("quantity")
@@ -348,7 +424,11 @@ async function run() {
   );
   check("rates: a fixed price does not follow the rate", (await priceIn("USD")) === 3);
   r = await ownerA("GET", `${A}/currencies/rates`);
-  check("rates: one product with a fixed USD price", r.body?.currencies?.find((c) => c.currency === "USD")?.fixedPrices === 1, r.body);
+  check(
+    "rates: one product with a fixed USD price",
+    r.body?.currencies?.find((c) => c.currency === "USD")?.fixedPrices === 1,
+    r.body,
+  );
 
   // ---- Finance: the reports add up to the orders made through the real API ----
   const order = async (currency, lines, key) => {
@@ -372,7 +452,12 @@ async function run() {
   const o3 = await order("CUP", [{ variantId: variants["BOL-1"], quantity: 1 }], "o3");
   r = await ownerA("POST", `${A}/orders/${o3}/cancel`, { reason: "Prueba" });
   check("finance setup: two orders paid, one cancelled", r.status === 200, r);
-  r = await ownerA("POST", `${A}/finance/expenses`, { spentOn: today(), category: "Mensajería", amount: 250, currency: "CUP" });
+  r = await ownerA("POST", `${A}/finance/expenses`, {
+    spentOn: today(),
+    category: "Mensajería",
+    amount: 250,
+    currency: "CUP",
+  });
   check("expenses: owner adds one -> 201", r.status === 201 && r.body?.amount === 250, r);
   const expenseId = r.body?.id;
 
@@ -380,7 +465,11 @@ async function run() {
   r = await staffA("GET", `${A}/finance/summary?${period}`);
   check("finance: staff -> 403", r.status === 403, r);
   r = await ownerB("GET", `${B}/finance/summary?${period}`);
-  check("finance: Base store -> 403 module_not_enabled", r.status === 403 && r.body?.error?.code === "module_not_enabled", r);
+  check(
+    "finance: Base store -> 403 module_not_enabled",
+    r.status === 403 && r.body?.error?.code === "module_not_enabled",
+    r,
+  );
   r = await ownerA("GET", `${A}/finance/summary?from=${today()}&to=2020-01-01&currency=CUP`);
   check("finance: a period that ends before it starts -> 400", r.status === 400 && spanish(r), r);
 
@@ -402,11 +491,17 @@ async function run() {
     const o = live.find((x) => x.id === l.order_id);
     const c = Array.isArray(l.order_line_costs) ? l.order_line_costs[0] : l.order_line_costs;
     if (!o || !c) continue;
-    const share = Number(o.subtotal) > 0 ? (Number(o.discount_total) * Number(l.line_total)) / Number(o.subtotal) : 0;
-    margin += (Number(l.line_total) - share) * Number(o.exchange_rate) - Number(c.unit_cost) * l.quantity * Number(c.cost_rate_to_base);
+    const share =
+      Number(o.subtotal) > 0 ? (Number(o.discount_total) * Number(l.line_total)) / Number(o.subtotal) : 0;
+    margin +=
+      (Number(l.line_total) - share) * Number(o.exchange_rate) -
+      Number(c.unit_cost) * l.quantity * Number(c.cost_rate_to_base);
   }
   const { data: pays } = await service.from("payments").select("amount, currency").eq("store_id", storeA.id);
-  const { data: refunds } = await service.from("refunds").select("amount, currency").eq("store_id", storeA.id);
+  const { data: refunds } = await service
+    .from("refunds")
+    .select("amount, currency")
+    .eq("store_id", storeA.id);
   const collectedBy = {};
   for (const p of pays) collectedBy[p.currency] = (collectedBy[p.currency] ?? 0) + Number(p.amount);
   for (const p of refunds) collectedBy[p.currency] = (collectedBy[p.currency] ?? 0) - Number(p.amount);
@@ -426,17 +521,27 @@ async function run() {
     s.collected.every((x) => round(collectedBy[x.currency] ?? 0) === x.amount),
     { api: s?.collected, db: collectedBy },
   );
-  check("summary: equivalent in CUP with each order's rate", s.totals.sold === round(soldEq), { api: s.totals.sold, db: soldEq });
-  check("summary: margin and net (margin − 250 of expenses)", s.totals.margin === round(margin) && s.totals.net === round(margin - 250), {
-    api: s.totals,
-    margin,
+  check("summary: equivalent in CUP with each order's rate", s.totals.sold === round(soldEq), {
+    api: s.totals.sold,
+    db: soldEq,
   });
+  check(
+    "summary: margin and net (margin − 250 of expenses)",
+    s.totals.margin === round(margin) && s.totals.net === round(margin - 250),
+    {
+      api: s.totals,
+      margin,
+    },
+  );
   check("summary: 2 orders", s.totals.orders === 2, s.totals);
 
   r = await ownerA("GET", `${A}/finance/daily?${period}`);
   check(
     "daily close: today with every currency",
-    r.status === 200 && r.body.days.length === 1 && r.body.days[0].orders === 2 && r.body.days[0].expenses[0]?.amount === 250,
+    r.status === 200 &&
+      r.body.days.length === 1 &&
+      r.body.days[0].orders === 2 &&
+      r.body.days[0].expenses[0]?.amount === 250,
     r.body,
   );
   r = await ownerA("GET", `${A}/finance/margin?${period}&group=product`);
@@ -454,7 +559,10 @@ async function run() {
   r = await ownerA("GET", `${A}/finance/inventory?currency=CUP&filter=all`);
   check(
     "inventory: valued with today's rates (every product has a cost)",
-    r.status === 200 && r.body.totals.costValue > 0 && r.body.totals.withoutCost === 0 && r.body.rows.length === 2,
+    r.status === 200 &&
+      r.body.totals.costValue > 0 &&
+      r.body.totals.withoutCost === 0 &&
+      r.body.rows.length === 2,
     r.body?.totals,
   );
   r = await ownerA("PUT", `${A}/finance/expenses/${expenseId}`, {
@@ -467,7 +575,11 @@ async function run() {
   r = await ownerB("DELETE", `${A}/finance/expenses/${expenseId}`);
   check("expenses: owner of B cannot delete one of A -> 403", r.status === 403, r);
   r = await ownerA("GET", `${A}/finance/summary?${period}`);
-  check("summary: the net follows the edited expense", r.body?.totals?.net === round(margin - 300), r.body?.totals);
+  check(
+    "summary: the net follows the edited expense",
+    r.body?.totals?.net === round(margin - 300),
+    r.body?.totals,
+  );
   r = await ownerA("DELETE", `${A}/finance/expenses/${expenseId}`);
   check("expenses: delete -> 204", r.status === 204, r);
 
@@ -477,9 +589,153 @@ async function run() {
   check(
     "export: one sheet per view",
     exp.status === 200 &&
-      ["Resumen", "Cierre diario", "Margen por producto", "Desglose", "Inventario", "Gastos"].every((n) => xwb.getWorksheet(n)),
+      ["Resumen", "Cierre diario", "Margen por producto", "Desglose", "Inventario", "Gastos"].every((n) =>
+        xwb.getWorksheet(n),
+      ),
     xwb.worksheets.map((w) => w.name),
   );
+
+  // ---- Custom domain (phase 6.4), dry_run. The proxy caches lookups for a minute: no host of A is requested
+  // before the domain is verified. Local hosts take the dev port.
+  const port = new URL(APP).port;
+  const DOMAIN = `pro-e2e-${randomBytes(3).toString("hex")}.localhost`;
+  const SUB = `${SLUGS[0]}.kshop.localhost:${port}`;
+  const root = api(await token(USERS.root));
+  r = await ownerB("GET", `${B}/custom-domain`);
+  check(
+    "domain: Base store -> 403 module_not_enabled",
+    r.status === 403 && r.body?.error?.code === "module_not_enabled",
+    r,
+  );
+  r = await staffA("GET", `${A}/custom-domain`);
+  check("domain: staff -> 403", r.status === 403, r);
+  r = await ownerA("GET", `${A}/custom-domain`);
+  check(
+    "domain: none yet, dry_run",
+    r.status === 200 && r.body.domain === null && r.body.mode === "dry_run",
+    r,
+  );
+  r = await ownerA("POST", `${A}/custom-domain`, { domain: "mitienda" });
+  check("domain: not a domain -> 400 in Spanish", r.status === 400 && spanish(r), r);
+  r = await ownerA("POST", `${A}/custom-domain`, { domain: "otra.kshop.fullkod.com" });
+  check("domain: a Kshop domain -> 422", r.status === 422 && spanish(r), r);
+  r = await ownerA("POST", `${A}/custom-domain`, { domain: `https://WWW.${DOMAIN}/inicio` });
+  check(
+    "domain: requested, normalized, pending with DNS records",
+    r.status === 201 &&
+      r.body.domain.domain === DOMAIN &&
+      r.body.domain.status === "pending" &&
+      r.body.domain.dnsRecords.length > 0 &&
+      !r.body.domain.live,
+    r,
+  );
+  r = await ownerA("POST", `${A}/custom-domain`, { domain: "segundo.example.com" });
+  check("domain: one per store -> 409", r.status === 409, r);
+  let { data: resolved } = await service.rpc("resolve_store_domain", { p_host: DOMAIN });
+  check("domain: pending is not resolved", resolved?.length === 0, resolved);
+  r = await ownerA("POST", `${A}/custom-domain/check`);
+  check(
+    "domain: check -> verified and live",
+    r.status === 200 && r.body.domain.status === "verified" && r.body.domain.live,
+    r,
+  );
+
+  let page = await hostGet(`${DOMAIN}:${port}`, "/");
+  check(
+    "proxy: the store is served on its domain",
+    page.status === 200 && page.body.includes("Pro E2E A"),
+    page.status,
+  );
+  check(
+    "proxy: canonical uses the domain",
+    page.body.includes(`rel="canonical" href="http://${DOMAIN}:${port}`),
+    page.body.match(/rel="canonical"[^>]*>/)?.[0],
+  );
+  page = await hostGet(SUB, "/search?q=gorra");
+  check(
+    "proxy: the subdomain storefront -> 308 to the domain, same path",
+    page.status === 308 && page.location === `http://${DOMAIN}:${port}/search?q=gorra`,
+    page,
+  );
+  page = await hostGet(SUB, "/admin");
+  check("proxy: the admin stays on the subdomain", page.status === 200, page.status);
+  page = await hostGet(`${DOMAIN}:${port}`, "/admin/orders");
+  check(
+    "proxy: /admin on the domain -> 307 to the subdomain",
+    page.status === 307 && page.location === `http://${SUB}/admin/orders`,
+    page,
+  );
+  page = await hostGet(`www.${DOMAIN}:${port}`, "/products?x=1");
+  check(
+    "proxy: www -> 308 to the domain",
+    page.status === 308 && page.location === `http://${DOMAIN}:${port}/products?x=1`,
+    page,
+  );
+  page = await hostGet(`${DOMAIN}:${port}`, "/robots.txt");
+  check(
+    "proxy: robots points to the sitemap on the domain",
+    page.body.includes(`Sitemap: http://${DOMAIN}:${port}/sitemap.xml`),
+    page.body,
+  );
+  page = await hostGet(`${DOMAIN}:${port}`, "/sitemap.xml");
+  check(
+    "proxy: sitemap urls on the domain",
+    page.status === 200 && page.body.includes(`<loc>http://${DOMAIN}:${port}/`),
+    page.body.slice(0, 200),
+  );
+  page = await hostGet(`desconocido-${randomBytes(3).toString("hex")}.localhost:${port}`, "/");
+  check("proxy: an unknown host -> 404", page.status === 404, page.status);
+
+  r = await root("GET", "/platform/domains");
+  check(
+    "superadmin: sees the domain with its store",
+    r.status === 200 && r.body.domains.some((d) => d.domain === DOMAIN && d.storeSlug === SLUGS[0] && d.live),
+    r.status,
+  );
+  r = await ownerA("GET", "/platform/domains");
+  check("superadmin list: an owner -> 403", r.status === 403, r);
+
+  // Module off (D23), with store B: a verified domain without the module goes to the subdomain.
+  const DOMAIN_B = `pro-e2e-b-${randomBytes(3).toString("hex")}.localhost`;
+  await service.from("store_domains").insert({
+    store_id: storeB.id,
+    domain: DOMAIN_B,
+    type: "custom",
+    status: "verified",
+    verified_at: new Date().toISOString(),
+  });
+  page = await hostGet(`${DOMAIN_B}:${port}`, "/products");
+  check(
+    "module off: the domain sends to the subdomain (307), the row is kept",
+    page.status === 307 && page.location === `http://${SLUGS[1]}.kshop.localhost:${port}/products`,
+    page,
+  );
+  await service.rpc("change_plan", {
+    p_store_id: storeA.id,
+    p_plan_code: "base",
+    p_interval: "month",
+    p_user_id: ids.ownerA,
+  });
+  ({ data: resolved } = await service.rpc("resolve_store_domain", { p_host: DOMAIN }));
+  r = await ownerA("GET", `${A}/custom-domain`);
+  check(
+    "module off on A: not live, admin screen locked, row kept",
+    resolved?.[0]?.live === false && r.status === 403,
+    { resolved, r },
+  );
+  await service.rpc("change_plan", {
+    p_store_id: storeA.id,
+    p_plan_code: "pro",
+    p_interval: "month",
+    p_user_id: ids.ownerA,
+  });
+  ({ data: resolved } = await service.rpc("resolve_store_domain", { p_host: DOMAIN }));
+  check("module back: live again", resolved?.[0]?.live === true, resolved);
+
+  r = await ownerA("DELETE", `${A}/custom-domain`);
+  check("domain: remove -> 204", r.status === 204, r);
+  r = await ownerA("GET", `${A}/custom-domain`);
+  check("domain: gone", r.body?.domain === null, r);
 }
 
 try {

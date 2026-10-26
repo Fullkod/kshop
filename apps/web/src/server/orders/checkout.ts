@@ -16,6 +16,7 @@ import { invalidateCatalog } from "../catalog/access";
 import { mapDbError } from "../db-errors";
 import { HttpError, notFound } from "../http";
 import { storeUrl } from "../storefront/page-helpers";
+import { fetchStoreCustomDomain } from "../stores";
 import { getServiceClient } from "../supabase";
 
 // Checkout options, order creation (D9) and the public order page (/order/{token}).
@@ -135,10 +136,10 @@ type OrderRow = {
 
 const num = (v: number | null) => (v == null ? null : Number(v));
 
-function toPublicOrder(row: OrderRow): PublicOrder {
+function toPublicOrder(row: OrderRow, customDomain: string | null): PublicOrder {
   const store = row.stores!;
   const code = orderCode(store.order_prefix, row.number);
-  const url = `${storeUrl(store)}/order/${row.public_token}`;
+  const url = `${storeUrl({ slug: store.slug, customDomain })}/order/${row.public_token}`;
   const lines = [...row.order_lines]
     .sort((a, b) => a.sort_order - b.sort_order)
     .map((l) => ({
@@ -231,7 +232,7 @@ export async function getPublicOrder(storeId: string, token: string): Promise<Pu
     .maybeSingle<OrderRow>();
   if (error) throw error;
   if (!data) throw notFound("Pedido");
-  return toPublicOrder(data);
+  return toPublicOrder(data, await fetchStoreCustomDomain(data.stores!.slug));
 }
 
 export type PlaceOrderParams = {

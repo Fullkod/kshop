@@ -1,13 +1,13 @@
 import "server-only";
-import { storeOrigin } from "@kshop/core";
+import { storePublicOrigin } from "@kshop/core";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { platformProtocol, publicEnv } from "@/env";
 import { getStoreBySlug, type PublicStore } from "../stores";
 
-/** Public origin of a store (custom domains arrive in Phase 6). */
-export const storeUrl = (store: Pick<PublicStore, "slug">) =>
-  storeOrigin(store.slug, publicEnv.platformDomain, platformProtocol);
+/** Public origin of a store: its live custom domain or its subdomain (sitemap, robots, canonical, order links). */
+export const storeUrl = (store: Pick<PublicStore, "slug"> & { customDomain?: string | null }) =>
+  storePublicOrigin(store, publicEnv.platformDomain, platformProtocol);
 
 /** Active store of a storefront route, or the 404 page. */
 export async function requireStore(params: Promise<{ storeSlug: string }>): Promise<PublicStore> {

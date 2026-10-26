@@ -47,6 +47,9 @@ export function SuperadminShell({ children }: { children: ReactNode }) {
             <Link href="/superadmin/whatsapp" className="hover:underline">
               WhatsApp
             </Link>
+            <Link href="/superadmin/domains" className="hover:underline">
+              Dominios
+            </Link>
             <span className="hidden text-white/70 sm:inline">{session.user.email}</span>
             <Button
               variant="ghost"
