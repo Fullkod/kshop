@@ -21,13 +21,15 @@ for (const file of [".env.local", ".env"]) {
 
 export default defineConfig(({ command }) => {
   const app = JSON.parse(readFileSync(resolve(here, "app.json"), "utf8")) as Record<string, unknown>;
+  // `pnpm app:build admin` sets the version of each APK.
+  if (process.env.KSHOP_APP_VERSION_CODE) app.versionCode = Number(process.env.KSHOP_APP_VERSION_CODE);
+  if (process.env.KSHOP_APP_VERSION_NAME) app.versionName = process.env.KSHOP_APP_VERSION_NAME;
   const local = command === "serve";
   const env = {
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
     supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "",
     // Local dev talks to `pnpm dev`; the APK to production (or KSHOP_API_URL).
-    apiBaseUrl:
-      process.env.KSHOP_API_URL ?? (local ? "http://localhost:3000" : "https://kshop.fullkod.com"),
+    apiBaseUrl: process.env.KSHOP_API_URL ?? (local ? "http://localhost:3000" : "https://kshop.fullkod.com"),
     platformDomain: local
       ? (process.env.NEXT_PUBLIC_PLATFORM_DOMAIN ?? "kshop.localhost:3000")
       : "kshop.fullkod.com",

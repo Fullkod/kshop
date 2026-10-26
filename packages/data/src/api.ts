@@ -711,6 +711,38 @@ export type CustomDomainResponse = { domain: CustomDomain | null; mode: "dry_run
 
 export type PlatformDomain = CustomDomain & { storeId: string; storeName: string; storeSlug: string };
 
+/** An Android build (PRP-7 D13): the APK in the public store-apps bucket. */
+export type AppBuild = {
+  id: string;
+  appId: string;
+  versionCode: number;
+  versionName: string;
+  url: string;
+  sizeBytes: number | null;
+  published: boolean;
+  notes: string | null;
+  createdAt: string;
+};
+
+/** Admin › App móvil: the owner's pending request, the latest published store app and the admin app. */
+export type MobileAppResponse = {
+  requestedAt: string | null;
+  latest: AppBuild | null;
+  adminApp: AppBuild | null;
+};
+
+export type PlatformAppStore = {
+  storeId: string;
+  storeName: string;
+  storeSlug: string;
+  storeStatus: string;
+  moduleEnabled: boolean;
+  requestedAt: string | null;
+  builds: AppBuild[];
+};
+
+export type PlatformAppsResponse = { stores: PlatformAppStore[]; adminBuilds: AppBuild[] };
+
 export type ApiClientOptions = {
   /** Origin of the web app ("" for same-origin calls in the browser). */
   baseUrl: string;
@@ -1027,6 +1059,10 @@ export function createApiClient(options: ApiClientOptions) {
       check: () => request<{ domain: CustomDomain }>("POST", `/stores/${storeId}/custom-domain/check`),
       remove: () => request<null>("DELETE", `/stores/${storeId}/custom-domain`),
     }),
+    mobileApp: (storeId: string) => ({
+      get: () => request<MobileAppResponse>("GET", `/stores/${storeId}/mobile-app`),
+      request: () => request<MobileAppResponse>("POST", `/stores/${storeId}/mobile-app`),
+    }),
     customers: (storeId: string) => ({
       setBlocked: (customerId: string, isBlocked: boolean) =>
         request<{ id: string; isBlocked: boolean }>("PATCH", `/stores/${storeId}/customers/${customerId}`, {
@@ -1062,6 +1098,9 @@ export function createApiClient(options: ApiClientOptions) {
         request<{ domains: PlatformDomain[]; mode: "dry_run" | "live" }>("GET", "/platform/domains"),
       checkDomain: (id: string) => request<null>("POST", `/platform/domains/${id}/check`),
       removeDomain: (id: string) => request<null>("DELETE", `/platform/domains/${id}`),
+      apps: () => request<PlatformAppsResponse>("GET", "/platform/apps"),
+      setAppBuildPublished: (id: string, published: boolean) =>
+        request<null>("PATCH", `/platform/apps/builds/${id}`, { published }),
       whatsapp: () => request<PlatformWhatsapp>("GET", "/platform/whatsapp"),
       setWhatsapp: (input: PlatformWhatsappInput) =>
         request<PlatformWhatsapp>("PUT", "/platform/whatsapp", input),

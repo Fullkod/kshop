@@ -35,6 +35,9 @@
     "qa:pro": "node scripts/qa-pro.mjs",
     "qa:apps": "node scripts/qa-apps.mjs",
     "app:config": "node scripts/app-config.mjs",
+    "app:build": "node scripts/app-build.mjs",
+    "app:publish": "node scripts/app-publish.mjs",
+    "app:keystore": "node scripts/app-keystore.mjs",
     "e2e:notifications": "node scripts/e2e-notifications.mjs",
     "qa:orders": "node scripts/qa-orders.mjs",
     "qa:discounts": "node scripts/qa-discounts.mjs",
@@ -51,6 +54,7 @@
     "graphql": "^16.11.0",
     "playwright-core": "1.56.1",
     "prettier": "^3.6.0",
+    "sharp": "0.35.5",
     "turbo": "^2.11.10",
     "typescript": "^5.9.0",
     "typescript-eslint": "^8.72.0"

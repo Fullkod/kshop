@@ -26,6 +26,8 @@ values
   (tests.fx('store_a'), 'com.fullkod.kshop.apps_test_a', 3, '1.2.0-beta', 'stores/a/app/v3.apk', null, false),
   (tests.fx('store_b'), 'com.fullkod.kshop.apps_test_b', 1, '1.0.0', 'stores/b/app/v1.apk', null, true),
   (null, 'com.fullkod.kshop.admin', 7, '0.7.0', 'platform/admin/v7.apk', null, true);
+insert into public.store_app_requests (store_id, requested_by)
+values (tests.fx('store_a'), tests.fx('owner_a')), (tests.fx('store_b'), tests.fx('owner_b'));
 
 -- ---------------------------------------------------------------------------
 -- Schema rules
@@ -72,6 +74,7 @@ update public.store_modules set enabled = true where store_id = tests.fx('store_
 
 select tests.login_anon();
 select tests.check('anon: no builds', tests.throws('select count(*) from public.store_app_builds'));
+select tests.check('anon: no app requests', tests.throws('select count(*) from public.store_app_requests'));
 select tests.eq('anon: app_info works', public.app_info(tests.fx('store_a')) ->> 'available', 'true');
 select tests.logout();
 
@@ -81,10 +84,14 @@ select tests.logout();
 
 select tests.login('staff_a');
 select tests.eq('staff A: no builds', (select count(*) from public.store_app_builds)::int, 0);
+select tests.eq('staff A: no app requests', (select count(*) from public.store_app_requests)::int, 0);
 select tests.logout();
 
 select tests.login('owner_a');
 select tests.eq('owner A: the builds of A only (also unpublished)', (select count(*) from public.store_app_builds)::int, 3);
+select tests.eq('owner A: only the app request of A', (select count(*) from public.store_app_requests)::int, 1);
+select tests.eq('owner A: cannot write app requests', tests.affected(format(
+  $$delete from public.store_app_requests where store_id = %L$$, tests.fx('store_a'))), -1);
 select tests.eq('owner A: cannot write builds', tests.affected(format(
   $$update public.store_app_builds set published = true where store_id = %L$$, tests.fx('store_a'))), -1);
 select tests.logout();
@@ -98,4 +105,7 @@ select tests.login('root');
 select tests.eq('superadmin: every build of these stores and the admin app',
   (select count(*) from public.store_app_builds
    where store_id in (tests.fx('store_a'), tests.fx('store_b')) or store_id is null)::int >= 5, true);
+select tests.eq('superadmin: every app request of these stores',
+  (select count(*) from public.store_app_requests
+   where store_id in (tests.fx('store_a'), tests.fx('store_b')))::int, 2);
 select tests.logout();

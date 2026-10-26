@@ -50,6 +50,9 @@ export function SuperadminShell({ children }: { children: ReactNode }) {
             <Link href="/superadmin/domains" className="hover:underline">
               Dominios
             </Link>
+            <Link href="/superadmin/apps" className="hover:underline">
+              Apps
+            </Link>
             <span className="hidden text-white/70 sm:inline">{session.user.email}</span>
             <Button
               variant="ghost"

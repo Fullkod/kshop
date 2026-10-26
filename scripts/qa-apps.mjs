@@ -10,11 +10,25 @@
 // 4. app_info (intercepted): newer version → «Actualizar»; no mobile_app → not available; suspended store.
 // 5. Admin app: the owner signs in, confirms the app order, changes a stock and uploads a photo (file); the staff
 //    member does not see costs; without the catalog module (entitlements intercepted) «Productos» is gone.
-// Screenshots in .titan/qa/fase-7/. The QA order is cancelled, the stock and photos put back and the QA customer
-// deleted at the end.
+// 6. Distribution (web, PRP-7 D13–D14): `pnpm app:publish demo --dir` registers a fake APK hidden; the owner asks for
+//    the app in Admin › App móvil; the superadmin sees the request and publishes the build in Superadmin › Apps;
+//    the store's /app page and the Android banner offer it; hidden again, /app stops offering it.
+// Screenshots in .titan/qa/fase-7/. The QA order is cancelled, the stock and photos put back, and the QA customer,
+// the fake build, the app request and the temporary superadmin deleted at the end.
 
 import { createClient } from "@supabase/supabase-js";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
@@ -30,6 +44,14 @@ for (const line of existsSync(join(root, ".env.local"))
 
 const APP = env.QA_STORE_APP_URL ?? "http://localhost:5173";
 const ADMIN = env.QA_ADMIN_APP_URL ?? "http://localhost:5174";
+const PLATFORM = env.QA_PLATFORM_URL ?? "http://kshop.localhost:3000";
+const WEB_STORE = env.QA_STORE_URL ?? "http://demo.kshop.localhost:3000";
+const SUPER = { email: "qa-apps-super@e2e.kshop.test", password: "qa-apps-super-2026" };
+const ANDROID_UA =
+  "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36";
+// A fake build of the Tienda Demo, far above any real version code.
+const QA_VERSION_NAME = "9.9.0-qa";
+const QA_VERSION_CODE = 1_900_000_000 + (Date.now() % 100_000);
 const OUT = join(root, ".titan/qa/fase-7");
 const GUEST_PHONE = "5359990700";
 const PHONE = "5359990701";
@@ -91,17 +113,41 @@ async function removeQaCustomers() {
   for (const c of data ?? []) await service.auth.admin.deleteUser(c.user_id);
 }
 
+async function removeQaDistribution() {
+  const { data: builds } = await service
+    .from("store_app_builds")
+    .select("id, apk_path")
+    .eq("store_id", store.id)
+    .eq("version_name", QA_VERSION_NAME);
+  for (const b of builds ?? []) {
+    await service.from("store_app_builds").delete().eq("id", b.id);
+    await service.storage.from("store-apps").remove([b.apk_path]);
+  }
+  await service.from("store_app_requests").delete().eq("store_id", store.id);
+  const { data } = await service.auth.admin.listUsers({ perPage: 1000 });
+  for (const u of data?.users ?? []) if (u.email === SUPER.email) await service.auth.admin.deleteUser(u.id);
+}
+
 await removeQaCustomers();
+await removeQaDistribution();
 const browser = await chromium.launch({ executablePath: chromiumPath() });
 const errors = [];
-async function newPhone() {
+async function newPhone(userAgent) {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
     isMobile: true,
     hasTouch: true,
+    ...(userAgent && { userAgent }),
   });
   const page = await context.newPage();
-  page.on("console", (m) => m.type() === "error" && errors.push(`${page.url()} :: ${m.text()}`));
+  // "instant navigation": a dev-only notice of Next on the web admin (see qa-billing.mjs).
+  page.on(
+    "console",
+    (m) =>
+      m.type() === "error" &&
+      !m.text().includes("instant navigation") &&
+      errors.push(`${page.url()} :: ${m.text()}`),
+  );
   page.on("pageerror", (e) => errors.push(`${page.url()} :: ${e.message}`));
   page.on(
     "response",
@@ -276,7 +322,9 @@ try {
   await shot(owner, "13-admin-pedido-390");
 
   await owner.goto(`${ADMIN}/admin/catalog/products/${product.id}`);
-  const stockInput = owner.locator('input[aria-label^="Stock "]:not([aria-label="Stock para todas"])').first();
+  const stockInput = owner
+    .locator('input[aria-label^="Stock "]:not([aria-label="Stock para todas"])')
+    .first();
   await stockInput.waitFor({ timeout: 30000 });
   const costInputs = await owner.locator('input[aria-label^="Costo "]').count();
   await stockInput.fill("37");
@@ -336,6 +384,117 @@ try {
   check("admin: without the catalog module «Productos» is not shown", productsTab === 0, productsTab);
   await shot(noCatalog, "16-admin-sin-modulo-390");
 
+  // 6. Distribution.
+  const apkDir = mkdtempSync(join(tmpdir(), "kshop-qa-apk-"));
+  const apk = Buffer.from("PK\u0003\u0004 fake apk of the QA");
+  writeFileSync(join(apkDir, "qa.apk"), apk);
+  writeFileSync(
+    join(apkDir, "build.json"),
+    JSON.stringify({
+      target: "demo",
+      storeId: store.id,
+      appId: "com.fullkod.kshop.demo",
+      name: "Tienda Demo",
+      versionCode: QA_VERSION_CODE,
+      versionName: QA_VERSION_NAME,
+      apk: "qa.apk",
+      sizeBytes: apk.length,
+      sha256: createHash("sha256").update(apk).digest("hex"),
+    }),
+  );
+  execFileSync("node", ["scripts/app-publish.mjs", "demo", "--dir", apkDir, "--notes", "QA"], {
+    cwd: root,
+    stdio: "ignore",
+  });
+  rmSync(apkDir, { recursive: true, force: true });
+  const { data: registered } = await service
+    .from("store_app_builds")
+    .select("id, published, apk_path")
+    .eq("version_code", QA_VERSION_CODE)
+    .eq("app_id", "com.fullkod.kshop.demo")
+    .maybeSingle();
+  check(
+    "app:publish registers the APK hidden in store-apps",
+    registered && !registered.published && registered.apk_path.startsWith(`stores/${store.id}/`),
+    JSON.stringify(registered),
+  );
+
+  const android = await newPhone(ANDROID_UA);
+  await android.goto(`${WEB_STORE}/app`);
+  await android.getByTestId("app-unavailable").waitFor({ timeout: 30000 });
+  check("/app: no download while the build is hidden", true);
+
+  const ownerWeb = await newPhone();
+  await ownerWeb.goto(`${WEB_STORE}/admin/login`);
+  await ownerWeb.fill("#email", "dueno@demo.kshop.test");
+  await ownerWeb.fill("#password", env.DEMO_OWNER_PASSWORD);
+  await ownerWeb.getByRole("button", { name: "Entrar" }).click();
+  await ownerWeb.waitForURL(/\/admin$/, { timeout: 30000 });
+  await ownerWeb.goto(`${WEB_STORE}/admin/mobile-app`);
+  await ownerWeb.getByTestId("request-app").click();
+  await ownerWeb.getByTestId("store-app").getByText("Pedida", { exact: true }).waitFor({ timeout: 20000 });
+  check("admin: the owner asks for the app («Pedir mi app»)", true);
+  await shot(ownerWeb, "17-admin-app-pedida-390");
+
+  await service.auth.admin.createUser({
+    email: SUPER.email,
+    password: SUPER.password,
+    email_confirm: true,
+    app_metadata: { role: "superadmin" },
+  });
+  const superadmin = await (await browser.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
+  superadmin.on("pageerror", (e) => errors.push(`${superadmin.url()} :: ${e.message}`));
+  await superadmin.goto(`${PLATFORM}/superadmin/login`);
+  await superadmin.fill("#email", SUPER.email);
+  await superadmin.fill("#password", SUPER.password);
+  await superadmin.click("button[type=submit]");
+  await superadmin.waitForURL(`${PLATFORM}/superadmin`, { timeout: 30000 });
+  await superadmin.goto(`${PLATFORM}/superadmin/apps`);
+  const demoCard = superadmin.getByTestId("apps-demo");
+  await demoCard.waitFor({ timeout: 30000 });
+  check(
+    "superadmin: the request of the Tienda Demo is listed",
+    (await demoCard.innerText()).includes("Pedida"),
+  );
+  const row = superadmin.getByTestId(`build-${QA_VERSION_CODE}`);
+  await row.getByRole("button", { name: "Publicar" }).click();
+  await row.getByText("Publicada").waitFor({ timeout: 20000 });
+  const { data: request } = await service
+    .from("store_app_requests")
+    .select("store_id")
+    .eq("store_id", store.id)
+    .maybeSingle();
+  check("superadmin: publishing answers the request", !request);
+  await superadmin.screenshot({ path: join(OUT, "qa-18-superadmin-apps-1280.png"), fullPage: true });
+
+  await android.goto(`${WEB_STORE}/app`);
+  const download = android.getByTestId("app-download");
+  await download.waitFor({ timeout: 30000 });
+  check(
+    "/app: offers the published APK with its version",
+    (await download.getAttribute("href"))?.endsWith(registered.apk_path) &&
+      (await android.getByText(`Versión ${QA_VERSION_NAME}`).count()) > 0,
+  );
+  await shot(android, "19-tienda-app-390");
+  await android.goto(WEB_STORE);
+  await android.getByTestId("app-banner").waitFor({ timeout: 30000 });
+  check("store: Android phones see the app banner", true);
+  await shot(android, "20-tienda-aviso-app-390");
+
+  await ownerWeb.reload();
+  await ownerWeb.getByTestId("store-app").getByText("Publicada", { exact: true }).waitFor({ timeout: 20000 });
+  check(
+    "admin: the owner sees the published app and its link",
+    (await ownerWeb.getByTestId("store-app").innerText()).includes("/app"),
+  );
+  await shot(ownerWeb, "21-admin-app-publicada-390");
+
+  await row.getByRole("button", { name: "Ocultar" }).click();
+  await row.getByRole("button", { name: "Publicar" }).waitFor({ timeout: 20000 });
+  await android.goto(`${WEB_STORE}/app`);
+  await android.getByTestId("app-unavailable").waitFor({ timeout: 30000 });
+  check("/app: hidden again, no download", true);
+
   if (errors.length) writeFileSync(join(OUT, "console-errors.txt"), errors.join("\n\n"));
   check("no console errors", errors.length === 0, errors.map((e) => e.slice(0, 300)).join(" | "));
 } catch (error) {
@@ -360,6 +519,7 @@ try {
     });
   }
   await removeQaCustomers();
+  await removeQaDistribution();
   for (const s of stockBefore ?? []) {
     await service
       .from("stocks")
@@ -377,7 +537,7 @@ try {
     if (m.storage_key)
       await service.storage
         .from("store-media")
-      .remove([m.storage_key, m.storage_key.replace(/-1600\.webp$/, "-480.webp")]);
+        .remove([m.storage_key, m.storage_key.replace(/-1600\.webp$/, "-480.webp")]);
   }
 }
 

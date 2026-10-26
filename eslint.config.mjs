@@ -11,6 +11,8 @@ export default tseslint.config(
       "**/.next/**",
       "**/.turbo/**",
       "**/dist/**",
+      "apps/*/android/**",
+      "apps/*/release/**",
       "**/gql/**",
       "**/next-env.d.ts",
       ".claude/**",

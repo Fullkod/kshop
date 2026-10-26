@@ -2,7 +2,7 @@
 // version and the theme colors for the splash. Reads only public data with the publishable key, so it also runs in
 // GitHub Actions without any secret of the platform.
 //
-//   node scripts/app-config.mjs <slug> [--version-name 1.2.0]
+//   node scripts/app-config.mjs <slug> [--version-code 12] [--version-name 1.2.0]
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -19,10 +19,12 @@ for (const line of existsSync(join(root, ".env.local"))
 
 const [slug, ...rest] = process.argv.slice(2);
 if (!slug) {
-  console.error("Usage: node scripts/app-config.mjs <slug> [--version-name x.y.z]");
+  console.error("Usage: node scripts/app-config.mjs <slug> [--version-code n] [--version-name x.y.z]");
   process.exit(1);
 }
-const versionNameArg = rest[rest.indexOf("--version-name") + 1];
+const option = (name) => (rest.includes(name) ? rest[rest.indexOf(name) + 1] : undefined);
+const versionNameArg = option("--version-name");
+const versionCodeArg = option("--version-code");
 
 const url = env.NEXT_PUBLIC_SUPABASE_URL;
 const key = env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -43,7 +45,10 @@ const info = await (
   })
 ).json();
 const latest = info?.latest ?? null;
-const versionCode = (latest?.version_code ?? 0) + 1;
+// GitHub Actions passes its run number: always growing and never repeated, also with unpublished builds.
+const versionCode = versionCodeArg ? Number(versionCodeArg) : (latest?.version_code ?? 0) + 1;
+if (!Number.isInteger(versionCode) || versionCode < 1)
+  throw new Error(`Invalid version code "${versionCodeArg}"`);
 
 const config = {
   storeId: store.id,

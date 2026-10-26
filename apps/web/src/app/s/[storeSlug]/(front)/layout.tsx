@@ -7,6 +7,8 @@ import {
   StoreHeader,
   themeStyle,
 } from "@kshop/storefront";
+import { AndroidAppBanner } from "@/features/mobile-app/components/AndroidAppBanner";
+import { getPublicStoreApp } from "@/server/app-builds";
 import { getStorefrontShell } from "@/server/storefront/data";
 import { getStoreBySlug } from "@/server/stores";
 
@@ -27,7 +29,10 @@ export default async function StorefrontLayout({ children, params }: LayoutProps
     );
   }
 
-  const shell = await getStorefrontShell(store.id);
+  const [shell, app] = await Promise.all([
+    getStorefrontShell(store.id),
+    getPublicStoreApp(store.id, store.slug),
+  ]);
   const header = headerLinks(shell);
 
   return (
@@ -41,6 +46,7 @@ export default async function StorefrontLayout({ children, params }: LayoutProps
       <CurrencyProvider storeId={store.id} currencies={shell.currencies}>
         <CustomerSessionProvider>
           <CartProvider>
+            {app && <AndroidAppBanner storeName={store.name} />}
             <StoreHeader store={store} links={header} />
             <main id="content" className="flex-1">
               {children}

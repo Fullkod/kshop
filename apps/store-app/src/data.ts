@@ -46,7 +46,7 @@ export async function loadAppInfo(): Promise<AppInfo> {
 }
 
 export const apkUrl = (path: string) =>
-  `${appConfig.supabaseUrl}/storage/v1/object/public/store-media/${path}`;
+  `${appConfig.supabaseUrl}/storage/v1/object/public/store-apps/${path}`;
 
 export const loadShell = () => storefront.shell();
 export const loadHome = () => storefront.home();

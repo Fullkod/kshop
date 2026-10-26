@@ -1,0 +1,78 @@
+# Builds and signs the Android app of a store, or Kshop Admin (PRP-7 D11, D12). Run it by hand from Actions with
+# the store slug (or "admin"); then `pnpm app:publish <slug>` downloads the APK, uploads it and registers it.
+# It only reads public data (repository variables NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+# the only secrets are the app's keystore and its password (ANDROID_KEYSTORE_<SLUG>, ANDROID_KEYSTORE_PASSWORD_<SLUG>,
+# created with `pnpm app:keystore <slug> --github`). The Supabase secret key never comes here.
+name: Android app
+run-name: "Android app: ${{ inputs.app }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: Slug de la tienda, o «admin» para Kshop Admin
+        required: true
+        type: string
+      version_name:
+        description: Versión visible (por defecto 1.0.<número de ejecución>)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      APP: ${{ inputs.app }}
+      VERSION_NAME: ${{ inputs.version_name }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - name: Check the app
+        id: app
+        run: |
+          [[ "$APP" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "::error::Invalid app «$APP»"; exit 1; }
+          echo "secret=$(echo "$APP" | tr 'a-z-' 'A-Z_')" >> "$GITHUB_OUTPUT"
+          echo "dir=$([ "$APP" = admin ] && echo admin-app || echo store-app)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: pnpm install --frozen-lockfile
+
+      - name: Keystore
+        env:
+          KEYSTORE_B64: ${{ secrets[format('ANDROID_KEYSTORE_{0}', steps.app.outputs.secret)] }}
+        run: |
+          [ -n "$KEYSTORE_B64" ] || { echo "::error::Missing secret ANDROID_KEYSTORE_${{ steps.app.outputs.secret }}"; exit 1; }
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/app.jks"
+
+      - name: Build and sign
+        env:
+          KSHOP_KEYSTORE_FILE: ${{ runner.temp }}/app.jks
+          KSHOP_KEYSTORE_PASSWORD: ${{ secrets[format('ANDROID_KEYSTORE_PASSWORD_{0}', steps.app.outputs.secret)] }}
+        run: |
+          args=("$APP" --version-code "$GITHUB_RUN_NUMBER" --assemble)
+          [ -n "$VERSION_NAME" ] && args+=(--version-name "$VERSION_NAME")
+          node scripts/app-build.mjs "${args[@]}"
+
+      - name: Remove the keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/app.jks"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk-${{ inputs.app }}
+          path: apps/${{ steps.app.outputs.dir }}/release/
+          retention-days: 30
+          if-no-files-found: error
