@@ -20,12 +20,7 @@ export async function getWarehousesOverview(storeId: string): Promise<Warehouses
       .order("is_default", { ascending: false })
       .order("name"),
     db.rpc("warehouse_totals", { p_store_id: storeId }),
-    db
-      .from("shipping_zones")
-      .select("id, name, is_active")
-      .eq("store_id", storeId)
-      .order("sort_order")
-      .order("name"),
+    db.from("shipping_zones").select("id, name, is_active").eq("store_id", storeId).order("sort_order").order("name"),
     db
       .from("warehouse_shipping_zones")
       .select("zone_id, warehouse_id, priority")
@@ -35,9 +30,9 @@ export async function getWarehousesOverview(storeId: string): Promise<Warehouses
   for (const result of [warehouses, totals, zones, links]) if (result.error) throw result.error;
 
   const totalsById = new Map(
-    (
-      (totals.data ?? []) as { warehouse_id: string; variants: number; units: number; reserved: number }[]
-    ).map((t) => [t.warehouse_id, t]),
+    ((totals.data ?? []) as { warehouse_id: string; variants: number; units: number; reserved: number }[]).map(
+      (t) => [t.warehouse_id, t],
+    ),
   );
   return {
     warehouses: (warehouses.data ?? []).map((w) => ({
@@ -129,10 +124,7 @@ type MovementRow = {
   product_variants: { name: string; sku: string; products: { name: string } | null } | null;
 };
 
-export async function listStockMovements(
-  storeId: string,
-  query: StockMovementQuery,
-): Promise<StockMovementsPage> {
+export async function listStockMovements(storeId: string, query: StockMovementQuery): Promise<StockMovementsPage> {
   const db = getServiceClient();
   let select = db
     .from("stock_movements")

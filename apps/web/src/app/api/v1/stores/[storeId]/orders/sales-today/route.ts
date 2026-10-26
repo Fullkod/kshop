@@ -14,12 +14,7 @@ type Row = {
 // GET /api/v1/stores/{storeId}/orders/sales-today  (staff+, module sales_today). Day in America/Havana.
 export const GET = apiHandler(
   async (request: Request, ctx: RouteContext<"/api/v1/stores/[storeId]/orders/sales-today">) => {
-    const { storeId } = await requireCatalogAccess(
-      request,
-      (await ctx.params).storeId,
-      "staff",
-      "sales_today",
-    );
+    const { storeId } = await requireCatalogAccess(request, (await ctx.params).storeId, "staff", "sales_today");
     const { data, error } = await getServiceClient().rpc("sales_today", { p_store_id: storeId });
     if (error) throw error;
     const row = data as Row;

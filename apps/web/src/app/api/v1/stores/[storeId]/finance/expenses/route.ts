@@ -18,12 +18,7 @@ export const GET = apiHandler(async (request: Request, ctx: Ctx) => {
 
 // POST { spentOn, category, amount, currency, note? }
 export const POST = apiHandler(async (request: Request, ctx: Ctx) => {
-  const { storeId, user } = await requireCatalogAccess(
-    request,
-    (await ctx.params).storeId,
-    "admin",
-    "finance",
-  );
+  const { storeId, user } = await requireCatalogAccess(request, (await ctx.params).storeId, "admin", "finance");
   const input = expenseInputSchema.parse(await readJson(request));
   return NextResponse.json(await createExpense(storeId, input, user), { status: 201 });
 });

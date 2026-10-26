@@ -28,14 +28,7 @@ import { useStore } from "@kshop/storefront";
 // every notice with «Reintentar» and «Abrir en WhatsApp» in case the automatic send fails.
 
 type Contact = NotificationContactInput & { id: string };
-type Template = {
-  id: string;
-  storeId: string | null;
-  event: string;
-  audience: NotificationAudience;
-  body: string;
-  isActive: boolean;
-};
+type Template = { id: string; storeId: string | null; event: string; audience: NotificationAudience; body: string; isActive: boolean };
 type LogRow = {
   id: string;
   orderId: string | null;
@@ -50,8 +43,7 @@ type LogRow = {
   createdAt: string;
 };
 
-const nodes = <T,>(c: { edges: { node: T }[] } | null | undefined): T[] =>
-  (c?.edges ?? []).map((e) => e.node);
+const nodes = <T,>(c: { edges: { node: T }[] } | null | undefined): T[] => (c?.edges ?? []).map((e) => e.node);
 const eventLabel = (event: string, audience: string) =>
   NOTIFICATION_EVENTS.find((e) => e.event === event && e.audience === audience)?.label ?? event;
 const STATUS_VARIANT: Record<NotificationStatus, "default" | "muted" | "success" | "destructive" | "gold"> = {
@@ -144,8 +136,8 @@ export function ContactsPage() {
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Los avisos salen del WhatsApp de Kshop (no del tuyo). Aquí eliges quién recibe los pedidos nuevos y
-          qué teléfonos ve el cliente para consultas.
+          Los avisos salen del WhatsApp de Kshop (no del tuyo). Aquí eliges quién recibe los pedidos nuevos y qué
+          teléfonos ve el cliente para consultas.
         </p>
         {canEdit && !editing && <Button onClick={() => setEditing("new")}>Nuevo contacto</Button>}
       </div>
@@ -157,9 +149,7 @@ export function ContactsPage() {
           pending={action.pending}
           onCancel={() => setEditing(null)}
           onSave={async (input, id) => {
-            const ok = await action.run(() =>
-              id ? notifications.updateContact(id, input) : notifications.createContact(input),
-            );
+            const ok = await action.run(() => (id ? notifications.updateContact(id, input) : notifications.createContact(input)));
             if (ok) {
               setEditing(null);
               reload();
@@ -195,9 +185,7 @@ export function ContactsPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={async () =>
-                      (await action.run(() => notifications.deleteContact(c.id))) !== undefined && reload()
-                    }
+                    onClick={async () => (await action.run(() => notifications.deleteContact(c.id))) !== undefined && reload()}
                   >
                     Borrar
                   </Button>
@@ -211,13 +199,7 @@ export function ContactsPage() {
   );
 }
 
-function ContactForm({
-  contact,
-  errors,
-  pending,
-  onCancel,
-  onSave,
-}: {
+function ContactForm({ contact, errors, pending, onCancel, onSave }: {
   contact: Contact | null;
   errors: Record<string, string>;
   pending: boolean;
@@ -232,11 +214,7 @@ function ContactForm({
   });
   const toggle = (key: keyof typeof flags, label: string) => (
     <label className="flex items-center gap-2 text-sm">
-      <input
-        type="checkbox"
-        checked={flags[key]}
-        onChange={(e) => setFlags({ ...flags, [key]: e.target.checked })}
-      />
+      <input type="checkbox" checked={flags[key]} onChange={(e) => setFlags({ ...flags, [key]: e.target.checked })} />
       {label}
     </label>
   );
@@ -244,11 +222,7 @@ function ContactForm({
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     void onSave(
-      {
-        name: String(data.get("name") ?? "").trim(),
-        phone: String(data.get("phone") ?? "").trim(),
-        ...flags,
-      },
+      { name: String(data.get("name") ?? "").trim(), phone: String(data.get("phone") ?? "").trim(), ...flags },
       contact?.id ?? null,
     );
   }
@@ -258,24 +232,12 @@ function ContactForm({
         <h3 className="font-semibold sm:col-span-2">{contact ? "Editar contacto" : "Nuevo contacto"}</h3>
         <div className="flex flex-col gap-1">
           <Label htmlFor="contact-name">Nombre</Label>
-          <Input
-            id="contact-name"
-            name="name"
-            defaultValue={contact?.name ?? ""}
-            placeholder="Dueña"
-            required
-          />
+          <Input id="contact-name" name="name" defaultValue={contact?.name ?? ""} placeholder="Dueña" required />
           <FieldError>{errors.name}</FieldError>
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="contact-phone">Teléfono (WhatsApp)</Label>
-          <Input
-            id="contact-phone"
-            name="phone"
-            type="tel"
-            defaultValue={contact ? formatPhone(contact.phone) : ""}
-            required
-          />
+          <Input id="contact-phone" name="phone" type="tel" defaultValue={contact ? formatPhone(contact.phone) : ""} required />
           <FieldError>{errors.phone}</FieldError>
         </div>
         <div className="flex flex-col gap-1 sm:col-span-2">
@@ -310,19 +272,15 @@ export function TemplatesPage() {
   return (
     <section className="flex flex-col gap-4">
       <p className="max-w-2xl text-sm text-muted-foreground">
-        Cada aviso empieza con el nombre de tu tienda; a los clientes se les aclara que es un aviso automático
-        y se les dan tus contactos. Puedes cambiar el texto de cada aviso o volver al de Kshop.
+        Cada aviso empieza con el nombre de tu tienda; a los clientes se les aclara que es un aviso automático y se les
+        dan tus contactos. Puedes cambiar el texto de cada aviso o volver al de Kshop.
       </p>
       <Card className="p-0">
         <ul className="divide-y" data-testid="templates-list">
           {NOTIFICATION_EVENTS.map((e) => {
             const key = `${e.audience}:${e.event}`;
-            const own = data.templates.find(
-              (t) => t.storeId && t.event === e.event && t.audience === e.audience,
-            );
-            const platform = data.templates.find(
-              (t) => !t.storeId && t.event === e.event && t.audience === e.audience,
-            );
+            const own = data.templates.find((t) => t.storeId && t.event === e.event && t.audience === e.audience);
+            const platform = data.templates.find((t) => !t.storeId && t.event === e.event && t.audience === e.audience);
             return (
               <li key={key} className="flex flex-col gap-2 px-4 py-3 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
@@ -353,14 +311,7 @@ export function TemplatesPage() {
   );
 }
 
-function TemplateEditor({
-  event,
-  audience,
-  own,
-  platform,
-  canEdit,
-  onSaved,
-}: {
+function TemplateEditor({ event, audience, own, platform, canEdit, onSaved }: {
   event: string;
   audience: NotificationAudience;
   own: Template | null;
@@ -428,8 +379,7 @@ function TemplateEditor({
                 size="sm"
                 disabled={action.pending}
                 onClick={async () => {
-                  if (await action.run(() => notifications.saveTemplate({ event, audience, body, isActive })))
-                    onSaved();
+                  if (await action.run(() => notifications.saveTemplate({ event, audience, body, isActive }))) onSaved();
                 }}
               >
                 Guardar
@@ -439,9 +389,7 @@ function TemplateEditor({
                   size="sm"
                   variant="ghost"
                   onClick={async () => {
-                    if (
-                      (await action.run(() => notifications.restoreTemplate(event, audience))) !== undefined
-                    ) {
+                    if ((await action.run(() => notifications.restoreTemplate(event, audience))) !== undefined) {
                       setBody(platform);
                       setIsActive(true);
                       onSaved();
@@ -517,9 +465,7 @@ function LogList({ rows, reload, showOrder }: { rows: LogRow[]; reload: () => vo
     <>
       {action.error && <Alert variant="destructive">{action.error}</Alert>}
       <ul className="divide-y" data-testid="notification-log">
-        {rows.length === 0 && (
-          <li className="px-4 py-3 text-sm text-muted-foreground">Sin avisos todavía.</li>
-        )}
+        {rows.length === 0 && <li className="px-4 py-3 text-sm text-muted-foreground">Sin avisos todavía.</li>}
         {rows.map((n) => (
           <li key={n.id} className="flex flex-col gap-1 px-4 py-3 text-sm">
             <div className="flex flex-wrap items-center gap-2">
@@ -544,12 +490,7 @@ function LogList({ rows, reload, showOrder }: { rows: LogRow[]; reload: () => vo
             {n.error && <span className="text-xs text-destructive">{n.error}</span>}
             <div className="flex flex-wrap gap-3 text-xs">
               {n.message && (
-                <a
-                  href={whatsappLink(n.recipient, n.message)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline"
-                >
+                <a href={whatsappLink(n.recipient, n.message)} target="_blank" rel="noopener noreferrer" className="underline">
                   Abrir en WhatsApp
                 </a>
               )}
@@ -557,9 +498,7 @@ function LogList({ rows, reload, showOrder }: { rows: LogRow[]; reload: () => vo
                 <button
                   type="button"
                   className="underline"
-                  onClick={async () =>
-                    (await action.run(() => api.notifications(store.id).retry(n.id))) && reload()
-                  }
+                  onClick={async () => (await action.run(() => api.notifications(store.id).retry(n.id))) && reload()}
                 >
                   Reintentar
                 </button>
@@ -577,16 +516,10 @@ export function LogPage() {
   return (
     <section className="flex flex-col gap-4">
       <p className="max-w-2xl text-sm text-muted-foreground">
-        Los últimos 50 avisos. «Simulado»: el WhatsApp de Kshop aún no está conectado, el aviso se generó pero
-        no se envió (puedes mandarlo tú con «Abrir en WhatsApp»).
+        Los últimos 50 avisos. «Simulado»: el WhatsApp de Kshop aún no está conectado, el aviso se generó pero no se
+        envió (puedes mandarlo tú con «Abrir en WhatsApp»).
       </p>
-      <Card className="p-0">
-        {rows === null ? (
-          <p className="p-4 text-muted-foreground">Cargando…</p>
-        ) : (
-          <LogList rows={rows} reload={reload} showOrder />
-        )}
-      </Card>
+      <Card className="p-0">{rows === null ? <p className="p-4 text-muted-foreground">Cargando…</p> : <LogList rows={rows} reload={reload} showOrder />}</Card>
     </section>
   );
 }

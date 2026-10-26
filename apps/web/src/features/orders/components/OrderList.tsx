@@ -69,19 +69,11 @@ export function OrderList() {
     const base: Filter = { storeId: { eq: store.id }, status: { in: statuses } };
     if (!q) return base;
     if (/^\d{1,9}$/.test(q) && Number(q) >= 1000) return { ...base, number: { eq: Number(q) } };
-    return {
-      ...base,
-      or: [
-        { customerName: { ilike: `%${q}%` } },
-        { customerPhone: { ilike: `%${q.replace(/\D/g, "") || q}%` } },
-      ],
-    };
+    return { ...base, or: [{ customerName: { ilike: `%${q}%` } }, { customerPhone: { ilike: `%${q.replace(/\D/g, "") || q}%` } }] };
   };
 
   async function load(after: string | null) {
-    const result = await graphql
-      .query(AdminOrdersQuery, { filter: filter(), first: PAGE_SIZE, after })
-      .toPromise();
+    const result = await graphql.query(AdminOrdersQuery, { filter: filter(), first: PAGE_SIZE, after }).toPromise();
     if (result.error) {
       setLoadError("No se pudieron cargar los pedidos.");
       return null;
@@ -179,24 +171,14 @@ export function OrderList() {
                     <span className="truncate text-sm text-muted-foreground">
                       {row.customerName} · {formatPhone(row.customerPhone)} · {row.items}{" "}
                       {row.items === 1 ? "producto" : "productos"} ·{" "}
-                      {new Date(row.createdAt).toLocaleString("es", {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                      })}
+                      {new Date(row.createdAt).toLocaleString("es", { dateStyle: "short", timeStyle: "short" })}
                     </span>
                   </Link>
                   <span className="text-sm font-medium">
-                    {row.total === null
-                      ? `${formatMoney(row.subtotal, row.currency)} + envío`
-                      : formatMoney(row.total, row.currency)}
+                    {row.total === null ? `${formatMoney(row.subtotal, row.currency)} + envío` : formatMoney(row.total, row.currency)}
                   </span>
                   {next && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={action.pending}
-                      onClick={() => quick(row, next as Exclude<OrderStatus, "cancelled">)}
-                    >
+                    <Button size="sm" variant="outline" disabled={action.pending} onClick={() => quick(row, next as Exclude<OrderStatus, "cancelled">)}>
                       {ORDER_ACTION_LABELS[next]}
                     </Button>
                   )}

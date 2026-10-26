@@ -33,10 +33,7 @@ function camelize<T>(value: unknown): T {
   if (Array.isArray(value)) return value.map((v) => camelize(v)) as T;
   if (value && typeof value === "object") {
     return Object.fromEntries(
-      Object.entries(value).map(([k, v]) => [
-        k.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase()),
-        camelize(v),
-      ]),
+      Object.entries(value).map(([k, v]) => [k.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase()), camelize(v)]),
     ) as T;
   }
   return value as T;
@@ -224,11 +221,7 @@ export async function buildFinanceExport(storeId: string, p: FinancePeriod): Pro
     { label: "Gastos", byCurrency: money(summary.expenses), eq: t.expenses },
     { label: "Ganancia neta", byCurrency: "", eq: t.net },
     { label: "Líneas sin costo (fuera del margen)", byCurrency: "", eq: t.linesWithoutCost },
-    {
-      label: `Vendido del periodo anterior (${summary.previous.from} a ${summary.previous.to})`,
-      byCurrency: "",
-      eq: summary.previous.sold,
-    },
+    { label: `Vendido del periodo anterior (${summary.previous.from} a ${summary.previous.to})`, byCurrency: "", eq: summary.previous.sold },
   ]);
 
   const cierre = sheet("Cierre diario", [
@@ -293,9 +286,7 @@ export async function buildFinanceExport(storeId: string, p: FinancePeriod): Pro
   ]);
   inv.addRows(inventory.rows);
   if (inventory.total > inventory.rows.length) {
-    inv.addRow({
-      productName: `… y ${inventory.total - inventory.rows.length} más (${INVENTORY_FILTER_LABELS.all})`,
-    });
+    inv.addRow({ productName: `… y ${inventory.total - inventory.rows.length} más (${INVENTORY_FILTER_LABELS.all})` });
   }
 
   const gastos = sheet("Gastos", [

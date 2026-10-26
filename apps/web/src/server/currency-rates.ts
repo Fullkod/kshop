@@ -62,9 +62,7 @@ export async function getMarketRates(): Promise<MarketRates | null> {
     await db.rpc("market_rate_put", { p_source: "eltoque", p_rate_date: today, p_rates: rates });
     return { date, cupPer: toCupPer(rates) };
   } catch (error) {
-    console.error("elTOQUE rate refresh failed.", {
-      message: error instanceof Error ? error.message : String(error),
-    });
+    console.error("elTOQUE rate refresh failed.", { message: error instanceof Error ? error.message : String(error) });
     return cached ? { date: cached.rate_date, cupPer: toCupPer(cached.rates) } : null;
   }
 }

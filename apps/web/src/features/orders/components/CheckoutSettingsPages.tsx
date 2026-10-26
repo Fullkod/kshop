@@ -1,26 +1,13 @@
 "use client";
 
-import {
-  CURRENCY_CODES,
-  formatMoney,
-  hasMinRole,
-  SHIPPING_TYPE_LABELS,
-  SHIPPING_TYPES,
-  type CurrencyCode,
-  type ShippingType,
-} from "@kshop/core";
+import { CURRENCY_CODES, formatMoney, hasMinRole, SHIPPING_TYPE_LABELS, SHIPPING_TYPES, type CurrencyCode, type ShippingType } from "@kshop/core";
 import { Alert, Badge, Button, Card, FieldError, Input, Label, Select } from "@kshop/ui";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useApiAction } from "@/features/catalog/use-catalog";
 import { useSession } from "@/lib/session";
 import { useStore } from "@kshop/storefront";
-import {
-  useCheckoutSettings,
-  type PaymentMethod,
-  type ShippingMethod,
-  type ShippingZone,
-} from "../use-orders";
+import { useCheckoutSettings, type PaymentMethod, type ShippingMethod, type ShippingZone } from "../use-orders";
 
 // Admin screens of the checkout settings: shipping zones and methods (module shipping) and payment methods.
 // Only admins and owners edit them; the staff sees them read-only.
@@ -30,13 +17,7 @@ function useCanEdit() {
   return admin.role === null || hasMinRole(admin.role, "admin");
 }
 
-function Row({
-  title,
-  detail,
-  badges,
-  onEdit,
-  onDelete,
-}: {
+function Row({ title, detail, badges, onEdit, onDelete }: {
   title: string;
   detail?: ReactNode;
   badges?: ReactNode;
@@ -77,8 +58,7 @@ export function ShippingPage() {
   if (error) return <Alert variant="destructive">{error}</Alert>;
   if (!data) return <p className="text-muted-foreground">Cargando…</p>;
   const settings = api.checkoutSettings(store.id);
-  const zoneName = (id: string | null) =>
-    id ? (data.zones.find((z) => z.id === id)?.name ?? "—") : "Todas las zonas";
+  const zoneName = (id: string | null) => (id ? (data.zones.find((z) => z.id === id)?.name ?? "—") : "Todas las zonas");
   const pickupPoints = data.warehouses.filter((w) => w.isPickupPoint);
 
   async function remove(resource: "zones" | "methods", id: string) {
@@ -92,9 +72,7 @@ export function ShippingPage() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold">Zonas</h2>
-            <p className="text-sm text-muted-foreground">
-              Municipios o áreas donde entregas. El cliente elige la suya.
-            </p>
+            <p className="text-sm text-muted-foreground">Municipios o áreas donde entregas. El cliente elige la suya.</p>
           </div>
           {canEdit && <Button onClick={() => setEditingZone("new")}>Nueva zona</Button>}
         </div>
@@ -103,9 +81,7 @@ export function ShippingPage() {
             zone={editingZone === "new" ? null : editingZone}
             onCancel={() => setEditingZone(null)}
             onSave={async (input, id) => {
-              const ok = await action.run(() =>
-                id ? settings.update("zones", id, input) : settings.create("zones", input),
-              );
+              const ok = await action.run(() => (id ? settings.update("zones", id, input) : settings.create("zones", input)));
               if (ok) {
                 setEditingZone(null);
                 reload();
@@ -116,9 +92,7 @@ export function ShippingPage() {
         )}
         <Card className="p-0">
           <ul className="divide-y">
-            {data.zones.length === 0 && (
-              <li className="px-4 py-3 text-sm text-muted-foreground">Sin zonas.</li>
-            )}
+            {data.zones.length === 0 && <li className="px-4 py-3 text-sm text-muted-foreground">Sin zonas.</li>}
             {data.zones.map((z) => (
               <Row
                 key={z.id}
@@ -152,9 +126,7 @@ export function ShippingPage() {
             fieldErrors={action.fieldErrors}
             onCancel={() => setEditingMethod(null)}
             onSave={async (input, id) => {
-              const ok = await action.run(() =>
-                id ? settings.update("methods", id, input) : settings.create("methods", input),
-              );
+              const ok = await action.run(() => (id ? settings.update("methods", id, input) : settings.create("methods", input)));
               if (ok) {
                 setEditingMethod(null);
                 reload();
@@ -164,9 +136,7 @@ export function ShippingPage() {
         )}
         <Card className="p-0">
           <ul className="divide-y">
-            {data.methods.length === 0 && (
-              <li className="px-4 py-3 text-sm text-muted-foreground">Sin métodos.</li>
-            )}
+            {data.methods.length === 0 && <li className="px-4 py-3 text-sm text-muted-foreground">Sin métodos.</li>}
             {data.methods.map((m) => (
               <Row
                 key={m.id}
@@ -174,14 +144,8 @@ export function ShippingPage() {
                 detail={[
                   SHIPPING_TYPE_LABELS[m.type],
                   zoneName(m.zoneId),
-                  m.type === "to_agree"
-                    ? null
-                    : m.price === 0
-                      ? "Gratis"
-                      : formatMoney(m.price, data.baseCurrency),
-                  m.freeOverSubtotal !== null
-                    ? `gratis desde ${formatMoney(m.freeOverSubtotal, data.baseCurrency)}`
-                    : null,
+                  m.type === "to_agree" ? null : m.price === 0 ? "Gratis" : formatMoney(m.price, data.baseCurrency),
+                  m.freeOverSubtotal !== null ? `gratis desde ${formatMoney(m.freeOverSubtotal, data.baseCurrency)}` : null,
                   m.type === "pickup" ? data.warehouses.find((w) => w.id === m.warehouseId)?.name : null,
                 ]
                   .filter(Boolean)
@@ -203,12 +167,7 @@ export function ShippingPage() {
   );
 }
 
-function ZoneForm({
-  zone,
-  onSave,
-  onCancel,
-  fieldErrors,
-}: {
+function ZoneForm({ zone, onSave, onCancel, fieldErrors }: {
   zone: ShippingZone | null;
   onSave: (input: { name: string; description?: string; isActive: boolean }, id?: string) => void;
   onCancel: () => void;
@@ -218,11 +177,7 @@ function ZoneForm({
     event.preventDefault();
     const d = new FormData(event.currentTarget);
     onSave(
-      {
-        name: String(d.get("name") ?? ""),
-        description: String(d.get("description") ?? ""),
-        isActive: d.get("isActive") === "on",
-      },
+      { name: String(d.get("name") ?? ""), description: String(d.get("description") ?? ""), isActive: d.get("isActive") === "on" },
       zone?.id,
     );
   }
@@ -252,15 +207,7 @@ function ZoneForm({
   );
 }
 
-function MethodForm({
-  method,
-  zones,
-  pickupPoints,
-  currency,
-  onSave,
-  onCancel,
-  fieldErrors,
-}: {
+function MethodForm({ method, zones, pickupPoints, currency, onSave, onCancel, fieldErrors }: {
   method: ShippingMethod | null;
   zones: ShippingZone[];
   pickupPoints: { id: string; name: string }[];
@@ -283,8 +230,7 @@ function MethodForm({
   fieldErrors: Record<string, string>;
 }) {
   const [type, setType] = useState<ShippingType>(method?.type ?? "delivery");
-  const optionalNumber = (v: FormDataEntryValue | null) =>
-    v === null || String(v).trim() === "" ? null : Number(v);
+  const optionalNumber = (v: FormDataEntryValue | null) => (v === null || String(v).trim() === "" ? null : Number(v));
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -357,35 +303,18 @@ function MethodForm({
             </div>
             <div className="flex flex-col gap-1">
               <Label htmlFor="m-free">Gratis desde ({currency}, opcional)</Label>
-              <Input
-                id="m-free"
-                name="freeOverSubtotal"
-                inputMode="decimal"
-                defaultValue={method?.freeOverSubtotal ?? ""}
-              />
+              <Input id="m-free" name="freeOverSubtotal" inputMode="decimal" defaultValue={method?.freeOverSubtotal ?? ""} />
             </div>
           </>
         )}
         <div className="flex gap-3">
           <div className="flex flex-col gap-1">
             <Label htmlFor="m-min">Días mín.</Label>
-            <Input
-              id="m-min"
-              name="minDays"
-              inputMode="numeric"
-              defaultValue={method?.minDays ?? ""}
-              className="w-24"
-            />
+            <Input id="m-min" name="minDays" inputMode="numeric" defaultValue={method?.minDays ?? ""} className="w-24" />
           </div>
           <div className="flex flex-col gap-1">
             <Label htmlFor="m-max">Días máx.</Label>
-            <Input
-              id="m-max"
-              name="maxDays"
-              inputMode="numeric"
-              defaultValue={method?.maxDays ?? ""}
-              className="w-24"
-            />
+            <Input id="m-max" name="maxDays" inputMode="numeric" defaultValue={method?.maxDays ?? ""} className="w-24" />
             <FieldError>{fieldErrors.maxDays}</FieldError>
           </div>
         </div>
@@ -426,9 +355,7 @@ export function PaymentMethodsPage() {
     };
     const id = editing && editing !== "new" ? editing.id : undefined;
     void action
-      .run(() =>
-        id ? settings.update("payment-methods", id, input) : settings.create("payment-methods", input),
-      )
+      .run(() => (id ? settings.update("payment-methods", id, input) : settings.create("payment-methods", input)))
       .then((ok) => {
         if (ok) {
           setEditing(null);
@@ -459,12 +386,7 @@ export function PaymentMethodsPage() {
               <legend className="mb-1 text-sm font-medium">Monedas (ninguna = todas)</legend>
               {CURRENCY_CODES.map((c: CurrencyCode) => (
                 <label key={c} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name={`currency-${c}`}
-                    defaultChecked={current?.currencies.includes(c)}
-                  />{" "}
-                  {c}
+                  <input type="checkbox" name={`currency-${c}`} defaultChecked={current?.currencies.includes(c)} /> {c}
                 </label>
               ))}
             </fieldset>
@@ -492,16 +414,12 @@ export function PaymentMethodsPage() {
       )}
       <Card className="p-0">
         <ul className="divide-y">
-          {data.paymentMethods.length === 0 && (
-            <li className="px-4 py-3 text-sm text-muted-foreground">Sin métodos de pago.</li>
-          )}
+          {data.paymentMethods.length === 0 && <li className="px-4 py-3 text-sm text-muted-foreground">Sin métodos de pago.</li>}
           {data.paymentMethods.map((p) => (
             <Row
               key={p.id}
               title={p.name}
-              detail={[p.currencies.length ? p.currencies.join(", ") : "Todas las monedas", p.instructions]
-                .filter(Boolean)
-                .join(" · ")}
+              detail={[p.currencies.length ? p.currencies.join(", ") : "Todas las monedas", p.instructions].filter(Boolean).join(" · ")}
               badges={!p.isActive && <Badge variant="muted">Inactivo</Badge>}
               onEdit={canEdit ? () => setEditing(p) : undefined}
               onDelete={

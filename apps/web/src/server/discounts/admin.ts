@@ -30,14 +30,9 @@ async function checkTargets(storeId: string, targets: { type: DiscountTarget; id
       .in("id", ids);
     if (error) throw error;
     if (count !== ids.length) {
-      throw new HttpError(
-        422,
-        "validation_failed",
-        "Algún producto o categoría elegido no existe en la tienda.",
-        {
-          targets: ["Algún producto o categoría elegido no existe en la tienda."],
-        },
-      );
+      throw new HttpError(422, "validation_failed", "Algún producto o categoría elegido no existe en la tienda.", {
+        targets: ["Algún producto o categoría elegido no existe en la tienda."],
+      });
     }
   }
 }
@@ -56,9 +51,7 @@ async function replaceTargets(
   if (!unique.length) return;
   const { error: insertError } = await service
     .from(table)
-    .insert(
-      unique.map((t) => ({ store_id: storeId, [column]: ownerId, target_type: t.type, target_id: t.id })),
-    );
+    .insert(unique.map((t) => ({ store_id: storeId, [column]: ownerId, target_type: t.type, target_id: t.id })));
   if (insertError) throw insertError;
 }
 
@@ -68,11 +61,7 @@ async function refreshPromotions(storeId: string): Promise<void> {
   invalidateCatalog(storeId);
 }
 
-export async function savePromotion(
-  storeId: string,
-  id: string | null,
-  input: PromotionInput,
-): Promise<string> {
+export async function savePromotion(storeId: string, id: string | null, input: PromotionInput): Promise<string> {
   await checkTargets(storeId, input.targets);
   const row = {
     name: input.name,

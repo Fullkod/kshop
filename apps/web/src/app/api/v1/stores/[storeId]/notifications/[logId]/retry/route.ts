@@ -7,12 +7,7 @@ import { retryNotification } from "@/server/notifications/admin";
 export const POST = apiHandler(
   async (request: Request, ctx: RouteContext<"/api/v1/stores/[storeId]/notifications/[logId]/retry">) => {
     const params = await ctx.params;
-    const { storeId } = await requireCatalogAccess(
-      request,
-      params.storeId,
-      "staff",
-      "whatsapp_notifications",
-    );
+    const { storeId } = await requireCatalogAccess(request, params.storeId, "staff", "whatsapp_notifications");
     await retryNotification(storeId, uuidParam.parse(params.logId));
     return NextResponse.json({ id: params.logId });
   },

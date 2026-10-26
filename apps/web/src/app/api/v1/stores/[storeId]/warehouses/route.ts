@@ -7,12 +7,7 @@ import { getWarehousesOverview } from "@/server/warehouses";
 //   -> { warehouses: [{ id, name, units, reserved, variants, … }], zones: [{ id, name, warehouseIds }] }
 export const GET = apiHandler(
   async (request: Request, ctx: RouteContext<"/api/v1/stores/[storeId]/warehouses">) => {
-    const { storeId } = await requireCatalogAccess(
-      request,
-      (await ctx.params).storeId,
-      "staff",
-      "multi_warehouse",
-    );
+    const { storeId } = await requireCatalogAccess(request, (await ctx.params).storeId, "staff", "multi_warehouse");
     return NextResponse.json(await getWarehousesOverview(storeId));
   },
 );

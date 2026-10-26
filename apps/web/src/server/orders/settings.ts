@@ -26,11 +26,7 @@ const zones: ResourceConfig<typeof shippingZoneSchema> = {
   module: "shipping",
   schema: shippingZoneSchema,
   entity: "La zona",
-  toRow: (i: ShippingZoneInput) => ({
-    name: i.name,
-    description: i.description ?? null,
-    is_active: i.isActive,
-  }),
+  toRow: (i: ShippingZoneInput) => ({ name: i.name, description: i.description ?? null, is_active: i.isActive }),
 };
 
 const methods: ResourceConfig<typeof shippingMethodSchema> = {
