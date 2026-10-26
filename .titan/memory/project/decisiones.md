@@ -72,6 +72,15 @@
     llevan enlace: si la orden es de una cuenta → su pedido en el perfil (`/account/orders/{id}`); si es de
     invitado o del admin sin cuenta → página pública por token. Casilla «Recibir avisos por WhatsApp» en el
     checkout, marcada por defecto.
+25. **Fase 5 (suscripciones y módulos)**: precios en **USD siempre**, cobro **en persona y en efectivo, sin
+    comprobantes**; sin prorrateo; equipo en esta fase; avisos de cobro al WhatsApp de la tienda y número de soporte
+    configurable; dominio propio vendible ya (configurado a mano). Precios del estudio
+    `2026-10-25-estudio-precios-cuba.md` («que entren clientes antes que todo»): Base 5, Pro 12.
+    **Base sin cupones**: en Base solo las **ofertas visibles** (badge «-20 %» y precio tachado, «eso gana
+    mercado»); cupones y descuento manual = módulo `vouchers` (Pro o suelto).
+    **Apariencia (tema, portada, banners, menús, páginas) la configura la plataforma**: fuera del Base («para que
+    necesiten del admin y no tengan tanta libertad ni responsabilidad»), incluida en Pro, no se vende suelta (el
+    superadmin puede regalarla a una tienda) y el **superadmin siempre puede editarla en cualquier tienda**.
 
 ## Recomendaciones de Claude (confirmadas en la Fase 0b, ver `AGENTS.md`)
 - Next (App Router) + Supabase + Tailwind/shadcn, deploy en Vercel (wildcard de subdominios).

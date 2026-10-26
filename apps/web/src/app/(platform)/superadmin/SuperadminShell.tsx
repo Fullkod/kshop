@@ -34,9 +34,15 @@ export function SuperadminShell({ children }: { children: ReactNode }) {
               Superadmin
             </span>
           </Link>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-sm">
             <Link href="/superadmin" className="hover:underline">
               Tiendas
+            </Link>
+            <Link href="/superadmin/billing" className="hover:underline">
+              Cobros
+            </Link>
+            <Link href="/superadmin/plans" className="hover:underline">
+              Planes
             </Link>
             <Link href="/superadmin/whatsapp" className="hover:underline">
               WhatsApp

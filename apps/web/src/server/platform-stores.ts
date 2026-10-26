@@ -64,7 +64,7 @@ export async function listPlatformStores(): Promise<PlatformStore[]> {
   return data.map((row) => toPlatformStore(row, emails));
 }
 
-async function getPlatformStore(storeId: string): Promise<PlatformStore> {
+export async function getPlatformStore(storeId: string): Promise<PlatformStore> {
   const { data, error } = await getServiceClient()
     .from("stores")
     .select(STORE_SELECT)
@@ -141,6 +141,30 @@ export async function createPlatformStore(
     throw error ?? new Error("create_store returned no row");
   }
 
+  // Founding partner (frozen price for life) or courtesy (never billed), chosen at sign-up.
+  if (input.founderPrice != null) {
+    const grant = await getServiceClient().rpc("subscription_add_grant", {
+      p_store_id: data.id,
+      p_type: "price_lock",
+      p_value: input.founderPrice,
+      p_reason: "Socio fundador",
+      p_ends_at: null,
+      p_actor: createdBy,
+    });
+    if (grant.error) throw grant.error;
+  }
+  if (input.founderPrice != null || input.comped) {
+    const update = await getServiceClient().rpc("subscription_update", {
+      p_store_id: data.id,
+      p_patch: {
+        ...(input.founderPrice != null ? { founder: true } : {}),
+        ...(input.comped ? { comped: true } : {}),
+      },
+      p_actor: createdBy,
+    });
+    if (update.error) throw update.error;
+  }
+
   return {
     store: await getPlatformStore(data.id),
     ownerAccessLink: owner.link,
@@ -152,13 +176,14 @@ export async function updatePlatformStoreStatus(
   storeId: string,
   status: StoreStatus,
 ): Promise<PlatformStore> {
-  const { data, error } = await getServiceClient()
-    .from("stores")
-    .update({ status })
-    .eq("id", storeId)
-    .select("id")
-    .maybeSingle();
-  if (error) throw error;
-  if (!data) throw notFound("Tienda");
+  // A manual suspension (reason manual) is not lifted by a payment, unlike one by billing (PRP-5 D15).
+  const { error } = await getServiceClient().rpc("store_set_status", {
+    p_store_id: storeId,
+    p_status: status,
+  });
+  if (error) {
+    if (error.hint === "not_found") throw notFound("Tienda");
+    throw error;
+  }
   return getPlatformStore(storeId);
 }

@@ -42,7 +42,8 @@ export default function SuperadminWhatsappPage() {
       await action();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Algo salió mal.");
-      if (e instanceof ApiError) setFields(Object.fromEntries(Object.entries(e.fields ?? {}).map(([k, v]) => [k, v[0] ?? ""])));
+      if (e instanceof ApiError)
+        setFields(Object.fromEntries(Object.entries(e.fields ?? {}).map(([k, v]) => [k, v[0] ?? ""])));
     } finally {
       setPending(false);
     }
@@ -73,17 +74,30 @@ export default function SuperadminWhatsappPage() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     void run(async () => {
-      const r = await api.platform.testWhatsapp(String(form.get("phone") ?? ""), String(form.get("text") ?? ""));
-      setNotice(r.status === "pending" ? "Mensaje en cola: sale en menos de un minuto." : "Mensaje simulado (modo sin envío).");
+      const r = await api.platform.testWhatsapp(
+        String(form.get("phone") ?? ""),
+        String(form.get("text") ?? ""),
+      );
+      setNotice(
+        r.status === "pending"
+          ? "Mensaje en cola: sale en menos de un minuto."
+          : "Mensaje simulado (modo sin envío).",
+      );
     });
   }
 
-  if (!data) return error ? <Alert variant="destructive">{error}</Alert> : <p className="text-muted-foreground">Cargando…</p>;
+  if (!data)
+    return error ? (
+      <Alert variant="destructive">{error}</Alert>
+    ) : (
+      <p className="text-muted-foreground">Cargando…</p>
+    );
   return (
     <div className="flex max-w-3xl flex-col gap-6">
       <h1 className="text-2xl font-semibold">WhatsApp de la plataforma</h1>
       <p className="text-sm text-muted-foreground">
-        Un solo número (OpenWA) envía los avisos de todas las tiendas. Cada mensaje empieza con el nombre de la tienda.
+        Un solo número (OpenWA) envía los avisos de todas las tiendas. Cada mensaje empieza con el nombre de
+        la tienda.
       </p>
       {error && <Alert variant="destructive">{error}</Alert>}
       {notice && <Alert variant="success">{notice}</Alert>}
@@ -92,7 +106,9 @@ export default function SuperadminWhatsappPage() {
         <span>En cola: {data.queue.pending}</span>
         <span>Enviados (24 h): {data.queue.sent24h}</span>
         <span>Simulados (24 h): {data.queue.simulated24h}</span>
-        <span className={data.queue.failed24h ? "text-destructive" : undefined}>Fallidos (24 h): {data.queue.failed24h}</span>
+        <span className={data.queue.failed24h ? "text-destructive" : undefined}>
+          Fallidos (24 h): {data.queue.failed24h}
+        </span>
       </Card>
 
       <Card>
@@ -109,7 +125,12 @@ export default function SuperadminWhatsappPage() {
           </div>
           <div className="flex flex-col gap-1 sm:col-span-2">
             <Label htmlFor="url">URL de OpenWA</Label>
-            <Input id="url" name="url" defaultValue={data.url ?? ""} placeholder="https://openwa.ejemplo.com" />
+            <Input
+              id="url"
+              name="url"
+              defaultValue={data.url ?? ""}
+              placeholder="https://openwa.ejemplo.com"
+            />
             <FieldError>{fields.url}</FieldError>
           </div>
           <div className="flex flex-col gap-1">
@@ -117,17 +138,33 @@ export default function SuperadminWhatsappPage() {
             <Input id="session" name="session" defaultValue={data.session ?? ""} placeholder="kshop" />
           </div>
           <div className="flex flex-col gap-1">
-            <Label htmlFor="apiKey">API key {data.hasApiKey && "(guardada; escribe otra para cambiarla)"}</Label>
+            <Label htmlFor="apiKey">
+              API key {data.hasApiKey && "(guardada; escribe otra para cambiarla)"}
+            </Label>
             <Input id="apiKey" name="apiKey" type="password" autoComplete="off" />
             <FieldError>{fields.apiKey}</FieldError>
           </div>
           <div className="flex flex-col gap-1">
             <Label htmlFor="ratePerMinute">Mensajes por minuto (plataforma)</Label>
-            <Input id="ratePerMinute" name="ratePerMinute" type="number" min={1} max={120} defaultValue={data.ratePerMinute} />
+            <Input
+              id="ratePerMinute"
+              name="ratePerMinute"
+              type="number"
+              min={1}
+              max={120}
+              defaultValue={data.ratePerMinute}
+            />
           </div>
           <div className="flex flex-col gap-1">
             <Label htmlFor="storeRatePerMinute">Mensajes por minuto (por tienda)</Label>
-            <Input id="storeRatePerMinute" name="storeRatePerMinute" type="number" min={1} max={120} defaultValue={data.storeRatePerMinute} />
+            <Input
+              id="storeRatePerMinute"
+              name="storeRatePerMinute"
+              type="number"
+              min={1}
+              max={120}
+              defaultValue={data.storeRatePerMinute}
+            />
           </div>
           <div className="sm:col-span-2">
             <Button type="submit" disabled={pending}>

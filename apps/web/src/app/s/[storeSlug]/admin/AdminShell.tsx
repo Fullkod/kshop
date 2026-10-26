@@ -47,6 +47,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
         const codes = (result.data?.storeEntitlements?.edges ?? [])
           .map((e) => e.node.moduleCode)
           .filter(isModuleCode);
+        // The look is set up by the platform: the superadmin always has «Apariencia» (phase 5, Roberto).
+        if (me.isSuperadmin && !codes.includes("themes")) codes.push("themes");
         const limits = JSON.parse(result.data?.storeLimits ?? "{}") as Record<string, number>;
         if (!cancelled) {
           setState({

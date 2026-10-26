@@ -11,18 +11,25 @@ import {
 import { revalidateTag } from "next/cache";
 import type { ZodType } from "zod";
 import { publicEnv } from "@/env";
-import { requireCatalogAccess } from "../catalog/access";
+import { getUserFromBearer } from "../auth";
+import { requireCatalogAccess, type CatalogContext } from "../catalog/access";
 import { storeMediaPrefix } from "../catalog/products";
 import { mapDbError } from "../db-errors";
-import { HttpError } from "../http";
+import { HttpError, uuidParam } from "../http";
 import { contentCacheTag } from "../storefront/data";
 import { getServiceClient } from "../supabase";
 
 // Storefront content written by /api/v1/stores/{storeId}/content/* (D14): store admins with the themes module.
 // store_id comes from the route; rows are written with the service client.
 
-export const requireContentAccess = (request: Request, rawStoreId: string) =>
-  requireCatalogAccess(request, rawStoreId, "admin", "themes");
+// Roberto (phase 5): the look is set up by the platform. The superadmin edits it in every store; the store's own
+// admins only with the themes module (Pro or a grant).
+export async function requireContentAccess(request: Request, rawStoreId: string): Promise<CatalogContext> {
+  const storeId = uuidParam.parse(rawStoreId);
+  const user = await getUserFromBearer(request);
+  if (user.isSuperadmin) return { user, storeId };
+  return requireCatalogAccess(request, storeId, "admin", "themes");
+}
 
 /** Every content write expires the storefront cache of the store now. */
 export function invalidateContent(storeId: string): void {

@@ -184,7 +184,7 @@ select tests.eq('Pro: every module, vouchers included', pg_temp.modules('store_b
 -- Down to Base: modules off in the database, every row and every piece of data kept.
 select public.change_plan(tests.fx('store_b'), 'base', 'month', tests.fx('root'));
 select tests.eq('Pro -> Base: only the Base modules',
-  pg_temp.modules('store_b'), 'catalog,discounts,excel_import,mobile_app,orders,sales_today,shipping,themes');
+  pg_temp.modules('store_b'), 'catalog,discounts,excel_import,mobile_app,orders,sales_today,shipping');
 select tests.eq('Pro -> Base: the plan rows are disabled, not deleted',
   (select count(*) from public.store_modules where store_id = tests.fx('store_b') and source = 'plan')::int, 14);
 select tests.eq('Pro -> Base: warehouses, currencies, contacts and products kept',
@@ -474,4 +474,46 @@ select tests.check('owner: no quote, payments, ticks, grants or settings from th
     (select id from public.platform_invoices limit 1))));
 select tests.eq('owner C: reads its invoices and lines', (select count(*) from public.platform_invoices)::int > 0
   and (select count(*) from public.platform_invoices where store_id <> tests.fx('store_c'))::int = 0, true);
+select tests.logout();
+
+-- ---------------------------------------------------------------------------
+-- Superadmin settings (phase 5.4)
+-- ---------------------------------------------------------------------------
+
+select public.plan_update('base', jsonb_build_object('price', 6, 'yearly_price', 60, 'is_public', true,
+  'modules', (select jsonb_agg(pm.module_code) || '["vouchers"]' from public.plan_modules pm
+    join public.plans p on p.id = pm.plan_id where p.code = 'base'),
+  'limits', jsonb_build_object('max_products', 500, 'max_staff', 3)));
+select tests.check('plan edited: price, limits and a module for every Base store at once', (
+  select price = 6 and yearly_price = 60 from public.plans where code = 'base')
+  and pg_temp.modules('store_c') like '%vouchers%'
+  and (public.store_limits(tests.fx('store_c')) = '{"max_staff": 3, "max_products": 500}'::jsonb));
+select public.plan_update('base', jsonb_build_object('price', 5, 'yearly_price', 50, 'is_public', true,
+  'modules', (select jsonb_agg(pm.module_code) from public.plan_modules pm
+    join public.plans p on p.id = pm.plan_id where p.code = 'base' and pm.module_code <> 'vouchers'),
+  'limits', jsonb_build_object('max_products', 300, 'max_staff', 2)));
+select tests.check('module removed from the plan: off in its stores, row kept',
+  pg_temp.modules('store_c') not like '%vouchers%' and exists (select 1 from public.store_modules
+    where store_id = tests.fx('store_c') and module_code = 'vouchers' and source = 'plan' and not enabled));
+select tests.check('a plan without the catalog or with a missing dependency is rejected',
+  tests.throws($$select public.plan_update('base', '{"price": 5, "modules": ["orders"]}')$$)
+  and tests.throws($$select public.plan_update('base', '{"price": 5, "modules": ["catalog", "sales_today"]}')$$));
+select public.module_set_addon_price('finance', 4);
+select tests.eq('add-on price edited', (select addon_price::text from public.modules where code = 'finance'), '4.00');
+select public.module_set_addon_price('finance', 3);
+select tests.check('the catalog is never sold alone', tests.throws($$select public.module_set_addon_price('catalog', 1)$$));
+select public.platform_billing_set('{"grace_days": 10, "support_whatsapp": "+5350000009"}');
+select tests.eq('billing settings: read and write', (public.platform_billing_get() ->> 'grace_days')
+  || ' ' || (public.platform_billing_get() ->> 'support_whatsapp'), '10 +5350000009');
+select public.store_set_status(tests.fx('store_d'), 'suspended');
+select tests.eq('manual suspension by the superadmin', (select format('%s %s', status, suspended_reason)
+  from public.stores where id = tests.fx('store_d')), 'suspended manual');
+select public.store_set_status(tests.fx('store_d'), 'active');
+select tests.eq('reactivated by hand', (select format('%s %s', status, coalesce(suspended_reason::text, '-'))
+  from public.stores where id = tests.fx('store_d')), 'active -');
+
+select tests.login('root');
+select tests.check('superadmin JWT: settings only through the server',
+  tests.throws($$select public.platform_billing_get()$$)
+  and tests.throws($$select public.plan_update('base', '{}')$$));
 select tests.logout();

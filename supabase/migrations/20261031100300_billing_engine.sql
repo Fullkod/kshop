@@ -176,10 +176,12 @@ begin
   select * into v_plan from public.plans where id = v_sub.plan_id;
   v_start := coalesce(p_period_start, v_sub.current_period_end, now());
   v_months := case v_sub.billing_interval when 'year' then 10 else 1 end;
+  -- A grant counts when it is in force at the start of the period or already when the invoice is made (a founder
+  -- price given right after the sign-up applies to the first month).
 
   select g.value, g.id into v_lock, v_lock_id from public.subscription_grants g
   where g.store_id = p_store_id and g.type = 'price_lock' and g.revoked_at is null
-    and g.starts_at <= v_start and (g.ends_at is null or g.ends_at > v_start)
+    and g.starts_at <= greatest(v_start, now()) and (g.ends_at is null or g.ends_at > v_start)
   order by g.created_at desc limit 1;
   v_price := coalesce(v_lock, v_sub.price_override,
     case v_sub.billing_interval when 'year' then v_plan.yearly_price end, v_plan.price * v_months);
@@ -208,7 +210,7 @@ begin
   -- The best discount in force (they do not add up).
   select g.value, g.id, g.reason into v_pct, v_pct_id, v_pct_reason from public.subscription_grants g
   where g.store_id = p_store_id and g.type = 'discount_percent' and g.revoked_at is null
-    and g.starts_at <= v_start and (g.ends_at is null or g.ends_at > v_start)
+    and g.starts_at <= greatest(v_start, now()) and (g.ends_at is null or g.ends_at > v_start)
   order by g.value desc, g.created_at limit 1;
   if v_pct is not null then
     v_discount := round(v_subtotal * v_pct / 100, 2);

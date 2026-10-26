@@ -43,8 +43,8 @@ select tests.eq('create_store: A has its primary subdomain',
   (select domain from public.store_domains where store_id = tests.fx('store_a') and is_primary), 'rls-test-a.kshop.fullkod.com');
 select tests.eq('create_store: A owner is a member',
   (select role::text from public.store_members where store_id = tests.fx('store_a') and user_id = tests.fx('owner_a')), 'owner');
-select tests.eq('create_store: A (base) gets 8 plan modules',
-  (select count(*) from public.store_modules where store_id = tests.fx('store_a'))::int, 8);
+select tests.eq('create_store: A (base) gets 7 plan modules (themes is Pro since phase 5)',
+  (select count(*) from public.store_modules where store_id = tests.fx('store_a'))::int, 7);
 select tests.eq('create_store: B (pro) gets all 14 modules (vouchers since phase 5)',
   (select count(*) from public.store_modules where store_id = tests.fx('store_b'))::int, 14);
 select tests.eq('create_store: A is trialing, B without trial is active',
@@ -98,7 +98,7 @@ select tests.eq('owner A: sees no modules of B',
 select tests.eq('owner A: sees no subscription of B',
   (select count(*) from public.subscriptions where store_id = tests.fx('store_b'))::int, 0);
 select tests.eq('owner A: entitlements of A',
-  (select count(*) from public.store_entitlements(tests.fx('store_a')))::int, 8);
+  (select count(*) from public.store_entitlements(tests.fx('store_a')))::int, 7);
 select tests.eq('owner A: entitlements of B are empty',
   (select count(*) from public.store_entitlements(tests.fx('store_b')))::int, 0);
 select tests.eq('owner A: limits of A', public.store_limits(tests.fx('store_a')), '{"max_staff": 2, "max_products": 300}'::jsonb);

@@ -55,6 +55,10 @@ export default function NewStorePage() {
       whatsappPhone: String(form.get("whatsappPhone") ?? "").trim() || undefined,
       planCode: form.get("planCode"),
       trialDays: Number(form.get("trialDays")),
+      founderPrice: String(form.get("founderPrice") ?? "").trim()
+        ? Number(String(form.get("founderPrice")).replace(",", "."))
+        : null,
+      comped: form.get("comped") === "on",
     });
     if (!parsed.success) {
       const fieldErrors = z.flattenError(parsed.error).fieldErrors as Record<string, string[] | undefined>;
@@ -221,6 +225,21 @@ export default function NewStorePage() {
           <Input id="trialDays" name="trialDays" type="number" min={0} max={365} defaultValue={30} />
           <FieldError>{errors.trialDays}</FieldError>
         </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="founderPrice">Socio fundador: precio congelado (USD/mes, opcional)</Label>
+          <Input
+            id="founderPrice"
+            name="founderPrice"
+            inputMode="decimal"
+            placeholder="Vacío = precio del plan"
+          />
+          <FieldError>{errors.founderPrice}</FieldError>
+        </div>
+
+        <label className="flex items-center gap-2 self-end pb-2 text-sm">
+          <input type="checkbox" name="comped" /> Cortesía (no se factura nunca)
+        </label>
 
         {formError && (
           <Alert variant="destructive" className="sm:col-span-2">

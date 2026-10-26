@@ -79,7 +79,9 @@ export default function SuperadminStoresPage() {
               {stores.map((store) => (
                 <tr key={store.id} className="border-b last:border-0" data-testid={`store-row-${store.slug}`}>
                   <td className="px-4 py-3">
-                    <div className="font-medium">{store.name}</div>
+                    <Link href={`/superadmin/stores/${store.id}`} className="font-medium hover:underline">
+                      {store.name}
+                    </Link>
                     <a
                       href={storeUrl(store.slug)}
                       className="text-xs text-primary hover:underline"

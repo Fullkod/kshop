@@ -30,6 +30,7 @@ Captación (lo que más pesa para Roberto):
 - **Precio de entrada igual al más barato del mercado** (5 USD) pero con más valor que su Base.
 - **Prueba de 30 días con el Pro completo**: el dueño se acostumbra a lo bueno y luego elige plan.
 - **Socios fundadores** (primeras ~20 tiendas): precio congelado de por vida (grant `price_lock`) y badge.
+- Apariencia (tema, portada, banners, menús, páginas) **no** está en el Base: la configura Kshop (Roberto); Pro sí.
 - Ofertas visibles en el Base (Roberto: «si se ve que un producto tiene descuento al cliente le da por
   comprarlo»); cupones y descuento manual quedan para el Pro o como suelto.
 

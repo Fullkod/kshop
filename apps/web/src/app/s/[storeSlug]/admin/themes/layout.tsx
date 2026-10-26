@@ -7,7 +7,12 @@ import { useAdmin } from "../admin-context";
 export default function ThemesLayout({ children }: { children: ReactNode }) {
   const admin = useAdmin();
   if (!admin.enabledModules.has("themes")) {
-    return <Alert variant="destructive">«Apariencia» no está incluida en el plan de tu tienda.</Alert>;
+    return (
+      <Alert>
+        La apariencia de tu tienda (colores, portada, banners, menús y páginas) la configura el equipo de
+        Kshop. Escríbenos para cualquier cambio, o pásate al plan Pro para hacerlo tú.
+      </Alert>
+    );
   }
   if (admin.role === "staff") {
     return (

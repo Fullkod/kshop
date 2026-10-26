@@ -26,6 +26,10 @@ export const createStoreInputSchema = z.object({
   whatsappPhone: phoneSchema.optional(),
   planCode: z.enum(PLAN_CODES).default("base"),
   trialDays: z.number().int().min(0).max(365).default(30),
+  /** Founding partner: plan price frozen for life (USD per period). */
+  founderPrice: z.number().min(0).max(1000).multipleOf(0.01).nullable().optional(),
+  /** Courtesy: never billed. */
+  comped: z.boolean().optional(),
 });
 export type CreateStoreInput = z.infer<typeof createStoreInputSchema>;
 

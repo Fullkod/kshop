@@ -49,6 +49,17 @@ import type {
   ShippingType,
   StoreRole,
   StoreStatus,
+  BillingInterval,
+  BillingSettingsInput,
+  ChangePlanInput,
+  GrantType,
+  InvoiceStatus,
+  PaymentMethod,
+  PlanUpdateInput,
+  PlatformPaymentInput,
+  SubscriptionGrantInput,
+  SubscriptionUpdateInput,
+  TeamInviteInput,
 } from "@kshop/core";
 
 // Contract of /api/v1, shared by the web and the Capacitor apps.
@@ -337,6 +348,152 @@ export class ApiError extends Error {
   }
 }
 
+// ---- Phase 5: plans, billing and team ----
+
+export type BillingPlan = {
+  code: PlanCode;
+  name: string;
+  price: number;
+  yearlyPrice: number | null;
+  isPublic: boolean;
+  modules: ModuleCode[];
+  limits: { maxProducts: number | null; maxStaff: number | null };
+};
+
+export type BillingModule = {
+  code: ModuleCode;
+  name: string;
+  description: string | null;
+  /** USD/month when sold alone (null = only in a plan). */
+  addonPrice: number | null;
+  dependsOn: string[];
+};
+
+export type InvoiceLine = {
+  kind: "plan" | "addon" | "discount" | "adjustment";
+  description: string;
+  quantity: number;
+  unitAmount: number;
+  amount: number;
+};
+
+export type PlatformInvoice = {
+  id: string;
+  storeId: string;
+  store: { name: string; slug: string } | null;
+  number: string;
+  periodStart: string;
+  periodEnd: string;
+  subtotal: number;
+  discount: number;
+  total: number;
+  amountPaid: number;
+  status: InvoiceStatus;
+  /** Pending and past its due date. */
+  overdue: boolean;
+  issuedAt: string;
+  dueAt: string;
+  paidAt: string | null;
+  voidReason: string | null;
+  lines: InvoiceLine[];
+  payments: { id: string; amount: number; method: PaymentMethod; reference: string | null; paidAt: string }[];
+};
+
+export type BillingQuote = {
+  periodStart: string;
+  periodEnd: string;
+  interval: BillingInterval;
+  lines: InvoiceLine[];
+  subtotal: number;
+  discount: number;
+  total: number;
+};
+
+export type StoreUsage = {
+  maxProducts: { limit: number | null; used: number };
+  maxStaff: { limit: number | null; used: number };
+};
+
+/** A module as the owner sees it: active (and from where) or what it would cost. */
+export type BillingModuleState = BillingModule & {
+  source: "plan" | "addon" | "grant" | null;
+  /** Included in the Pro plan (to sell the upgrade). */
+  inPro: boolean;
+  endsAt: string | null;
+};
+
+/** Admin › Plan y facturación (owner/admin). */
+export type StoreBilling = {
+  plan: { code: PlanCode; name: string };
+  interval: BillingInterval;
+  status: string;
+  storeStatus: StoreStatus;
+  suspendedReason: "billing" | "manual" | null;
+  trialEndsAt: string | null;
+  currentPeriodStart: string | null;
+  currentPeriodEnd: string | null;
+  founder: boolean;
+  cancelAt: string | null;
+  /** Next invoice (null for a courtesy store). */
+  quote: BillingQuote | null;
+  usage: StoreUsage;
+  modules: BillingModuleState[];
+  invoices: PlatformInvoice[];
+  plans: BillingPlan[];
+  instructions: string | null;
+  supportWhatsapp: string | null;
+};
+
+export type SubscriptionGrant = {
+  id: string;
+  type: GrantType;
+  value: number;
+  reason: string | null;
+  startsAt: string;
+  endsAt: string | null;
+  revokedAt: string | null;
+  createdAt: string;
+};
+
+/** Superadmin › Tienda › Suscripción. */
+export type PlatformSubscription = StoreBilling & {
+  store: PlatformStore;
+  priceOverride: number | null;
+  limitOverrides: { maxProducts?: number | null; maxStaff?: number | null };
+  notes: string | null;
+  grants: SubscriptionGrant[];
+  storeModules: {
+    code: ModuleCode;
+    source: "plan" | "addon" | "grant";
+    enabled: boolean;
+    price: number | null;
+    endsAt: string | null;
+    reason: string | null;
+  }[];
+};
+
+export type BillingSettings = {
+  invoiceLeadDays: number;
+  invoiceDueDays: number;
+  graceDays: number;
+  trialReminderDays: number;
+  defaultTrialDays: number;
+  billingInstructions: string;
+  supportWhatsapp: string | null;
+};
+
+export type TeamMember = {
+  userId: string;
+  email: string | null;
+  role: StoreRole;
+  createdAt: string;
+  isMe: boolean;
+};
+
+export type TeamResponse = { members: TeamMember[]; usage: StoreUsage["maxStaff"] };
+
+export type TeamInviteResponse = { member: TeamMember; accessLink: string; accountWasCreated: boolean };
+
 export type ApiClientOptions = {
   /** Origin of the web app ("" for same-origin calls in the browser). */
   baseUrl: string;
@@ -443,7 +600,8 @@ export function createApiClient(options: ApiClientOptions) {
     customerAuth: (storeId: string) => {
       const base = `/stores/${storeId}/customer-auth`;
       return {
-        register: (input: CustomerRegisterInput) => request<CustomerAuthResponse>("POST", `${base}/register`, input),
+        register: (input: CustomerRegisterInput) =>
+          request<CustomerAuthResponse>("POST", `${base}/register`, input),
         login: (input: CustomerLoginInput) => request<CustomerAuthResponse>("POST", `${base}/login`, input),
         reset: (input: CustomerResetInput) => request<CustomerAuthResponse>("POST", `${base}/reset`, input),
       };
@@ -458,15 +616,18 @@ export function createApiClient(options: ApiClientOptions) {
         return params.size ? `?${params}` : "";
       };
       return {
-        get: (token?: string | null, currency?: string) => request<Cart>("GET", `${base}${query(token, currency)}`),
+        get: (token?: string | null, currency?: string) =>
+          request<Cart>("GET", `${base}${query(token, currency)}`),
         update: (input: CartUpdateInput) => request<Cart>("PUT", base, input),
         setVoucher: (input: CartVoucherInput) => request<Cart>("PUT", `${base}/voucher`, input),
       };
     },
     checkout: (storeId: string) => ({
       options: () => request<CheckoutOptions>("GET", `/stores/${storeId}/checkout`),
-      place: (input: CheckoutInput) => request<CheckoutResponse>("POST", `/stores/${storeId}/checkout`, input),
-      order: (token: string) => request<{ order: PublicOrder }>("GET", `/stores/${storeId}/checkout/orders/${token}`),
+      place: (input: CheckoutInput) =>
+        request<CheckoutResponse>("POST", `/stores/${storeId}/checkout`, input),
+      order: (token: string) =>
+        request<{ order: PublicOrder }>("GET", `/stores/${storeId}/checkout/orders/${token}`),
     }),
     /** Admin: shipping zones and methods, payment methods (admin+). */
     checkoutSettings: (storeId: string) => {
@@ -476,7 +637,8 @@ export function createApiClient(options: ApiClientOptions) {
           request<{ id: string }>("POST", `${base}/${resource}`, input),
         update: <R extends CheckoutSettingName>(resource: R, id: string, input: CheckoutSettingInputs[R]) =>
           request<{ id: string }>("PATCH", `${base}/${resource}/${id}`, input),
-        remove: (resource: CheckoutSettingName, id: string) => request<null>("DELETE", `${base}/${resource}/${id}`),
+        remove: (resource: CheckoutSettingName, id: string) =>
+          request<null>("DELETE", `${base}/${resource}/${id}`),
       };
     },
     /** Admin: orders (staff+). Reads go through pg_graphql (AdminOrdersQuery, AdminOrderQuery). */
@@ -486,7 +648,8 @@ export function createApiClient(options: ApiClientOptions) {
         request<{ id: string }>("POST", `${base}/${orderId}/${action}`, body);
       return {
         create: (input: AdminOrderInput) => request<CheckoutResponse>("POST", base, input),
-        transition: (orderId: string, to: Exclude<OrderStatus, "cancelled">) => act(orderId, "transition", { to }),
+        transition: (orderId: string, to: Exclude<OrderStatus, "cancelled">) =>
+          act(orderId, "transition", { to }),
         setShipping: (orderId: string, amount: number) => act(orderId, "shipping", { amount }),
         recordPayment: (orderId: string, input: OrderPaymentInput) => act(orderId, "payments", input),
         cancel: (orderId: string, reason?: string) => act(orderId, "cancel", { reason }),
@@ -498,7 +661,8 @@ export function createApiClient(options: ApiClientOptions) {
     discounts: (storeId: string) => {
       const base = `/stores/${storeId}`;
       return {
-        createPromotion: (input: PromotionInput) => request<{ id: string }>("POST", `${base}/promotions`, input),
+        createPromotion: (input: PromotionInput) =>
+          request<{ id: string }>("POST", `${base}/promotions`, input),
         updatePromotion: (id: string, input: PromotionInput) =>
           request<{ id: string }>("PUT", `${base}/promotions/${id}`, input),
         deletePromotion: (id: string) => request<null>("DELETE", `${base}/promotions/${id}`),
@@ -518,18 +682,41 @@ export function createApiClient(options: ApiClientOptions) {
           request<{ id: string }>("PATCH", `${base}/notification-contacts/${id}`, input),
         deleteContact: (id: string) => request<null>("DELETE", `${base}/notification-contacts/${id}`),
         saveTemplate: (input: WhatsappTemplateInput) =>
-          request<{ event: string; audience: NotificationAudience }>("PUT", `${base}/whatsapp-templates`, input),
+          request<{ event: string; audience: NotificationAudience }>(
+            "PUT",
+            `${base}/whatsapp-templates`,
+            input,
+          ),
         restoreTemplate: (event: string, audience: NotificationAudience) =>
           request<null>("DELETE", `${base}/whatsapp-templates?event=${event}&audience=${audience}`),
         preview: (body: string, audience: NotificationAudience, orderId?: string) =>
-          request<{ text: string }>("POST", `${base}/whatsapp-templates/preview`, { body, audience, orderId }),
+          request<{ text: string }>("POST", `${base}/whatsapp-templates/preview`, {
+            body,
+            audience,
+            orderId,
+          }),
         retry: (logId: string) => request<{ id: string }>("POST", `${base}/notifications/${logId}/retry`),
       };
     },
     /** Admin: customers of the store. */
+    billing: (storeId: string) => ({
+      get: () => request<StoreBilling>("GET", `/stores/${storeId}/billing`),
+    }),
+    team: (storeId: string) => {
+      const base = `/stores/${storeId}/team`;
+      return {
+        list: () => request<TeamResponse>("GET", base),
+        invite: (input: TeamInviteInput) => request<TeamInviteResponse>("POST", base, input),
+        update: (userId: string, role: StoreRole) =>
+          request<{ member: TeamMember }>("PATCH", `${base}/${userId}`, { role }),
+        remove: (userId: string) => request<null>("DELETE", `${base}/${userId}`),
+      };
+    },
     customers: (storeId: string) => ({
       setBlocked: (customerId: string, isBlocked: boolean) =>
-        request<{ id: string; isBlocked: boolean }>("PATCH", `/stores/${storeId}/customers/${customerId}`, { isBlocked }),
+        request<{ id: string; isBlocked: boolean }>("PATCH", `/stores/${storeId}/customers/${customerId}`, {
+          isBlocked,
+        }),
       recoveryCode: (customerId: string) =>
         request<RecoveryCodeResponse>("POST", `/stores/${storeId}/customers/${customerId}/recovery-code`),
     }),
@@ -557,9 +744,58 @@ export function createApiClient(options: ApiClientOptions) {
       updateStoreStatus: (storeId: string, status: StoreStatus) =>
         request<{ store: PlatformStore }>("PATCH", `/platform/stores/${storeId}`, { status }),
       whatsapp: () => request<PlatformWhatsapp>("GET", "/platform/whatsapp"),
-      setWhatsapp: (input: PlatformWhatsappInput) => request<PlatformWhatsapp>("PUT", "/platform/whatsapp", input),
+      setWhatsapp: (input: PlatformWhatsappInput) =>
+        request<PlatformWhatsapp>("PUT", "/platform/whatsapp", input),
       testWhatsapp: (phone: string, text: string) =>
         request<{ status: string }>("POST", "/platform/whatsapp/test", { phone, text }),
+      plans: () => request<{ plans: BillingPlan[]; modules: BillingModule[] }>("GET", "/platform/plans"),
+      updatePlan: (code: PlanCode, input: PlanUpdateInput) =>
+        request<{ plans: BillingPlan[]; modules: BillingModule[] }>("PUT", `/platform/plans/${code}`, input),
+      setAddonPrice: (code: ModuleCode, addonPrice: number | null) =>
+        request<{ plans: BillingPlan[]; modules: BillingModule[] }>("PUT", `/platform/modules/${code}`, {
+          addonPrice,
+        }),
+      billingSettings: () => request<BillingSettings>("GET", "/platform/billing/settings"),
+      setBillingSettings: (input: BillingSettingsInput) =>
+        request<BillingSettings>("PUT", "/platform/billing/settings", input),
+      invoices: (status: "open" | "overdue" | "paid" | "all" = "open") =>
+        request<{ invoices: PlatformInvoice[] }>("GET", `/platform/invoices?status=${status}`),
+      recordPayment: (invoiceId: string, input: PlatformPaymentInput) =>
+        request<{ invoice: PlatformInvoice }>("POST", `/platform/invoices/${invoiceId}/payments`, input),
+      adjustInvoice: (invoiceId: string, description: string, amount: number) =>
+        request<{ invoice: PlatformInvoice }>("POST", `/platform/invoices/${invoiceId}/adjustments`, {
+          description,
+          amount,
+        }),
+      voidInvoice: (invoiceId: string, reason?: string) =>
+        request<{ invoice: PlatformInvoice }>("POST", `/platform/invoices/${invoiceId}/void`, { reason }),
+      subscription: (storeId: string) => {
+        const base = `/platform/stores/${storeId}/subscription`;
+        return {
+          get: () => request<PlatformSubscription>("GET", base),
+          update: (input: SubscriptionUpdateInput) => request<PlatformSubscription>("PATCH", base, input),
+          changePlan: (input: ChangePlanInput) => request<PlatformSubscription>("PUT", `${base}/plan`, input),
+          setAddon: (moduleCode: ModuleCode, enabled: boolean) =>
+            request<PlatformSubscription>("PUT", `${base}/addons`, { moduleCode, enabled }),
+          setModuleGrant: (
+            moduleCode: ModuleCode,
+            enabled: boolean,
+            endsAt?: string | null,
+            reason?: string,
+          ) =>
+            request<PlatformSubscription>("PUT", `${base}/module-grants`, {
+              moduleCode,
+              enabled,
+              endsAt,
+              reason,
+            }),
+          addGrant: (input: SubscriptionGrantInput) =>
+            request<PlatformSubscription>("POST", `${base}/grants`, input),
+          revokeGrant: (grantId: string) =>
+            request<PlatformSubscription>("DELETE", `${base}/grants/${grantId}`),
+          issueInvoice: () => request<PlatformSubscription>("POST", `${base}/invoices`),
+        };
+      },
     },
   };
 }
