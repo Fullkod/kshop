@@ -1,10 +1,15 @@
 "use client";
 
-import { createApiClient, createAuthClient, type ApiClient, type CustomerAuthResponse, type CustomerProfile } from "@kshop/data";
+import {
+  createApiClient,
+  createAuthClient,
+  type ApiClient,
+  type CustomerAuthResponse,
+  type CustomerProfile,
+} from "@kshop/data";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { supabaseConfig } from "@/env";
-import { useStore } from "@/lib/store-context";
+import { useStore, useStorefrontConfig, type StorefrontConfig } from "../store-context";
 
 // D6: the customer session has its own storage key, so signing in as a customer never signs the staff out of
 // the admin on the same subdomain (and the other way around). Pages stay cacheable: nothing here reads cookies.
@@ -26,8 +31,8 @@ type CustomerSessionValue = {
 const CustomerSessionContext = createContext<CustomerSessionValue | null>(null);
 
 let customerClient: SupabaseClient | undefined;
-function getCustomerClient(): SupabaseClient {
-  customerClient ??= createAuthClient(supabaseConfig, CUSTOMER_STORAGE_KEY);
+function getCustomerClient(config: StorefrontConfig): SupabaseClient {
+  customerClient ??= createAuthClient(config.supabase, CUSTOMER_STORAGE_KEY, { storage: config.authStorage });
   return customerClient;
 }
 
@@ -37,7 +42,8 @@ const belongsTo = (session: Session | null, storeId: string) =>
 
 export function CustomerSessionProvider({ children }: { children: ReactNode }) {
   const store = useStore();
-  const supabase = getCustomerClient();
+  const config = useStorefrontConfig();
+  const supabase = getCustomerClient(config);
   const [session, setSession] = useState<Session | null>(null);
   // Profile tagged with its user, so a profile from a previous session is never shown.
   const [profile, setProfile] = useState<{ userId: string; customer: CustomerProfile } | null>(null);
@@ -46,13 +52,14 @@ export function CustomerSessionProvider({ children }: { children: ReactNode }) {
   const api = useMemo(
     () =>
       createApiClient({
-        baseUrl: "",
+        baseUrl: config.apiBaseUrl,
+        headers: config.channel === "app" ? { "X-Kshop-Channel": "app" } : undefined,
         getAccessToken: async () => {
           const current = (await supabase.auth.getSession()).data.session;
           return belongsTo(current, store.id) ? current?.access_token : null;
         },
       }),
-    [supabase, store.id],
+    [supabase, store.id, config],
   );
 
   useEffect(() => {

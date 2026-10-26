@@ -1,11 +1,11 @@
 "use client";
 
 import { ApiError, type Cart } from "@kshop/data";
-import Link from "next/link";
+import { Link } from "../navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useStore } from "@/lib/store-context";
-import { useCustomerSession } from "../customer-account/CustomerSession";
-import { useSelectedCurrency } from "../storefront/components/Currency";
+import { useStore } from "../store-context";
+import { useCustomerSession } from "../account/CustomerSession";
+import { useSelectedCurrency } from "../components/Currency";
 import { clearCartToken, getCartToken, setCartToken } from "./cart-token";
 
 // Server-side cart (D8) seen from the storefront: guests keep a token in localStorage, signed-in customers
@@ -111,7 +111,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCartToken(store.id);
         setCart((c) =>
           c
-            ? { ...c, token: null, lines: [], subtotal: 0, promotionSavings: 0, voucher: null, discountTotal: 0, itemCount: 0, hasIssues: false }
+            ? {
+                ...c,
+                token: null,
+                lines: [],
+                subtotal: 0,
+                promotionSavings: 0,
+                voucher: null,
+                discountTotal: 0,
+                itemCount: 0,
+                hasIssues: false,
+              }
             : c,
         );
       },
@@ -136,7 +146,14 @@ export function CartLink() {
       className="relative flex h-10 w-10 items-center justify-center rounded-[var(--sf-radius)] hover:bg-surface"
       aria-label={count ? `Carrito, ${count} ${count === 1 ? "producto" : "productos"}` : "Carrito"}
     >
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <svg
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        aria-hidden
+      >
         <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6" />
         <circle cx="10" cy="20" r="1.3" />
         <circle cx="17" cy="20" r="1.3" />

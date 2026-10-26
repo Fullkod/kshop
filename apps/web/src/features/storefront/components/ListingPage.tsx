@@ -1,11 +1,12 @@
 import type { SearchParams } from "@kshop/core";
-import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import type { ProductFilters } from "@/server/storefront/catalog";
 import type { PublicStore } from "@/server/stores";
+import { Breadcrumbs, ListingSkeleton, type Crumb } from "@kshop/storefront";
 import { Listing } from "./Listing";
 
-export type Crumb = { label: string; href?: string };
+export type { Crumb };
+export { Breadcrumbs, ListingSkeleton };
 
 /** Header (breadcrumb, title) + the listing, which streams in since it depends on the query string. */
 export function ListingPage({
@@ -59,46 +60,4 @@ async function ResolvedListing(
   },
 ) {
   return <Listing {...props} searchParams={await props.searchParams} />;
-}
-
-export function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
-  const all: Crumb[] = [{ label: "Inicio", href: "/" }, ...crumbs];
-  return (
-    <nav aria-label="Ruta de navegación">
-      <ol className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
-        {all.map((c, i) => (
-          <li key={`${c.label}-${i}`} className="flex items-center gap-1">
-            {i > 0 && <span aria-hidden>/</span>}
-            {c.href && i < all.length - 1 ? (
-              <Link href={c.href} className="hover:text-foreground hover:underline">
-                {c.label}
-              </Link>
-            ) : (
-              <span aria-current={i === all.length - 1 ? "page" : undefined} className="text-foreground">
-                {c.label}
-              </span>
-            )}
-          </li>
-        ))}
-      </ol>
-    </nav>
-  );
-}
-
-export function ListingSkeleton() {
-  return (
-    <div
-      className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4"
-      aria-busy="true"
-      aria-label="Cargando"
-    >
-      {Array.from({ length: 8 }, (_, i) => (
-        <div key={i} className="flex flex-col gap-2">
-          <div className="aspect-[4/5] animate-pulse rounded-[var(--sf-radius)] bg-surface" />
-          <div className="h-4 w-3/4 animate-pulse rounded bg-surface" />
-          <div className="h-4 w-1/3 animate-pulse rounded bg-surface" />
-        </div>
-      ))}
-    </div>
-  );
 }

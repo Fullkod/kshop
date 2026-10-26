@@ -1,31 +1,29 @@
 "use client";
 
 import { formatMoney, ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS, SHIPPING_TYPE_LABELS } from "@kshop/core";
-import { createApiClient, type PublicOrder } from "@kshop/data";
+import type { PublicOrder } from "@kshop/data";
 import { Alert, Badge, Card } from "@kshop/ui";
-import { useParams } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { useStore } from "@/lib/store-context";
+import { usePublicApi, useStore } from "../store-context";
 
 // Public order page (/order/{token}): confirmation after the checkout and the link the customer keeps.
 // Opening WhatsApp after an await is blocked by mobile browsers, so the customer taps the button here (gotcha).
-
-const publicApi = createApiClient({ baseUrl: "", getAccessToken: () => null });
 
 // ?new=1 right after the checkout (read from the URL, false while prerendering).
 const noSubscribe = () => () => {};
 const readIsNew = () => new URLSearchParams(window.location.search).get("new") === "1";
 
 const dateTime = (iso: string) =>
-  new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Havana" }).format(
-    new Date(iso),
-  );
+  new Intl.DateTimeFormat("es", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "America/Havana",
+  }).format(new Date(iso));
 
 /** By the token in the URL (/order/{token}) or a given one (/account/orders/{id}). */
-export function OrderView({ token: givenToken }: { token?: string } = {}) {
+export function OrderView({ token }: { token: string }) {
   const store = useStore();
-  const params = useParams<{ token?: string }>();
-  const token = givenToken ?? params.token ?? "";
+  const publicApi = usePublicApi();
   const [order, setOrder] = useState<PublicOrder | null>(null);
   const [missing, setMissing] = useState(false);
   const isNew = useSyncExternalStore(noSubscribe, readIsNew, () => false);
@@ -34,8 +32,11 @@ export function OrderView({ token: givenToken }: { token?: string } = {}) {
     publicApi
       .checkout(store.id)
       .order(token)
-      .then((r) => setOrder(r.order), () => setMissing(true));
-  }, [store.id, token]);
+      .then(
+        (r) => setOrder(r.order),
+        () => setMissing(true),
+      );
+  }, [publicApi, store.id, token]);
 
   if (missing) return <p className="py-12 text-center">No encontramos este pedido.</p>;
   if (!order) return <p className="py-12 text-center text-muted-foreground">Cargando…</p>;
@@ -48,8 +49,8 @@ export function OrderView({ token: givenToken }: { token?: string } = {}) {
         <Card className="flex flex-col gap-3 border-primary">
           <h2 className="text-xl font-semibold">¡Pedido {order.code} recibido!</h2>
           <p>
-            Último paso: envíalo a {order.storeName} por WhatsApp para que lo confirmen. Guarda esta página para ver
-            cómo va tu pedido.
+            Último paso: envíalo a {order.storeName} por WhatsApp para que lo confirmen. Guarda esta página
+            para ver cómo va tu pedido.
           </p>
           {order.whatsappUrl && (
             <a
@@ -83,8 +84,14 @@ export function OrderView({ token: givenToken }: { token?: string } = {}) {
             <li key={`${l.sku}-${i}`} className="flex gap-3 py-3">
               <div className="h-16 w-14 shrink-0 overflow-hidden rounded bg-surface">
                 {l.imageUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element -- snapshot URL from Supabase Storage
-                  <img src={l.imageUrl} alt="" width={56} height={64} className="h-full w-full object-cover" />
+                  // snapshot URL from Supabase Storage
+                  <img
+                    src={l.imageUrl}
+                    alt=""
+                    width={56}
+                    height={64}
+                    className="h-full w-full object-cover"
+                  />
                 )}
               </div>
               <div className="flex min-w-0 flex-1 flex-col text-sm">
@@ -92,7 +99,9 @@ export function OrderView({ token: givenToken }: { token?: string } = {}) {
                 {l.variantName && <span className="text-muted-foreground">{l.variantName}</span>}
                 <span className="text-muted-foreground">
                   {l.quantity} × {money(l.unitPrice)}
-                  {l.listPrice !== null && l.listPrice > l.unitPrice && <s className="ml-2">{money(l.listPrice)}</s>}
+                  {l.listPrice !== null && l.listPrice > l.unitPrice && (
+                    <s className="ml-2">{money(l.listPrice)}</s>
+                  )}
                 </span>
               </div>
               <span className="text-sm font-medium">{money(l.lineTotal)}</span>
@@ -122,7 +131,11 @@ export function OrderView({ token: givenToken }: { token?: string } = {}) {
           <div className="flex justify-between">
             <dt>Entrega</dt>
             <dd>
-              {order.shippingTotal === null ? "A convenir" : order.shippingTotal === 0 ? "Gratis" : money(order.shippingTotal)}
+              {order.shippingTotal === null
+                ? "A convenir"
+                : order.shippingTotal === 0
+                  ? "Gratis"
+                  : money(order.shippingTotal)}
             </dd>
           </div>
           <div className="flex justify-between text-base font-semibold">
@@ -159,7 +172,9 @@ export function OrderView({ token: givenToken }: { token?: string } = {}) {
             <>
               <p>{order.paymentMethod.name}</p>
               {order.paymentMethod.instructions && (
-                <p className="whitespace-pre-line text-muted-foreground">{order.paymentMethod.instructions}</p>
+                <p className="whitespace-pre-line text-muted-foreground">
+                  {order.paymentMethod.instructions}
+                </p>
               )}
             </>
           ) : (
@@ -174,7 +189,9 @@ export function OrderView({ token: givenToken }: { token?: string } = {}) {
           <ol className="flex flex-col gap-1">
             {order.events.map((e, i) => (
               <li key={i} className="flex justify-between gap-3">
-                <span>{e.type === "created" ? "Pedido recibido" : e.to ? ORDER_STATUS_LABELS[e.to] : e.type}</span>
+                <span>
+                  {e.type === "created" ? "Pedido recibido" : e.to ? ORDER_STATUS_LABELS[e.to] : e.type}
+                </span>
                 <span className="text-muted-foreground">{dateTime(e.createdAt)}</span>
               </li>
             ))}
@@ -183,7 +200,12 @@ export function OrderView({ token: givenToken }: { token?: string } = {}) {
       )}
 
       {!isNew && order.whatsappUrl && (
-        <a href={order.whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-center text-sm underline">
+        <a
+          href={order.whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-center text-sm underline"
+        >
           Escribir a {store.name} sobre este pedido
         </a>
       )}

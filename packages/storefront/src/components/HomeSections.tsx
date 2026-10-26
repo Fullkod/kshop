@@ -1,5 +1,5 @@
-import Link from "next/link";
-import type { BannerData, HomeSection } from "@/server/storefront/catalog";
+import { Link } from "../navigation";
+import type { BannerData, HomeSection } from "@kshop/data";
 import { HeroSlider } from "./HeroSlider";
 import { Markdown } from "./Markdown";
 import { ProductCard, imageSrcSet } from "./ProductCard";
@@ -53,7 +53,7 @@ export function HomeSections({ sections }: { sections: HomeSection[] }) {
                         className="group relative flex aspect-[4/3] items-end overflow-hidden rounded-[var(--sf-radius)] bg-surface p-4"
                       >
                         {c.imageUrl && (
-                          // eslint-disable-next-line @next/next/no-img-element -- category image
+                          // category image
                           <img
                             src={c.imageUrl}
                             alt=""
@@ -84,7 +84,7 @@ export function HomeSections({ sections }: { sections: HomeSection[] }) {
                         className="flex h-14 items-center gap-2 rounded-[var(--sf-radius)] border px-4 hover:bg-surface"
                       >
                         {b.logoUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element -- brand logo
+                          // brand logo
                           <img
                             src={b.logoUrl}
                             alt={b.name}

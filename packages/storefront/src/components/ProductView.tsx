@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "../navigation";
 import { useMemo, useState } from "react";
-import { useCart } from "@/features/cart/CartProvider";
-import type { StorefrontProduct } from "@/server/storefront/catalog";
+import { useCart } from "../cart/CartProvider";
+import type { StorefrontProduct } from "@kshop/data";
 import { Price } from "./Currency";
 import { imageSrcSet } from "./ProductCard";
 
@@ -44,7 +44,7 @@ export function ProductView({ product }: { product: StorefrontProduct }) {
       <div className="flex flex-col gap-3">
         <div className="aspect-[4/5] overflow-hidden rounded-[var(--sf-radius)] bg-surface">
           {image ? (
-            // eslint-disable-next-line @next/next/no-img-element -- D12: our own WebP sizes, no image optimizer
+            // D12: our own WebP sizes, no image optimizer
             <img
               src={image.url}
               srcSet={imageSrcSet(image.url)}
@@ -70,7 +70,7 @@ export function ProductView({ product }: { product: StorefrontProduct }) {
                   aria-current={i === imageIndex}
                   className={`block h-20 w-16 overflow-hidden rounded-[var(--sf-radius)] border-2 ${i === imageIndex ? "border-primary" : "border-transparent"}`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element -- thumbnail */}
+                  {/* thumbnail */}
                   <img
                     src={m.thumbUrl ?? m.url}
                     alt=""
@@ -210,7 +210,11 @@ function AddToCart({ variantId }: { variantId: string }) {
           >
             −
           </button>
-          <span className="w-8 text-center font-medium" aria-live="polite" aria-label={`Cantidad: ${quantity}`}>
+          <span
+            className="w-8 text-center font-medium"
+            aria-live="polite"
+            aria-label={`Cantidad: ${quantity}`}
+          >
             {quantity}
           </span>
           <button
@@ -240,7 +244,9 @@ function AddToCart({ variantId }: { variantId: string }) {
             </Link>
           </>
         )}
-        {status === "error" && <span className="text-destructive">No se pudo añadir. Inténtalo de nuevo.</span>}
+        {status === "error" && (
+          <span className="text-destructive">No se pudo añadir. Inténtalo de nuevo.</span>
+        )}
       </p>
     </div>
   );

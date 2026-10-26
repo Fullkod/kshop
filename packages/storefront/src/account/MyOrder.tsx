@@ -1,18 +1,16 @@
 "use client";
 
 import { ApiError } from "@kshop/data";
-import Link from "next/link";
-import { useParams } from "next/navigation";
+import { Link } from "../navigation";
 import { useEffect, useState } from "react";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "../store-context";
 import { OrderView } from "../cart/OrderView";
 import { RequireCustomer } from "./AccountView";
 import { useCustomerSession } from "./CustomerSession";
 
 // /account/orders/{id}: the order of a customer with an account, inside its profile (link of the WhatsApp
 // notices, decision 24). Asks to sign in first; another customer's order is simply not found.
-export function MyOrder() {
-  const { orderId } = useParams<{ orderId: string }>();
+export function MyOrder({ orderId }: { orderId: string }) {
   return (
     <RequireCustomer path={`/account/orders/${orderId}`}>
       <MyOrderBody orderId={orderId} />

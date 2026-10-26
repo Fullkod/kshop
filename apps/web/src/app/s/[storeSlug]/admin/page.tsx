@@ -3,7 +3,7 @@
 import { Card } from "@kshop/ui";
 import { ADMIN_MODULES } from "@/features/registry";
 import { SalesTodayCard } from "@/features/sales-today/SalesTodayCard";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 import { useAdmin } from "./admin-context";
 
 export default function AdminHomePage() {

@@ -6,7 +6,7 @@ import { Card } from "@kshop/ui";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 
 /** «Ventas de hoy» (D16, module sales_today): orders and money received today in America/Havana. */
 export function SalesTodayCard() {

@@ -15,8 +15,8 @@ import {
 import { Alert, Button, Card, Label } from "@kshop/ui";
 import { useState } from "react";
 import { useApiAction } from "@/features/catalog/use-catalog";
-import { themeStyle } from "@/features/storefront/theme-style";
-import { useStore } from "@/lib/store-context";
+import { themeStyle } from "@kshop/storefront";
+import { useStore } from "@kshop/storefront";
 import type { AdminContent } from "../use-content";
 
 const COLOR_LABELS: Record<keyof ThemeColors, string> = {

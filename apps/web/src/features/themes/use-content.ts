@@ -4,7 +4,7 @@ import type { HomeSectionType, Link, LinkType, MenuLocation } from "@kshop/core"
 import { AdminContentQuery } from "@kshop/data";
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 
 export type AdminBanner = {
   id: string;

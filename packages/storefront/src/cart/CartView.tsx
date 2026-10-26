@@ -3,7 +3,7 @@
 import { formatMoney } from "@kshop/core";
 import { ApiError, type Cart, type CartLine } from "@kshop/data";
 import { Alert, Button, Input } from "@kshop/ui";
-import Link from "next/link";
+import { Link } from "../navigation";
 import { useState } from "react";
 import { useCart } from "./CartProvider";
 
@@ -30,7 +30,13 @@ export function CartView() {
     <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
       <ul className="flex flex-col divide-y border-y">
         {cart.lines.map((line) => (
-          <CartLineRow key={line.variantId} line={line} money={money} disabled={pending} onChange={setQuantity} />
+          <CartLineRow
+            key={line.variantId}
+            line={line}
+            money={money}
+            disabled={pending}
+            onChange={setQuantity}
+          />
         ))}
       </ul>
       <aside className="flex h-fit flex-col gap-4 rounded-[var(--sf-radius)] border p-4">
@@ -68,9 +74,12 @@ function CartLineRow({
 }) {
   return (
     <li className="flex gap-3 py-4">
-      <Link href={`/product/${line.productSlug}`} className="h-24 w-20 shrink-0 overflow-hidden rounded-[var(--sf-radius)] bg-surface">
+      <Link
+        href={`/product/${line.productSlug}`}
+        className="h-24 w-20 shrink-0 overflow-hidden rounded-[var(--sf-radius)] bg-surface"
+      >
         {line.imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element -- D12: our own WebP sizes, no image optimizer
+          // D12: our own WebP sizes, no image optimizer
           <img src={line.imageUrl} alt="" width={80} height={96} className="h-full w-full object-cover" />
         )}
       </Link>
@@ -81,14 +90,20 @@ function CartLineRow({
         {line.variantName && <p className="text-sm text-muted-foreground">{line.variantName}</p>}
         <p className="text-sm">
           {money(line.unitPrice)}
-          {beforePrice(line) !== null && <s className="ml-2 text-muted-foreground">{money(beforePrice(line)!)}</s>}
+          {beforePrice(line) !== null && (
+            <s className="ml-2 text-muted-foreground">{money(beforePrice(line)!)}</s>
+          )}
         </p>
         {line.promotionName && <p className="text-xs text-primary">{line.promotionName}</p>}
         {line.issue === "unavailable" && <p className="text-sm text-destructive">Ya no está disponible.</p>}
         {line.issue === "insufficient" && (
           <p className="text-sm text-destructive">
             Solo quedan {line.available}.{" "}
-            <button type="button" className="underline" onClick={() => onChange(line.variantId, line.available)}>
+            <button
+              type="button"
+              className="underline"
+              onClick={() => onChange(line.variantId, line.available)}
+            >
               Ajustar
             </button>
           </p>

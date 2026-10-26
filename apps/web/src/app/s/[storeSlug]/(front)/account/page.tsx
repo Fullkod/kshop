@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { AccountView } from "@/features/customer-account/AccountView";
-import { MyOrders } from "@/features/customer-account/MyOrders";
+import { AccountView } from "@kshop/storefront";
+import { MyOrders } from "@kshop/storefront";
 
 export const metadata: Metadata = { title: "Mi cuenta", robots: { index: false } };
 

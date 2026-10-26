@@ -4,7 +4,7 @@ import type { CurrencyCode, ShippingType } from "@kshop/core";
 import { CheckoutSettingsQuery } from "@kshop/data";
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 
 export type ShippingZone = { id: string; name: string; description: string | null; isActive: boolean };
 export type ShippingMethod = {

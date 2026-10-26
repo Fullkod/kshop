@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CustomerLoginForm } from "@/features/customer-account/AccountForms";
+import { CustomerLoginForm } from "@kshop/storefront";
 
 export const metadata: Metadata = { title: "Entrar", robots: { index: false } };
 

@@ -6,7 +6,7 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useApiAction } from "@/features/catalog/use-catalog";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 import { useCheckoutSettings, type PaymentMethod, type ShippingMethod, type ShippingZone } from "../use-orders";
 
 // Admin screens of the checkout settings: shipping zones and methods (module shipping) and payment methods.

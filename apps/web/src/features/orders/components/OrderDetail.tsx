@@ -24,7 +24,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useApiAction } from "@/features/catalog/use-catalog";
 import { platformProtocol, publicEnv } from "@/env";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 import { useCheckoutSettings } from "../use-orders";
 import { OrderNotices } from "@/features/whatsapp-notifications/components/NotificationsPages";
 import { STATUS_VARIANT } from "./OrderList";

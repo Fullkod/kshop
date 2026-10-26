@@ -546,7 +546,12 @@ export type StockMovement = {
   userEmail: string | null;
 };
 
-export type StockMovementsPage = { movements: StockMovement[]; total: number; page: number; pageSize: number };
+export type StockMovementsPage = {
+  movements: StockMovement[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
 
 export type CurrencyRateEntry = { rate: number; setAt: string; setBy: string | null };
 
@@ -702,6 +707,8 @@ export type ApiClientOptions = {
   baseUrl: string;
   getAccessToken: () => string | null | undefined | Promise<string | null | undefined>;
   fetch?: typeof fetch;
+  /** Sent with every call, e.g. { "X-Kshop-Channel": "app" } from the store app. */
+  headers?: Record<string, string>;
 };
 
 export function createApiClient(options: ApiClientOptions) {
@@ -712,6 +719,7 @@ export function createApiClient(options: ApiClientOptions) {
     const res = await doFetch(`${options.baseUrl}/api/v1${path}`, {
       method,
       headers: {
+        ...options.headers,
         ...(token && { Authorization: `Bearer ${token}` }),
         ...(body !== undefined && { "Content-Type": "application/json" }),
       },
@@ -920,19 +928,27 @@ export function createApiClient(options: ApiClientOptions) {
       return {
         overview: () => request<WarehousesOverview>("GET", base),
         setZone: (zoneId: string, warehouseIds: string[]) =>
-          request<{ zoneId: string; warehouseIds: string[] }>("PUT", `${base}/zones/${zoneId}`, { warehouseIds }),
+          request<{ zoneId: string; warehouseIds: string[] }>("PUT", `${base}/zones/${zoneId}`, {
+            warehouseIds,
+          }),
         stock: (warehouseId: string, query = "") =>
           request<{ rows: WarehouseStockRow[] }>(
             "GET",
             `${base}/${warehouseId}/stock?${new URLSearchParams({ q: query })}`,
           ),
         transfer: (input: StockTransferInput) =>
-          request<{ transferId: string; variants: number; units: number }>("POST", `${base}/transfers`, input),
+          request<{ transferId: string; variants: number; units: number }>(
+            "POST",
+            `${base}/transfers`,
+            input,
+          ),
         movements: (query: Partial<StockMovementQuery> = {}) =>
           request<StockMovementsPage>(
             "GET",
             `${base}/movements?${new URLSearchParams(
-              Object.entries(query).flatMap(([k, v]) => (v === undefined || v === "" ? [] : [[k, String(v)]])),
+              Object.entries(query).flatMap(([k, v]) =>
+                v === undefined || v === "" ? [] : [[k, String(v)]],
+              ),
             )}`,
           ),
       };
@@ -945,16 +961,19 @@ export function createApiClient(options: ApiClientOptions) {
         ).toString();
       return {
         summary: (period: FinancePeriod) => request<FinanceSummary>("GET", `${base}/summary?${qs(period)}`),
-        daily: (period: FinancePeriod) => request<{ days: FinanceDay[] }>("GET", `${base}/daily?${qs(period)}`),
+        daily: (period: FinancePeriod) =>
+          request<{ days: FinanceDay[] }>("GET", `${base}/daily?${qs(period)}`),
         margin: (period: FinancePeriod, group: MarginGroup) =>
           request<FinanceMargin>("GET", `${base}/margin?${qs({ ...period, group })}`),
-        breakdown: (period: FinancePeriod) => request<FinanceBreakdown>("GET", `${base}/breakdown?${qs(period)}`),
+        breakdown: (period: FinancePeriod) =>
+          request<FinanceBreakdown>("GET", `${base}/breakdown?${qs(period)}`),
         inventory: (query: Partial<FinanceInventoryQuery> & Pick<FinanceInventoryQuery, "currency">) =>
           request<FinanceInventory>("GET", `${base}/inventory?${qs(query)}`),
         expenses: (period: Pick<FinancePeriod, "from" | "to">) =>
           request<{ expenses: Expense[] }>("GET", `${base}/expenses?${qs(period)}`),
         createExpense: (input: ExpenseInput) => request<Expense>("POST", `${base}/expenses`, input),
-        updateExpense: (id: string, input: ExpenseInput) => request<Expense>("PUT", `${base}/expenses/${id}`, input),
+        updateExpense: (id: string, input: ExpenseInput) =>
+          request<Expense>("PUT", `${base}/expenses/${id}`, input),
         deleteExpense: (id: string) => request<null>("DELETE", `${base}/expenses/${id}`),
         export: (period: FinancePeriod) => download(`${base}/export?${qs(period)}`, "finanzas.xlsx"),
       };

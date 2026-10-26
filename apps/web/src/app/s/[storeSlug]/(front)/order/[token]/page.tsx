@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { OrderView } from "@/features/cart/OrderView";
+import { OrderFromRoute } from "@/features/storefront/components/RouteOrders";
 
 export const metadata: Metadata = { title: "Pedido", robots: { index: false } };
 
@@ -9,7 +9,7 @@ export default function Page() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:py-12">
       <Suspense fallback={<p className="py-12 text-center text-muted-foreground">Cargando…</p>}>
-        <OrderView />
+        <OrderFromRoute />
       </Suspense>
     </div>
   );

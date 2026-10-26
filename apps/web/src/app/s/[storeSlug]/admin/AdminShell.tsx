@@ -8,7 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { ADMIN_MODULES } from "@/features/registry";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 import { AdminContext, type AdminState } from "./admin-context";
 import { AccountBanner } from "./AccountBanner";
 

@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { InvoiceCard, LinesTable, UsageMeter } from "@/features/billing/components/BillingParts";
 import { formatDate, SUBSCRIPTION_STATUS_LABELS } from "@/lib/format";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 import { useAdmin } from "../admin-context";
 
 // Admin › Plan y facturación (owner/admin): plan and state, next invoice, usage against the limits, modules with

@@ -6,7 +6,7 @@ import { Alert, Button, Card, FieldError, Input, Label, Select } from "@kshop/ui
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { formatDate } from "@/lib/format";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 import { useAdmin } from "../admin-context";
 
 // Admin › Equipo (owner/admin). The plan limits how many people (the owner does not count). An invitation is a

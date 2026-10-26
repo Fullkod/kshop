@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CustomerRegisterForm } from "@/features/customer-account/AccountForms";
+import { CustomerRegisterForm } from "@kshop/storefront";
 
 export const metadata: Metadata = { title: "Crear cuenta", robots: { index: false } };
 

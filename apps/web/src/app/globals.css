@@ -1,18 +1,6 @@
 @import "tailwindcss";
 @import "@kshop/ui/styles.css";
+@import "@kshop/storefront/styles.css";
 
 @source "../../../../packages/ui/src";
-
-/* Storefront: the store theme (CSS variables set by the layout) decides fonts and corner radius. */
-/* --bg/--fg are read directly: the --color-* tokens resolve on :root (admin palette, dark mode included). */
-.sf-root {
-  background: var(--bg);
-  color: var(--fg);
-  font-family: var(--sf-body);
-}
-.sf-root h1,
-.sf-root h2,
-.sf-root h3,
-.sf-root .sf-heading {
-  font-family: var(--sf-heading);
-}
+@source "../../../../packages/storefront/src";

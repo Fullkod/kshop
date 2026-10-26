@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useApiAction, useCatalogApi, useCatalogStructure } from "@/features/catalog/use-catalog";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 
 const XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 /** Same limit as the store-imports bucket (10 MB). */

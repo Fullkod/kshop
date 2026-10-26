@@ -1,6 +1,6 @@
-import Link from "next/link";
-import type { PublicStore } from "@/server/stores";
-import type { NavLink } from "@/server/storefront/data";
+import { Link } from "../navigation";
+import type { PublicStore } from "../store-context";
+import type { NavLink } from "@kshop/data";
 import { whatsappUrl } from "./whatsapp";
 
 export function StoreFooter({ store, links }: { store: PublicStore; links: NavLink[] }) {

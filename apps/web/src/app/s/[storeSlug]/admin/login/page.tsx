@@ -2,7 +2,7 @@
 
 import { Card } from "@kshop/ui";
 import { LoginForm } from "@/components/LoginForm";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 
 export default function StoreAdminLoginPage() {
   const store = useStore();

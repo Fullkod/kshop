@@ -2,7 +2,7 @@
 
 import { convertFromBase, formatMoney, type CurrencyCode } from "@kshop/core";
 import { createContext, useContext, useSyncExternalStore, type ReactNode } from "react";
-import type { StoreCurrency } from "@/server/storefront/data";
+import type { StoreCurrency } from "@kshop/data";
 
 // Decision D11: pages are rendered (and cached) in the base currency; with more than one sale currency the
 // visitor's choice is applied here, in the browser, with the store rates and per-currency overrides.

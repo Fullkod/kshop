@@ -20,7 +20,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useApiAction } from "@/features/catalog/use-catalog";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 import { useCheckoutSettings } from "../use-orders";
 
 type Filter = VariablesOf<typeof AdminOrdersQuery>["filter"];

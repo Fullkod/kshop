@@ -22,7 +22,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { uploadProductImage } from "@/lib/images";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 import {
   categoryOptions,
   useApiAction,

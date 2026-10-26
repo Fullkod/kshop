@@ -1,5 +1,5 @@
-import Link from "next/link";
-import type { ProductCardData } from "@/server/storefront/catalog";
+import { Link } from "../navigation";
+import type { ProductCardData } from "@kshop/data";
 import { Price } from "./Currency";
 
 /** srcset for an image stored in the two Phase 1 sizes (…-480.webp / …-1600.webp). */
@@ -16,7 +16,7 @@ export function ProductCard({ product, priority = false }: { product: ProductCar
     <Link href={`/product/${product.slug}`} className="group flex flex-col gap-2">
       <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--sf-radius)] bg-surface">
         {product.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- D12: our own WebP sizes, no image optimizer
+          // D12: our own WebP sizes, no image optimizer
           <img
             src={product.imageUrl}
             srcSet={imageSrcSet(product.imageUrl)}

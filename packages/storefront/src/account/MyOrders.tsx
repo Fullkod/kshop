@@ -3,9 +3,9 @@
 import { formatMoney, ORDER_STATUS_LABELS } from "@kshop/core";
 import type { CustomerOrderSummary } from "@kshop/data";
 import { Badge, Card } from "@kshop/ui";
-import Link from "next/link";
+import { Link } from "../navigation";
 import { useEffect, useState } from "react";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "../store-context";
 import { useCustomerSession } from "./CustomerSession";
 
 /** «Mis pedidos» in the account: only the customer's orders of this store (RLS). */
@@ -18,7 +18,10 @@ export function MyOrders() {
     api
       .customer(store.id)
       .orders()
-      .then((r) => setOrders(r.orders), () => setOrders([]));
+      .then(
+        (r) => setOrders(r.orders),
+        () => setOrders([]),
+      );
   }, [api, store.id]);
 
   return (

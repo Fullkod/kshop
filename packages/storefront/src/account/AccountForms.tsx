@@ -1,18 +1,16 @@
 "use client";
 
 import { formatPhone, normalizePhone, whatsappLink } from "@kshop/core";
-import { ApiError, createApiClient } from "@kshop/data";
+import { ApiError } from "@kshop/data";
 import { Alert, Button, FieldError, Input, Label } from "@kshop/ui";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link } from "../navigation";
+import { useRouter } from "../navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
-import { useStore } from "@/lib/store-context";
+import { usePublicApi, useStore } from "../store-context";
 import { getCartToken } from "../cart/cart-token";
 import { useCustomerSession } from "./CustomerSession";
 
 // Sign-in, sign-up and password recovery of the storefront customer (phone + password, D1).
-
-const publicApi = createApiClient({ baseUrl: "", getAccessToken: () => null });
 
 /** Where to go after signing in: ?next=/checkout (same-site paths only), the account otherwise. */
 function nextPath(): string {
@@ -76,6 +74,7 @@ const PhoneInput = ({ invalid }: { invalid?: boolean }) => (
 
 export function CustomerLoginForm() {
   const store = useStore();
+  const publicApi = usePublicApi();
   const { signIn } = useCustomerSession();
   const router = useRouter();
   const form = useApiForm();
@@ -120,6 +119,7 @@ export function CustomerLoginForm() {
 
 export function CustomerRegisterForm() {
   const store = useStore();
+  const publicApi = usePublicApi();
   const { signIn } = useCustomerSession();
   const router = useRouter();
   const form = useApiForm();
@@ -155,7 +155,14 @@ export function CustomerRegisterForm() {
         <PhoneInput invalid={!!form.fields.phone} />
       </Field>
       <Field id="password" label="Contraseña (mínimo 8 caracteres)" error={form.fields.password}>
-        <Input id="password" name="password" type="password" autoComplete="new-password" minLength={8} required />
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          minLength={8}
+          required
+        />
       </Field>
       <label className="flex items-start gap-2 text-sm">
         <input type="checkbox" name="acceptsMarketing" className="mt-1" />
@@ -178,6 +185,7 @@ export function CustomerRegisterForm() {
 /** Without automatic WhatsApp messages yet (decision 23) the store sends the code by hand. */
 export function CustomerRecoverForm() {
   const store = useStore();
+  const publicApi = usePublicApi();
   const { signIn } = useCustomerSession();
   const router = useRouter();
   const form = useApiForm();
@@ -233,10 +241,24 @@ export function CustomerRecoverForm() {
         </a>
       )}
       <Field id="code" label="Código de 6 dígitos" error={form.fields.code}>
-        <Input id="code" name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} required />
+        <Input
+          id="code"
+          name="code"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={6}
+          required
+        />
       </Field>
       <Field id="password" label="Nueva contraseña (mínimo 8 caracteres)" error={form.fields.password}>
-        <Input id="password" name="password" type="password" autoComplete="new-password" minLength={8} required />
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          minLength={8}
+          required
+        />
       </Field>
       {form.error && <Alert variant="destructive">{form.error}</Alert>}
       <Button type="submit" disabled={form.pending}>

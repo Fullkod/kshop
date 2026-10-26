@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useApiAction } from "@/features/catalog/use-catalog";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 
 type Row = {
   id: string;

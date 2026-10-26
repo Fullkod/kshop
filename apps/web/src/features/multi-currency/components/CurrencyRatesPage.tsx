@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { formatDate } from "@/lib/format";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 
 // Admin › Monedas (module multi_currency, PRP-6 D16, D17). The owner sets every rate by hand (decision 4); elTOQUE's
 // informal rate is only shown as a suggestion and never applied by itself. Changing a rate moves the converted

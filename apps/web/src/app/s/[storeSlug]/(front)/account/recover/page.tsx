@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CustomerRecoverForm } from "@/features/customer-account/AccountForms";
+import { CustomerRecoverForm } from "@kshop/storefront";
 
 export const metadata: Metadata = { title: "Recuperar contraseña", robots: { index: false } };
 

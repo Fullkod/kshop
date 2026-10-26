@@ -3,9 +3,9 @@
 import { formatPhone } from "@kshop/core";
 import { ApiError, type CustomerAddress } from "@kshop/data";
 import { Alert, Button, Card, Input, Label } from "@kshop/ui";
-import { useRouter } from "next/navigation";
+import { useRouter } from "../navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "../store-context";
 import { useCustomerSession } from "./CustomerSession";
 
 /** Guard for customer-only pages: sends guests to the sign-in page and back here afterwards. */
@@ -91,7 +91,12 @@ function ProfileCard() {
           <Input id="email" name="email" type="email" defaultValue={customer.email ?? ""} />
         </div>
         <label className="flex items-start gap-2 text-sm sm:col-span-2">
-          <input type="checkbox" name="acceptsMarketing" defaultChecked={customer.acceptsMarketing} className="mt-1" />
+          <input
+            type="checkbox"
+            name="acceptsMarketing"
+            defaultChecked={customer.acceptsMarketing}
+            className="mt-1"
+          />
           Quiero recibir novedades y ofertas de {store.name}.
         </label>
         {message && (
@@ -172,7 +177,12 @@ function AddressesCard() {
                 <p>{a.address}</p>
                 {a.reference && <p className="text-muted-foreground">{a.reference}</p>}
               </div>
-              <Button variant="ghost" size="sm" onClick={() => onDelete(a.id)} aria-label={`Borrar dirección de ${a.recipient}`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete(a.id)}
+                aria-label={`Borrar dirección de ${a.recipient}`}
+              >
                 Borrar
               </Button>
             </li>

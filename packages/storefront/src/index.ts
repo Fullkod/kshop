@@ -1,0 +1,26 @@
+// Storefront shared by the web (Next) and the store app (Vite + Capacitor), PRP-7 D1/D3. Routing comes from
+// NavigationProvider, the store and the API from StoreProvider: nothing here imports Next.
+export * from "./navigation";
+export * from "./store-context";
+export * from "./theme-style";
+export * from "./components/Currency";
+export * from "./components/HeroSlider";
+export * from "./components/HomeSections";
+export * from "./components/Listing";
+export * from "./components/ListingControls";
+export * from "./components/Markdown";
+export * from "./components/ProductCard";
+export * from "./components/ProductView";
+export * from "./components/StoreFooter";
+export * from "./components/StoreHeader";
+export * from "./components/whatsapp";
+export * from "./cart/cart-token";
+export * from "./cart/CartProvider";
+export * from "./cart/CartView";
+export * from "./cart/CheckoutView";
+export * from "./cart/OrderView";
+export * from "./account/AccountForms";
+export * from "./account/AccountView";
+export * from "./account/CustomerSession";
+export * from "./account/MyOrder";
+export * from "./account/MyOrders";

@@ -6,7 +6,7 @@ import { Alert, Badge, Button, buttonVariants, Card, Input, Select } from "@ksho
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 import { categoryOptions, useApiAction, useCatalogApi, useCatalogStructure } from "../use-catalog";
 
 type Row = NonNullable<ResultOf<typeof AdminProductsQuery>["adminSearchProducts"]>["edges"][number]["node"];

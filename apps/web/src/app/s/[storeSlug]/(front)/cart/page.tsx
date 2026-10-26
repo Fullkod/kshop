@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CartView } from "@/features/cart/CartView";
+import { CartView } from "@kshop/storefront";
 
 export const metadata: Metadata = { title: "Carrito", robots: { index: false } };
 

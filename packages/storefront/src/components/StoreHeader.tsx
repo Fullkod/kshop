@@ -1,7 +1,7 @@
-import Link from "next/link";
-import type { PublicStore } from "@/server/stores";
-import type { NavLink } from "@/server/storefront/data";
-import { CartLink } from "@/features/cart/CartProvider";
+import { Link } from "../navigation";
+import type { PublicStore } from "../store-context";
+import type { NavLink } from "@kshop/data";
+import { CartLink } from "../cart/CartProvider";
 import { CurrencySelect } from "./Currency";
 
 /** Header: name/logo, menu (dropdowns on desktop, a <details> panel on mobile, no JS needed), search, currency. */
@@ -54,7 +54,7 @@ export function StoreHeader({ store, links }: { store: PublicStore; links: NavLi
 
         <Link href="/" className="flex min-w-0 items-center gap-2" aria-label={`${store.name}, inicio`}>
           {store.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- store logo from Supabase Storage
+            // store logo from Supabase Storage
             <img
               src={store.logoUrl}
               alt=""

@@ -5,7 +5,7 @@ import { ApiError, CatalogStructureQuery } from "@kshop/data";
 import { useCallback, useEffect, useState } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 
 export type AttributeValue = { id: string; name: string; slug: string; value: string | null };
 export type Attribute = {

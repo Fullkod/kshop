@@ -8,7 +8,7 @@ import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { platformProtocol, publicEnv } from "@/env";
 import { formatDate, storeUrl } from "@/lib/format";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 
 // Admin › Dominio propio (module custom_domain, PRP-6 D20–D23). The owner buys the domain, types it here, sets the
 // DNS records at their registrar and presses «Comprobar». The admin always stays on the subdomain.

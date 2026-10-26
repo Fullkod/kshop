@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/features/storefront/components/ListingPage";
-import { Markdown } from "@/features/storefront/components/Markdown";
+import { Markdown } from "@kshop/storefront";
 import { getPage } from "@/server/storefront/catalog";
 import { getStorefrontShell } from "@/server/storefront/data";
 import { requireStore, staticSlugs, storeMetadata } from "@/server/storefront/page-helpers";

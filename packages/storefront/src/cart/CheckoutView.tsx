@@ -3,12 +3,12 @@
 import { convertFromBase, formatMoney, formatPhone, SHIPPING_TYPE_LABELS } from "@kshop/core";
 import { ApiError, type CheckoutOptions } from "@kshop/data";
 import { Alert, Button, FieldError, Input, Label, Select } from "@kshop/ui";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link } from "../navigation";
+import { useRouter } from "../navigation";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { useStore } from "@/lib/store-context";
-import { useCustomerSession } from "../customer-account/CustomerSession";
-import { useSelectedCurrency } from "../storefront/components/Currency";
+import { useStore } from "../store-context";
+import { useCustomerSession } from "../account/CustomerSession";
+import { useSelectedCurrency } from "../components/Currency";
 import { getCartToken } from "./cart-token";
 import { useCart } from "./CartProvider";
 import { VoucherForm } from "./CartView";
@@ -36,7 +36,10 @@ export function CheckoutView() {
   const idempotencyKey = useRef<string | null>(null);
 
   useEffect(() => {
-    api.checkout(store.id).options().then(setOptions, () => setError("No se pudieron cargar las opciones de entrega."));
+    api
+      .checkout(store.id)
+      .options()
+      .then(setOptions, () => setError("No se pudieron cargar las opciones de entrega."));
   }, [api, store.id]);
 
   const zoneMethods = useMemo(
@@ -190,7 +193,9 @@ export function CheckoutView() {
               <fieldset className="flex flex-col gap-2">
                 <legend className="sr-only">Método de entrega</legend>
                 {zoneMethods.length === 0 && (
-                  <p className="text-sm text-muted-foreground">Elige una zona para ver cómo te lo hacemos llegar.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Elige una zona para ver cómo te lo hacemos llegar.
+                  </p>
                 )}
                 {zoneMethods.map((m) => (
                   <label
@@ -209,12 +214,18 @@ export function CheckoutView() {
                       <span className="font-medium">{m.name}</span>
                       <span className="text-muted-foreground">
                         {SHIPPING_TYPE_LABELS[m.type]}
-                        {m.pickupPoint && ` · ${m.pickupPoint.name}${m.pickupPoint.address ? `, ${m.pickupPoint.address}` : ""}`}
-                        {m.minDays !== null && ` · ${m.minDays}${m.maxDays !== null && m.maxDays !== m.minDays ? `–${m.maxDays}` : ""} días`}
+                        {m.pickupPoint &&
+                          ` · ${m.pickupPoint.name}${m.pickupPoint.address ? `, ${m.pickupPoint.address}` : ""}`}
+                        {m.minDays !== null &&
+                          ` · ${m.minDays}${m.maxDays !== null && m.maxDays !== m.minDays ? `–${m.maxDays}` : ""} días`}
                       </span>
                     </span>
                     <span className="text-sm font-medium">
-                      {m.type === "to_agree" ? "A convenir" : m.price === 0 ? "Gratis" : money(toCartCurrency(m.price))}
+                      {m.type === "to_agree"
+                        ? "A convenir"
+                        : m.price === 0
+                          ? "Gratis"
+                          : money(toCartCurrency(m.price))}
                     </span>
                   </label>
                 ))}
@@ -226,10 +237,13 @@ export function CheckoutView() {
           {(!options.shippingEnabled || method?.type !== "pickup") && (
             <>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="address">
-                  Dirección{method?.type === "delivery" ? "" : " (opcional)"}
-                </Label>
-                <Input id="address" name="address" autoComplete="street-address" required={method?.type === "delivery"} />
+                <Label htmlFor="address">Dirección{method?.type === "delivery" ? "" : " (opcional)"}</Label>
+                <Input
+                  id="address"
+                  name="address"
+                  autoComplete="street-address"
+                  required={method?.type === "delivery"}
+                />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="reference">Referencias (opcional)</Label>
@@ -307,7 +321,13 @@ export function CheckoutView() {
             {createAccount && (
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="password">Contraseña (mínimo 8 caracteres)</Label>
-                <Input id="password" name="password" type="password" autoComplete="new-password" minLength={8} />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={8}
+                />
                 <FieldError>{fieldError("password") ?? fieldError("createAccountPassword")}</FieldError>
               </div>
             )}
@@ -344,18 +364,24 @@ export function CheckoutView() {
           )}
           <div className="flex justify-between">
             <span>Entrega</span>
-            <span>{!method ? "—" : shipping === null ? "A convenir" : shipping === 0 ? "Gratis" : money(shipping)}</span>
+            <span>
+              {!method ? "—" : shipping === null ? "A convenir" : shipping === 0 ? "Gratis" : money(shipping)}
+            </span>
           </div>
           <div className="flex justify-between pt-1 text-base font-semibold">
             <span>Total</span>
             <span>{shipping === null ? `${money(goods)} + entrega` : money(goods + shipping)}</span>
           </div>
           {voucher?.amount === null && (
-            <p className="text-xs text-muted-foreground">El cupón se descuenta del envío al confirmar el pedido.</p>
+            <p className="text-xs text-muted-foreground">
+              El cupón se descuenta del envío al confirmar el pedido.
+            </p>
           )}
         </div>
         {cart.vouchersEnabled && <VoucherForm />}
-        {cart.hasIssues && <Alert variant="destructive">Algunos productos cambiaron. Revisa tu carrito.</Alert>}
+        {cart.hasIssues && (
+          <Alert variant="destructive">Algunos productos cambiaron. Revisa tu carrito.</Alert>
+        )}
         {error && <Alert variant="destructive">{error}</Alert>}
         <Button type="submit" size="lg" disabled={pending || cart.hasIssues}>
           {pending ? "Enviando pedido…" : "Confirmar pedido"}

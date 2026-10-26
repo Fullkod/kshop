@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Breadcrumbs, type Crumb } from "@/features/storefront/components/ListingPage";
-import { ProductGrid } from "@/features/storefront/components/ProductCard";
-import { ProductView } from "@/features/storefront/components/ProductView";
+import { ProductGrid } from "@kshop/storefront";
+import { ProductView } from "@kshop/storefront";
 import { getProduct, getProducts } from "@/server/storefront/catalog";
 import { getStorefrontShell } from "@/server/storefront/data";
 import { requireStore, staticSlugs, storeMetadata } from "@/server/storefront/page-helpers";

@@ -8,7 +8,7 @@ import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useApiAction } from "@/features/catalog/use-catalog";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 import { useCheckoutSettings } from "../use-orders";
 
 // "Nuevo pedido" from the admin (decision 23): orders taken by phone or in person, through the same

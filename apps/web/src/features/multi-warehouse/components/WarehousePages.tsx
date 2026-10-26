@@ -14,7 +14,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 
 // Admin › Almacenes (module multi_warehouse, PRP-6 D11–D15): stock per warehouse, which warehouses serve each zone,
 // transfers and the movement history. Creating and editing warehouses stays in Catálogo › Almacenes.

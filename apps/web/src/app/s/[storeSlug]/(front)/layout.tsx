@@ -1,9 +1,9 @@
-import { CartProvider } from "@/features/cart/CartProvider";
-import { CustomerSessionProvider } from "@/features/customer-account/CustomerSession";
-import { CurrencyProvider } from "@/features/storefront/components/Currency";
-import { StoreFooter } from "@/features/storefront/components/StoreFooter";
-import { StoreHeader } from "@/features/storefront/components/StoreHeader";
-import { themeStyle } from "@/features/storefront/theme-style";
+import { CartProvider } from "@kshop/storefront";
+import { CustomerSessionProvider } from "@kshop/storefront";
+import { CurrencyProvider } from "@kshop/storefront";
+import { StoreFooter } from "@kshop/storefront";
+import { StoreHeader } from "@kshop/storefront";
+import { themeStyle } from "@kshop/storefront";
 import { getStorefrontShell, type NavLink } from "@/server/storefront/data";
 import { getStoreBySlug } from "@/server/stores";
 

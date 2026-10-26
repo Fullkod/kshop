@@ -31,7 +31,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 
 // Admin › Finanzas (module finance, owner/admin, PRP-6 D1–D10 and Roberto's answers): Resumen with the daily close
 // in every currency, Margen, Inventario, Desglose and Gastos. The period and the currency of the «Equivalente» live

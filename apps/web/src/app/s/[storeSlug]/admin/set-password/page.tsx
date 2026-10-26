@@ -4,7 +4,7 @@ import { Alert, Button, Card, FieldError, Input, Label } from "@kshop/ui";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 
 const MIN_PASSWORD = 8;
 

@@ -30,7 +30,7 @@ import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useApiAction } from "@/features/catalog/use-catalog";
 import { useCheckoutSettings } from "@/features/orders/use-orders";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 
 // Admin screens of the discounts module (PRP-4): automatic promotions (crossed-out price in the storefront) and
 // vouchers typed in the cart. Admins and owners edit them; the staff sees them read-only. Dates are typed in

@@ -13,6 +13,7 @@
   "dependencies": {
     "@kshop/core": "workspace:*",
     "@kshop/data": "workspace:*",
+    "@kshop/storefront": "workspace:*",
     "@kshop/ui": "workspace:*",
     "@supabase/supabase-js": "^2.118.0",
     "@urql/core": "^6.0.3",

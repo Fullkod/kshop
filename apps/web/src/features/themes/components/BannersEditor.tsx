@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useApiAction, type CatalogStructure } from "@/features/catalog/use-catalog";
 import { uploadBannerImage } from "@/lib/images";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 import { fromLocalInput, toLocalInput, type AdminBanner, type AdminContent } from "../use-content";
 import { LinkPicker } from "./LinkPicker";
 

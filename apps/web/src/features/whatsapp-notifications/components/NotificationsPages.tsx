@@ -21,7 +21,7 @@ import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useApiAction } from "@/features/catalog/use-catalog";
 import { useCheckoutSettings } from "@/features/orders/use-orders";
 import { useSession } from "@/lib/session";
-import { useStore } from "@/lib/store-context";
+import { useStore } from "@kshop/storefront";
 
 // Admin screens of the WhatsApp notices (module whatsapp_notifications, PRP-4): who receives the store notices,
 // the texts (store override of the platform default, with a preview rendered by the same SQL) and the log of

@@ -1,7 +1,7 @@
 "use client";
 
 import { listingQuery, SORT_LABELS, type ListingState, type ProductSort } from "@kshop/core";
-import { useRouter } from "next/navigation";
+import { useRouter } from "../navigation";
 import { useState } from "react";
 
 /** Sort select and price range: they change the URL (the listing is rendered on the server from it). */

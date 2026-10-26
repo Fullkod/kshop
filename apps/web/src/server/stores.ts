@@ -1,27 +1,11 @@
 import "server-only";
-import {
-  currencyCodeSchema,
-  resolveTheme,
-  type CurrencyCode,
-  type StoreStatus,
-  type Theme,
-} from "@kshop/core";
+import { currencyCodeSchema, resolveTheme } from "@kshop/core";
 import { createGraphqlClient, StoreBySlugQuery, StoreSlugsQuery } from "@kshop/data";
+import type { PublicStore } from "@kshop/storefront";
 import { cacheLife, cacheTag } from "next/cache";
 import { supabaseConfig } from "@/env";
 
-export type PublicStore = {
-  id: string;
-  slug: string;
-  name: string;
-  status: StoreStatus;
-  baseCurrency: CurrencyCode;
-  whatsappPhone: string | null;
-  logoUrl: string | null;
-  theme: Theme;
-  /** Live custom domain (verified, module on, store active) or null: the store is served on its subdomain. */
-  customDomain: string | null;
-};
+export type { PublicStore } from "@kshop/storefront";
 
 export const storeCacheTag = (slug: string) => `store:${slug}`;
 

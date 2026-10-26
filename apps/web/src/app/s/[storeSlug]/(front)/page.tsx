@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { HomeSections } from "@/features/storefront/components/HomeSections";
+import { HomeSections } from "@kshop/storefront";
 import { getHome, getProducts, type HomeSection } from "@/server/storefront/catalog";
 import { getStorefrontShell } from "@/server/storefront/data";
 import { requireStore, storeMetadata } from "@/server/storefront/page-helpers";

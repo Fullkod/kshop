@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CheckoutView } from "@/features/cart/CheckoutView";
+import { CheckoutView } from "@kshop/storefront";
 
 export const metadata: Metadata = { title: "Finalizar pedido", robots: { index: false } };
 
