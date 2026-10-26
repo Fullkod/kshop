@@ -73,7 +73,7 @@ Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desa
 | 2. Tienda pública | Hecha. Lighthouse en Vercel: portada 97–98, ficha 89–93, listado 76–90 tras el deploy (CLS 0; queda el LCP de la imagen) | `prp-fase-2-tienda-publica.md` | `f1b50e0` |
 | 3. Clientes y compra | Hecha (avisos automáticos por OpenWA en la Fase 4) | `prp-fase-3-clientes-y-compra.md` | ver PRP |
 | 4. Avisos y descuentos | Hecha; **pendiente** probar con la instancia OpenWA real (hoy en modo simulado) | `prp-fase-4-avisos-y-descuentos.md` | ver PRP |
-| 5. Suscripciones y módulos | En curso: 5.1–5.5 hechas; falta la validación final (5.6) | `prp-fase-5-suscripciones-y-modulos.md` | `6b52dc8` |
+| 5. Suscripciones y módulos | Hecha; **pendiente** poner a cero el contador de facturas antes de la primera real y configurar el WhatsApp de soporte | `prp-fase-5-suscripciones-y-modulos.md` | ver PRP |
 
 El remoto `origin` (`Fullkod/kshop`) está al día hasta la Fase 2 (Roberto subió los commits); lo de la Fase 3
 sigue en commits locales hasta que Roberto autorice el push.

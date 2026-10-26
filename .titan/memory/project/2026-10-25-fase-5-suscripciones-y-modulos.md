@@ -1,4 +1,4 @@
-# Fase 5 — Suscripciones y módulos (en curso: 5.1–5.5 hechas, falta la validación final 5.6)
+# Fase 5 — Suscripciones y módulos (hecha, 2026-10-25)
 
 PRP con progreso, decisiones y aprendizajes: `.titan/plans/prp-fase-5-suscripciones-y-modulos.md`.
 Precios: `2026-10-25-estudio-precios-cuba.md`. Decisión 25 en `decisiones.md`.
@@ -22,14 +22,13 @@ Precios: `2026-10-25-estudio-precios-cuba.md`. Decisión 25 en `decisiones.md`.
   candados «Pro · N USD».
 - Tienda Demo: cortesía (no se factura); `demo:seed` la deja así.
 
-## Pruebas (última pasada)
-`test:rls` 475/475, `e2e:billing` 52/52, `qa:billing` 16/16 (capturas `.titan/qa/fase-5/`), `e2e:discounts` 35/35;
-typecheck y lint OK.
+## Pruebas (validación final 5.6)
+`test`, `typecheck`, `lint`, `build` OK; `test:rls` 475/475; `e2e:catalog` 46/46, `e2e:orders` 94/94,
+`e2e:discounts` 35/35, `e2e:notifications` 29/29, `e2e:billing` 52/52; `qa:orders` 14/14, `qa:discounts` 9/9,
+`qa:notifications` 8/8, `qa:billing` 16/16 (capturas `.titan/qa/fase-5/`).
+Las pruebas que editan contenido en una tienda Base deben regalarle antes `themes` (`set_store_module_grant`).
 
-## Falta (5.6, pausado por Roberto)
-- `pnpm test`, `pnpm build`, reiniciar `pnpm dev` después del build, y repasar `e2e:{catalog,orders,discounts,
-  notifications,billing}` y `qa:{orders,discounts,notifications,billing}`.
-- Quitar `.titan/qa/fase-5/console-errors.txt` (resto de una pasada fallida, ya commiteado).
-- Opcional: reiniciar el contador de facturas (`private.platform_invoice_counters`) que gastaron los E2E/QA
-  (la primera factura real saldría con un número > 0001).
-- Cerrar PRP, `arranque-y-fases.md` y esta entrada.
+## Pendiente
+- Antes de la primera factura real: poner a cero `private.platform_invoice_counters` (las pruebas gastan números
+  porque dev = prod; hacerlo solo si `platform_invoices` está vacía).
+- Configurar el WhatsApp de soporte en Superadmin › Cobros.

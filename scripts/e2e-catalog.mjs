@@ -279,6 +279,18 @@ async function run() {
   check("content: staff cannot change the theme -> 403", r.status === 403, r);
   r = await ownerB("PUT", `${CA}/theme`, { preset: "warm" });
   check("content: owner of B cannot change A -> 403", r.status === 403, r);
+  // Phase 5: the look is not in Base; the platform gives it to store A as a grant.
+  r = await ownerA("PUT", `${CA}/theme`, { preset: "warm" });
+  check("content: Base store without the look module -> 403", r.status === 403, r);
+  const { error: grantError } = await service.rpc("set_store_module_grant", {
+    p_store_id: storeA.id,
+    p_module_code: "themes",
+    p_enabled: true,
+    p_ends_at: null,
+    p_reason: "e2e",
+    p_user_id: null,
+  });
+  if (grantError) throw grantError;
   r = await ownerA("PUT", `${CA}/theme`, { preset: "nope" });
   check("content: invalid preset -> 400", r.status === 400, r);
   r = await ownerA("PUT", `${CA}/theme`, { preset: "warm", colors: { accent: "#112233" } });

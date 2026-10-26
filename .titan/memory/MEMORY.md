@@ -26,7 +26,7 @@
 - [2026-10-25-fase-3-clientes-y-compra.md](project/2026-10-25-fase-3-clientes-y-compra.md) — Fase 3 hecha: dónde está cada pieza, pruebas, pendientes
 - [2026-10-25-fase-4-avisos-y-descuentos.md](project/2026-10-25-fase-4-avisos-y-descuentos.md) — Fase 4 hecha: motor de precios SQL, promociones, cupones y avisos WhatsApp (dry_run; falta OpenWA real)
 - [2026-10-25-estudio-precios-cuba.md](project/2026-10-25-estudio-precios-cuba.md) — Precios en USD para Cuba (Base 5, Pro 12, sueltos 2–3, prueba 30 días, fundadores); competencia Plaza Cubana; cobro en efectivo
-- [2026-10-25-fase-5-suscripciones-y-modulos.md](project/2026-10-25-fase-5-suscripciones-y-modulos.md) — Fase 5 en curso (5.1–5.5 hechas): precios USD, cupones y apariencia fuera del Base, dónde está cada pieza, qué falta
+- [2026-10-25-fase-5-suscripciones-y-modulos.md](project/2026-10-25-fase-5-suscripciones-y-modulos.md) — Fase 5 hecha: precios USD, cupones y apariencia fuera del Base, dónde está cada pieza, pendientes
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
 
 ## feedback/ — Correcciones y preferencias
@@ -47,4 +47,4 @@
 - `prp-fase-2-tienda-publica.md` — Fase 2: tienda pública (COMPLETADO 2026-10-25; Lighthouse en Vercel en el PRP)
 - `prp-fase-3-clientes-y-compra.md` — Fase 3: clientes y compra (COMPLETADO)
 - `prp-fase-4-avisos-y-descuentos.md` — Fase 4: promociones, cupones y avisos WhatsApp de plataforma (COMPLETADO salvo OpenWA real)
-- `prp-fase-5-suscripciones-y-modulos.md` — Fase 5: planes, add-ons, grants, facturas manuales, límites, equipo, suspensión (EN CURSO: 5.1–5.5 hechas, falta 5.6)
+- `prp-fase-5-suscripciones-y-modulos.md` — Fase 5: planes, add-ons, grants, facturas manuales, límites, equipo, suspensión (HECHA)
