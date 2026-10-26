@@ -21,7 +21,12 @@ const CART_COLUMNS = "id, token, customer_id, currency, voucher_code";
 
 export type CartOwner = { customerId: string | null; token: string | undefined };
 
-type StoreCurrencyRow = { currency: CurrencyCode; is_base: boolean; rate_to_base: number; rounding: number | null };
+type StoreCurrencyRow = {
+  currency: CurrencyCode;
+  is_base: boolean;
+  rate_to_base: number;
+  rounding: number | null;
+};
 
 /** Sale currencies the store can sell in now (other than the base needs multi_currency). */
 export async function saleCurrencies(storeId: string): Promise<StoreCurrencyRow[]> {
@@ -38,7 +43,9 @@ export async function saleCurrencies(storeId: string): Promise<StoreCurrencyRow[
 
 /** The requested currency when the store sells in it, otherwise the base currency. */
 export function pickCurrency(currencies: StoreCurrencyRow[], requested?: string | null): StoreCurrencyRow {
-  return currencies.find((c) => c.currency === requested) ?? currencies.find((c) => c.is_base) ?? currencies[0]!;
+  return (
+    currencies.find((c) => c.currency === requested) ?? currencies.find((c) => c.is_base) ?? currencies[0]!
+  );
 }
 
 async function findCart(storeId: string, owner: CartOwner): Promise<CartRow | null> {
@@ -132,7 +139,11 @@ export async function priceLines(
 }
 
 /** Lines with prices in the cart currency (promotions and voucher included) and stock problems flagged. */
-export async function cartView(storeId: string, cart: CartRow | null, requestedCurrency?: string): Promise<Cart> {
+export async function cartView(
+  storeId: string,
+  cart: CartRow | null,
+  requestedCurrency?: string,
+): Promise<Cart> {
   const currencies = await saleCurrencies(storeId);
   const currency = pickCurrency(currencies, requestedCurrency ?? cart?.currency);
   const empty: Cart = {
@@ -262,7 +273,11 @@ export async function updateCart(storeId: string, owner: CartOwner, input: CartU
     else upserts.push({ store_id: storeId, cart_id: cart.id, variant_id: line.variantId, quantity });
   }
   if (removals.length) {
-    const { error } = await service.from("cart_lines").delete().eq("cart_id", cart.id).in("variant_id", removals);
+    const { error } = await service
+      .from("cart_lines")
+      .delete()
+      .eq("cart_id", cart.id)
+      .in("variant_id", removals);
     if (error) throw error;
   }
   if (upserts.length) {

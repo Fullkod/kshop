@@ -64,19 +64,26 @@ export function mapDbError(error: unknown, entity = "El registro"): never {
       }
       // Phase 5: plans, add-ons and team (Spanish message from SQL).
       if (error.hint === "max_staff") throw new HttpError(409, "limit_reached", error.message ?? "");
-      if (error.hint === "module_dependency") throw new HttpError(409, "module_dependency", error.message ?? "");
+      if (error.hint === "module_dependency")
+        throw new HttpError(409, "module_dependency", error.message ?? "");
       if (error.hint === "forbidden") throw new HttpError(403, "forbidden", error.message ?? "");
       if (error.hint === "conflict") throw new HttpError(409, "conflict", error.message ?? "");
       // Order functions (phase 3): Spanish message from SQL, status from the hint.
-      if (error.hint === "insufficient_stock") throw new HttpError(409, "insufficient_stock", error.message ?? "");
-      if (error.hint === "invalid_transition") throw new HttpError(409, "invalid_transition", error.message ?? "");
-      if (error.hint === "shipping_required") throw new HttpError(409, "shipping_required", error.message ?? "");
+      if (error.hint === "insufficient_stock")
+        throw new HttpError(409, "insufficient_stock", error.message ?? "");
+      if (error.hint === "invalid_transition")
+        throw new HttpError(409, "invalid_transition", error.message ?? "");
+      if (error.hint === "shipping_required")
+        throw new HttpError(409, "shipping_required", error.message ?? "");
       if (error.hint === "store_inactive") throw new HttpError(404, "not_found", error.message ?? "");
       // Phase 4: a voucher that does not apply (expired, no uses left, minimum not reached…).
       if (error.hint === "voucher_invalid") {
-        throw new HttpError(422, "voucher_invalid", error.message ?? "", { voucherCode: [error.message ?? ""] });
+        throw new HttpError(422, "voucher_invalid", error.message ?? "", {
+          voucherCode: [error.message ?? ""],
+        });
       }
-      if (error.hint === "not_found") throw new HttpError(404, "not_found", error.message ?? `${entity} no existe.`);
+      if (error.hint === "not_found")
+        throw new HttpError(404, "not_found", error.message ?? `${entity} no existe.`);
       throw new HttpError(400, "invalid_data", error.message ?? "Operación no válida.");
     case "P0002":
       throw new HttpError(404, "not_found", `${entity} no existe.`);

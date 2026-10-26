@@ -17,6 +17,9 @@ next-env.d.ts
 # Capacitor native outputs
 android/app/build/
 ios/App/Pods/
+# App signing keys (PRP-7 D12): never in git, the original lives in Roberto's local folder
+*.jks
+*.keystore
 
 # misc
 .DS_Store

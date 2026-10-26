@@ -97,8 +97,9 @@ export function CustomersPage() {
       {code && (
         <Alert variant="success" className="flex flex-col gap-2">
           <span>
-            Código para {code.name}: <strong className="font-mono text-lg tracking-widest">{code.code}</strong> (vale 60
-            minutos y una sola vez).
+            Código para {code.name}:{" "}
+            <strong className="font-mono text-lg tracking-widest">{code.code}</strong> (vale 60 minutos y una
+            sola vez).
             {code.sentByWhatsapp && " Ya se lo enviamos por el WhatsApp de Kshop."}
           </span>
           <a
@@ -134,10 +135,20 @@ export function CustomersPage() {
                 </span>
                 {isAdmin && (
                   <>
-                    <Button size="sm" variant="outline" disabled={action.pending} onClick={() => recovery(row)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={action.pending}
+                      onClick={() => recovery(row)}
+                    >
                       Código de recuperación
                     </Button>
-                    <Button size="sm" variant="ghost" disabled={action.pending} onClick={() => toggleBlock(row)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={action.pending}
+                      onClick={() => toggleBlock(row)}
+                    >
                       {row.isBlocked ? "Desbloquear" : "Bloquear"}
                     </Button>
                   </>

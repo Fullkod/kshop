@@ -1,4 +1,5 @@
 import type {
+  ProductSort,
   AttributeInput,
   CustomDomainInput,
   CustomDomainStatus,
@@ -71,6 +72,14 @@ import type {
   SubscriptionUpdateInput,
   TeamInviteInput,
 } from "@kshop/core";
+import type {
+  Facets,
+  HomeSection,
+  ProductCardData,
+  ProductFilters,
+  StorefrontProduct,
+  StorefrontShell,
+} from "./storefront-reads";
 
 // Contract of /api/v1, shared by the web and the Capacitor apps.
 
@@ -831,6 +840,36 @@ export function createApiClient(options: ApiClientOptions) {
           request<Cart>("GET", `${base}${query(token, currency)}`),
         update: (input: CartUpdateInput) => request<Cart>("PUT", base, input),
         setVoucher: (input: CartVoucherInput) => request<Cart>("PUT", `${base}/voucher`, input),
+      };
+    },
+    /** Cached storefront reads of a store (the store app), PRP-7 D3. */
+    storefront: (storeId: string) => {
+      const get = <T>(params: Record<string, string>) =>
+        request<T>("GET", `/stores/${storeId}/storefront?${new URLSearchParams(params)}`);
+      return {
+        shell: () => get<StorefrontShell>({ view: "shell" }),
+        home: () => get<HomeSection[]>({ view: "home" }),
+        products: (filters: ProductFilters, sort: ProductSort, page: number, perPage?: number) =>
+          get<{ total: number; products: ProductCardData[] }>({
+            view: "products",
+            filters: JSON.stringify(filters),
+            sort,
+            page: String(page),
+            ...(perPage && { perPage: String(perPage) }),
+          }),
+        facets: (filters: ProductFilters) =>
+          get<Facets>({ view: "facets", filters: JSON.stringify(filters) }),
+        product: (slug: string) => get<StorefrontProduct | null>({ view: "product", slug }),
+        page: (slug: string) =>
+          get<{
+            title: string;
+            content: string;
+            seoTitle: string | null;
+            seoDescription: string | null;
+          } | null>({
+            view: "page",
+            slug,
+          }),
       };
     },
     checkout: (storeId: string) => ({

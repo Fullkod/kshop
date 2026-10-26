@@ -8,7 +8,12 @@ import { apiHandler } from "@/server/http";
 // Rates are changed with PUT /catalog/currencies (history kept by set_store_currency).
 export const GET = apiHandler(
   async (request: Request, ctx: RouteContext<"/api/v1/stores/[storeId]/currencies/rates">) => {
-    const { storeId } = await requireCatalogAccess(request, (await ctx.params).storeId, "admin", "multi_currency");
+    const { storeId } = await requireCatalogAccess(
+      request,
+      (await ctx.params).storeId,
+      "admin",
+      "multi_currency",
+    );
     return NextResponse.json(await getCurrencyRates(storeId));
   },
 );

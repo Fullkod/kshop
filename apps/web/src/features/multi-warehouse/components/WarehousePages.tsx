@@ -122,8 +122,8 @@ export function WarehousesOverviewPage() {
         <div>
           <h2 className="text-lg font-semibold">Qué almacén sirve cada zona</h2>
           <p className="text-sm text-muted-foreground">
-            Al comprar, el pedido toma primero las unidades de los almacenes de su zona (en este orden) y, si no
-            alcanzan, de los demás. Una zona sin almacenes elegidos usa el principal y luego el resto.
+            Al comprar, el pedido toma primero las unidades de los almacenes de su zona (en este orden) y, si
+            no alcanzan, de los demás. Una zona sin almacenes elegidos usa el principal y luego el resto.
           </p>
         </div>
         {data.zones.length === 0 ? (
@@ -225,7 +225,11 @@ function ZoneEditor({
                   >
                     ↓
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setSelected(selected.filter((x) => x !== id))}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setSelected(selected.filter((x) => x !== id))}
+                  >
                     Quitar
                   </Button>
                 </>
@@ -407,7 +411,8 @@ export function TransferPage() {
                 <li key={r.variantId} className="flex items-center gap-2 border-b py-2 last:border-0">
                   <span className="flex-1">
                     {r.productName}
-                    {r.variantName && ` · ${r.variantName}`} <span className="text-muted-foreground">({r.sku})</span>
+                    {r.variantName && ` · ${r.variantName}`}{" "}
+                    <span className="text-muted-foreground">({r.sku})</span>
                   </span>
                   <span className="text-muted-foreground">
                     {free} libres{r.allocated > 0 && ` · ${r.allocated} reservadas`}
@@ -435,7 +440,8 @@ export function TransferPage() {
             <div key={l.variantId} className="flex flex-wrap items-center gap-2 text-sm">
               <span className="flex-1">
                 {l.productName}
-                {l.variantName && ` · ${l.variantName}`} <span className="text-muted-foreground">({l.sku})</span>
+                {l.variantName && ` · ${l.variantName}`}{" "}
+                <span className="text-muted-foreground">({l.sku})</span>
               </span>
               <Input
                 type="number"
@@ -461,7 +467,12 @@ export function TransferPage() {
           ))}
           <div className="flex flex-col gap-1">
             <Label htmlFor="transfer-note">Nota (opcional)</Label>
-            <Input id="transfer-note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} />
+            <Input
+              id="transfer-note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              maxLength={200}
+            />
           </div>
         </Card>
       )}

@@ -1,10 +1,13 @@
-import { CartProvider } from "@kshop/storefront";
-import { CustomerSessionProvider } from "@kshop/storefront";
-import { CurrencyProvider } from "@kshop/storefront";
-import { StoreFooter } from "@kshop/storefront";
-import { StoreHeader } from "@kshop/storefront";
-import { themeStyle } from "@kshop/storefront";
-import { getStorefrontShell, type NavLink } from "@/server/storefront/data";
+import {
+  CartProvider,
+  CurrencyProvider,
+  CustomerSessionProvider,
+  headerLinks,
+  StoreFooter,
+  StoreHeader,
+  themeStyle,
+} from "@kshop/storefront";
+import { getStorefrontShell } from "@/server/storefront/data";
 import { getStoreBySlug } from "@/server/stores";
 
 /** Public storefront: store theme, header, footer. A suspended store shows a notice (its admin stays reachable). */
@@ -25,22 +28,7 @@ export default async function StorefrontLayout({ children, params }: LayoutProps
   }
 
   const shell = await getStorefrontShell(store.id);
-  // Without a header menu, the top-level categories are the navigation.
-  const header: NavLink[] = shell.header.length
-    ? shell.header
-    : [
-        { label: "Productos", href: "/products", children: [] },
-        ...shell.categories
-          .filter((c) => !c.parentId)
-          .slice(0, 6)
-          .map((c) => ({
-            label: c.name,
-            href: `/category/${c.slug}`,
-            children: shell.categories
-              .filter((child) => child.parentId === c.id)
-              .map((child) => ({ label: child.name, href: `/category/${child.slug}`, children: [] })),
-          })),
-      ];
+  const header = headerLinks(shell);
 
   return (
     <div className="sf-root flex min-h-dvh flex-col" style={themeStyle(store.theme)}>

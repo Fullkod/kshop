@@ -20,6 +20,19 @@ export const StoreBySlugQuery = graphql(`
   }
 `);
 
+// Slug of a store by id (the store app sends the id).
+export const StoreSlugByIdQuery = graphql(`
+  query StoreSlugById($id: UUID!) {
+    storesCollection(filter: { id: { eq: $id } }, first: 1) {
+      edges {
+        node {
+          slug
+        }
+      }
+    }
+  }
+`);
+
 // Store slugs visible to anon (prerendered store routes).
 export const StoreSlugsQuery = graphql(`
   query StoreSlugs {

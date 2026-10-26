@@ -24,3 +24,4 @@ export * from "./account/AccountView";
 export * from "./account/CustomerSession";
 export * from "./account/MyOrder";
 export * from "./account/MyOrders";
+export * from "./components/pages";

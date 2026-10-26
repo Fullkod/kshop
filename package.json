@@ -33,6 +33,8 @@
     "qa:billing": "node scripts/qa-billing.mjs",
     "e2e:pro": "node scripts/e2e-pro.mjs",
     "qa:pro": "node scripts/qa-pro.mjs",
+    "qa:apps": "node scripts/qa-apps.mjs",
+    "app:config": "node scripts/app-config.mjs",
     "e2e:notifications": "node scripts/e2e-notifications.mjs",
     "qa:orders": "node scripts/qa-orders.mjs",
     "qa:discounts": "node scripts/qa-discounts.mjs",

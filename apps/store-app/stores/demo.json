@@ -1,0 +1,15 @@
+{
+  "storeId": "693d5ec1-c6fb-4270-8cf2-c6c9daaec07a",
+  "slug": "demo",
+  "name": "Tienda Demo",
+  "appId": "com.fullkod.kshop.demo",
+  "versionCode": 1,
+  "versionName": "1.0.1",
+  "logoUrl": null,
+  "theme": {
+    "colors": {
+      "background": "#FFFFFF",
+      "accent": "#5B21B6"
+    }
+  }
+}

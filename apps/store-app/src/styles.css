@@ -1,0 +1,27 @@
+@import "tailwindcss";
+@import "@kshop/ui/styles.css";
+@import "@kshop/storefront/styles.css";
+
+@source "../../../packages/ui/src";
+@source "../../../packages/storefront/src";
+@source ".";
+
+/* The theme fonts (bundled, no network): same variables as next/font sets on the web. */
+:root {
+  --font-outfit: "Outfit Variable";
+  --font-dm-sans: "DM Sans Variable";
+  --font-inter: "Inter Variable";
+  --font-poppins: "Poppins";
+  --font-lora: "Lora Variable";
+  --font-playfair-display: "Playfair Display Variable";
+}
+
+html,
+body {
+  overscroll-behavior-y: none;
+}
+/* Safe areas (status bar, gesture bar) around the app. */
+.app-root {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}

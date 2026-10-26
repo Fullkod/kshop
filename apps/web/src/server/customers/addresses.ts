@@ -76,7 +76,9 @@ export async function saveAddress(
         .eq("id", addressId)
         .eq("store_id", storeId)
         .eq("customer_id", customerId)
-    : service.from("customer_addresses").insert({ ...toRow(input), store_id: storeId, customer_id: customerId });
+    : service
+        .from("customer_addresses")
+        .insert({ ...toRow(input), store_id: storeId, customer_id: customerId });
   const { data, error } = await query.select("*").maybeSingle<AddressRow>();
   if (error) mapDbError(error, "La dirección");
   if (!data) throw notFound("Dirección");

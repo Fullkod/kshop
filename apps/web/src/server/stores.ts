@@ -1,6 +1,6 @@
 import "server-only";
 import { currencyCodeSchema, resolveTheme } from "@kshop/core";
-import { createGraphqlClient, StoreBySlugQuery, StoreSlugsQuery } from "@kshop/data";
+import { createGraphqlClient, StoreBySlugQuery, StoreSlugByIdQuery, StoreSlugsQuery } from "@kshop/data";
 import type { PublicStore } from "@kshop/storefront";
 import { cacheLife, cacheTag } from "next/cache";
 import { supabaseConfig } from "@/env";
@@ -65,4 +65,18 @@ export async function listStoreSlugs(): Promise<string[]> {
   cacheLife("hours");
   const result = await graphql.query(StoreSlugsQuery, {}).toPromise();
   return (result.data?.storesCollection?.edges ?? []).map((e) => e.node.slug);
+}
+
+/** Store card by id (store app reads), cached like the one by slug: the slug of an id never changes. */
+export async function getStoreById(id: string): Promise<PublicStore | null> {
+  const slug = await getStoreSlug(id);
+  return slug ? getStoreBySlug(slug) : null;
+}
+
+async function getStoreSlug(id: string): Promise<string | null> {
+  "use cache";
+  cacheLife("hours");
+  const result = await graphql.query(StoreSlugByIdQuery, { id }).toPromise();
+  if (result.error) throw result.error;
+  return result.data?.storesCollection?.edges[0]?.node.slug ?? null;
 }

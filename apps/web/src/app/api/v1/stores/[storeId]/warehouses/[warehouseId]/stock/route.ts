@@ -11,7 +11,11 @@ export const GET = apiHandler(
     const params = await ctx.params;
     const { storeId } = await requireCatalogAccess(request, params.storeId, "staff", "multi_warehouse");
     const warehouseId = uuidParam.parse(params.warehouseId);
-    const query = z.string().trim().max(80).parse(new URL(request.url).searchParams.get("q") ?? "");
+    const query = z
+      .string()
+      .trim()
+      .max(80)
+      .parse(new URL(request.url).searchParams.get("q") ?? "");
     return NextResponse.json({ rows: await getWarehouseStock(storeId, warehouseId, query) });
   },
 );

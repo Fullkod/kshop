@@ -275,7 +275,7 @@ de Roberto (criterios de éxito); `/app` ofrece la descarga y la quita sin el m�
 | Fase | Estado | Commit |
 |------|--------|--------|
 | 7.1 Cimientos compartidos | Hecha: `20261102100000_apps.sql` (`store_app_builds` + RLS, `app_info(store_id)` anon: disponible si la tienda está activa y con `mobile_app`, última versión publicada; null = app de admin), suite `09_apps_isolation` (`test:rls` 549/549). CORS de `/api/v1` en el proxy solo para `https://localhost`, `capacitor://localhost` (y Vite 5173/5174 en local), preflight 204; checkout con `X-Kshop-Channel: app` → canal `app`. Lecturas de la tienda pública movidas a `@kshop/data` (`storefront-reads.ts`: `fetchStorefrontShell/Products/Facets/Product/Page/Home/SitemapPaths`), la web las envuelve con `use cache` (D3). `e2e:{catalog,discounts,pro}` y `qa:{orders,discounts}` en verde. **El paquete `@kshop/admin` (D2) pasa a la 7.3**, donde se usa por primera vez | ver git |
-| 7.2 App de tienda | Pendiente | — |
+| 7.2 App de tienda | Hecha: `@kshop/storefront` (tienda, carrito y cuenta movidos desde `apps/web` con `NavigationProvider`/`StoreProvider`; `loadListing` + `ListingView`, `headerLinks`, `defaultHome`, `categoryTrail`, `ProductDetails`; la web los usa con `next/link`). `apps/store-app` (Vite 8 + React 19 + react-router 8 + Capacitor 8): rutas de la web, tema y fuentes de la tienda, sesión del cliente en Preferences, canal `app`, caché en el teléfono con «Sin conexión», botón atrás, barra de estado, aviso «Actualizar» y tienda sin módulo/suspendida por `app_info`. **Cambio sobre D1/D3**: la app lee el catálogo por `GET /api/v1/stores/{id}/storefront?view=…` (las mismas funciones `use cache` de la web + `s-maxage=60`), no por pg_graphql directo: medido 0,5–1,8 s por lectura y *statement timeout* (3 s de anon) en paralelo; por la API, 17 ms con la caché caliente. `pnpm app:config <slug>` escribe `apps/store-app/stores/{slug}.json`. `qa:apps` 10/10; `qa:{orders,discounts,notifications,pro}` y `e2e:orders` en verde tras el movimiento | ver git |
 | 7.3 App de administración | Pendiente | — |
 | 7.4 Generar y distribuir | Pendiente | — |
 | 7.5 Validación final | Pendiente | — |
@@ -283,6 +283,21 @@ de Roberto (criterios de éxito); `/app` ofrece la descarga y la quita sin el m�
 ## 🧠 Aprendizajes (Self-Annealing / Neural Network)
 
 > Esta sección CRECE con cada error encontrado durante la implementación.
+
+### 2026-10-26: En este Chrome `window.scrollTo` devuelve una Promise
+- **Error**: `useEffect(() => window.scrollTo(0, 0), [pathname])` → «destroy is not a function» al desmontar (React recibe la Promise como limpieza).
+- **Fix**: cuerpo con llaves, sin devolver nada.
+- **Aplicar en**: todo efecto escrito como expresión.
+
+### 2026-10-26: Lecturas anónimas de pg_graphql desde muchos clientes
+- **Error**: la app leyendo el catálogo directo de pg_graphql tardaba 0,5–1,8 s por consulta y en paralelo daba *statement timeout* (500 de `/graphql/v1`).
+- **Fix**: las apps leen por `/api/v1/stores/{id}/storefront` (funciones `use cache` de la web + CDN). La web ya lo evitaba por su caché.
+- **Aplicar en**: cualquier cliente nuevo (apps, widgets) que lea el catálogo.
+
+### 2026-10-26: Turbopack sirve un módulo viejo tras añadir funciones a un archivo con `use cache`
+- **Error**: `getStoreById is not a function` aunque estaba en `server/stores.ts`; tocar el archivo no bastó.
+- **Fix**: reiniciar `pnpm dev`.
+- **Aplicar en**: errores «X is not a function» de algo recién añadido en dev.
 
 ---
 

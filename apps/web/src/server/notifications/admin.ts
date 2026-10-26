@@ -40,10 +40,18 @@ function contactError(error: unknown): never {
   mapDbError(error, "El contacto");
 }
 
-export async function saveContact(storeId: string, id: string | null, input: NotificationContactInput): Promise<string> {
+export async function saveContact(
+  storeId: string,
+  id: string | null,
+  input: NotificationContactInput,
+): Promise<string> {
   const service = getServiceClient();
   const query = id
-    ? service.from("store_notification_contacts").update(contactRow(input)).eq("store_id", storeId).eq("id", id)
+    ? service
+        .from("store_notification_contacts")
+        .update(contactRow(input))
+        .eq("store_id", storeId)
+        .eq("id", id)
     : service.from("store_notification_contacts").insert({ ...contactRow(input), store_id: storeId });
   const { data, error } = await query.select("id").maybeSingle<{ id: string }>();
   if (error) contactError(error);
@@ -67,14 +75,24 @@ export async function saveTemplate(storeId: string, input: WhatsappTemplateInput
   const { error } = await getServiceClient()
     .from("whatsapp_templates")
     .upsert(
-      { store_id: storeId, event: input.event, audience: input.audience, body: input.body, is_active: input.isActive },
+      {
+        store_id: storeId,
+        event: input.event,
+        audience: input.audience,
+        body: input.body,
+        is_active: input.isActive,
+      },
       { onConflict: "store_id,event,audience" },
     );
   if (error) mapDbError(error, "La plantilla");
 }
 
 /** Back to the platform default. */
-export async function restoreTemplate(storeId: string, event: string, audience: NotificationAudience): Promise<void> {
+export async function restoreTemplate(
+  storeId: string,
+  event: string,
+  audience: NotificationAudience,
+): Promise<void> {
   const { error } = await getServiceClient()
     .from("whatsapp_templates")
     .delete()
@@ -101,7 +119,10 @@ export async function previewTemplate(
 }
 
 export async function retryNotification(storeId: string, logId: string): Promise<void> {
-  const { error } = await getServiceClient().rpc("notification_retry", { p_store_id: storeId, p_log_id: logId });
+  const { error } = await getServiceClient().rpc("notification_retry", {
+    p_store_id: storeId,
+    p_log_id: logId,
+  });
   if (error) mapDbError(error, "El aviso");
 }
 
@@ -152,7 +173,10 @@ export async function setPlatformWhatsapp(input: PlatformWhatsappInput): Promise
 }
 
 export async function sendTestMessage(phone: string, text: string): Promise<{ status: string }> {
-  const { data, error } = await getServiceClient().rpc("notification_send_test", { p_phone: phone, p_text: text });
+  const { data, error } = await getServiceClient().rpc("notification_send_test", {
+    p_phone: phone,
+    p_text: text,
+  });
   if (error) mapDbError(error);
   return { status: String((data as { status: string }).status) };
 }

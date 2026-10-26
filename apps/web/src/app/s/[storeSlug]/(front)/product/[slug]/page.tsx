@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Breadcrumbs, type Crumb } from "@/features/storefront/components/ListingPage";
-import { ProductGrid } from "@kshop/storefront";
-import { ProductView } from "@kshop/storefront";
+import { Breadcrumbs, categoryTrail, ProductDetails, ProductView } from "@kshop/storefront";
 import { getProduct, getProducts } from "@/server/storefront/catalog";
 import { getStorefrontShell } from "@/server/storefront/data";
 import { requireStore, staticSlugs, storeMetadata } from "@/server/storefront/page-helpers";
@@ -37,12 +35,7 @@ export default async function ProductPage({ params }: Props) {
   const { store, product } = await load({ params });
   const shell = await getStorefrontShell(store.id);
 
-  const crumbs: Crumb[] = [];
-  for (let c = shell.categories.find((x) => x.id === product.category?.id); c;) {
-    crumbs.unshift({ label: c.name, href: `/category/${c.slug}` });
-    const parentId = c.parentId;
-    c = shell.categories.find((x) => x.id === parentId);
-  }
+  const crumbs = categoryTrail(shell, product.category?.id);
   const related = product.category
     ? (await getProducts(store.id, { categoryId: product.category.id }, "newest", 1, 5)).products
         .filter((p) => p.id !== product.id)
@@ -78,38 +71,7 @@ export default async function ProductPage({ params }: Props) {
       <Breadcrumbs crumbs={[...crumbs, { label: product.name }]} />
       <ProductView product={product} />
 
-      {(product.description || product.attributes.length > 0) && (
-        <section className="grid gap-8 border-t pt-8 md:grid-cols-2 md:gap-12">
-          {product.description && (
-            <div className="flex flex-col gap-3">
-              <h2 className="text-xl font-semibold">Descripción</h2>
-              <p className="whitespace-pre-line leading-relaxed text-muted-foreground">
-                {product.description}
-              </p>
-            </div>
-          )}
-          {product.attributes.length > 0 && (
-            <div className="flex flex-col gap-3">
-              <h2 className="text-xl font-semibold">Características</h2>
-              <dl className="divide-y rounded-[var(--sf-radius)] border">
-                {product.attributes.map((a) => (
-                  <div key={a.name} className="grid grid-cols-2 gap-4 px-4 py-2 text-sm">
-                    <dt className="text-muted-foreground">{a.name}</dt>
-                    <dd>{a.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          )}
-        </section>
-      )}
-
-      {related.length > 0 && (
-        <section className="flex flex-col gap-4 border-t pt-8">
-          <h2 className="text-xl font-semibold">También te puede gustar</h2>
-          <ProductGrid products={related} />
-        </section>
-      )}
+      <ProductDetails product={product} related={related} />
     </div>
   );
 }

@@ -56,8 +56,18 @@ const norm = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").trim().toL
 
 async function loadStructure(storeId: string, productTypeId: string): Promise<Structure> {
   const db = getServiceClient();
-  const [type, typeAttrs, categories, brands, collections, currencies, sale, warehouses, multiCurrency, multiWarehouse] =
-    await Promise.all([
+  const [
+    type,
+    typeAttrs,
+    categories,
+    brands,
+    collections,
+    currencies,
+    sale,
+    warehouses,
+    multiCurrency,
+    multiWarehouse,
+  ] = await Promise.all([
     db
       .from("product_types")
       .select("id, name, has_variants")
@@ -74,7 +84,12 @@ async function loadStructure(storeId: string, productTypeId: string): Promise<St
     db.from("brands").select("id, name").eq("store_id", storeId),
     db.from("collections").select("id, name").eq("store_id", storeId),
     db.from("store_currencies").select("currency").eq("store_id", storeId).eq("is_base", true).single(),
-    db.from("store_currencies").select("currency").eq("store_id", storeId).eq("is_base", false).eq("sells", true),
+    db
+      .from("store_currencies")
+      .select("currency")
+      .eq("store_id", storeId)
+      .eq("is_base", false)
+      .eq("sells", true),
     db
       .from("warehouses")
       .select("id, name")
@@ -234,9 +249,7 @@ async function buildWorkbook(s: Structure, rows: ExportRow[]): Promise<Buffer> {
           `• ${s.saleCurrencies.map((c) => `Precio ${c}`).join(", ")}: precio fijo en esa moneda. Vacío: se convierte con la tasa.`,
         ]
       : []),
-    ...(s.extraWarehouses.length
-      ? ["• Stock {almacén}: unidades en cada uno de los demás almacenes."]
-      : []),
+    ...(s.extraWarehouses.length ? ["• Stock {almacén}: unidades en cada uno de los demás almacenes."] : []),
     "• Imágenes (URLs): enlaces públicos a las fotos del producto, separados por comas. Se descargan al importar; si ya se importaron antes no se repiten.",
     "• Al importar puedes crear automáticamente las categorías, marcas, colecciones y valores que falten.",
     "• Modo «actualizar»: si el SKU ya existe se actualizan sus datos; las celdas vacías no borran nada.",
@@ -927,7 +940,9 @@ export async function runImportBatch(
       else if (result === "updated") updated++;
       else skipped++;
       // Phase 6: fixed prices per currency and stock in the other warehouses (rows saved before have none).
-      const extras = g.data.filter((d) => Object.keys(d.prices ?? {}).length || Object.keys(d.stocks ?? {}).length);
+      const extras = g.data.filter(
+        (d) => Object.keys(d.prices ?? {}).length || Object.keys(d.stocks ?? {}).length,
+      );
       if (extras.length && result !== "skipped") {
         const { error: extrasError } = await db.rpc("import_variant_extras", {
           p_store_id: storeId,

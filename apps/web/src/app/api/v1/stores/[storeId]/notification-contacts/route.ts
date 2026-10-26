@@ -8,7 +8,12 @@ import { saveContact } from "@/server/notifications/admin";
 // { name, phone, notifyNewOrder, notifyPaymentRecorded, showToCustomer, isActive }
 export const POST = apiHandler(
   async (request: Request, ctx: RouteContext<"/api/v1/stores/[storeId]/notification-contacts">) => {
-    const { storeId } = await requireCatalogAccess(request, (await ctx.params).storeId, "admin", "whatsapp_notifications");
+    const { storeId } = await requireCatalogAccess(
+      request,
+      (await ctx.params).storeId,
+      "admin",
+      "whatsapp_notifications",
+    );
     const input = notificationContactSchema.parse(await readJson(request));
     return NextResponse.json({ id: await saveContact(storeId, null, input) }, { status: 201 });
   },

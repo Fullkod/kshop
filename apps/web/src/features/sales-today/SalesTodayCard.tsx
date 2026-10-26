@@ -16,7 +16,10 @@ export function SalesTodayCard() {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    api.orders(store.id).salesToday().then(setData, () => setFailed(true));
+    api
+      .orders(store.id)
+      .salesToday()
+      .then(setData, () => setFailed(true));
   }, [api, store.id]);
 
   if (failed) return null;
@@ -42,13 +45,17 @@ export function SalesTodayCard() {
           <div>
             <dt className="text-sm text-muted-foreground">Vendido</dt>
             <dd className="font-semibold">
-              {data.orders.length === 0 ? "—" : data.orders.map((o) => formatMoney(o.amount, o.currency)).join(" · ")}
+              {data.orders.length === 0
+                ? "—"
+                : data.orders.map((o) => formatMoney(o.amount, o.currency)).join(" · ")}
             </dd>
           </div>
           <div>
             <dt className="text-sm text-muted-foreground">Cobrado</dt>
             <dd className="font-semibold">
-              {data.received.length === 0 ? "—" : data.received.map((r) => formatMoney(r.amount, r.currency)).join(" · ")}
+              {data.received.length === 0
+                ? "—"
+                : data.received.map((r) => formatMoney(r.amount, r.currency)).join(" · ")}
             </dd>
           </div>
         </dl>

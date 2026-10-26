@@ -76,14 +76,22 @@ export const POST = apiHandler(
           p_user_id: user.id,
         });
         if (error) mapDbError(error, "El pedido");
-        if ((data as { flipped_product_ids: string[] }).flipped_product_ids.length) invalidateCatalog(storeId);
+        if ((data as { flipped_product_ids: string[] }).flipped_product_ids.length)
+          invalidateCatalog(storeId);
         break;
       }
       case "notes": {
         const { text } = orderNoteSchema.parse(body);
         const { data, error } = await db
           .from("order_events")
-          .insert({ store_id: storeId, order_id: orderId, type: "note", is_internal: true, payload: { text }, user_id: user.id })
+          .insert({
+            store_id: storeId,
+            order_id: orderId,
+            type: "note",
+            is_internal: true,
+            payload: { text },
+            user_id: user.id,
+          })
           .select("id");
         // 23503: the order is not in this store (composite FK).
         if (error?.code === "23503") throw notFound("Pedido");

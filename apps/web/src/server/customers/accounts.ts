@@ -53,7 +53,11 @@ export const toCustomerProfile = (row: CustomerRow): CustomerProfile => ({
 
 /** Client IP behind Vercel's proxy (first x-forwarded-for hop). */
 export function clientIp(request: Request): string {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "local";
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "local"
+  );
 }
 
 export async function rateLimit(key: string, windowSeconds: number, max: number): Promise<void> {
@@ -64,7 +68,11 @@ export async function rateLimit(key: string, windowSeconds: number, max: number)
   });
   if (error) throw error;
   if (data !== true) {
-    throw new HttpError(429, "too_many_attempts", "Demasiados intentos. Espera unos minutos y vuelve a probar.");
+    throw new HttpError(
+      429,
+      "too_many_attempts",
+      "Demasiados intentos. Espera unos minutos y vuelve a probar.",
+    );
   }
 }
 
@@ -136,9 +144,14 @@ export async function registerCustomer(
   await rateLimit(`register-ip:${storeId}:${ip}`, 3600, 10);
 
   if (await findCustomer(storeId, input.phone)) {
-    throw new HttpError(409, "phone_taken", "Ya hay una cuenta con ese teléfono en esta tienda. Inicia sesión.", {
-      phone: ["Ya hay una cuenta con ese teléfono."],
-    });
+    throw new HttpError(
+      409,
+      "phone_taken",
+      "Ya hay una cuenta con ese teléfono en esta tienda. Inicia sesión.",
+      {
+        phone: ["Ya hay una cuenta con ese teléfono."],
+      },
+    );
   }
 
   const service = getServiceClient();
@@ -151,7 +164,11 @@ export async function registerCustomer(
   });
   if (createError || !created.user) {
     if (createError?.code === "email_exists") {
-      throw new HttpError(409, "phone_taken", "Ya hay una cuenta con ese teléfono en esta tienda. Inicia sesión.");
+      throw new HttpError(
+        409,
+        "phone_taken",
+        "Ya hay una cuenta con ese teléfono en esta tienda. Inicia sesión.",
+      );
     }
     if (createError?.code === "weak_password") {
       throw new HttpError(400, "weak_password", "La contraseña es demasiado débil.", {
@@ -176,7 +193,11 @@ export async function registerCustomer(
   if (insertError) {
     await service.auth.admin.deleteUser(created.user.id);
     if (insertError.code === "23505") {
-      throw new HttpError(409, "phone_taken", "Ya hay una cuenta con ese teléfono en esta tienda. Inicia sesión.");
+      throw new HttpError(
+        409,
+        "phone_taken",
+        "Ya hay una cuenta con ese teléfono en esta tienda. Inicia sesión.",
+      );
     }
     throw insertError;
   }
@@ -228,13 +249,16 @@ export async function createRecoveryCode(
   if (!customer) throw notFound("Cliente");
 
   const code = String(randomInt(0, 10 ** RECOVERY_CODE_LENGTH)).padStart(RECOVERY_CODE_LENGTH, "0");
-  const { data: expiresAt, error: createError } = await getServiceClient().rpc("customer_recovery_code_create", {
-    p_store_id: storeId,
-    p_customer_id: customerId,
-    p_code_hash: recoveryHash(storeId, customer.phone, code),
-    p_ttl_minutes: RECOVERY_CODE_TTL_MINUTES,
-    p_created_by: staffUserId,
-  });
+  const { data: expiresAt, error: createError } = await getServiceClient().rpc(
+    "customer_recovery_code_create",
+    {
+      p_store_id: storeId,
+      p_customer_id: customerId,
+      p_code_hash: recoveryHash(storeId, customer.phone, code),
+      p_ttl_minutes: RECOVERY_CODE_TTL_MINUTES,
+      p_created_by: staffUserId,
+    },
+  );
   if (createError) throw createError;
   // With the platform WhatsApp live the code reaches the customer by itself (decision 24); otherwise the staff
   // sends it by wa.me as before.
@@ -265,7 +289,11 @@ export async function resetCustomerPassword(
     .single<{ status: "ok" | "invalid" | "locked"; user_id: string | null }>();
   if (error) throw error;
   if (data.status === "locked") {
-    throw new HttpError(429, "code_locked", "Demasiados intentos con ese código. Pide uno nuevo a la tienda.");
+    throw new HttpError(
+      429,
+      "code_locked",
+      "Demasiados intentos con ese código. Pide uno nuevo a la tienda.",
+    );
   }
   if (data.status !== "ok" || !data.user_id) {
     throw new HttpError(400, "invalid_code", "El código no es válido o ya caducó.", {
@@ -278,7 +306,9 @@ export async function resetCustomerPassword(
   });
   if (updateError) {
     if (updateError.code === "weak_password" || updateError.code === "same_password") {
-      throw new HttpError(400, "weak_password", "Elige otra contraseña.", { password: ["Elige otra contraseña."] });
+      throw new HttpError(400, "weak_password", "Elige otra contraseña.", {
+        password: ["Elige otra contraseña."],
+      });
     }
     throw updateError;
   }
@@ -307,7 +337,8 @@ export async function requireCustomer(request: Request, storeId: string): Promis
     .maybeSingle<CustomerRow>();
   if (error) throw error;
   if (!data) throw unauthorized();
-  if (data.is_blocked) throw new HttpError(403, "customer_blocked", "Tu cuenta está bloqueada. Escribe a la tienda.");
+  if (data.is_blocked)
+    throw new HttpError(403, "customer_blocked", "Tu cuenta está bloqueada. Escribe a la tienda.");
   return { user, customer: data };
 }
 
