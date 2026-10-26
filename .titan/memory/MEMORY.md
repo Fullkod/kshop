@@ -50,3 +50,4 @@
 - `prp-fase-4-avisos-y-descuentos.md` — Fase 4: promociones, cupones y avisos WhatsApp de plataforma (COMPLETADO salvo OpenWA real)
 - `prp-fase-5-suscripciones-y-modulos.md` — Fase 5: planes, add-ons, grants, facturas manuales, límites, equipo, suspensión (HECHA)
 - `prp-fase-6-pro.md` — Fase 6: Finanzas, multi-almacén, multimoneda, dominio propio (HECHA)
+- `prp-fase-7-apps.md` — Fase 7: app de tienda y app de admin con Capacitor (PENDIENTE de las respuestas de Roberto)
