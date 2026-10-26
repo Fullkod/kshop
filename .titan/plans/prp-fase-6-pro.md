@@ -1,6 +1,6 @@
 # PRP-6: Pro — finanzas, multi-almacén, multimoneda y dominio propio
 
-> **Estado**: EN CURSO (2026-10-26): 6.1–6.4 hechas; falta la 6.5 (validación final). APROBADO con las respuestas de Roberto (ver «Decisiones de Roberto»)
+> **Estado**: HECHA (2026-10-26): 6.1–6.5. Pendiente de Roberto: token de elTOQUE, probar Vercel con un dominio real (con permiso) y pasar Vercel a Pro antes de vender dominios. APROBADO con las respuestas de Roberto (ver «Decisiones de Roberto»)
 > **Fecha**: 2026-10-26
 > **Proyecto**: Kshop
 > **Fase**: 6 (ver `arranque-y-fases.md`). Código de partida: commit `f33e8eb` (Fase 5 cerrada)
@@ -276,12 +276,12 @@ al subdominio, enlaces de aviso/sitemap/canonical, módulo apagado → vuelve al
 ### Fase 5: Validación final
 **Objetivo**: sistema funcionando end-to-end.
 **Validación**:
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build` pasan
-- [ ] `pnpm test:rls` (01–08) y `pnpm e2e:{api,catalog,orders,discounts,notifications,billing,pro}` en verde
-- [ ] `pnpm qa:{orders,discounts,notifications,billing,pro}` en verde; capturas en `.titan/qa/fase-6/`
-- [ ] `demo:seed` deja la Tienda Demo con dos almacenes con zonas, USD con historial de tasas, costos y un dominio
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build` pasan
+- [x] `pnpm test:rls` (01–08) y `pnpm e2e:{catalog,orders,discounts,notifications,billing,pro}` en verde (`e2e:api` no, ver Progreso)
+- [x] `pnpm qa:{orders,discounts,notifications,billing,pro}` en verde; capturas en `.titan/qa/fase-6/`
+- [x] `demo:seed` deja la Tienda Demo con dos almacenes con zonas, USD con historial de tasas, costos y un dominio
       de prueba `demo-tienda.localhost`
-- [ ] Criterios de éxito cumplidos; memoria, `arranque-y-fases.md` y este PRP actualizados
+- [x] Criterios de éxito cumplidos; memoria, `arranque-y-fases.md` y este PRP actualizados
 
 ---
 
@@ -345,7 +345,7 @@ Sustituyen a la propuesta donde chocan.
 | 6.2 Multi-almacén y multimoneda | Hecha: `…100100_warehouse_engine` (disponible y reserva solo del almacén principal sin el módulo, D13; reserva por punto de recogida / zona / resto con reparto, D12; `set_zone_warehouses`; `transfer_stock` con el mismo orden de bloqueo que el checkout; caché de elTOQUE), `…100200_pro_readers`, `…100300_import_variant_extras`. API `/stores/{id}/warehouses{,/zones/{id},/{id}/stock,/transfers,/movements}` y `/currencies/rates`; pantallas Almacenes (Resumen con zonas, Traspasar, Movimientos) y Monedas (tasa, sugerencia elTOQUE, historial, precios fijos); Excel con «Precio {moneda}» y «Stock {almacén}». `test:rls` 512/512, `e2e:pro` 30/30 (incluye carrera por la última unidad e import del Excel), `qa:pro` 7/7, `e2e:{orders,catalog,excel,discounts}` en verde | ver git |
 | 6.3 Finanzas | Hecha: `…100400_finance_engine` (`finance_summary`, `finance_daily` = cierre del día con todas las monedas, `finance_margin` por producto/categoría/marca, `finance_breakdown`, `finance_inventory`; `private.rate_at`) + `…100500_finance_rate_periods` (la tasa de la moneda elegida como tramos unidos por fecha: con 20 000 pedidos/30 días el resumen bajó de 1,8–2,6 s a ~200 ms; diario 72 ms, margen 152 ms, desglose 63 ms; sin tabla resumen, D5). API `/stores/{id}/finance/{summary,daily,margin,breakdown,inventory,expenses[/{id}],export}` (owner/admin + `finance`); `@kshop/ui` `BarChart` en SVG; pantallas Resumen (KPIs, gráfico, cierre del día), Margen, Inventario, Desglose, Gastos; «Ver todo en» la moneda que elija el dueño; exportar a Excel (una hoja por vista). Suite 08: «los informes cuadran» con CUP/USD, cancelado, envío a convenir, pagos, devolución, gastos y cambio de tasa posterior; `test:rls` 526/526, `e2e:pro` 49/49 (informes = sumas directas de la BD de pedidos hechos por la API), `qa:pro` 14/14 | ver git |
 | 6.4 Dominio propio | Hecha: `…100600_custom_domains` (`private.store_custom_domain` = verificado + tienda activa + módulo; `store_public_url` v2; RPC anon `resolve_store_domain(host)` → slug/dominio/`live` y `resolve_store_custom_domain(slug)`). El subdominio sigue `is_primary`: el origen público se calcula, así apagar el módulo no cambia datos (D21 sin mover `is_primary`). Proxy con caché de 60 s (también los «no existe»): subdominio → 308 al dominio salvo `/admin`; dominio `/admin` o no vivo → 307 al subdominio; `www.` → 308; redirecciones con `no-store` para no dejar bucles en caché al apagar el módulo. `storePublicOrigin` (core) en canonical, sitemap, robots, enlace del pedido y detalle del pedido en el admin. `server/vercel-domains.ts` (API v10/v9/v6, `www` con redirección) en `dry_run` sin `VERCEL_DOMAINS_TOKEN` — **sin probar contra Vercel**. Admin › Dominio propio (alta, registros DNS, Comprobar, Quitar) y Superadmin › Dominios. `test:rls` 533/533, `e2e:pro` 74/74 (proxy con cabecera Host), `qa:pro` 18/18, `e2e:orders` 94/94, core 59/59. Advisors: solo las dos RPC anon del proxy, a propósito | ver git |
-| 6.5 Validación final | Pendiente | — |
+| 6.5 Validación final | Hecha: typecheck, lint, `test` (core 59/59), build (206 páginas); `test:rls` 533/533; `e2e:{catalog 46, excel 22, orders 94, discounts 35, notifications 29, billing 52, pro 74}`; `qa:{orders 14, discounts 9, notifications 8, billing 16, pro 18}`. `e2e:api` no se corrió (necesita `tienda-a`/`tienda-b` creadas a mano, como en las Fases 4–5). `demo:seed` añade zonas por almacén, historial de USD y `demo-tienda.localhost` **pendiente** (no verificado: la BD es la de producción y la Demo real redirigiría a un `.localhost`). Arreglos: `fetch` con `no-store` dentro de `use cache` (ficha de la tienda) y margen de reloj en los módulos de la suscripción | ver git |
 
 ## 🧠 Aprendizajes (Self-Annealing / Neural Network)
 
@@ -405,6 +405,16 @@ Sustituyen a la propuesta donde chocan.
 - **Error (evitado)**: el proxy guarda 60 s también los «no existe»; pedir el dominio antes de verificarlo dejaría la prueba en 404 un minuto.
 - **Fix**: E2E/QA no piden ningún host de la tienda antes de verificar; «módulo apagado» se prueba con otra tienda y un dominio nuevo.
 - **Aplicar en**: pruebas de todo lo que pase por el proxy.
+
+### 2026-10-26: `fetch` con `cache: "no-store"` dentro de `"use cache"`
+- **Error**: la QA de pedidos vio «Next.js encountered uncached data during prerendering» en `/account/register` tras añadir la consulta del dominio a la ficha de la tienda.
+- **Fix**: sin `no-store` (dentro de `use cache` ya se cachea con la etiqueta de la tienda; fuera, `fetch` no cachea por defecto).
+- **Aplicar en**: cualquier `fetch` que se llame desde una función con `"use cache"`.
+
+### 2026-10-26: El reloj de Supabase va por delante del servidor
+- **Error**: `e2e:billing` falló al comprar un complemento: `starts_at = now()` de la BD quedaba ~1 s en el futuro para el servidor y el módulo salía «no activo» (fallo de la Fase 5 que aparecía según el desfase).
+- **Fix**: margen de 60 s al comparar `starts_at` en `server/billing`.
+- **Aplicar en**: toda comparación en TS con fechas puestas por `now()` en la BD.
 
 ---
 

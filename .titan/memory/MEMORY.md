@@ -27,7 +27,7 @@
 - [2026-10-25-fase-4-avisos-y-descuentos.md](project/2026-10-25-fase-4-avisos-y-descuentos.md) — Fase 4 hecha: motor de precios SQL, promociones, cupones y avisos WhatsApp (dry_run; falta OpenWA real)
 - [2026-10-25-estudio-precios-cuba.md](project/2026-10-25-estudio-precios-cuba.md) — Precios en USD para Cuba (Base 5, Pro 12, sueltos 2–3, prueba 30 días, fundadores); competencia Plaza Cubana; cobro en efectivo
 - [2026-10-25-fase-5-suscripciones-y-modulos.md](project/2026-10-25-fase-5-suscripciones-y-modulos.md) — Fase 5 hecha: precios USD, cupones y apariencia fuera del Base, dónde está cada pieza, pendientes
-- [2026-10-26-fase-6-pro.md](project/2026-10-26-fase-6-pro.md) — Fase 6 en curso (6.1–6.3): decisiones de Roberto, dónde está cada pieza, qué falta (dominio propio, validación)
+- [2026-10-26-fase-6-pro.md](project/2026-10-26-fase-6-pro.md) — Fase 6 hecha: decisiones de Roberto, dónde está cada pieza, pendientes de Roberto (elTOQUE, Vercel real)
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
 
 ## feedback/ — Correcciones y preferencias
@@ -49,4 +49,4 @@
 - `prp-fase-3-clientes-y-compra.md` — Fase 3: clientes y compra (COMPLETADO)
 - `prp-fase-4-avisos-y-descuentos.md` — Fase 4: promociones, cupones y avisos WhatsApp de plataforma (COMPLETADO salvo OpenWA real)
 - `prp-fase-5-suscripciones-y-modulos.md` — Fase 5: planes, add-ons, grants, facturas manuales, límites, equipo, suspensión (HECHA)
-- `prp-fase-6-pro.md` — Fase 6: Finanzas, multi-almacén, multimoneda, dominio propio (EN CURSO: 6.1–6.3 hechas, sigue 6.4 dominio propio)
+- `prp-fase-6-pro.md` — Fase 6: Finanzas, multi-almacén, multimoneda, dominio propio (HECHA)

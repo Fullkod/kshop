@@ -396,9 +396,11 @@ export async function getStoreBilling(
   ]);
   if (storeModules.error) throw storeModules.error;
   const now = Date.now();
+  // starts_at comes from the database clock, which may run a second ahead of this server: a module bought just now
+  // must show as active.
   const active = (m: StoreModuleRow) =>
     m.enabled &&
-    new Date(m.starts_at).getTime() <= now &&
+    new Date(m.starts_at).getTime() <= now + 60_000 &&
     (!m.ends_at || new Date(m.ends_at).getTime() > now);
   const pro = catalog.plans.find((p) => p.code === "pro");
 

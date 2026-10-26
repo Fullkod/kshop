@@ -74,7 +74,7 @@ Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desa
 | 3. Clientes y compra | Hecha (avisos automáticos por OpenWA en la Fase 4) | `prp-fase-3-clientes-y-compra.md` | ver PRP |
 | 4. Avisos y descuentos | Hecha; **pendiente** probar con la instancia OpenWA real (hoy en modo simulado) | `prp-fase-4-avisos-y-descuentos.md` | ver PRP |
 | 5. Suscripciones y módulos | Hecha; **pendiente** poner a cero el contador de facturas antes de la primera real y configurar el WhatsApp de soporte | `prp-fase-5-suscripciones-y-modulos.md` | ver PRP |
-| 6. Pro | En curso: 6.1–6.3 hechas (almacenes, monedas, finanzas); falta 6.4 dominio propio y 6.5 validación | `prp-fase-6-pro.md` | ver PRP |
+| 6. Pro | Hecha (almacenes, monedas, finanzas, dominio propio). **Pendiente**: token de elTOQUE, probar Vercel con un dominio real (con permiso) y Vercel Pro antes de vender dominios | `prp-fase-6-pro.md` | ver PRP |
 
 El remoto `origin` (`Fullkod/kshop`) está al día hasta la Fase 2 (Roberto subió los commits); lo de la Fase 3
 sigue en commits locales hasta que Roberto autorice el push.

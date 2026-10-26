@@ -38,7 +38,6 @@ export async function fetchStoreCustomDomain(slug: string): Promise<string | nul
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ p_slug: slug }),
-    cache: "no-store",
   });
   if (!res.ok) throw new Error(`resolve_store_custom_domain failed (${res.status})`);
   return (await res.json()) as string | null;

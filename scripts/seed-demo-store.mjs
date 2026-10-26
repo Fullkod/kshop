@@ -149,15 +149,60 @@ if (!zoneCount) {
     .select("id")
     .single();
   const { error: methodsError } = await service.from("shipping_methods").insert([
-    { store_id: store.id, zone_id: habana, type: "delivery", name: "Mensajería", price: 500, free_over_subtotal: 20000, min_days: 1, max_days: 2, warehouse_id: null, sort_order: 1 },
-    { store_id: store.id, zone_id: other, type: "to_agree", name: "Mensajería (precio a convenir)", price: 0, warehouse_id: null, sort_order: 2 },
-    { store_id: store.id, zone_id: null, type: "pickup", name: "Recoger en la tienda", price: 0, warehouse_id: warehouse.id, sort_order: 3 },
+    {
+      store_id: store.id,
+      zone_id: habana,
+      type: "delivery",
+      name: "Mensajería",
+      price: 500,
+      free_over_subtotal: 20000,
+      min_days: 1,
+      max_days: 2,
+      warehouse_id: null,
+      sort_order: 1,
+    },
+    {
+      store_id: store.id,
+      zone_id: other,
+      type: "to_agree",
+      name: "Mensajería (precio a convenir)",
+      price: 0,
+      warehouse_id: null,
+      sort_order: 2,
+    },
+    {
+      store_id: store.id,
+      zone_id: null,
+      type: "pickup",
+      name: "Recoger en la tienda",
+      price: 0,
+      warehouse_id: warehouse.id,
+      sort_order: 3,
+    },
   ]);
   if (methodsError) throw methodsError;
   const { error: paymentsError } = await service.from("payment_methods").insert([
-    { store_id: store.id, name: "Efectivo al recibir", currencies: [], instructions: "Pagas al recibir el pedido.", sort_order: 1 },
-    { store_id: store.id, name: "Transferencia", currencies: ["CUP"], instructions: "Transfiere a la tarjeta que te enviamos por WhatsApp y manda el comprobante.", sort_order: 2 },
-    { store_id: store.id, name: "Zelle", currencies: ["USD"], instructions: "Te enviamos los datos de Zelle por WhatsApp.", sort_order: 3 },
+    {
+      store_id: store.id,
+      name: "Efectivo al recibir",
+      currencies: [],
+      instructions: "Pagas al recibir el pedido.",
+      sort_order: 1,
+    },
+    {
+      store_id: store.id,
+      name: "Transferencia",
+      currencies: ["CUP"],
+      instructions: "Transfiere a la tarjeta que te enviamos por WhatsApp y manda el comprobante.",
+      sort_order: 2,
+    },
+    {
+      store_id: store.id,
+      name: "Zelle",
+      currencies: ["USD"],
+      instructions: "Te enviamos los datos de Zelle por WhatsApp.",
+      sort_order: 3,
+    },
   ]);
   if (paymentsError) throw paymentsError;
   console.log("Created shipping zones, shipping methods and payment methods");
@@ -169,7 +214,12 @@ const { count: promoCount } = await service
   .select("id", { count: "exact", head: true })
   .eq("store_id", store.id);
 if (!promoCount) {
-  const { data: category } = await service.from("categories").select("id").eq("store_id", store.id).eq("slug", "vestidos").maybeSingle();
+  const { data: category } = await service
+    .from("categories")
+    .select("id")
+    .eq("store_id", store.id)
+    .eq("slug", "vestidos")
+    .maybeSingle();
   if (category) {
     const { data: promo, error: promoError } = await service
       .from("promotions")
@@ -179,25 +229,111 @@ if (!promoCount) {
     if (promoError) throw promoError;
     const { error: targetError } = await service
       .from("promotion_targets")
-      .insert({ store_id: store.id, promotion_id: promo.id, target_type: "category", target_id: category.id });
+      .insert({
+        store_id: store.id,
+        promotion_id: promo.id,
+        target_type: "category",
+        target_id: category.id,
+      });
     if (targetError) throw targetError;
     const { error: refreshError } = await service.rpc("refresh_promotions", { p_store_id: store.id });
     if (refreshError) throw refreshError;
     console.log("Created the promotion «Rebajas de vestidos» (-20 % on Vestidos)");
   }
 }
-const { error: voucherError } = await service.from("vouchers").upsert(
-  { store_id: store.id, code: "BIENVENIDA10", name: "Bienvenida", scope: "order", reward: "percent", value: 10, min_subtotal: 2000, usage_per_customer: 1 },
-  { onConflict: "store_id,code", ignoreDuplicates: true },
-);
+const { error: voucherError } = await service
+  .from("vouchers")
+  .upsert(
+    {
+      store_id: store.id,
+      code: "BIENVENIDA10",
+      name: "Bienvenida",
+      scope: "order",
+      reward: "percent",
+      value: 10,
+      min_subtotal: 2000,
+      usage_per_customer: 1,
+    },
+    { onConflict: "store_id,code", ignoreDuplicates: true },
+  );
 if (voucherError) throw voucherError;
 
 // WhatsApp notices (phase 4): the store's WhatsApp gets the new orders and is shown to customers.
-const { error: contactError } = await service.from("store_notification_contacts").upsert(
-  { store_id: store.id, name: "Tienda Demo", phone: "+5350000000", notify_new_order: true, show_to_customer: true },
-  { onConflict: "store_id,phone", ignoreDuplicates: true },
-);
+const { error: contactError } = await service
+  .from("store_notification_contacts")
+  .upsert(
+    {
+      store_id: store.id,
+      name: "Tienda Demo",
+      phone: "+5350000000",
+      notify_new_order: true,
+      show_to_customer: true,
+    },
+    { onConflict: "store_id,phone", ignoreDuplicates: true },
+  );
 if (contactError) throw contactError;
+
+// Pro (phase 6): zones served by each warehouse, a USD rate history and a custom domain waiting for DNS. Only what
+// is missing, so the staff can change it freely.
+{
+  const { count: servedCount } = await service
+    .from("warehouse_shipping_zones")
+    .select("zone_id", { count: "exact", head: true })
+    .eq("store_id", store.id);
+  const { data: warehouses } = await service
+    .from("warehouses")
+    .select("id, is_default")
+    .eq("store_id", store.id)
+    .eq("is_active", true)
+    .order("is_default", { ascending: false });
+  const { data: zones } = await service.from("shipping_zones").select("id, name").eq("store_id", store.id);
+  if (!servedCount && warehouses?.length > 1 && zones?.length) {
+    const [main, second] = warehouses;
+    for (const zone of zones) {
+      const order = zone.name === "La Habana" ? [main.id, second.id] : [second.id, main.id];
+      const { error } = await service.rpc("set_zone_warehouses", {
+        p_store_id: store.id,
+        p_zone_id: zone.id,
+        p_warehouse_ids: order,
+      });
+      if (error) throw error;
+    }
+    console.log("Set the warehouses that serve each zone");
+  }
+
+  const { count: historyCount } = await service
+    .from("currency_rate_history")
+    .select("id", { count: "exact", head: true })
+    .eq("store_id", store.id)
+    .eq("currency", "USD");
+  if (historyCount < 3) {
+    const daysAgo = (n) => new Date(Date.now() - n * 86_400_000).toISOString();
+    const { error } = await service.from("currency_rate_history").insert([
+      { store_id: store.id, currency: "USD", rate: 280, set_by: ownerId, set_at: daysAgo(45) },
+      { store_id: store.id, currency: "USD", rate: 290, set_by: ownerId, set_at: daysAgo(20) },
+    ]);
+    if (error) throw error;
+    console.log("Added the USD rate history (280 → 290 → current)");
+  }
+
+  // Pending on purpose: the database is shared with production, and a verified domain would send the real
+  // demo.kshop.fullkod.com storefront to a .localhost host. Verify it by hand in local dev if needed.
+  const { error: domainError } = await service.from("store_domains").upsert(
+    {
+      store_id: store.id,
+      domain: "demo-tienda.localhost",
+      type: "custom",
+      status: "pending",
+      dns_records: [
+        { type: "A", name: "@", value: "76.76.21.21" },
+        { type: "CNAME", name: "www", value: "cname.vercel-dns.com" },
+      ],
+      requested_by: ownerId,
+    },
+    { onConflict: "domain", ignoreDuplicates: true },
+  );
+  if (domainError) throw domainError;
+}
 
 console.log(`Owner: ${DEMO.owner} (DEMO_OWNER_PASSWORD) · Staff: ${DEMO.staff} (DEMO_STAFF_PASSWORD)`);
 console.log("Admin: http://demo.kshop.localhost:3000/admin");
