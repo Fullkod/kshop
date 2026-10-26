@@ -22,6 +22,10 @@ import type {
   StockMovementQuery,
   StockMovementType,
   StockTransferInput,
+  ExpenseInput,
+  FinanceInventoryQuery,
+  FinancePeriod,
+  MarginGroup,
   AdminOrderInput,
   NotificationAudience,
   NotificationContactInput,
@@ -557,6 +561,115 @@ export type StoreCurrencyRates = {
   suggested: number | null;
 };
 
+// Phase 6: Finanzas (module finance). Equivalent amounts are in `currency`.
+export type MoneyByCurrency = { currency: CurrencyCode; amount: number };
+
+export type FinanceSummary = {
+  currency: CurrencyCode;
+  from: string;
+  to: string;
+  sold: (MoneyByCurrency & { orders: number; pending: number })[];
+  collected: MoneyByCurrency[];
+  expenses: MoneyByCurrency[];
+  totals: {
+    orders: number;
+    sold: number;
+    pending: number;
+    shipping: number;
+    collected: number;
+    expenses: number;
+    avgTicket: number;
+    margin: number;
+    net: number;
+    linesWithoutCost: number;
+  };
+  previous: { from: string; to: string; orders: number; sold: number };
+};
+
+export type FinanceDay = {
+  day: string;
+  orders: number;
+  sold: MoneyByCurrency[];
+  collected: MoneyByCurrency[];
+  expenses: MoneyByCurrency[];
+  soldEq: number;
+  collectedEq: number;
+  expensesEq: number;
+};
+
+export type FinanceMargin = {
+  currency: CurrencyCode;
+  totals: {
+    units: number;
+    revenue: number;
+    revenueWithCost: number;
+    cost: number;
+    margin: number;
+    lines: number;
+    linesWithoutCost: number;
+  };
+  rows: {
+    key: string | null;
+    name: string;
+    units: number;
+    revenue: number;
+    cost: number;
+    margin: number;
+    marginPct: number | null;
+    linesWithoutCost: number;
+  }[];
+};
+
+export type FinanceBreakdownRow = { name: string; orders: number; amount: number; original?: number };
+
+export type FinanceBreakdown = {
+  currency: CurrencyCode;
+  paymentMethods: FinanceBreakdownRow[];
+  zones: FinanceBreakdownRow[];
+  channels: FinanceBreakdownRow[];
+  currencies: FinanceBreakdownRow[];
+};
+
+export type FinanceInventory = {
+  currency: CurrencyCode;
+  totals: {
+    variants: number;
+    units: number;
+    reserved: number;
+    costValue: number;
+    saleValue: number;
+    withoutCost: number;
+    outOfStock: number;
+    lowStock: number;
+  };
+  total: number;
+  page: number;
+  pageSize: number;
+  rows: {
+    variantId: string;
+    productName: string;
+    variantName: string;
+    sku: string;
+    quantity: number;
+    allocated: number;
+    available: number;
+    threshold: number;
+    costValue: number | null;
+    saleValue: number;
+    lastMovement: string | null;
+  }[];
+};
+
+export type Expense = {
+  id: string;
+  spentOn: string;
+  category: string;
+  amount: number;
+  currency: CurrencyCode;
+  note: string | null;
+  createdBy: string | null;
+};
+
 export type CurrencyRatesResponse = {
   baseCurrency: CurrencyCode;
   currencies: StoreCurrencyRates[];
@@ -801,6 +914,28 @@ export function createApiClient(options: ApiClientOptions) {
               Object.entries(query).flatMap(([k, v]) => (v === undefined || v === "" ? [] : [[k, String(v)]])),
             )}`,
           ),
+      };
+    },
+    finance: (storeId: string) => {
+      const base = `/stores/${storeId}/finance`;
+      const qs = (query: Record<string, string | number | undefined>) =>
+        new URLSearchParams(
+          Object.entries(query).flatMap(([k, v]) => (v === undefined || v === "" ? [] : [[k, String(v)]])),
+        ).toString();
+      return {
+        summary: (period: FinancePeriod) => request<FinanceSummary>("GET", `${base}/summary?${qs(period)}`),
+        daily: (period: FinancePeriod) => request<{ days: FinanceDay[] }>("GET", `${base}/daily?${qs(period)}`),
+        margin: (period: FinancePeriod, group: MarginGroup) =>
+          request<FinanceMargin>("GET", `${base}/margin?${qs({ ...period, group })}`),
+        breakdown: (period: FinancePeriod) => request<FinanceBreakdown>("GET", `${base}/breakdown?${qs(period)}`),
+        inventory: (query: Partial<FinanceInventoryQuery> & Pick<FinanceInventoryQuery, "currency">) =>
+          request<FinanceInventory>("GET", `${base}/inventory?${qs(query)}`),
+        expenses: (period: Pick<FinancePeriod, "from" | "to">) =>
+          request<{ expenses: Expense[] }>("GET", `${base}/expenses?${qs(period)}`),
+        createExpense: (input: ExpenseInput) => request<Expense>("POST", `${base}/expenses`, input),
+        updateExpense: (id: string, input: ExpenseInput) => request<Expense>("PUT", `${base}/expenses/${id}`, input),
+        deleteExpense: (id: string) => request<null>("DELETE", `${base}/expenses/${id}`),
+        export: (period: FinancePeriod) => download(`${base}/export?${qs(period)}`, "finanzas.xlsx"),
       };
     },
     currencyRates: (storeId: string) => ({

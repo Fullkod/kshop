@@ -1,6 +1,6 @@
 # PRP-6: Pro — finanzas, multi-almacén, multimoneda y dominio propio
 
-> **Estado**: APROBADO (2026-10-26) con las respuestas de Roberto (ver «Decisiones de Roberto»)
+> **Estado**: EN CURSO (2026-10-26): 6.1–6.3 hechas; **pausado por Roberto** antes de la 6.4 (dominio propio). APROBADO con las respuestas de Roberto (ver «Decisiones de Roberto»)
 > **Fecha**: 2026-10-26
 > **Proyecto**: Kshop
 > **Fase**: 6 (ver `arranque-y-fases.md`). Código de partida: commit `f33e8eb` (Fase 5 cerrada)
@@ -343,6 +343,9 @@ Sustituyen a la propuesta donde chocan.
 |------|--------|--------|
 | 6.1 Esquema y aislamiento | Hecha: `20261101100000_pro_schema.sql` (`warehouse_shipping_zones`, `stock_movements.transfer_id`, `order_line_costs.cost_rate_to_base` con trigger y relleno de las 42 líneas existentes, `expenses`, `private.market_rates`, columnas de `store_domains` con un dominio propio por tienda). Suite 08; romper la política de gastos hace fallar 4 tests | `82da209` |
 | 6.2 Multi-almacén y multimoneda | Hecha: `…100100_warehouse_engine` (disponible y reserva solo del almacén principal sin el módulo, D13; reserva por punto de recogida / zona / resto con reparto, D12; `set_zone_warehouses`; `transfer_stock` con el mismo orden de bloqueo que el checkout; caché de elTOQUE), `…100200_pro_readers`, `…100300_import_variant_extras`. API `/stores/{id}/warehouses{,/zones/{id},/{id}/stock,/transfers,/movements}` y `/currencies/rates`; pantallas Almacenes (Resumen con zonas, Traspasar, Movimientos) y Monedas (tasa, sugerencia elTOQUE, historial, precios fijos); Excel con «Precio {moneda}» y «Stock {almacén}». `test:rls` 512/512, `e2e:pro` 30/30 (incluye carrera por la última unidad e import del Excel), `qa:pro` 7/7, `e2e:{orders,catalog,excel,discounts}` en verde | ver git |
+| 6.3 Finanzas | Hecha: `…100400_finance_engine` (`finance_summary`, `finance_daily` = cierre del día con todas las monedas, `finance_margin` por producto/categoría/marca, `finance_breakdown`, `finance_inventory`; `private.rate_at`) + `…100500_finance_rate_periods` (la tasa de la moneda elegida como tramos unidos por fecha: con 20 000 pedidos/30 días el resumen bajó de 1,8–2,6 s a ~200 ms; diario 72 ms, margen 152 ms, desglose 63 ms; sin tabla resumen, D5). API `/stores/{id}/finance/{summary,daily,margin,breakdown,inventory,expenses[/{id}],export}` (owner/admin + `finance`); `@kshop/ui` `BarChart` en SVG; pantallas Resumen (KPIs, gráfico, cierre del día), Margen, Inventario, Desglose, Gastos; «Ver todo en» la moneda que elija el dueño; exportar a Excel (una hoja por vista). Suite 08: «los informes cuadran» con CUP/USD, cancelado, envío a convenir, pagos, devolución, gastos y cambio de tasa posterior; `test:rls` 526/526, `e2e:pro` 49/49 (informes = sumas directas de la BD de pedidos hechos por la API), `qa:pro` 14/14 | ver git |
+| 6.4 Dominio propio | **Pendiente** (siguiente) | — |
+| 6.5 Validación final | Pendiente | — |
 
 ## 🧠 Aprendizajes (Self-Annealing / Neural Network)
 
@@ -357,6 +360,31 @@ Sustituyen a la propuesta donde chocan.
 - **Error**: `syntax error at or near "into"` con `insert into fixtures select … from (insert … returning id) z`.
 - **Fix**: CTE: `with z as (insert … returning id) insert into fixtures select … from z`.
 - **Aplicar en**: fixtures de los tests SQL.
+
+### 2026-10-26: Una función escalar por fila hunde los informes
+- **Error**: `private.rate_at` (subconsultas) llamada por pedido y por suma: 1,8–2,6 s con 20 000 pedidos.
+- **Fix**: `private.rate_periods` (tramos `[from_at, to_at)` de la moneda destino) unido por fecha una vez por consulta; un factor por pedido.
+- **Aplicar en**: cualquier informe que convierta monedas por fecha.
+
+### 2026-10-26: `->>` y `||` tienen la misma precedencia
+- **Error**: `s ->> 'a' || s ->> 'b'` → `operator does not exist: text ->> unknown`.
+- **Fix**: paréntesis: `(s ->> 'a') || (s ->> 'b')`.
+- **Aplicar en**: tests SQL que arman cadenas desde jsonb.
+
+### 2026-10-26: Una actualización que rompe un `check` falla entera sin avisar en los scripts
+- **Error**: la QA ponía `total = null` con envío 0 (check «los dos o ninguno»); supabase-js devuelve el error y el script no lo miraba: los pedidos quedaron todos «hoy».
+- **Fix**: una sola actualización válida y `if (error) throw error` en la siembra.
+- **Aplicar en**: siembras de QA/E2E.
+
+### 2026-10-26: Recrear una tienda con el mismo slug enseguida
+- **Error**: la ficha de la tienda está en caché unos minutos por slug; borrar y recrear «qa-pro» daba «No tienes acceso» (id anterior).
+- **Fix**: slug distinto por pasada (`qa-pro-xxxxx`) y limpieza por prefijo.
+- **Aplicar en**: scripts de QA que crean tiendas temporales.
+
+### 2026-10-26: Datos viejos sin aviso al cambiar el periodo
+- **Error**: al pulsar «7 días» seguían los números del mes hasta llegar el informe nuevo (la QA llegó a capturarlos).
+- **Fix**: `useReport` devuelve `loading` por clave de petición; el informe se atenúa con `aria-busy` y la QA espera a `aria-busy="false"`.
+- **Aplicar en**: pantallas con filtros que recargan datos.
 
 ### 2026-10-26: El token de elTOQUE de LensSpace no se puede copiar
 - **Error**: está guardado como secreto de Edge Function en el Supabase de LensSpace (solo se ve su huella).

@@ -91,6 +91,8 @@ async function createStore(name, slug, ownerId, prefix, plan) {
   return data;
 }
 
+const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Havana" }).format(new Date());
+
 const spanish = (r) =>
   typeof r.body?.error?.message === "string" && /[a-záéíóúñ]/i.test(r.body.error.message);
 
@@ -347,6 +349,137 @@ async function run() {
   check("rates: a fixed price does not follow the rate", (await priceIn("USD")) === 3);
   r = await ownerA("GET", `${A}/currencies/rates`);
   check("rates: one product with a fixed USD price", r.body?.currencies?.find((c) => c.currency === "USD")?.fixedPrices === 1, r.body);
+
+  // ---- Finance: the reports add up to the orders made through the real API ----
+  const order = async (currency, lines, key) => {
+    const res = await ownerA("POST", `${A}/orders`, {
+      idempotencyKey: `pro-e2e-${key}`,
+      currency,
+      customer: { name: "Cliente E2E", phone: "+5353123456" },
+      lines,
+      notifyCustomer: false,
+    });
+    if (res.status !== 201) throw new Error(`order ${key}: ${JSON.stringify(res)}`);
+    return res.body.orderId;
+  };
+  const o1 = await order("CUP", [{ variantId: variants["GOR-1"], quantity: 2 }], "o1");
+  await ownerA("POST", `${A}/orders/${o1}/shipping`, { amount: 100 });
+  await ownerA("POST", `${A}/orders/${o1}/payments`, { amount: 1000 });
+  const o2 = await order("USD", [{ variantId: variants["BOL-1"], quantity: 1 }], "o2");
+  await ownerA("POST", `${A}/orders/${o2}/shipping`, { amount: 0 });
+  const { data: o2row } = await service.from("orders").select("total").eq("id", o2).single();
+  await ownerA("POST", `${A}/orders/${o2}/payments`, { amount: Number(o2row.total) });
+  const o3 = await order("CUP", [{ variantId: variants["BOL-1"], quantity: 1 }], "o3");
+  r = await ownerA("POST", `${A}/orders/${o3}/cancel`, { reason: "Prueba" });
+  check("finance setup: two orders paid, one cancelled", r.status === 200, r);
+  r = await ownerA("POST", `${A}/finance/expenses`, { spentOn: today(), category: "Mensajería", amount: 250, currency: "CUP" });
+  check("expenses: owner adds one -> 201", r.status === 201 && r.body?.amount === 250, r);
+  const expenseId = r.body?.id;
+
+  const period = `from=${today()}&to=${today()}&currency=CUP`;
+  r = await staffA("GET", `${A}/finance/summary?${period}`);
+  check("finance: staff -> 403", r.status === 403, r);
+  r = await ownerB("GET", `${B}/finance/summary?${period}`);
+  check("finance: Base store -> 403 module_not_enabled", r.status === 403 && r.body?.error?.code === "module_not_enabled", r);
+  r = await ownerA("GET", `${A}/finance/summary?from=${today()}&to=2020-01-01&currency=CUP`);
+  check("finance: a period that ends before it starts -> 400", r.status === 400 && spanish(r), r);
+
+  // Expected values straight from the database.
+  const { data: orders } = await service
+    .from("orders")
+    .select("id, currency, exchange_rate, status, subtotal, total, discount_total")
+    .eq("store_id", storeA.id);
+  const live = orders.filter((o) => o.status !== "cancelled");
+  const soldBy = {};
+  for (const o of live) soldBy[o.currency] = (soldBy[o.currency] ?? 0) + Number(o.total ?? o.subtotal);
+  const soldEq = live.reduce((s, o) => s + Number(o.total ?? o.subtotal) * Number(o.exchange_rate), 0);
+  const { data: lines } = await service
+    .from("order_lines")
+    .select("order_id, quantity, line_total, order_line_costs(unit_cost, cost_rate_to_base)")
+    .eq("store_id", storeA.id);
+  let margin = 0;
+  for (const l of lines) {
+    const o = live.find((x) => x.id === l.order_id);
+    const c = Array.isArray(l.order_line_costs) ? l.order_line_costs[0] : l.order_line_costs;
+    if (!o || !c) continue;
+    const share = Number(o.subtotal) > 0 ? (Number(o.discount_total) * Number(l.line_total)) / Number(o.subtotal) : 0;
+    margin += (Number(l.line_total) - share) * Number(o.exchange_rate) - Number(c.unit_cost) * l.quantity * Number(c.cost_rate_to_base);
+  }
+  const { data: pays } = await service.from("payments").select("amount, currency").eq("store_id", storeA.id);
+  const { data: refunds } = await service.from("refunds").select("amount, currency").eq("store_id", storeA.id);
+  const collectedBy = {};
+  for (const p of pays) collectedBy[p.currency] = (collectedBy[p.currency] ?? 0) + Number(p.amount);
+  for (const p of refunds) collectedBy[p.currency] = (collectedBy[p.currency] ?? 0) - Number(p.amount);
+  const round = (v) => Math.round(v * 100) / 100;
+
+  r = await ownerA("GET", `${A}/finance/summary?${period}`);
+  const s = r.body;
+  check(
+    "summary: sold per currency equals the orders (cancelled left out)",
+    r.status === 200 &&
+      s.sold.length === Object.keys(soldBy).length &&
+      s.sold.every((x) => round(soldBy[x.currency]) === x.amount),
+    { api: s?.sold, db: soldBy },
+  );
+  check(
+    "summary: collected per currency equals payments − refunds",
+    s.collected.every((x) => round(collectedBy[x.currency] ?? 0) === x.amount),
+    { api: s?.collected, db: collectedBy },
+  );
+  check("summary: equivalent in CUP with each order's rate", s.totals.sold === round(soldEq), { api: s.totals.sold, db: soldEq });
+  check("summary: margin and net (margin − 250 of expenses)", s.totals.margin === round(margin) && s.totals.net === round(margin - 250), {
+    api: s.totals,
+    margin,
+  });
+  check("summary: 2 orders", s.totals.orders === 2, s.totals);
+
+  r = await ownerA("GET", `${A}/finance/daily?${period}`);
+  check(
+    "daily close: today with every currency",
+    r.status === 200 && r.body.days.length === 1 && r.body.days[0].orders === 2 && r.body.days[0].expenses[0]?.amount === 250,
+    r.body,
+  );
+  r = await ownerA("GET", `${A}/finance/margin?${period}&group=product`);
+  check(
+    "margin by product adds up to the summary margin",
+    r.status === 200 && round(r.body.rows.reduce((t, x) => t + x.margin, 0)) === round(margin),
+    r.body,
+  );
+  r = await ownerA("GET", `${A}/finance/breakdown?${period}`);
+  check(
+    "breakdown: channel admin, two currencies",
+    r.status === 200 && r.body.channels[0]?.name === "admin" && r.body.currencies.length === 2,
+    r.body,
+  );
+  r = await ownerA("GET", `${A}/finance/inventory?currency=CUP&filter=all`);
+  check(
+    "inventory: valued with today's rates (every product has a cost)",
+    r.status === 200 && r.body.totals.costValue > 0 && r.body.totals.withoutCost === 0 && r.body.rows.length === 2,
+    r.body?.totals,
+  );
+  r = await ownerA("PUT", `${A}/finance/expenses/${expenseId}`, {
+    spentOn: today(),
+    category: "Mensajería",
+    amount: 300,
+    currency: "CUP",
+  });
+  check("expenses: edit -> 300", r.status === 200 && r.body.amount === 300, r);
+  r = await ownerB("DELETE", `${A}/finance/expenses/${expenseId}`);
+  check("expenses: owner of B cannot delete one of A -> 403", r.status === 403, r);
+  r = await ownerA("GET", `${A}/finance/summary?${period}`);
+  check("summary: the net follows the edited expense", r.body?.totals?.net === round(margin - 300), r.body?.totals);
+  r = await ownerA("DELETE", `${A}/finance/expenses/${expenseId}`);
+  check("expenses: delete -> 204", r.status === 204, r);
+
+  const exp = await fetch(`${APP}/api/v1${A}/finance/export?${period}`, { headers: auth });
+  const xwb = new ExcelJS.Workbook();
+  await xwb.xlsx.load(await exp.arrayBuffer());
+  check(
+    "export: one sheet per view",
+    exp.status === 200 &&
+      ["Resumen", "Cierre diario", "Margen por producto", "Desglose", "Inventario", "Gastos"].every((n) => xwb.getWorksheet(n)),
+    xwb.worksheets.map((w) => w.name),
+  );
 }
 
 try {

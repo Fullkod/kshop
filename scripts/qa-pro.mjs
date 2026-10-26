@@ -1,7 +1,8 @@
-// Browser QA of phase 6 (pnpm dev running). Creates a temporary Pro store qa-pro with its owner, two warehouses, a
+// Browser QA of phase 6 (pnpm dev running). Creates a temporary Pro store qa-pro-xxxxx with its owner, two warehouses, a
 // zone, two products and USD as a sale currency; screenshots go to .titan/qa/fase-6/. Everything is deleted at the end.
 //   1. Almacenes (1280 px): overview, zone served by Norte, transfer, movements; the overview at 390 px.
 //   2. Monedas (1280 px): change the USD rate and see the history.
+//   3. Finanzas (1280 and 390 px): summary with the daily close, everything in USD, margin, inventory, expenses.
 //
 //   node scripts/qa-pro.mjs
 
@@ -21,7 +22,9 @@ for (const line of existsSync(join(root, ".env.local"))
   if (match && !env[match[1]]) env[match[1]] = match[2].trim();
 }
 
-const SLUG = "qa-pro";
+// A new subdomain per run: the store card is cached for minutes per slug, so reusing "qa-pro" right after deleting
+// it would show the previous store.
+const SLUG = `qa-pro-${Date.now().toString(36).slice(-5)}`;
 const BASE = `http://${SLUG}.kshop.localhost:3000`;
 const OUT = join(root, ".titan/qa/fase-6");
 const OWNER = { email: "qa-pro-owner@e2e.kshop.test", password: randomBytes(12).toString("base64url") };
@@ -59,7 +62,7 @@ function chromiumPath() {
 }
 
 async function cleanup() {
-  await service.from("stores").delete().eq("slug", SLUG);
+  await service.from("stores").delete().like("slug", "qa-pro-%");
   const { data } = await service.auth.admin.listUsers({ perPage: 1000 });
   for (const u of data?.users ?? []) {
     if (u.email === OWNER.email) await service.auth.admin.deleteUser(u.id);
@@ -133,6 +136,65 @@ async function seed() {
     p_rounding: null,
     p_user_id: owner.user.id,
   });
+
+  // Orders of the last 10 days (CUP and USD), most paid, for Finanzas.
+  const { data: bag } = await service.from("product_variants").select("id").eq("store_id", store.id).eq("sku", "BOL-1").single();
+  await service.rpc("set_stock_quantity", {
+    p_store_id: store.id,
+    p_variant_id: bag.id,
+    p_warehouse_id: (await service.from("warehouses").select("id").eq("store_id", store.id).eq("is_default", true).single()).data.id,
+    p_quantity: 40,
+    p_type: "adjustment",
+    p_note: null,
+    p_user_id: owner.user.id,
+  });
+  const { data: main } = await service.from("warehouses").select("id").eq("store_id", store.id).eq("is_default", true).single();
+  await service.rpc("set_stock_quantity", {
+    p_store_id: store.id,
+    p_variant_id: cap.id,
+    p_warehouse_id: main.id,
+    p_quantity: 40,
+    p_type: "adjustment",
+    p_note: null,
+    p_user_id: owner.user.id,
+  });
+  for (let day = 0; day < 10; day++) {
+    for (let n = 0; n < 1 + (day % 3); n++) {
+      const usd = (day + n) % 4 === 0;
+      const { data: result, error: orderError } = await service.rpc("checkout_create_order", {
+        p_store_id: store.id,
+        p_input: {
+          idempotency_key: `qa-pro-${day}-${n}`,
+          channel: "admin",
+          currency: usd ? "USD" : "CUP",
+          lines: [{ variant_id: n % 2 ? cap.id : bag.id, quantity: 1 + (n % 2) }],
+          customer: { name: `Cliente ${day}${n}`, phone: "+5353123456" },
+          notify_customer: false,
+        },
+      });
+      if (orderError) throw orderError;
+      const at = new Date(Date.now() - day * 86_400_000).toISOString();
+      const { data: o } = await service.from("orders").select("subtotal").eq("id", result.order_id).single();
+      const { error: dateError } = await service
+        .from("orders")
+        .update({ created_at: at, shipping_total: 0, total: o.subtotal })
+        .eq("id", result.order_id);
+      if (dateError) throw dateError;
+      if ((day + n) % 3 !== 0) {
+        await service.rpc("order_record_payment", {
+          p_store_id: store.id,
+          p_order_id: result.order_id,
+          p_input: { amount: Number(o.subtotal) },
+          p_user_id: owner.user.id,
+        });
+        await service.from("payments").update({ created_at: at }).eq("order_id", result.order_id);
+      }
+    }
+  }
+  await service.from("expenses").insert([
+    { store_id: store.id, spent_on: new Date(Date.now() - 2 * 86_400_000).toISOString().slice(0, 10), category: "Alquiler", amount: 5000, currency: "CUP" },
+    { store_id: store.id, spent_on: new Date(Date.now() - 5 * 86_400_000).toISOString().slice(0, 10), category: "Envases y bolsas", amount: 3, currency: "USD" },
+  ]);
   return store;
 }
 
@@ -221,6 +283,48 @@ try {
   const history = await admin.getByTestId("history-USD").innerText();
   check("rates: history with 320 and 300", history.includes("320") && history.includes("300"), history);
   await shot(admin, "05-monedas-1280");
+
+  // 3. Finanzas (last 7 days).
+  await admin.goto(`${BASE}/admin/finance`);
+  await admin.getByTestId("kpi-sold").waitFor({ timeout: 20000 });
+  await admin.getByRole("button", { name: "7 días" }).click();
+  await admin.waitForURL(/from=/);
+  await admin.locator('[data-testid="finance-summary"][aria-busy="false"]').waitFor({ timeout: 15000 });
+  const sold = await admin.getByTestId("kpi-sold").innerText();
+  check("finance: sold in CUP and USD", sold.includes("CUP") && sold.includes("USD"), sold);
+  const days = await admin.getByTestId("daily-close").locator("tbody tr").count();
+  check("finance: the daily close of the last 7 days (one row per day with activity)", days >= 5 && days <= 7, days);
+  await shot(admin, "06-finanzas-resumen-1280");
+  await admin.selectOption("#finance-currency", "USD");
+  await admin.waitForURL(/currency=USD/);
+  await admin.locator('[data-testid="finance-summary"][aria-busy="false"]').waitFor({ timeout: 15000 });
+  check("finance: everything in USD on request", (await admin.getByTestId("kpi-collected").innerText()).includes("USD"));
+
+  await admin.getByRole("link", { name: "Margen" }).click();
+  await admin.getByTestId("margin-rows").getByText("Bolso").waitFor({ timeout: 15000 });
+  check("margin: per product", (await admin.getByTestId("margin-rows").innerText()).includes("Gorra"));
+  await shot(admin, "07-finanzas-margen-1280");
+
+  await admin.getByRole("link", { name: "Inventario" }).click();
+  await admin.getByTestId("inventory-rows").getByText("GOR-1").waitFor({ timeout: 15000 });
+  const costValue = await admin.getByTestId("inventory-cost").innerText();
+  check("inventory: valued at cost in USD", /[1-9][\d.,]*\s*USD/.test(costValue), costValue);
+  await shot(admin, "08-finanzas-inventario-1280");
+
+  await admin.getByRole("link", { name: "Gastos" }).click();
+  await admin.getByTestId("expenses").getByText("Alquiler").waitFor({ timeout: 15000 });
+  await admin.fill("#expense-category", "Mensajería");
+  await admin.fill("#expense-amount", "450");
+  await admin.getByRole("button", { name: "Añadir gasto" }).click();
+  await admin.getByTestId("expenses").getByText("Mensajería").waitFor({ timeout: 15000 });
+  check("expenses: added from the form", (await admin.getByTestId("expenses-total").innerText()).includes("CUP"));
+  await shot(admin, "09-finanzas-gastos-1280");
+
+  await phone.goto(`${BASE}/admin/finance`);
+  await phone.getByTestId("kpi-sold").waitFor({ timeout: 20000 });
+  const financeOverflow = await phone.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check("finance at 390 px: no horizontal scroll of the page", financeOverflow <= 1, financeOverflow);
+  await shot(phone, "10-finanzas-390");
 
   if (errors.length) writeFileSync(join(OUT, "console-errors.txt"), errors.join("\n\n"));
   check("no console errors", errors.length === 0, errors.map((e) => e.slice(0, 300)).join(" | "));
