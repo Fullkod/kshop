@@ -31,6 +31,11 @@ function errorResponse(error: HttpError) {
 export function apiHandler<TArgs extends unknown[]>(handler: (...args: TArgs) => Promise<Response>) {
   return async (...args: TArgs): Promise<Response> => {
     try {
+      const request = args[0];
+      if (request instanceof Request) {
+        // Loaded on demand: store-writable imports auth, which imports this module.
+        await (await import("./store-writable")).assertStoreWritable(request);
+      }
       return await handler(...args);
     } catch (error) {
       // Next's own interrupts (prerender bail-out of GET handlers, notFound…) must pass through.

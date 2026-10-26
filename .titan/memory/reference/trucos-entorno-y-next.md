@@ -47,3 +47,7 @@ Detalle de cada error en la sección «Aprendizajes» de los PRP de las fases 1 
   defecto de Next (8 páginas por worker × CPUs) la instancia de Supabase se satura y falla con 57014
   (2026-10-25). Arreglo en `next.config.ts`: `staticGenerationMaxConcurrency: 2` + `staticGenerationRetryCount: 3`.
   Diagnóstico: `query_logs` (postgrest_logs/postgres_logs) en la hora del build.
+- **`pnpm dev` sirviendo código viejo** (fases 4 y 5): rutas y módulos de servidor de antes de los últimos cambios
+  aunque el archivo ya cambió (p. ej. la API aceptaba cupones en Base y el carrito no traía campos nuevos). Pasa tras
+  `pnpm build` con el dev corriendo y a veces sin él; editar el archivo no siempre basta. Síntoma: un E2E que
+  pasaba falla con un comportamiento «imposible». Fix: reiniciar `pnpm dev` (parar el `next dev` del puerto 3000).

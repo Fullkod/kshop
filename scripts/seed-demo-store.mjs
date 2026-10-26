@@ -106,6 +106,16 @@ if (!store) {
   console.log(`Store ${DEMO.name} already exists (${store.id})`);
 }
 
+// The platform's test store is never billed (phase 5): courtesy, Pro.
+{
+  const { error: compedError } = await service.rpc("subscription_update", {
+    p_store_id: store.id,
+    p_patch: { comped: true, notes: "Tienda de pruebas de la plataforma" },
+    p_actor: null,
+  });
+  if (compedError) throw compedError;
+}
+
 const { error: memberError } = await service
   .from("store_members")
   .upsert(

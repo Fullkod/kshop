@@ -1,6 +1,6 @@
 "use client";
 
-import { isModuleCode, ROLE_LABELS, type ModuleCode } from "@kshop/core";
+import { formatUsd, isModuleCode, ROLE_LABELS, type ModuleCode } from "@kshop/core";
 import { StoreEntitlementsQuery } from "@kshop/data";
 import { Alert, Badge, Button, cn } from "@kshop/ui";
 import Link from "next/link";
@@ -10,6 +10,13 @@ import { ADMIN_MODULES } from "@/features/registry";
 import { useSession } from "@/lib/session";
 import { useStore } from "@/lib/store-context";
 import { AdminContext, type AdminState } from "./admin-context";
+import { AccountBanner } from "./AccountBanner";
+
+// Store account pages (owner/admin), after the modules.
+const ACCOUNT_LINKS = [
+  { href: "/admin/team", label: "Equipo" },
+  { href: "/admin/billing", label: "Plan y facturación" },
+] as const;
 
 // Pages that work without a store session.
 const PUBLIC_PATHS = ["/admin/login", "/admin/set-password"];
@@ -50,10 +57,27 @@ export function AdminShell({ children }: { children: ReactNode }) {
         // The look is set up by the platform: the superadmin always has «Apariencia» (phase 5, Roberto).
         if (me.isSuperadmin && !codes.includes("themes")) codes.push("themes");
         const limits = JSON.parse(result.data?.storeLimits ?? "{}") as Record<string, number>;
+        const subscription = result.data?.subscriptionsCollection?.edges[0]?.node ?? null;
+        const addonPrices: AdminState["addonPrices"] = {};
+        for (const { node } of result.data?.modulesCollection?.edges ?? []) {
+          if (isModuleCode(node.code) && node.addonPrice != null)
+            addonPrices[node.code] = Number(node.addonPrice);
+        }
         if (!cancelled) {
           setState({
             kind: "ready",
-            admin: { role: membership?.role ?? null, enabledModules: new Set<ModuleCode>(codes), limits },
+            admin: {
+              role: membership?.role ?? null,
+              enabledModules: new Set<ModuleCode>(codes),
+              limits,
+              isSuperadmin: me.isSuperadmin,
+              subscription: subscription && {
+                status: subscription.status,
+                trialEndsAt: subscription.trialEndsAt ?? null,
+              },
+              storeStatus: result.data?.storesCollection?.edges[0]?.node.status ?? "active",
+              addonPrices,
+            },
           });
         }
       } catch {
@@ -141,17 +165,40 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   {module.label}
                 </Link>
               ) : (
-                <span
+                <Link
                   key={module.code}
+                  href="/admin/billing"
                   data-testid={`nav-locked-${module.code}`}
-                  className="flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm whitespace-nowrap text-muted-foreground"
-                  title="Disponible en el plan Pro"
+                  className="flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm whitespace-nowrap text-muted-foreground hover:bg-background"
+                  title={
+                    admin.addonPrices[module.code] != null
+                      ? `Incluido en Pro, o ${formatUsd(admin.addonPrices[module.code]!)}/mes suelto`
+                      : "Incluido en el plan Pro"
+                  }
                 >
                   {module.label}
-                  <Badge variant="gold">Pro</Badge>
-                </span>
+                  <Badge variant="gold">
+                    {admin.addonPrices[module.code] != null
+                      ? `Pro · ${formatUsd(admin.addonPrices[module.code]!)}`
+                      : "Pro"}
+                  </Badge>
+                </Link>
               );
             })}
+            {(admin.role === "owner" || admin.role === "admin" || admin.isSuperadmin) &&
+              ACCOUNT_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  data-testid={`nav-${link.href.slice(7)}`}
+                  className={cn(
+                    "rounded-md px-3 py-2 text-sm whitespace-nowrap hover:bg-background",
+                    pathname.startsWith(link.href) && "bg-background font-medium",
+                  )}
+                >
+                  {link.label}
+                </Link>
+              ))}
           </nav>
           <div className="hidden px-5 pb-6 md:block">
             <Button variant="ghost" size="sm" onClick={signOut}>
@@ -159,7 +206,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </Button>
           </div>
         </aside>
-        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8">
+          <AccountBanner admin={admin} />
+          {children}
+        </main>
       </div>
     </AdminContext.Provider>
   );

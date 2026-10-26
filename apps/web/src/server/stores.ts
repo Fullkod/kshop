@@ -48,7 +48,9 @@ async function fetchStoreBySlug(slug: string): Promise<PublicStore | null> {
 export async function getStoreBySlug(slug: string): Promise<PublicStore | null> {
   "use cache";
   cacheTag(storeCacheTag(slug));
-  cacheLife("hours");
+  // Minutes, not hours: the daily billing job suspends stores in the database, where Next cannot expire this tag
+  // (phase 5); a suspended store must show its notice within about a minute, not an empty storefront for an hour.
+  cacheLife("minutes");
   return fetchStoreBySlug(slug);
 }
 

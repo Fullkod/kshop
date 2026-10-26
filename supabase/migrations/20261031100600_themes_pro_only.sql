@@ -11,3 +11,8 @@ update public.modules set addon_price = null, addon_currency = null where code =
 select private.sync_plan_modules(s.store_id)
 from public.subscriptions s join public.plans p on p.id = s.plan_id
 where p.code = 'base';
+
+-- Same name as in the admin menu.
+update public.modules set name = 'Apariencia',
+  description = 'Tema, portada, banners, menús y páginas de la tienda.'
+where code = 'themes';

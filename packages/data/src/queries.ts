@@ -47,6 +47,29 @@ export const StoreEntitlementsQuery = graphql(`
       }
     }
     storeLimits(pStoreId: $storeId)
+    subscriptionsCollection(filter: { storeId: { eq: $storeId } }, first: 1) {
+      edges {
+        node {
+          status
+          trialEndsAt
+        }
+      }
+    }
+    storesCollection(filter: { id: { eq: $storeId } }, first: 1) {
+      edges {
+        node {
+          status
+        }
+      }
+    }
+    modulesCollection(first: 100) {
+      edges {
+        node {
+          code
+          addonPrice
+        }
+      }
+    }
   }
 `);
 

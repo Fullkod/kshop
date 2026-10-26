@@ -4,7 +4,7 @@ import { requireCatalogAccess } from "@/server/catalog/access";
 import { saveVoucher } from "@/server/discounts/admin";
 import { apiHandler, readJson } from "@/server/http";
 
-// POST /api/v1/stores/{storeId}/vouchers  (admin+, module discounts)
+// POST /api/v1/stores/{storeId}/vouchers  (admin+, module vouchers)
 // { code, name, scope: order|specific|shipping, reward, value, minSubtotal?, minQuantity?, usageLimit?,
 //   usagePerCustomer?, startsAt?, endsAt?, isActive, targets: [{type, id}] (scope specific) }
 export const POST = apiHandler(async (request: Request, ctx: RouteContext<"/api/v1/stores/[storeId]/vouchers">) => {

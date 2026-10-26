@@ -88,7 +88,7 @@ async function isSlugTaken(slug: string): Promise<boolean> {
  * Gets the owner's account and a one-time access link (decision D4: sent by the superadmin over WhatsApp,
  * no email provider needed). New owners get an invite link; existing owners (several stores) a magic link.
  */
-async function prepareOwner(email: string, redirectTo: string) {
+export async function prepareOwner(email: string, redirectTo: string) {
   const auth = getServiceClient().auth.admin;
 
   const invite = await auth.generateLink({ type: "invite", email, options: { redirectTo } });

@@ -30,6 +30,7 @@
     "e2e:orders": "node scripts/e2e-orders.mjs",
     "e2e:discounts": "node scripts/e2e-discounts.mjs",
     "e2e:billing": "node scripts/e2e-billing.mjs",
+    "qa:billing": "node scripts/qa-billing.mjs",
     "e2e:notifications": "node scripts/e2e-notifications.mjs",
     "qa:orders": "node scripts/qa-orders.mjs",
     "qa:discounts": "node scripts/qa-discounts.mjs",

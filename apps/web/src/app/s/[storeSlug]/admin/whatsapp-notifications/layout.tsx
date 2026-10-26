@@ -8,7 +8,9 @@ import { useAdmin } from "../admin-context";
 export default function NotificationsLayout({ children }: { children: ReactNode }) {
   const admin = useAdmin();
   if (!admin.enabledModules.has("whatsapp_notifications")) {
-    return <Alert variant="destructive">Los avisos por WhatsApp no están incluidos en el plan de tu tienda.</Alert>;
+    return (
+      <Alert variant="destructive">Los avisos por WhatsApp no están incluidos en el plan de tu tienda.</Alert>
+    );
   }
   return (
     <div className="max-w-6xl">

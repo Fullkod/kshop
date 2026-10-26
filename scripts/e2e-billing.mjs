@@ -29,7 +29,11 @@ const USERS = {
   ownerB: "bill-owner-b@e2e.kshop.test",
 };
 // Accounts invited through the team API (removed at the end too).
-const INVITED = ["bill-admin-a@e2e.kshop.test", "bill-staff2-a@e2e.kshop.test", "bill-staff3-a@e2e.kshop.test"];
+const INVITED = [
+  "bill-admin-a@e2e.kshop.test",
+  "bill-staff2-a@e2e.kshop.test",
+  "bill-staff3-a@e2e.kshop.test",
+];
 const SLUGS = ["bill-e2e-a", "bill-e2e-b"];
 
 const service = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
@@ -48,7 +52,8 @@ async function cleanup() {
   await service.from("stores").delete().in("slug", SLUGS);
   const { data } = await service.auth.admin.listUsers({ perPage: 1000 });
   for (const u of data?.users ?? []) {
-    if (Object.values(USERS).includes(u.email) || INVITED.includes(u.email)) await service.auth.admin.deleteUser(u.id);
+    if (Object.values(USERS).includes(u.email) || INVITED.includes(u.email))
+      await service.auth.admin.deleteUser(u.id);
   }
 }
 
@@ -94,7 +99,8 @@ async function createStore(name, slug, ownerId, prefix, plan) {
   return data;
 }
 
-const spanish = (r) => typeof r.body?.error?.message === "string" && /[a-záéíóúñ]/i.test(r.body.error.message);
+const spanish = (r) =>
+  typeof r.body?.error?.message === "string" && /[a-záéíóúñ]/i.test(r.body.error.message);
 
 async function run() {
   await cleanup();
@@ -127,11 +133,21 @@ async function run() {
   r = await root("GET", "/platform/plans");
   const base = r.body?.plans?.find((p) => p.code === "base");
   const pro = r.body?.plans?.find((p) => p.code === "pro");
-  check("plans: Base 5 USD (50 yearly), Pro 12; Base without coupons nor look; Pro with both",
-    r.status === 200 && base?.price === 5 && base?.yearlyPrice === 50 && pro?.price === 12
-      && !base.modules.includes("vouchers") && !base.modules.includes("themes")
-      && pro.modules.includes("vouchers") && pro.modules.includes("themes") && base.limits.maxStaff === 2
-      && pro.limits.maxStaff === 10 && pro.limits.maxProducts === null, r.body);
+  check(
+    "plans: Base 5 USD (50 yearly), Pro 12; Base without coupons nor look; Pro with both",
+    r.status === 200 &&
+      base?.price === 5 &&
+      base?.yearlyPrice === 50 &&
+      pro?.price === 12 &&
+      !base.modules.includes("vouchers") &&
+      !base.modules.includes("themes") &&
+      pro.modules.includes("vouchers") &&
+      pro.modules.includes("themes") &&
+      base.limits.maxStaff === 2 &&
+      pro.limits.maxStaff === 10 &&
+      pro.limits.maxProducts === null,
+    r.body,
+  );
   r = await root("PUT", "/platform/plans/base", { ...base, price: -1 });
   check("plans: a negative price -> 400 with the field", r.status === 400 && !!r.body.error.fields?.price, r);
   r = await root("PUT", "/platform/modules/catalog", { addonPrice: 1 });
@@ -139,18 +155,36 @@ async function run() {
 
   // ---- Subscription of A (Base, no trial) ----
   r = await root("GET", sub);
-  check("subscription: Base, active, next invoice 5 USD, usage 0/300 and 1/2 (the staff)",
-    r.status === 200 && r.body.plan.code === "base" && r.body.status === "active" && r.body.quote?.total === 5
-      && r.body.usage.maxProducts.limit === 300 && r.body.usage.maxStaff.used === 1, r.body);
+  check(
+    "subscription: Base, active, next invoice 5 USD, usage 0/300 and 1/2 (the staff)",
+    r.status === 200 &&
+      r.body.plan.code === "base" &&
+      r.body.status === "active" &&
+      r.body.quote?.total === 5 &&
+      r.body.usage.maxProducts.limit === 300 &&
+      r.body.usage.maxStaff.used === 1,
+    r.body,
+  );
   r = await root("PUT", `${sub}/addons`, { moduleCode: "vouchers", enabled: true });
-  check("add-on: coupons bought on Base -> 2 USD more",
-    r.status === 200 && r.body.quote.total === 7 && r.body.modules.find((m) => m.code === "vouchers")?.source === "addon",
-    r.body?.quote);
+  check(
+    "add-on: coupons bought on Base -> 2 USD more",
+    r.status === 200 &&
+      r.body.quote.total === 7 &&
+      r.body.modules.find((m) => m.code === "vouchers")?.source === "addon",
+    r.body?.quote,
+  );
   r = await ownerA("GET", `/stores/${storeA.id}/entitlements`);
-  check("add-on: the store has coupons at once", r.status === 200 && JSON.stringify(r.body).includes("vouchers"), r.body);
+  check(
+    "add-on: the store has coupons at once",
+    r.status === 200 && JSON.stringify(r.body).includes("vouchers"),
+    r.body,
+  );
   r = await root("PUT", `${sub}/plan`, { planCode: "pro", interval: "year" });
-  check("plan change to Pro yearly: 120 USD and the add-on is not billed (Pro includes it)",
-    r.status === 200 && r.body.plan.code === "pro" && r.body.quote.total === 120, r.body?.quote);
+  check(
+    "plan change to Pro yearly: 120 USD and the add-on is not billed (Pro includes it)",
+    r.status === 200 && r.body.plan.code === "pro" && r.body.quote.total === 120,
+    r.body?.quote,
+  );
   r = await root("PUT", `${sub}/plan`, { planCode: "base", interval: "month" });
   check("back to Base monthly: 5 + 2", r.status === 200 && r.body.quote.total === 7, r.body?.quote);
   r = await root("POST", `${sub}/grants`, { type: "discount_percent", value: 150 });
@@ -161,64 +195,139 @@ async function run() {
   r = await root("PATCH", sub, { priceOverride: -3 });
   check("settings: negative own price -> 400", r.status === 400, r);
   r = await root("PATCH", sub, { founder: true, limitOverrides: { maxProducts: 500 }, notes: "Prueba E2E" });
-  check("settings: founder, 500 products, notes", r.status === 200 && r.body.founder && r.body.usage.maxProducts.limit === 500
-    && r.body.notes === "Prueba E2E", r.body);
+  check(
+    "settings: founder, 500 products, notes",
+    r.status === 200 &&
+      r.body.founder &&
+      r.body.usage.maxProducts.limit === 500 &&
+      r.body.notes === "Prueba E2E",
+    r.body,
+  );
 
   // ---- Invoices and cash payments ----
   r = await root("POST", `${sub}/invoices`);
   const invoice = r.body?.invoices?.find((i) => i.status === "pending");
-  check("issue now: invoice KS-… of 3.50 for the current month", r.status === 201 && invoice?.total === 3.5
-    && /^KS-\d{4}-\d{4}$/.test(invoice.number) && invoice.lines.length === 3, r.body?.invoices);
+  check(
+    "issue now: invoice KS-… of 3.50 for the current month",
+    r.status === 201 &&
+      invoice?.total === 3.5 &&
+      /^KS-\d{4}-\d{4}$/.test(invoice.number) &&
+      invoice.lines.length === 3,
+    r.body?.invoices,
+  );
   r = await root("GET", "/platform/invoices?status=open");
-  check("collections: the invoice is in «Por cobrar» with its store", r.status === 200
-    && r.body.invoices.some((i) => i.id === invoice?.id && i.store?.slug === SLUGS[0]), r.status);
+  check(
+    "collections: the invoice is in «Por cobrar» with its store",
+    r.status === 200 && r.body.invoices.some((i) => i.id === invoice?.id && i.store?.slug === SLUGS[0]),
+    r.status,
+  );
   r = await root("POST", `/platform/invoices/${invoice.id}/payments`, { amount: 0 });
   check("payment: 0 -> 400", r.status === 400, r);
-  r = await root("POST", `/platform/invoices/${invoice.id}/payments`, { amount: 2, method: "cash", notes: "Primera parte" });
-  check("payment: 2 in cash -> still pending, 1.50 left", r.status === 201 && r.body.invoice.status === "pending"
-    && r.body.invoice.amountPaid === 2, r.body);
+  r = await root("POST", `/platform/invoices/${invoice.id}/payments`, {
+    amount: 2,
+    method: "cash",
+    notes: "Primera parte",
+  });
+  check(
+    "payment: 2 in cash -> still pending, 1.50 left",
+    r.status === 201 && r.body.invoice.status === "pending" && r.body.invoice.amountPaid === 2,
+    r.body,
+  );
   r = await root("POST", `/platform/invoices/${invoice.id}/void`, {});
   check("void: an invoice with payments cannot be voided -> 409", r.status === 409 && spanish(r), r);
-  r = await root("POST", `/platform/invoices/${invoice.id}/adjustments`, { description: "Dominio", amount: 1 });
+  r = await root("POST", `/platform/invoices/${invoice.id}/adjustments`, {
+    description: "Dominio",
+    amount: 1,
+  });
   check("adjustment: +1 -> 4.50", r.status === 200 && r.body.invoice.total === 4.5, r.body?.invoice);
-  r = await root("POST", `/platform/invoices/${invoice.id}/payments`, { amount: 2.5, method: "transfer", reference: "T-1" });
-  check("payment: the rest -> paid", r.status === 201 && r.body.invoice.status === "paid"
-    && r.body.invoice.payments.length === 2, r.body?.invoice);
+  r = await root("POST", `/platform/invoices/${invoice.id}/payments`, {
+    amount: 2.5,
+    method: "transfer",
+    reference: "T-1",
+  });
+  check(
+    "payment: the rest -> paid",
+    r.status === 201 && r.body.invoice.status === "paid" && r.body.invoice.payments.length === 2,
+    r.body?.invoice,
+  );
   r = await root("POST", `/platform/invoices/${invoice.id}/payments`, { amount: 1 });
   check("payment on a paid invoice -> 409", r.status === 409, r);
 
   // A store closed by billing reopens when paid (the daily tick is tested in SQL; here the state is set directly).
   r = await root("POST", `${sub}/invoices`);
   const next = r.body?.invoices?.find((i) => i.status === "pending");
-  await service.from("platform_invoices").update({ due_at: new Date(Date.now() - 864e5 * 9).toISOString() }).eq("id", next.id);
+  await service
+    .from("platform_invoices")
+    .update({ due_at: new Date(Date.now() - 864e5 * 9).toISOString() })
+    .eq("id", next.id);
   await service.from("subscriptions").update({ status: "suspended" }).eq("store_id", storeA.id);
-  await service.from("stores").update({ status: "suspended", suspended_reason: "billing" }).eq("id", storeA.id);
+  await service
+    .from("stores")
+    .update({ status: "suspended", suspended_reason: "billing" })
+    .eq("id", storeA.id);
   r = await root("GET", `/platform/invoices?status=overdue`);
-  check("collections: the overdue invoice is in «Vencidas»", r.body?.invoices?.some((i) => i.id === next.id && i.overdue), r.status);
+  check(
+    "collections: the overdue invoice is in «Vencidas»",
+    r.body?.invoices?.some((i) => i.id === next.id && i.overdue),
+    r.status,
+  );
   r = await ownerA("GET", `/stores/${storeA.id}/billing`);
-  check("suspended store: the owner still sees its billing", r.status === 200 && r.body.storeStatus === "suspended"
-    && r.body.suspendedReason === "billing", r.body?.storeStatus);
+  check(
+    "suspended store: the owner still sees its billing",
+    r.status === 200 && r.body.storeStatus === "suspended" && r.body.suspendedReason === "billing",
+    r.body?.storeStatus,
+  );
   r = await root("POST", `/platform/invoices/${next.id}/payments`, { amount: next.total });
-  const { data: reopened } = await service.from("stores").select("status, suspended_reason").eq("id", storeA.id).single();
-  check("paying the overdue invoice reopens the store", r.status === 201 && reopened.status === "active"
-    && reopened.suspended_reason === null, reopened);
+  const { data: reopened } = await service
+    .from("stores")
+    .select("status, suspended_reason")
+    .eq("id", storeA.id)
+    .single();
+  check(
+    "paying the overdue invoice reopens the store",
+    r.status === 201 && reopened.status === "active" && reopened.suspended_reason === null,
+    reopened,
+  );
 
   r = await root("PATCH", `/platform/stores/${storeA.id}`, { status: "suspended" });
-  const { data: manual } = await service.from("stores").select("suspended_reason").eq("id", storeA.id).single();
-  check("manual suspension by the superadmin", r.status === 200 && manual.suspended_reason === "manual", manual);
+  const { data: manual } = await service
+    .from("stores")
+    .select("suspended_reason")
+    .eq("id", storeA.id)
+    .single();
+  check(
+    "manual suspension by the superadmin",
+    r.status === 200 && manual.suspended_reason === "manual",
+    manual,
+  );
   await root("PATCH", `/platform/stores/${storeA.id}`, { status: "active" });
 
   r = await root("DELETE", `${sub}/grants/${grantId}`);
-  check("grant revoked: the discount is gone from the next invoice", r.status === 200 && r.body.quote.discount === 0, r.body?.quote);
+  check(
+    "grant revoked: the discount is gone from the next invoice",
+    r.status === 200 && r.body.quote.discount === 0,
+    r.body?.quote,
+  );
   r = await root("PATCH", sub, { comped: true });
-  check("courtesy: never billed (no next invoice)", r.status === 200 && r.body.status === "comped" && r.body.quote === null, r.body);
+  check(
+    "courtesy: never billed (no next invoice)",
+    r.status === 200 && r.body.status === "comped" && r.body.quote === null,
+    r.body,
+  );
   await root("PATCH", sub, { comped: false });
 
   // ---- Owner view ----
   r = await ownerA("GET", `/stores/${storeA.id}/billing`);
-  check("owner: plan, invoices, modules with prices, how to pay", r.status === 200 && r.body.invoices.length >= 2
-    && r.body.modules.some((m) => m.code === "multi_currency" && m.addonPrice === 3 && m.inPro)
-    && typeof r.body.instructions === "string" && !("notes" in r.body) && !("grants" in r.body), r.body);
+  check(
+    "owner: plan, invoices, modules with prices, how to pay",
+    r.status === 200 &&
+      r.body.invoices.length >= 2 &&
+      r.body.modules.some((m) => m.code === "multi_currency" && m.addonPrice === 3 && m.inPro) &&
+      typeof r.body.instructions === "string" &&
+      !("notes" in r.body) &&
+      !("grants" in r.body),
+    r.body,
+  );
   r = await staffA("GET", `/stores/${storeA.id}/billing`);
   check("billing: staff -> 403", r.status === 403, r);
   r = await ownerB("GET", `/stores/${storeA.id}/billing`);
@@ -227,11 +336,129 @@ async function run() {
   // ---- Look (Apariencia): set up by the platform ----
   const theme = { preset: "kshop", colors: {}, radius: "md" };
   r = await ownerA("PUT", `/stores/${storeA.id}/content/theme`, theme);
-  check("look: a Base owner cannot change it -> 403", r.status === 403 && r.body.error.code === "module_not_enabled", r);
+  check(
+    "look: a Base owner cannot change it -> 403",
+    r.status === 403 && r.body.error.code === "module_not_enabled",
+    r,
+  );
   r = await root("PUT", `/stores/${storeA.id}/content/theme`, theme);
   check("look: the superadmin always can", r.status === 200, r);
   r = await ownerB("PUT", `/stores/${storeB.id}/content/theme`, theme);
   check("look: a Pro owner can", r.status === 200, r);
+
+  // ---- Team (Base: 2 people besides the owner) ----
+  const team = `/stores/${storeA.id}/team`;
+  r = await ownerA("GET", team);
+  check(
+    "team: owner and staff, 1 of 2",
+    r.status === 200 &&
+      r.body.members.length === 2 &&
+      r.body.members[0].role === "owner" &&
+      r.body.usage.used === 1 &&
+      r.body.usage.limit === 2,
+    r.body,
+  );
+  r = await staffA("GET", team);
+  check("team: staff cannot see it -> 403", r.status === 403, r);
+  r = await ownerA("POST", team, { email: "no-es-email", role: "staff" });
+  check("team: invalid email -> 400 on the field", r.status === 400 && !!r.body.error.fields?.email, r);
+  r = await ownerA("POST", team, { email: INVITED[0], role: "admin" });
+  const invitedAdmin = r.body?.member;
+  check(
+    "team: the owner invites an admin -> one-time access link",
+    r.status === 201 &&
+      invitedAdmin?.role === "admin" &&
+      typeof r.body.accessLink === "string" &&
+      r.body.accessLink.startsWith("http"),
+    r.body,
+  );
+  r = await ownerA("POST", team, { email: INVITED[1], role: "staff" });
+  check(
+    "team: the third person -> 409 limit_reached in Spanish",
+    r.status === 409 && r.body.error.code === "limit_reached" && /plan permite 2/.test(r.body.error.message),
+    r,
+  );
+  {
+    const { data } = await service.auth.admin.listUsers({ perPage: 1000 });
+    check(
+      "team: a rejected invitation leaves no orphan account",
+      !data.users.some((u) => u.email === INVITED[1]),
+    );
+  }
+  r = await ownerA("PATCH", `${team}/${invitedAdmin.userId}`, { role: "staff" });
+  check("team: the owner changes a role", r.status === 200 && r.body.member.role === "staff", r);
+  r = await ownerA("DELETE", `${team}/${ids.ownerA}`);
+  check("team: nobody removes the owner -> 403", r.status === 403, r);
+  r = await ownerA("DELETE", `${team}/${invitedAdmin.userId}`);
+  check("team: remove a person -> 204", r.status === 204, r);
+  // Last free place, two invitations at the same time: exactly one wins.
+  const both = await Promise.all([
+    ownerA("POST", team, { email: INVITED[1], role: "staff" }),
+    ownerA("POST", team, { email: INVITED[2], role: "staff" }),
+  ]);
+  check(
+    "team: two invitations for the last place -> one 201, one 409",
+    both
+      .map((x) => x.status)
+      .sort()
+      .join(",") === "201,409",
+    both.map((x) => [x.status, x.body?.error?.code]),
+  );
+
+  // ---- Suspended store: read-only admin, the superadmin can still fix things ----
+  await service
+    .from("stores")
+    .update({ status: "suspended", suspended_reason: "manual" })
+    .eq("id", storeA.id);
+  r = await ownerA("POST", `/stores/${storeA.id}/vouchers`, {
+    code: "SUSP10",
+    name: "x",
+    reward: "percent",
+    value: 10,
+  });
+  check(
+    "suspended: writes of the staff -> 403 store_suspended",
+    r.status === 403 && r.body.error.code === "store_suspended" && spanish(r),
+    r,
+  );
+  r = await ownerA("GET", `/stores/${storeA.id}/billing`);
+  check("suspended: reads still work", r.status === 200, r.status);
+  r = await root("PUT", `/stores/${storeA.id}/content/theme`, theme);
+  check("suspended: the superadmin can still write", r.status === 200, r);
+  await service.from("stores").update({ status: "active", suspended_reason: null }).eq("id", storeA.id);
+
+  // ---- Down from Pro to Base and back: modules off in the API, data kept ----
+  const subB = `/platform/stores/${storeB.id}/subscription`;
+  const { data: wh } = await service
+    .from("warehouses")
+    .insert({ store_id: storeB.id, name: "Almacén 2" })
+    .select("id")
+    .single();
+  r = await root("PUT", `${subB}/plan`, { planCode: "base", interval: "month" });
+  check("Pro -> Base", r.status === 200 && r.body.plan.code === "base", r.status);
+  r = await ownerB("POST", `/stores/${storeB.id}/vouchers`, {
+    code: "PROB10",
+    name: "x",
+    reward: "percent",
+    value: 10,
+  });
+  check(
+    "Base: coupons -> 403 module_not_enabled",
+    r.status === 403 && r.body.error.code === "module_not_enabled",
+    r,
+  );
+  r = await ownerB("PUT", `/stores/${storeB.id}/content/theme`, theme);
+  check("Base: the look -> 403", r.status === 403, r);
+  const { data: kept } = await service.from("warehouses").select("id").eq("id", wh.id).maybeSingle();
+  check("Base: the second warehouse is still there", !!kept);
+  r = await root("PUT", `${subB}/plan`, { planCode: "pro", interval: "month" });
+  r = await ownerB("POST", `/stores/${storeB.id}/vouchers`, {
+    code: "PROB10",
+    name: "Vuelta",
+    reward: "percent",
+    value: 10,
+  });
+  check("Base -> Pro: coupons again", r.status === 201, r);
 
   return { storeA, storeB, ids, root, ownerA, staffA, ownerB };
 }
