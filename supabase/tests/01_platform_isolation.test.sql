@@ -45,8 +45,8 @@ select tests.eq('create_store: A owner is a member',
   (select role::text from public.store_members where store_id = tests.fx('store_a') and user_id = tests.fx('owner_a')), 'owner');
 select tests.eq('create_store: A (base) gets 8 plan modules',
   (select count(*) from public.store_modules where store_id = tests.fx('store_a'))::int, 8);
-select tests.eq('create_store: B (pro) gets all 13 modules',
-  (select count(*) from public.store_modules where store_id = tests.fx('store_b'))::int, 13);
+select tests.eq('create_store: B (pro) gets all 14 modules (vouchers since phase 5)',
+  (select count(*) from public.store_modules where store_id = tests.fx('store_b'))::int, 14);
 select tests.eq('create_store: A is trialing, B without trial is active',
   (select string_agg(status::text, ',' order by store_id = tests.fx('store_b')) from public.subscriptions
     where store_id in (tests.fx('store_a'), tests.fx('store_b'))), 'trialing,active');
@@ -71,7 +71,7 @@ select tests.check('anon: cannot read store_domains', tests.throws('select * fro
 select tests.check('anon: cannot read store_modules', tests.throws('select * from public.store_modules'));
 select tests.check('anon: cannot read subscriptions', tests.throws('select * from public.subscriptions'));
 select tests.check('anon: cannot read private config', tests.throws('select * from private.store_private_config'));
-select tests.check('anon: reads the module catalog', (select count(*) from public.modules) = 13);
+select tests.check('anon: reads the module catalog', (select count(*) from public.modules) = 14);
 select tests.check('anon: cannot call store_entitlements',
   tests.throws(format('select * from public.store_entitlements(%L)', tests.fx('store_a'))));
 select tests.check('anon: cannot call create_store', tests.throws(format(
@@ -171,7 +171,7 @@ select tests.eq('superadmin: sees members of A and B',
 select tests.eq('superadmin: sees both subscriptions',
   (select count(*) from public.subscriptions where store_id in (tests.fx('store_a'), tests.fx('store_b')))::int, 2);
 select tests.eq('superadmin: entitlements of B',
-  (select count(*) from public.store_entitlements(tests.fx('store_b')))::int, 13);
+  (select count(*) from public.store_entitlements(tests.fx('store_b')))::int, 14);
 select tests.check('superadmin: still cannot read private config via API roles',
   tests.throws('select * from private.store_private_config'));
 

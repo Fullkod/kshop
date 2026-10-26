@@ -287,6 +287,12 @@ Equipo, banners de trial/impago/suspensión, candados con precio (D21), modo sol
 
 ---
 
+## Progreso
+
+| Fase | Estado | Commit |
+|------|--------|--------|
+| 5.1 Esquema y aislamiento | Hecha: `20261031100000_billing_schema.sql` (tipos, columnas en plans/stores/store_modules/subscriptions, `subscription_grants`, `platform_invoices` + líneas + pagos en USD, contador de numeración, `notification_log.dedupe_key`, config de cobro, RLS: owner/admin leen lo suyo, staff solo el estado, avisos `billing_*` ocultos al staff; catálogo: Base 5/50, Pro 12/120, módulo `vouchers` en Pro + suelto 2 USD, sueltos a 3 USD, Pro 10 de equipo; Tienda Demo `comped`). Suite 07 (24 tests); `test:rls` 394/394; romper la política de facturas hace fallar 6 tests | ver git |
+
 ## 🧠 Aprendizajes (Self-Annealing / Neural Network)
 
 > Esta sección CRECE con cada error encontrado durante la implementación.

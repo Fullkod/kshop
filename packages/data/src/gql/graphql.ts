@@ -157,6 +157,7 @@ export type NotificationLogFilter = {
   audience?: NotificationAudienceFilter | null | undefined;
   channel?: StringFilter | null | undefined;
   createdAt?: DatetimeFilter | null | undefined;
+  dedupeKey?: StringFilter | null | undefined;
   error?: StringFilter | null | undefined;
   event?: StringFilter | null | undefined;
   id?: UuidFilter | null | undefined;
