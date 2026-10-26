@@ -9,3 +9,4 @@ export * from "./content-queries";
 export * from "./order-queries";
 export * from "./discount-queries";
 export * from "./notification-queries";
+export * from "./storefront-reads";

@@ -274,7 +274,7 @@ de Roberto (criterios de éxito); `/app` ofrece la descarga y la quita sin el m�
 
 | Fase | Estado | Commit |
 |------|--------|--------|
-| 7.1 Cimientos compartidos | Pendiente | — |
+| 7.1 Cimientos compartidos | Hecha: `20261102100000_apps.sql` (`store_app_builds` + RLS, `app_info(store_id)` anon: disponible si la tienda está activa y con `mobile_app`, última versión publicada; null = app de admin), suite `09_apps_isolation` (`test:rls` 549/549). CORS de `/api/v1` en el proxy solo para `https://localhost`, `capacitor://localhost` (y Vite 5173/5174 en local), preflight 204; checkout con `X-Kshop-Channel: app` → canal `app`. Lecturas de la tienda pública movidas a `@kshop/data` (`storefront-reads.ts`: `fetchStorefrontShell/Products/Facets/Product/Page/Home/SitemapPaths`), la web las envuelve con `use cache` (D3). `e2e:{catalog,discounts,pro}` y `qa:{orders,discounts}` en verde. **El paquete `@kshop/admin` (D2) pasa a la 7.3**, donde se usa por primera vez | ver git |
 | 7.2 App de tienda | Pendiente | — |
 | 7.3 App de administración | Pendiente | — |
 | 7.4 Generar y distribuir | Pendiente | — |

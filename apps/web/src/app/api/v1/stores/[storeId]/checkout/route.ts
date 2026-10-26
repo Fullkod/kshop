@@ -23,7 +23,7 @@ export const GET = apiHandler(async (_request: Request, ctx: Ctx) => {
 
 // POST /api/v1/stores/{storeId}/checkout  { idempotencyKey, cartToken?, currency?, customer, shipping, paymentMethodId?,
 //   note?, createAccountPassword? }
-// The lines come from the server-side cart, never from the request. A retry with the same key returns the same order.
+// Header X-Kshop-Channel: app from the store app. The lines come from the server-side cart, never from the request. A retry with the same key returns the same order.
 export const POST = apiHandler(async (request: Request, ctx: Ctx) => {
   const storeId = uuidParam.parse((await ctx.params).storeId);
   await requireOpenStore(storeId);
@@ -50,7 +50,8 @@ export const POST = apiHandler(async (request: Request, ctx: Ctx) => {
 
   const cart = await cartLinesForCheckout(storeId, { customerId, token: input.cartToken });
   const result: CheckoutResponse = await placeOrder(storeId, {
-    channel: "web",
+    // The Capacitor store app says so (PRP-7 D5); it only labels the order (Finanzas › Desglose by channel).
+    channel: request.headers.get("x-kshop-channel") === "app" ? "app" : "web",
     customerId,
     cartId: cart?.cartId ?? null,
     lines: cart?.lines ?? [],

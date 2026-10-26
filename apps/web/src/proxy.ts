@@ -46,6 +46,28 @@ async function cachedRpc<T>(fn: string, args: Record<string, string>): Promise<T
   }
 }
 
+// Capacitor apps call /api/v1 from their WebView origin (PRP-7 D5); the web itself is same-origin. In local dev the
+// Vite servers of the apps (5173 store, 5174 admin) too. Never "*".
+const APP_ORIGINS = new Set([
+  "https://localhost",
+  "capacitor://localhost",
+  ...(PROTOCOL === "http" ? ["http://localhost:5173", "http://localhost:5174"] : []),
+]);
+
+function withCors(request: NextRequest) {
+  const origin = request.headers.get("origin");
+  const response =
+    request.method === "OPTIONS" ? new NextResponse(null, { status: 204 }) : NextResponse.next();
+  if (!origin || !APP_ORIGINS.has(origin)) return response;
+  response.headers.set("Access-Control-Allow-Origin", origin);
+  response.headers.set("Vary", "Origin");
+  response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  response.headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Kshop-Channel");
+  response.headers.set("Access-Control-Expose-Headers", "Content-Disposition");
+  response.headers.set("Access-Control-Max-Age", "86400");
+  return response;
+}
+
 const isAdminPath = (pathname: string) => pathname === "/admin" || pathname.startsWith("/admin/");
 
 /** Redirects keep the path and query; no-store so turning the module off never leaves a cached loop. */
@@ -73,7 +95,7 @@ const rewriteToStore = (request: NextRequest, slug: string) => {
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
-  if (pathname.startsWith("/api/")) return NextResponse.next();
+  if (pathname.startsWith("/api/")) return withCors(request);
 
   // The internal store route must not be reachable from any host.
   if (pathname === "/s" || pathname.startsWith(STORE_PREFIX)) {

@@ -17410,6 +17410,11 @@
             },
             {
               "kind": "OBJECT",
+              "name": "StoreAppBuilds",
+              "ofType": null
+            },
+            {
+              "kind": "OBJECT",
               "name": "StoreCurrencies",
               "ofType": null
             },
@@ -36794,6 +36799,29 @@
             {
               "args": [
                 {
+                  "name": "pStoreId",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "UUID",
+                    "ofType": null
+                  },
+                  "description": null,
+                  "defaultValue": null
+                }
+              ],
+              "name": "appInfo",
+              "type": {
+                "kind": "SCALAR",
+                "name": "JSON",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [
+                {
                   "name": "id",
                   "type": {
                     "kind": "NON_NULL",
@@ -43041,6 +43069,128 @@
                 }
               },
               "description": "A pagable collection of type `Stocks`",
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "UUID",
+                      "ofType": null
+                    }
+                  },
+                  "description": "The record's `id` value",
+                  "defaultValue": null
+                }
+              ],
+              "name": "storeAppBuildsByPk",
+              "type": {
+                "kind": "OBJECT",
+                "name": "StoreAppBuilds",
+                "ofType": null
+              },
+              "description": "Retrieve a record of type `StoreAppBuilds` by its primary key",
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [
+                {
+                  "name": "first",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Query the first `n` records in the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "last",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Query the last `n` records in the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "before",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Cursor",
+                    "ofType": null
+                  },
+                  "description": "Query values in the collection before the provided cursor",
+                  "defaultValue": null
+                },
+                {
+                  "name": "after",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Cursor",
+                    "ofType": null
+                  },
+                  "description": "Query values in the collection after the provided cursor",
+                  "defaultValue": null
+                },
+                {
+                  "name": "offset",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.",
+                  "defaultValue": null
+                },
+                {
+                  "name": "filter",
+                  "type": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "StoreAppBuildsFilter",
+                    "ofType": null
+                  },
+                  "description": "Filters to apply to the results set when querying from the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "orderBy",
+                  "type": {
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "INPUT_OBJECT",
+                        "name": "StoreAppBuildsOrderBy",
+                        "ofType": null
+                      }
+                    }
+                  },
+                  "description": "Sort order to apply to the collection",
+                  "defaultValue": null
+                }
+              ],
+              "name": "storeAppBuildsCollection",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "StoreAppBuildsConnection",
+                  "ofType": null
+                }
+              },
+              "description": "A pagable collection of type `StoreAppBuilds`",
               "isDeprecated": false,
               "deprecationReason": null
             },
@@ -49396,6 +49546,635 @@
         },
         {
           "kind": "OBJECT",
+          "name": "StoreAppBuilds",
+          "fields": [
+            {
+              "args": [],
+              "name": "nodeId",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "ID",
+                  "ofType": null
+                }
+              },
+              "description": "Globally Unique Record Identifier",
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "id",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "UUID",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "storeId",
+              "type": {
+                "kind": "SCALAR",
+                "name": "UUID",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "appId",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "versionCode",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "versionName",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "apkPath",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "sizeBytes",
+              "type": {
+                "kind": "SCALAR",
+                "name": "BigInt",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "sha256",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "notes",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "published",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "createdBy",
+              "type": {
+                "kind": "SCALAR",
+                "name": "UUID",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "createdAt",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Datetime",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "store",
+              "type": {
+                "kind": "OBJECT",
+                "name": "Stores",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            }
+          ],
+          "enumValues": [],
+          "interfaces": [
+            {
+              "kind": "INTERFACE",
+              "name": "Node",
+              "ofType": null
+            }
+          ],
+          "description": null,
+          "inputFields": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "OBJECT",
+          "name": "StoreAppBuildsConnection",
+          "fields": [
+            {
+              "args": [],
+              "name": "edges",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "OBJECT",
+                      "name": "StoreAppBuildsEdge",
+                      "ofType": null
+                    }
+                  }
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "pageInfo",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "PageInfo",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            }
+          ],
+          "enumValues": [],
+          "interfaces": [],
+          "description": null,
+          "inputFields": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "OBJECT",
+          "name": "StoreAppBuildsEdge",
+          "fields": [
+            {
+              "args": [],
+              "name": "cursor",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "node",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "StoreAppBuilds",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            }
+          ],
+          "enumValues": [],
+          "interfaces": [],
+          "description": null,
+          "inputFields": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "INPUT_OBJECT",
+          "name": "StoreAppBuildsFilter",
+          "fields": null,
+          "enumValues": [],
+          "interfaces": [],
+          "description": null,
+          "inputFields": [
+            {
+              "name": "id",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "UUIDFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "storeId",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "UUIDFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "appId",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "StringFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "versionCode",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "IntFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "versionName",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "StringFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "apkPath",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "StringFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "sizeBytes",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "BigIntFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "sha256",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "StringFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "notes",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "StringFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "published",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "BooleanFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "createdBy",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "UUIDFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "createdAt",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "DatetimeFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "nodeId",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "IDFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "and",
+              "type": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "StoreAppBuildsFilter",
+                    "ofType": null
+                  }
+                }
+              },
+              "description": "Returns true only if all its inner filters are true, otherwise returns false",
+              "defaultValue": null
+            },
+            {
+              "name": "or",
+              "type": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "StoreAppBuildsFilter",
+                    "ofType": null
+                  }
+                }
+              },
+              "description": "Returns true if at least one of its inner filters is true, otherwise returns false",
+              "defaultValue": null
+            },
+            {
+              "name": "not",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "StoreAppBuildsFilter",
+                "ofType": null
+              },
+              "description": "Negates a filter",
+              "defaultValue": null
+            }
+          ],
+          "possibleTypes": null
+        },
+        {
+          "kind": "INPUT_OBJECT",
+          "name": "StoreAppBuildsOrderBy",
+          "fields": null,
+          "enumValues": [],
+          "interfaces": [],
+          "description": null,
+          "inputFields": [
+            {
+              "name": "id",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "storeId",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "appId",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "versionCode",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "versionName",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "apkPath",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "sizeBytes",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "sha256",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "notes",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "published",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "createdBy",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "createdAt",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            }
+          ],
+          "possibleTypes": null
+        },
+        {
+          "kind": "OBJECT",
           "name": "StoreCurrencies",
           "fields": [
             {
@@ -54123,6 +54902,97 @@
               "type": {
                 "kind": "OBJECT",
                 "name": "PagesConnection",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [
+                {
+                  "name": "first",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Query the first `n` records in the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "last",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Query the last `n` records in the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "before",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Cursor",
+                    "ofType": null
+                  },
+                  "description": "Query values in the collection before the provided cursor",
+                  "defaultValue": null
+                },
+                {
+                  "name": "after",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Cursor",
+                    "ofType": null
+                  },
+                  "description": "Query values in the collection after the provided cursor",
+                  "defaultValue": null
+                },
+                {
+                  "name": "offset",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.",
+                  "defaultValue": null
+                },
+                {
+                  "name": "filter",
+                  "type": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "StoreAppBuildsFilter",
+                    "ofType": null
+                  },
+                  "description": "Filters to apply to the results set when querying from the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "orderBy",
+                  "type": {
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "INPUT_OBJECT",
+                        "name": "StoreAppBuildsOrderBy",
+                        "ofType": null
+                      }
+                    }
+                  },
+                  "description": "Sort order to apply to the collection",
+                  "defaultValue": null
+                }
+              ],
+              "name": "storeAppBuildsCollection",
+              "type": {
+                "kind": "OBJECT",
+                "name": "StoreAppBuildsConnection",
                 "ofType": null
               },
               "description": null,
