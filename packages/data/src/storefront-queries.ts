@@ -8,14 +8,29 @@ export const StorefrontShellQuery = graphql(`
   query StorefrontShell($storeId: UUID!) {
     storefrontFeatures(pStoreId: $storeId)
     shippingMethodsCollection(
-      filter: { storeId: { eq: $storeId }, isActive: { eq: true }, freeOverSubtotal: { is: NOT_NULL } }
-      orderBy: [{ freeOverSubtotal: AscNullsLast }]
-      first: 1
+      filter: { storeId: { eq: $storeId }, isActive: { eq: true } }
+      orderBy: [{ sortOrder: AscNullsLast }]
+      first: 50
     ) {
       edges {
         node {
           name
+          type
+          price
+          minDays
+          maxDays
           freeOverSubtotal
+        }
+      }
+    }
+    paymentMethodsCollection(
+      filter: { storeId: { eq: $storeId }, isActive: { eq: true } }
+      orderBy: [{ sortOrder: AscNullsLast }]
+      first: 20
+    ) {
+      edges {
+        node {
+          name
         }
       }
     }

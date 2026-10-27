@@ -112,9 +112,13 @@ try {
     await guest.locator("p s, p .line-through").first().isVisible(),
   );
   await shot(guest, "02-ficha-oferta-390");
-  await guest.getByRole("button", { name: "Añadir uno" }).click();
+  // Two units: phones have no quantity stepper on the product page (redesign R4), the buy bar adds one each time.
   await guest.getByRole("button", { name: "Añadir al carrito" }).click();
   await guest.getByText("Añadido al carrito.").waitFor({ timeout: 15000 });
+  await Promise.all([
+    guest.waitForResponse((r) => r.url().includes("/cart") && r.request().method() === "PUT" && r.ok()),
+    guest.getByRole("button", { name: "Añadir al carrito" }).click(),
+  ]);
 
   await guest.goto(`${BASE}/cart`);
   await guest.getByLabel("Código de cupón").fill("bienvenida10");

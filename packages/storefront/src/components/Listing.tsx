@@ -1,4 +1,4 @@
-import { chipVariants, SlidersHorizontal, X } from "@kshop/ui";
+import { ChevronRight, chipVariants, SlidersHorizontal, X } from "@kshop/ui";
 import {
   listingFilterIds,
   listingQuery,
@@ -351,16 +351,19 @@ export function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
   const all: Crumb[] = [{ label: "Inicio", href: "/" }, ...crumbs];
   return (
     <nav aria-label="Ruta de navegación">
-      <ol className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
+      <ol className="flex flex-wrap items-center gap-1 text-[13px] text-muted-foreground">
         {all.map((c, i) => (
           <li key={`${c.label}-${i}`} className="flex items-center gap-1">
-            {i > 0 && <span aria-hidden>/</span>}
+            {i > 0 && <ChevronRight size={14} aria-hidden />}
             {c.href && i < all.length - 1 ? (
               <Link href={c.href} className="hover:text-foreground hover:underline">
                 {c.label}
               </Link>
             ) : (
-              <span aria-current={i === all.length - 1 ? "page" : undefined} className="text-foreground">
+              <span
+                aria-current={i === all.length - 1 ? "page" : undefined}
+                className="font-medium text-foreground"
+              >
                 {c.label}
               </span>
             )}

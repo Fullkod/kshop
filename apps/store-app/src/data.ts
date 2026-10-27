@@ -57,4 +57,4 @@ export const listingReader: ListingReader = {
   facets: (filters) => storefront.facets(filters),
 };
 export const loadNewest = (limit: number) => storefront.products({}, "newest", 1, limit);
-export const loadRelated = (categoryId: string) => storefront.products({ categoryId }, "newest", 1, 5);
+export const loadRelated = (categoryId: string) => storefront.products({ categoryId }, "newest", 1, 9);

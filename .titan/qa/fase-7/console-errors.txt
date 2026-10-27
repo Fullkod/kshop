@@ -1,7 +1,32 @@
-500 GET http://localhost:3000/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/storefront?view=store
+http://demo.kshop.localhost:3000/app :: Error: Route "/s/[storeSlug]/app": Next.js encountered uncached data during prerendering.
 
-http://localhost:5174/admin/catalog :: Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+`fetch(...)` or `connection()` accessed outside of `<Suspense>` prevents the route from being prerendered, blocking the page load and leading to a slower user experience.
 
-500 GET http://localhost:3000/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/storefront?view=store
+Ways to fix this:
+  - [stream] Provide a placeholder with `<Suspense fallback={...}>` around the data access
+  - [cache] Cache the data access with `"use cache"` (does not apply to `connection()`)
+  - [block] Set `export const instant = false` to allow a blocking route
 
-http://localhost:5174/admin/catalog :: Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+Learn more: https://nextjs.org/docs/messages/blocking-prerender-dynamic
+    at StorefrontLayout (about://React/Server/C:%5CLocal-Disc-D%5CProject%5CFullkod%5Ckshop%5Capps%5Cweb%5C.next%5Cdev%5Cserver%5Cchunks%5Cssr%5C%5Broot-of-the-server%5D__1d3r_r5hqo-40._.js?136:30:190)
+    at NavigationProvider (about://React/Server/C:%5CLocal-Disc-D%5CProject%5CFullkod%5Ckshop%5Capps%5Cweb%5C.next%5Cdev%5Cserver%5Cchunks%5Cssr%5Cpackages_storefront_src_0_31m7b98u8qb._.js?137:9587:31)
+    at NextNavigationProvider (about://React/Server/C:%5CLocal-Disc-D%5CProject%5CFullkod%5Ckshop%5Capps%5Cweb%5C.next%5Cdev%5Cserver%5Cchunks%5Cssr%5Capps_web_src_lib_navigation_tsx_1k-0zes7lnxma._.js?138:35:35)
+    at StoreProvider (about://React/Server/C:%5CLocal-Disc-D%5CProject%5CFullkod%5Ckshop%5Capps%5Cweb%5C.next%5Cdev%5Cserver%5Cchunks%5Cssr%5Cpackages_storefront_src_0_31m7b98u8qb._.js?139:9645:26)
+    at StoreLayout (about://React/Server/C:%5CLocal-Disc-D%5CProject%5CFullkod%5Ckshop%5Capps%5Cweb%5C.next%5Cdev%5Cserver%5Cchunks%5Cssr%5Capps_web_src_1qow_giwg_d4w._.js?140:48:190)
+    at StoreLayout (about://React/Server/C:%5CLocal-Disc-D%5CProject%5CFullkod%5Ckshop%5Capps%5Cweb%5C.next%5Cdev%5Cserver%5Cchunks%5Cssr%5Capps_web_src_1qow_giwg_d4w._.js?140:48:190)
+    at body (<anonymous>:1:13)
+    at html (<anonymous>:1:13)
+    at RootLayout [Prerender] (<anonymous>:1:31)
+    at resolveErrorDev (http://demo.kshop.localhost:3000/_next/static/chunks/0dod_next_dist_compiled_react-server-dom-turbopack_1mkjc8yquxyns._.js:2029:105)
+    at getOutlinedModel (http://demo.kshop.localhost:3000/_next/static/chunks/0dod_next_dist_compiled_react-server-dom-turbopack_1mkjc8yquxyns._.js:1568:28)
+    at parseModelString (http://demo.kshop.localhost:3000/_next/static/chunks/0dod_next_dist_compiled_react-server-dom-turbopack_1mkjc8yquxyns._.js:1688:50)
+    at reviveModel (http://demo.kshop.localhost:3000/_next/static/chunks/0dod_next_dist_compiled_react-server-dom-turbopack_1mkjc8yquxyns._.js:2634:66)
+    at reviveModel (http://demo.kshop.localhost:3000/_next/static/chunks/0dod_next_dist_compiled_react-server-dom-turbopack_1mkjc8yquxyns._.js:2637:61)
+    at reviveModel (http://demo.kshop.localhost:3000/_next/static/chunks/0dod_next_dist_compiled_react-server-dom-turbopack_1mkjc8yquxyns._.js:2716:112)
+    at parseModel (http://demo.kshop.localhost:3000/_next/static/chunks/0dod_next_dist_compiled_react-server-dom-turbopack_1mkjc8yquxyns._.js:2629:16)
+    at initializeModelChunk (http://demo.kshop.localhost:3000/_next/static/chunks/0dod_next_dist_compiled_react-server-dom-turbopack_1mkjc8yquxyns._.js:1141:25)
+    at resolveModelChunk (http://demo.kshop.localhost:3000/_next/static/chunks/0dod_next_dist_compiled_react-server-dom-turbopack_1mkjc8yquxyns._.js:1039:43)
+    at processFullStringRow (http://demo.kshop.localhost:3000/_next/static/chunks/0dod_next_dist_compiled_react-server-dom-turbopack_1mkjc8yquxyns._.js:2585:371)
+    at processFullBinaryRow (http://demo.kshop.localhost:3000/_next/static/chunks/0dod_next_dist_compiled_react-server-dom-turbopack_1mkjc8yquxyns._.js:2507:9)
+    at processBinaryChunk (http://demo.kshop.localhost:3000/_next/static/chunks/0dod_next_dist_compiled_react-server-dom-turbopack_1mkjc8yquxyns._.js:2614:221)
+    at progress (http://demo.kshop.localhost:3000/_next/static/chunks/0dod_next_dist_compiled_react-server-dom-turbopack_1mkjc8yquxyns._.js:2801:13)

@@ -21,7 +21,8 @@ import {
   MyOrder,
   MyOrders,
   OrderView,
-  ProductDetails,
+  RelatedProducts,
+  ProductSkeleton,
   ProductView,
   useRouter,
   useStore,
@@ -205,18 +206,29 @@ export function ProductPage() {
   const page = useCached(`product:${slug}`, async () => {
     const product = await loadProduct(slug);
     const related = product?.category
-      ? (await loadRelated(product.category.id)).products.filter((p) => p.id !== product.id).slice(0, 4)
+      ? (await loadRelated(product.category.id)).products.filter((p) => p.id !== product.id).slice(0, 8)
       : [];
     return { product, related };
   });
-  if (!page.data) return page.loading ? <Loading /> : <Missing what="No se pudo cargar el producto." />;
+  if (!page.data) {
+    return page.loading ? (
+      <div className="px-[clamp(16px,4.4cqw,56px)] pt-4">
+        <ProductSkeleton />
+      </div>
+    ) : (
+      <Missing what="No se pudo cargar el producto." />
+    );
+  }
   const { product, related } = page.data;
   if (!product) return <Missing what="Este producto ya no está disponible." />;
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-6">
-      <Breadcrumbs crumbs={[...categoryTrail(shell, product.category?.id), { label: product.name }]} />
-      <ProductView product={product} />
-      <ProductDetails product={product} related={related} />
+    <div className="flex flex-col gap-[clamp(44px,5.6cqw,72px)] px-[clamp(16px,4.4cqw,56px)] pt-4 @min-[720px]:pb-8">
+      <ProductView
+        product={product}
+        crumbs={[...categoryTrail(shell, product.category?.id), { label: product.name }]}
+        delivery={{ delivery: shell.delivery, freeShipping: shell.freeShipping }}
+      />
+      <RelatedProducts products={related} />
     </div>
   );
 }

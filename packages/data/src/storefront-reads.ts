@@ -51,6 +51,16 @@ export type StorefrontShell = {
   slugs: Record<string, string>;
   /** Lowest «free over» subtotal of the active shipping methods (base currency), for the cart's progress bar. */
   freeShipping: { from: number; method: string } | null;
+  /** Active shipping methods (one per name, the cheapest) and payment methods: product page benefits and delivery. */
+  delivery: { methods: DeliveryMethod[]; payments: string[] };
+};
+
+export type DeliveryMethod = {
+  name: string;
+  type: "delivery" | "pickup" | "to_agree";
+  price: number;
+  minDays: number | null;
+  maxDays: number | null;
 };
 
 export async function fetchStorefrontShell(gql: Client, storeId: string): Promise<StorefrontShell> {
@@ -119,9 +129,32 @@ export async function fetchStorefrontShell(gql: Client, storeId: string): Promis
     features: { multiCurrency: !!features.multi_currency, vouchers: !!features.vouchers },
     slugs,
     freeShipping: (() => {
-      const method = nodes(d.shippingMethodsCollection)[0];
-      return method?.freeOverSubtotal ? { from: Number(method.freeOverSubtotal), method: method.name } : null;
+      const free = nodes(d.shippingMethodsCollection)
+        .filter((m) => m.freeOverSubtotal != null)
+        .sort((a, b) => Number(a.freeOverSubtotal) - Number(b.freeOverSubtotal))[0];
+      return free ? { from: Number(free.freeOverSubtotal), method: free.name } : null;
     })(),
+    delivery: {
+      // The same method can exist per zone: one entry per name, with its lowest price.
+      methods: [
+        ...nodes(d.shippingMethodsCollection)
+          .reduce((byName, m) => {
+            const current = byName.get(m.name);
+            if (!current || Number(m.price) < current.price) {
+              byName.set(m.name, {
+                name: m.name,
+                type: m.type as DeliveryMethod["type"],
+                price: Number(m.price),
+                minDays: m.minDays ?? null,
+                maxDays: m.maxDays ?? null,
+              });
+            }
+            return byName;
+          }, new Map<string, DeliveryMethod>())
+          .values(),
+      ],
+      payments: nodes(d.paymentMethodsCollection).map((p) => p.name),
+    },
   };
 }
 
@@ -430,6 +463,8 @@ export async function fetchProduct(gql: Client, storeId: string, slug: string) {
         v.variantPromotions,
       ),
       available: !v.trackInventory || v.stockAvailable > 0,
+      /** Units left when the variant tracks stock (null = not tracked). */
+      stock: v.trackInventory ? v.stockAvailable : null,
       mediaIds: nodes(v.variantMediaCollection).map((m) => m.mediaId),
       options: nodes(v.variantAttributeValuesCollection).flatMap((o) =>
         o.attributeValues

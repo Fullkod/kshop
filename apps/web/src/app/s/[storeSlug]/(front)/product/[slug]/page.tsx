@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Breadcrumbs, categoryTrail, ProductDetails, ProductView } from "@kshop/storefront";
+import { categoryTrail, ProductView, RelatedProducts } from "@kshop/storefront";
 import { getProduct, getProducts } from "@/server/storefront/catalog";
 import { getStorefrontShell } from "@/server/storefront/data";
 import { requireStore, staticSlugs, storeMetadata } from "@/server/storefront/page-helpers";
@@ -37,9 +37,9 @@ export default async function ProductPage({ params }: Props) {
 
   const crumbs = categoryTrail(shell, product.category?.id);
   const related = product.category
-    ? (await getProducts(store.id, { categoryId: product.category.id }, "newest", 1, 5)).products
+    ? (await getProducts(store.id, { categoryId: product.category.id }, "newest", 1, 9)).products
         .filter((p) => p.id !== product.id)
-        .slice(0, 4)
+        .slice(0, 8)
     : [];
 
   const available = product.variants.some((v) => v.available);
@@ -62,16 +62,18 @@ export default async function ProductPage({ params }: Props) {
   };
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6">
+    <div className="flex flex-col gap-[clamp(44px,5.6cqw,72px)] px-[clamp(16px,4.4cqw,56px)] pt-4 pb-0 @min-[720px]:pb-8">
       <script
         type="application/ld+json"
         // JSON.stringify escapes quotes; "<" is escaped so the content cannot close the script tag.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
-      <Breadcrumbs crumbs={[...crumbs, { label: product.name }]} />
-      <ProductView product={product} />
-
-      <ProductDetails product={product} related={related} />
+      <ProductView
+        product={product}
+        crumbs={[...crumbs, { label: product.name }]}
+        delivery={{ delivery: shell.delivery, freeShipping: shell.freeShipping }}
+      />
+      <RelatedProducts products={related} />
     </div>
   );
 }

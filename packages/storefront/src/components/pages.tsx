@@ -1,8 +1,7 @@
-import type { HomeSection, NavLink, ProductCardData, StorefrontProduct, StorefrontShell } from "@kshop/data";
+import type { HomeSection, NavLink, ProductCardData, StorefrontShell } from "@kshop/data";
 import { chipVariants } from "@kshop/ui";
 import { Link } from "../navigation";
 import type { Crumb } from "./Listing";
-import { ProductGrid } from "./ProductCard";
 
 // Page pieces shared by the web and the store app, so both show the same navigation, home and product page.
 
@@ -121,50 +120,4 @@ export function categoryTrail(
     c = shell.categories.find((x) => x.id === parentId);
   }
   return crumbs;
-}
-
-/** Description, characteristics and related products under the product view. */
-export function ProductDetails({
-  product,
-  related,
-}: {
-  product: StorefrontProduct;
-  related: ProductCardData[];
-}) {
-  return (
-    <>
-      {(product.description || product.attributes.length > 0) && (
-        <section className="grid gap-8 border-t pt-8 md:grid-cols-2 md:gap-12">
-          {product.description && (
-            <div className="flex flex-col gap-3">
-              <h2 className="text-xl font-semibold">Descripción</h2>
-              <p className="whitespace-pre-line leading-relaxed text-muted-foreground">
-                {product.description}
-              </p>
-            </div>
-          )}
-          {product.attributes.length > 0 && (
-            <div className="flex flex-col gap-3">
-              <h2 className="text-xl font-semibold">Características</h2>
-              <dl className="divide-y rounded-sf border">
-                {product.attributes.map((a) => (
-                  <div key={a.name} className="grid grid-cols-2 gap-4 px-4 py-2 text-sm">
-                    <dt className="text-muted-foreground">{a.name}</dt>
-                    <dd>{a.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          )}
-        </section>
-      )}
-
-      {related.length > 0 && (
-        <section className="flex flex-col gap-4 border-t pt-8">
-          <h2 className="text-xl font-semibold">También te puede gustar</h2>
-          <ProductGrid products={related} />
-        </section>
-      )}
-    </>
-  );
 }

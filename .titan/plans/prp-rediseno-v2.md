@@ -269,6 +269,22 @@ con equivalencia en las monedas activas (sin MLC), variantes con D6, stock («qu
 beneficios, acordeón (descripción, envío desde `shipping_methods`), relacionados y barra de compra fija en móvil;
 valoraciones según D5. Piezas reutilizables para `featured_product`.
 **Validación**: capturas 1280/390 con 2 presets; `qa:orders` en verde (compra desde la ficha); `prefers-reduced-motion`.
+**Hecha (2026-10-27)**: `ProductView` nuevo (migas con `chevron-right` y «volver» en móvil; galería con miniaturas en
+columna desde 720 y en fila bajo la foto en móvil, -%, favorito, compartir —`navigator.share` o copiar enlace— y
+contador; caja de precio 30/800 con tachado, -%, promoción y `PriceEquivalents` en las otras monedas; `VariantPicker`
+con la respuesta 10: un valor sin ninguna variante disponible va tachado, discontinuo y **desactivado**, y elegir un
+valor que solo existe con otras opciones salta a la primera combinación disponible; stock «Disponible · quedan N» si
+≤ 5 (`variants[].stock` nuevo); stepper de 54 + «Añadir al carrito» y «Pedir por WhatsApp» con producto, variante,
+cantidad, precio y enlace; beneficios y acordeón «Envío y entrega» de `shell.delivery` (métodos activos, uno por
+nombre con su menor precio, y métodos de pago); sin estrellas; barra de compra fija en móvil con WhatsApp y «Añadir» +
+precio, `aria-label` «Añadir al carrito, {precio}»). Añadir abre el cajón o el aviso. `RelatedProducts` en carrusel
+(«Combínalo con» / «También te puede gustar», 8 tarjetas). `ProductDetails` eliminado. `ProductSkeleton` en la app
+(CLS de la ficha en la app 0,17–0,38 → 0). `qa:discounts` añade dos veces en vez de «Añadir uno» (en móvil no hay
+stepper). Evidencia `.titan/qa/rediseno-v2/R4/` (33/33 en web y 33/33 en la app a 1280, 720 y 390: CLS 0, sin scroll
+horizontal, sin barra de pestañas, barra de compra solo en móvil, beneficios reales, acordeón, añadir → cajón/aviso).
+`qa:orders` 14/14, `qa:discounts` 9/9, `qa:apps` 28/28 (la primera pasada tras reiniciar el dev dio un aviso de
+prerender en frío en `/app`), typecheck, lint, test y build en verde. Pendiente: capturas con un segundo preset (se
+harán con la portada en R5, que las pide para los 6).
 
 ### Fase R5: Portada
 **Objetivo**: migración del «Modelo de Datos» + test de aislamiento; `content.ts` con los 7 tipos y `eyebrow`;
@@ -361,10 +377,12 @@ del estudio de precios), CTA final y pie con «Acceso Fullkod»; CTAs según D8.
   aplastaba a 12 px. `buttonVariants` pasa ahora por `cn()` (tailwind-merge) y la base lleva `[&_svg]:shrink-0`.
 - **R3 — Valores exportados desde un módulo `"use client"`** (funciones, constantes) llegan como referencias al servidor:
   `imageSrcSet` se movió a `components/images.ts`.
-- **Caché en dev tras guardar en Apariencia**: con `revalidateTag(storeCacheTag(slug), { expire: 0 })` la portada
-  sigue sirviendo el valor anterior en las 2–3 visitas siguientes (medido con la descripción y con el tema, que ya
-  existía: no lo introduce el rediseño). La documentación de Next dice que `{ expire: 0 }` no sirve contenido viejo:
-  **comprobar en un build de producción** (puerto 3200) antes de cerrar el rediseño; si se repite, investigar.
+- **Servidor de dev con código viejo tras horas de cambios en `packages/*`**: los route handlers (`/api/v1/...`)
+  siguieron con el `resolveTheme` de antes de R0 (la API daba el tema v1 y la app de tienda fallaba en `readableOn`) y
+  tras guardar en Apariencia la portada servía el valor anterior 2–3 visitas. Al reiniciar `pnpm dev` todo sale al
+  momento: no era la invalidación (`revalidateTag(..., { expire: 0 })` funciona). **Si algo «no se actualiza» en dev
+  después de tocar paquetes compartidos, reiniciar `pnpm dev` antes de investigar.** La app de tienda ahora pasa el tema
+  por `resolveTheme` al leerlo (una APK puede tener en el teléfono la tienda guardada por una versión anterior).
 - **Aviso de Next en dev ajeno al rediseño**: «Could not validate that a segment in your UI has instant navigation» en
   `/admin` (`admin/page.tsx`) y `/admin/themes` (`themes/layout.tsx`). No rompe nada; revisar en R6 (admin).
 

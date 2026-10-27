@@ -105,3 +105,29 @@ export function CurrencySelect() {
     </label>
   );
 }
+
+/** «≈ 4,50 USD · 4,20 EUR según la tasa de hoy»: the price in the other sale currencies (multi_currency only). */
+export function PriceEquivalents({
+  amount,
+  overrides,
+  className,
+}: {
+  amount: number;
+  overrides?: PriceOverride[];
+  className?: string;
+}) {
+  const state = useContext(CurrencyContext);
+  if (!state || state.currencies.length < 2) return null;
+  const others = state.currencies
+    .filter((c) => c.currency !== state.selected.currency)
+    .map((c) =>
+      formatMoney(
+        c.isBase
+          ? amount
+          : (overrides?.find((o) => o.currency === c.currency)?.price ??
+              convertFromBase(amount, c.rateToBase, c.rounding)),
+        c.currency,
+      ),
+    );
+  return <p className={className}>≈ {others.join(" · ")} según la tasa de hoy</p>;
+}

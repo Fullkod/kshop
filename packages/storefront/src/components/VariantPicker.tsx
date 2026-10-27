@@ -40,20 +40,35 @@ export function useVariantSelection(variants: Variant[]) {
     return Object.fromEntries((initial?.options ?? []).map((o) => [o.attributeId, o.valueId]));
   });
   const variant = variants.find((v) => v.options.every((o) => selected[o.attributeId] === o.valueId));
-  const pick = (attributeId: string, valueId: string) =>
-    setSelected((s) => ({ ...s, [attributeId]: valueId }));
+  const has = (v: Variant, attributeId: string, valueId: string) =>
+    v.options.some((o) => o.attributeId === attributeId && o.valueId === valueId);
   // A value is available if some available variant has it together with the other selected values.
   const valueAvailable = (attributeId: string, valueId: string) =>
     variants.some(
       (v) =>
         v.available &&
-        v.options.some((o) => o.attributeId === attributeId && o.valueId === valueId) &&
+        has(v, attributeId, valueId) &&
         v.options.every((o) => o.attributeId === attributeId || selected[o.attributeId] === o.valueId),
     );
-  return { axes, selected, pick, variant, valueAvailable };
+  // Sold out everywhere: no available variant has it at all (shown struck, not selectable; PRP-R answer 10).
+  const valueSoldOut = (attributeId: string, valueId: string) =>
+    !variants.some((v) => v.available && has(v, attributeId, valueId));
+  // Picking a value that only exists with other options moves to the first available combination that has it.
+  const pick = (attributeId: string, valueId: string) =>
+    setSelected((s) => {
+      const next = { ...s, [attributeId]: valueId };
+      const exact = variants.find(
+        (v) => v.available && v.options.every((o) => next[o.attributeId] === o.valueId),
+      );
+      if (exact) return next;
+      const other = variants.find((v) => v.available && has(v, attributeId, valueId));
+      return other ? Object.fromEntries(other.options.map((o) => [o.attributeId, o.valueId])) : next;
+    });
+  return { axes, selected, pick, variant, valueAvailable, valueSoldOut };
 }
 
-/** Sizes as 52×46 chips, colors as a chip with the real swatch; sold-out values stay visible, dashed and struck. */
+/** Sizes as 52×46 chips, colors as a chip with the real swatch; sold-out values stay visible, dashed, struck and
+ *  disabled. */
 export function VariantPicker({
   selection,
   onPick,
@@ -61,7 +76,7 @@ export function VariantPicker({
   selection: ReturnType<typeof useVariantSelection>;
   onPick?: () => void;
 }) {
-  const { axes, selected, pick, valueAvailable } = selection;
+  const { axes, selected, pick, valueSoldOut } = selection;
   return (
     <>
       {axes.map((axis) => (
@@ -75,7 +90,7 @@ export function VariantPicker({
           <div className="flex flex-wrap gap-2">
             {axis.values.map((v) => {
               const on = selected[axis.attributeId] === v.valueId;
-              const available = valueAvailable(axis.attributeId, v.valueId);
+              const available = !valueSoldOut(axis.attributeId, v.valueId);
               return (
                 <button
                   key={v.valueId}
@@ -85,6 +100,7 @@ export function VariantPicker({
                     onPick?.();
                   }}
                   aria-pressed={on}
+                  disabled={!available}
                   className={`flex h-[46px] items-center justify-center gap-2 rounded-sf-btn text-sm outline-none focus-visible:shadow-[0_0_0_4px_var(--ring)] ${v.swatch ? "pr-3.5 pl-2.5" : "min-w-[52px] px-3"} ${
                     on
                       ? `border-2 border-primary font-semibold ${v.swatch ? "" : "bg-accent-soft text-primary"}`

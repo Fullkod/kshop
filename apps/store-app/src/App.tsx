@@ -1,3 +1,4 @@
+import { resolveTheme } from "@kshop/core";
 import type { StorefrontShell } from "@kshop/data";
 import {
   BottomTabBar,
@@ -136,7 +137,14 @@ function Banners({ stale, info }: { stale: boolean; info: AppInfo | undefined })
 
 function StoreApp() {
   useBackButton();
-  const store = useCached("store", loadStore);
+  const cachedStore = useCached("store", loadStore);
+  // The theme is resolved here too: the device (or the API cache) may hold a store saved by an older version, with
+  // fewer theme fields (theme v1 before the redesign); resolveTheme fills the rest from the preset.
+  const storeData = useMemo(
+    () => cachedStore.data && { ...cachedStore.data, theme: resolveTheme(cachedStore.data.theme) },
+    [cachedStore.data],
+  );
+  const store = { ...cachedStore, data: storeData };
   const info = useCached("app-info", loadAppInfo);
   const shell = useCached("shell", loadShell);
   const unavailable = !!info.data && !info.data.available;
