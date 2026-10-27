@@ -1,6 +1,6 @@
 import type { NavLink } from "@kshop/data";
 import { chipVariants, ChevronDown, Flame, Heart, Search, User } from "@kshop/ui";
-import { CartLink } from "../cart/CartProvider";
+import { CartLink } from "../cart/CartDrawer";
 import { Link } from "../navigation";
 import type { PublicStore } from "../store-context";
 import { CurrencySelect } from "./Currency";

@@ -243,6 +243,25 @@ color, WhatsApp, badge del producto), `ProductCardData` ampliado (`discountPerce
 bloques; barra de envío gratis según D4; toast «Añadido al carrito».
 **Validación**: `e2e:orders` y `e2e:discounts` en verde (añadir rápido incluido); `qa:orders` en verde; Lighthouse del
 listado con CLS 0; capturas de listado, drawer y hoja.
+**Hecha (2026-10-27)**: antes, arreglo pedido por Roberto: el menú móvil se cierra al seguir un enlace, al tocar fuera
+y con Escape (`MobileMenu.tsx` cliente; constantes compartidas en `header-shared.ts`). `ProductCardData` gana
+`discountPercent`, `badge` (el del producto, antes era el «-20 %» calculado), `swatches` (hex de los valores de
+variante), `variantCount` y `defaultVariantId` (añadir sin elegir); fragmento `StorefrontProductCard` con id, stock y
+valores de atributo de las variantes (0,4–0,7 s sin caché, lejos del corte de 3 s). `ProductCard` cliente: badges -% /
+del producto (trofeo si es «Más vendido») / Agotado (foto al 45 %), favorito (BD, invitado → login con `next`), añadir
+rápido (directo con una variante; con varias, selector en `<dialog>`: hoja inferior en móvil, diálogo centrado desde
+720), colores (máx. 4 + N), WhatsApp con nombre, precio y enlace; `row` para búsqueda/ofertas. `VariantPicker` +
+`useVariantSelection` compartidos con la ficha. `CartDrawer` (`<dialog>`: panel de 420 a la derecha desde 720, hoja
+del 90 % en móvil) y aviso «Añadido al carrito» en móvil por `CartUiProvider`; el botón del carrito abre el panel en
+web. `CartView` con los mismos bloques (líneas `row` + stepper de 44, cupón, «Descuentos» en `text-sale`, total y
+«Finalizar pedido por WhatsApp» → `/checkout`). **D4 hecha**: `shell.freeShipping` = menor `free_over_subtotal` de los
+métodos activos; la barra solo sale si el carrito está en la moneda base. Las escrituras de métodos de envío ahora
+expiran la caché de la tienda. Listados sin ancho máximo, chips de filtro `chipVariants`, esqueleto con las medidas de
+la tarjeta nueva. **No se inventó** «Pagas al recibir · en efectivo o transferencia» del pie del carrito (los métodos de
+pago son de cada tienda). Evidencia `.titan/qa/rediseno-v2/R3/` (16/16 en web y 16/16 en la app a 1280 y 390: CLS del
+listado 0,0000–0,0001, cajón, aviso, selector, favorito de invitado, carrito con barra). `e2e:orders` 94/94,
+`e2e:discounts` 35/35, `qa:discounts` 9/9 (textos «-20%» y «Descuentos» actualizados), `qa:orders` 14/14 (la primera
+pasada dio un timeout de clic en frío), typecheck, lint, test y build en verde.
 
 ### Fase R4: Ficha de producto
 **Objetivo**: `ProductView` según `02` y `TiendaFicha.dc.html`: galería (vertical web, horizontal móvil), caja de precio
@@ -328,6 +347,10 @@ del estudio de precios), CTA final y pie con «Acceso Fullkod»; CTAs según D8.
   admin, con rutas de parámetros sin generar): «URL data outside of <Suspense>». El proveedor pasa un **hook**
   (`Navigation.usePathname`) y solo lo llama quien lo necesita (la barra inferior, dentro de `<Suspense>` en la web).
 - **R2 — Vite no llega a `networkidle`** en Playwright: en la app usar `load` + espera.
+- **R3 — `cva` no fusiona clases**: `buttonVariants({ size: "sm" }) + " px-0"` dejaba ganar `px-3.5` y el icono «+» se
+  aplastaba a 12 px. `buttonVariants` pasa ahora por `cn()` (tailwind-merge) y la base lleva `[&_svg]:shrink-0`.
+- **R3 — Valores exportados desde un módulo `"use client"`** (funciones, constantes) llegan como referencias al servidor:
+  `imageSrcSet` se movió a `components/images.ts`.
 - **Aviso de Next en dev ajeno al rediseño**: «Could not validate that a segment in your UI has instant navigation» en
   `/admin` (`admin/page.tsx`) y `/admin/themes` (`themes/layout.tsx`). No rompe nada; revisar en R6 (admin).
 

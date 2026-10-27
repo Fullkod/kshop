@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireCatalogAccess } from "@/server/catalog/access";
+import { invalidateCatalog, requireCatalogAccess } from "@/server/catalog/access";
 import { mapDbError } from "@/server/db-errors";
 import { apiHandler, notFound, readJson } from "@/server/http";
 import { getCheckoutSetting } from "@/server/orders/settings";
@@ -20,6 +20,8 @@ export const POST = apiHandler(
       .select("id")
       .single<{ id: string }>();
     if (error) mapDbError(error, resource.entity);
+    // The storefront shell shows the free-shipping threshold of the methods.
+    invalidateCatalog(storeId);
     return NextResponse.json({ id: data!.id }, { status: 201 });
   },
 );

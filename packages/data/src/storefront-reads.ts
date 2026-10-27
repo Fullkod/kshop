@@ -49,6 +49,8 @@ export type StorefrontShell = {
   features: { multiCurrency: boolean; vouchers: boolean };
   /** Slugs by id, to turn typed links (menus, banners) into paths. */
   slugs: Record<string, string>;
+  /** Lowest «free over» subtotal of the active shipping methods (base currency), for the cart's progress bar. */
+  freeShipping: { from: number; method: string } | null;
 };
 
 export async function fetchStorefrontShell(gql: Client, storeId: string): Promise<StorefrontShell> {
@@ -116,6 +118,10 @@ export async function fetchStorefrontShell(gql: Client, storeId: string): Promis
       })),
     features: { multiCurrency: !!features.multi_currency, vouchers: !!features.vouchers },
     slugs,
+    freeShipping: (() => {
+      const method = nodes(d.shippingMethodsCollection)[0];
+      return method?.freeOverSubtotal ? { from: Number(method.freeOverSubtotal), method: method.name } : null;
+    })(),
   };
 }
 
@@ -168,10 +174,17 @@ export type ProductCardData = {
   /** "Before" price of the cheapest variant (its compare-at price, or its price when a promotion lowers it). */
   compareAtPrice: number | null;
   compareAtOverrides: PriceOverride[];
-  /** "-20 %" for a promotion, "Oferta" for a compare-at price. */
+  /** Whole percent saved on the cheapest variant (promotion or compare-at price), or null. */
+  discountPercent: number | null;
+  /** The store's own label for the product («Nuevo», «Más vendido»). */
   badge: string | null;
   inStock: boolean;
   overrides: PriceOverride[];
+  /** Hex colors of the variants' swatch values, without repeats. */
+  swatches: string[];
+  variantCount: number;
+  /** The only variant, when it can be added without choosing (quick add). */
+  defaultVariantId: string | null;
 };
 
 export type PriceOverride = { currency: string; price: number };
@@ -278,6 +291,16 @@ function toProductCard(p: ResultOf<typeof StorefrontProductCardFragment>): Produ
     ),
   );
   const cheapest = [...variants].sort((a, b) => a.price - b.price)[0];
+  const variantNodes = nodes(p.productVariantsCollection);
+  const only = variantNodes.length === 1 ? variantNodes[0] : null;
+  const swatches = new Set(
+    variantNodes.flatMap((v) =>
+      nodes(v.variantAttributeValuesCollection).flatMap((o) => {
+        const hex = o.attributeValues?.value;
+        return hex && HEX.test(hex) ? [hex.toUpperCase()] : [];
+      }),
+    ),
+  );
   return {
     id: p.id,
     slug: p.slug,
@@ -288,11 +311,19 @@ function toProductCard(p: ResultOf<typeof StorefrontProductCardFragment>): Produ
     maxPrice: Number(p.maxPrice ?? 0),
     compareAtPrice: cheapest?.compareAtPrice ?? null,
     compareAtOverrides: cheapest?.compareAtOverrides ?? [],
-    badge: cheapest?.badge ?? null,
+    discountPercent: cheapest?.compareAtPrice
+      ? savingPercent(cheapest.compareAtPrice, cheapest.price) || null
+      : null,
+    badge: p.badge ?? null,
     inStock: p.inStock,
     overrides: cheapest?.overrides ?? [],
+    swatches: [...swatches],
+    variantCount: variantNodes.length,
+    defaultVariantId: only && (!only.trackInventory || only.stockAvailable > 0) ? only.id : null,
   };
 }
+
+const HEX = /^#[0-9a-f]{6}$/i;
 
 /** Published product cards by id, in the order given (favorites); unknown or unpublished ids are left out. */
 export async function fetchProductCards(

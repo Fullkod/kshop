@@ -1,8 +1,6 @@
 "use client";
 
 import { ApiError, type Cart } from "@kshop/data";
-import { ShoppingBag } from "@kshop/ui";
-import { Link } from "../navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useStore } from "../store-context";
 import { useCustomerSession } from "../account/CustomerSession";
@@ -136,21 +134,6 @@ export function useCart(): CartValue {
   const value = useContext(CartContext);
   if (!value) throw new Error("useCart must be used inside <CartProvider>");
   return value;
-}
-
-/** Header link to the cart (filled, with the number of units). */
-export function CartLink() {
-  const { count } = useCart();
-  return (
-    <Link
-      href="/cart"
-      className="ml-1 flex h-11 min-w-11 items-center justify-center gap-2 rounded-sf-btn bg-primary px-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
-      aria-label={count ? `Carrito, ${count} ${count === 1 ? "producto" : "productos"}` : "Carrito"}
-    >
-      <ShoppingBag size={19} aria-hidden />
-      {count > 0 && <CountBadge count={count} />}
-    </Link>
-  );
 }
 
 /** Units in the cart: header button and bottom tab bar. */

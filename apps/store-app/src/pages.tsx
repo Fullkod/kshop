@@ -160,9 +160,9 @@ export function ListingRoute({ kind }: { kind: ListingKind }) {
   }
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6">
+    <div className="flex flex-col gap-6 px-[clamp(16px,4.4cqw,56px)] py-6">
       <Breadcrumbs crumbs={[...crumbs, { label: title }]} />
-      <h1 className="text-3xl font-semibold">{title}</h1>
+      <h1 className="sf-heading text-[clamp(24px,2.6cqw,34px)] leading-tight font-bold">{title}</h1>
       {intro}
       <ListingData
         cacheKey={`listing:${basePath}?${params.toString()}`}
@@ -240,7 +240,7 @@ export const FavoritesPage = () => <FavoritesView />;
 
 export const CartPage = () => (
   <Narrow width="max-w-5xl" title="Carrito">
-    <CartView />
+    <CartView freeShipping={useShell().freeShipping} />
   </Narrow>
 );
 

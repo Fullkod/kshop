@@ -31,10 +31,10 @@ export function ListingPage({
   intro?: ReactNode;
 }) {
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
+    <div className="flex flex-col gap-6 px-[clamp(16px,4.4cqw,56px)] py-8">
       <Breadcrumbs crumbs={[...crumbs, { label: title }]} />
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold">{title}</h1>
+        <h1 className="sf-heading text-[clamp(24px,2.6cqw,34px)] leading-tight font-bold">{title}</h1>
         {description && <p className="max-w-2xl text-muted-foreground">{description}</p>}
       </div>
       {intro}

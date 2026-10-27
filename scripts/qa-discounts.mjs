@@ -35,7 +35,9 @@ const service = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_K
 const results = [];
 function check(name, ok, detail) {
   results.push(ok);
-  console.log(`${ok ? "ok" : "not ok"} - ${name}${ok || detail === undefined ? "" : ` (${String(detail).slice(0, 400)})`}`);
+  console.log(
+    `${ok ? "ok" : "not ok"} - ${name}${ok || detail === undefined ? "" : ` (${String(detail).slice(0, 400)})`}`,
+  );
 }
 
 function chromiumPath() {
@@ -44,20 +46,34 @@ function chromiumPath() {
   const dirs = existsSync(cache) ? readdirSync(cache).filter((d) => /^chromium-\d+$/.test(d)) : [];
   dirs.sort((a, b) => Number(b.split("-")[1]) - Number(a.split("-")[1]));
   for (const dir of dirs) {
-    for (const exe of ["chrome-win64/chrome.exe", "chrome-linux/chrome", "chrome-mac/Chromium.app/Contents/MacOS/Chromium"]) {
+    for (const exe of [
+      "chrome-win64/chrome.exe",
+      "chrome-linux/chrome",
+      "chrome-mac/Chromium.app/Contents/MacOS/Chromium",
+    ]) {
       if (existsSync(join(cache, dir, exe))) return join(cache, dir, exe);
     }
   }
-  throw new Error(`No Chromium in ${cache}; install one (npx playwright install chromium) or set QA_CHROMIUM_PATH`);
+  throw new Error(
+    `No Chromium in ${cache}; install one (npx playwright install chromium) or set QA_CHROMIUM_PATH`,
+  );
 }
 
 const { data: store } = await service.from("stores").select("id").eq("slug", "demo").single();
-const { data: product } = await service.from("products").select("id").eq("store_id", store.id).eq("slug", "vestido-nandu").single();
+const { data: product } = await service
+  .from("products")
+  .select("id")
+  .eq("store_id", store.id)
+  .eq("slug", "vestido-nandu")
+  .single();
 const { data: variants } = await service.from("product_variants").select("id").eq("product_id", product.id);
 const { data: stockBefore } = await service
   .from("stocks")
   .select("variant_id, warehouse_id, quantity")
-  .in("variant_id", variants.map((v) => v.id));
+  .in(
+    "variant_id",
+    variants.map((v) => v.id),
+  );
 const startedAt = new Date().toISOString();
 
 const browser = await chromium.launch({ executablePath: chromiumPath() });
@@ -65,12 +81,19 @@ const errors = [];
 async function newPage(viewport) {
   const context = await browser.newContext({ viewport });
   const page = await context.newPage();
-  page.on("console", (m) => m.type() === "error" && !m.text().includes("instant navigation") && errors.push(`${page.url()} :: ${m.text()}`));
+  page.on(
+    "console",
+    (m) =>
+      m.type() === "error" &&
+      !m.text().includes("instant navigation") &&
+      errors.push(`${page.url()} :: ${m.text()}`),
+  );
   return page;
 }
 // caret "initial": the default hides the caret with an inline style that breaks hydration if React has not
 // hydrated yet (a false "attributes didn't match" error).
-const shot = (page, name) => page.screenshot({ path: join(OUT, `qa-${name}.png`), fullPage: true, caret: "initial" });
+const shot = (page, name) =>
+  page.screenshot({ path: join(OUT, `qa-${name}.png`), fullPage: true, caret: "initial" });
 
 const guest = await newPage({ width: 390, height: 844 });
 const admin = await newPage({ width: 1280, height: 900 });
@@ -78,13 +101,16 @@ const admin = await newPage({ width: 1280, height: 900 });
 try {
   // 1. Guest: badge, cart with the voucher, checkout and order page.
   await guest.goto(`${BASE}/category/vestidos`);
-  await guest.getByText("-20 %").first().waitFor({ timeout: 15000 });
-  check("listing shows the -20 % badge of the promotion", true);
+  await guest.getByText("-20%").first().waitFor({ timeout: 15000 });
+  check("listing shows the -20% badge of the promotion", true);
   await shot(guest, "01-listado-oferta-390");
 
   await guest.goto(`${BASE}/product/vestido-nandu`);
   await guest.getByText("Rebajas de vestidos").waitFor({ timeout: 15000 });
-  check("product page shows the promotion name and the struck price", await guest.locator("p s, p .line-through").first().isVisible());
+  check(
+    "product page shows the promotion name and the struck price",
+    await guest.locator("p s, p .line-through").first().isVisible(),
+  );
   await shot(guest, "02-ficha-oferta-390");
   await guest.getByRole("button", { name: "Añadir uno" }).click();
   await guest.getByRole("button", { name: "Añadir al carrito" }).click();
@@ -95,7 +121,11 @@ try {
   await guest.getByRole("button", { name: "Aplicar" }).click();
   await guest.getByText("Cupón BIENVENIDA10").first().waitFor({ timeout: 15000 });
   const cartText = await guest.locator("main").innerText();
-  check("cart: voucher applied (−240) and the saving of the offer", cartText.includes("240") && /Ahorras/.test(cartText), cartText);
+  check(
+    "cart: voucher applied (−240) and the saving of the offer",
+    cartText.includes("240") && /Descuentos/.test(cartText),
+    cartText,
+  );
   await shot(guest, "03-carrito-cupon-390");
 
   await guest.goto(`${BASE}/checkout`);
@@ -111,10 +141,18 @@ try {
   await guest.waitForURL(/\/order\/[0-9a-f-]+\?new=1/, { timeout: 30000 });
   await guest.getByText(/recibido!/).waitFor({ timeout: 15000 });
   const orderText = await guest.locator("main").innerText();
-  check("order page: voucher line and total 2400 − 240 + 500", orderText.includes("Cupón BIENVENIDA10") && orderText.includes("2660"), orderText);
+  check(
+    "order page: voucher line and total 2400 − 240 + 500",
+    orderText.includes("Cupón BIENVENIDA10") && orderText.includes("2660"),
+    orderText,
+  );
   await shot(guest, "05-pedido-descuento-390");
   const token = guest.url().split("?")[0].split("/").pop();
-  const { data: order } = await service.from("orders").select("id, number").eq("public_token", token).single();
+  const { data: order } = await service
+    .from("orders")
+    .select("id, number")
+    .eq("public_token", token)
+    .single();
 
   // 2. Owner: promotion created and deleted from the admin, voucher usage, order discounts.
   await admin.goto(`${BASE}/admin/login`);
@@ -130,7 +168,9 @@ try {
   await admin.fill("#value", "15");
   const categorySelect = admin.getByLabel("Añadir categoría");
   // Labels carry the tree indent ("— Complementos"): select by value.
-  await categorySelect.selectOption(await categorySelect.locator("option", { hasText: "Complementos" }).getAttribute("value"));
+  await categorySelect.selectOption(
+    await categorySelect.locator("option", { hasText: "Complementos" }).getAttribute("value"),
+  );
   await shot(admin, "06-admin-nueva-promocion-1280");
   await admin.getByRole("button", { name: "Guardar" }).click();
   await admin.getByTestId("promotions-list").getByText("QA Complementos").waitFor({ timeout: 15000 });
@@ -150,7 +190,10 @@ try {
 
   await admin.goto(`${BASE}/admin/orders/${order.id}`);
   await admin.getByText("Cupón BIENVENIDA10").waitFor({ timeout: 15000 });
-  check("admin: order detail shows the offer and the voucher", await admin.getByText(/Oferta «Rebajas de vestidos»/).isVisible());
+  check(
+    "admin: order detail shows the offer and the voucher",
+    await admin.getByText(/Oferta «Rebajas de vestidos»/).isVisible(),
+  );
   await shot(admin, "09-admin-pedido-descuentos-1280");
 
   if (errors.length) writeFileSync(join(OUT, "console-errors.txt"), errors.join("\n\n"));
@@ -169,11 +212,26 @@ try {
     .eq("customer_phone", `+${PHONE}`)
     .not("status", "in", "(delivered,cancelled)");
   for (const o of open ?? []) {
-    await service.rpc("order_cancel", { p_store_id: store.id, p_order_id: o.id, p_reason: "Pedido de QA", p_user_id: null });
+    await service.rpc("order_cancel", {
+      p_store_id: store.id,
+      p_order_id: o.id,
+      p_reason: "Pedido de QA",
+      p_user_id: null,
+    });
   }
-  const { data: leftover } = await service.from("promotions").select("id").eq("store_id", store.id).eq("name", "QA Complementos");
+  const { data: leftover } = await service
+    .from("promotions")
+    .select("id")
+    .eq("store_id", store.id)
+    .eq("name", "QA Complementos");
   if (leftover?.length) {
-    await service.from("promotions").delete().in("id", leftover.map((p) => p.id));
+    await service
+      .from("promotions")
+      .delete()
+      .in(
+        "id",
+        leftover.map((p) => p.id),
+      );
     await service.rpc("refresh_promotions", { p_store_id: store.id });
   }
   for (const row of stockBefore) {

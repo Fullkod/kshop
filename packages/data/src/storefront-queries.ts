@@ -7,6 +7,18 @@ import { graphql } from "./gql";
 export const StorefrontShellQuery = graphql(`
   query StorefrontShell($storeId: UUID!) {
     storefrontFeatures(pStoreId: $storeId)
+    shippingMethodsCollection(
+      filter: { storeId: { eq: $storeId }, isActive: { eq: true }, freeOverSubtotal: { is: NOT_NULL } }
+      orderBy: [{ freeOverSubtotal: AscNullsLast }]
+      first: 1
+    ) {
+      edges {
+        node {
+          name
+          freeOverSubtotal
+        }
+      }
+    }
     menusCollection(filter: { storeId: { eq: $storeId } }, first: 2) {
       edges {
         node {
@@ -134,6 +146,7 @@ export const StorefrontProductCardFragment = graphql(`
     minPrice
     maxPrice
     inStock
+    badge
     primaryMediaUrl
     brands {
       name
@@ -141,8 +154,20 @@ export const StorefrontProductCardFragment = graphql(`
     productVariantsCollection(first: 20) {
       edges {
         node {
+          id
+          trackInventory
+          stockAvailable
           price
           compareAtPrice
+          variantAttributeValuesCollection(first: 5) {
+            edges {
+              node {
+                attributeValues {
+                  value
+                }
+              }
+            }
+          }
           variantPromotions {
             promoPrice
             reward

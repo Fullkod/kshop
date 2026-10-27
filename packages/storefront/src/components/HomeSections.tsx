@@ -2,7 +2,8 @@ import { Link } from "../navigation";
 import type { BannerData, HomeSection } from "@kshop/data";
 import { HeroSlider } from "./HeroSlider";
 import { Markdown } from "./Markdown";
-import { ProductCard, imageSrcSet } from "./ProductCard";
+import { imageSrcSet } from "./images";
+import { ProductCard } from "./ProductCard";
 
 export function HomeSections({ sections }: { sections: HomeSection[] }) {
   return (

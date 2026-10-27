@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireCatalogAccess } from "@/server/catalog/access";
+import { invalidateCatalog, requireCatalogAccess } from "@/server/catalog/access";
 import { mapDbError } from "@/server/db-errors";
 import { apiHandler, notFound, readJson, uuidParam } from "@/server/http";
 import { getCheckoutSetting } from "@/server/orders/settings";
@@ -30,6 +30,7 @@ export const PATCH = apiHandler(async (request: Request, ctx: Ctx) => {
     .maybeSingle();
   if (error) mapDbError(error, resource.entity);
   if (!data) throw missing(resource.entity);
+  invalidateCatalog(storeId);
   return NextResponse.json({ id });
 });
 
@@ -45,5 +46,6 @@ export const DELETE = apiHandler(async (request: Request, ctx: Ctx) => {
     .select("id");
   if (error) mapDbError(error, resource.entity);
   if (!data?.length) throw missing(resource.entity);
+  invalidateCatalog(storeId);
   return new NextResponse(null, { status: 204 });
 });

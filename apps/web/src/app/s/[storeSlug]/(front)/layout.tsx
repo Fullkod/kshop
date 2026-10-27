@@ -1,6 +1,7 @@
 import {
   BottomTabBar,
   CartProvider,
+  CartUiProvider,
   CurrencyProvider,
   CustomerSessionProvider,
   FavoritesProvider,
@@ -51,15 +52,17 @@ export default async function StorefrontLayout({ children, params }: LayoutProps
         <CustomerSessionProvider>
           <FavoritesProvider>
             <CartProvider>
-              {app && <AndroidAppBanner storeName={store.name} />}
-              <StoreHeader store={store} links={header} chips={headerChips(shell)} />
-              <main id="content" className="flex-1">
-                {children}
-              </main>
-              <StoreFooter store={store} links={shell.footer} currencies={shell.currencies} />
-              <Suspense fallback={null}>
-                <BottomTabBar />
-              </Suspense>
+              <CartUiProvider freeShipping={shell.freeShipping}>
+                {app && <AndroidAppBanner storeName={store.name} />}
+                <StoreHeader store={store} links={header} chips={headerChips(shell)} />
+                <main id="content" className="flex-1">
+                  {children}
+                </main>
+                <StoreFooter store={store} links={shell.footer} currencies={shell.currencies} />
+                <Suspense fallback={null}>
+                  <BottomTabBar />
+                </Suspense>
+              </CartUiProvider>
             </CartProvider>
           </FavoritesProvider>
         </CustomerSessionProvider>

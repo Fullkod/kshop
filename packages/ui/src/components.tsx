@@ -6,8 +6,8 @@ import { cn } from "./cn";
 // theme variable, so the same atom follows whichever palette surrounds it.
 const focusRing = "outline-none focus-visible:shadow-[0_0_0_4px_var(--ring)]";
 
-export const buttonVariants = cva(
-  `inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-sf-btn font-semibold transition-colors disabled:pointer-events-none disabled:opacity-45 aria-disabled:pointer-events-none aria-disabled:opacity-45 ${focusRing}`,
+const buttonCva = cva(
+  `inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-sf-btn [&_svg]:shrink-0 font-semibold transition-colors disabled:pointer-events-none disabled:opacity-45 aria-disabled:pointer-events-none aria-disabled:opacity-45 ${focusRing}`,
   {
     variants: {
       variant: {
@@ -31,6 +31,9 @@ export const buttonVariants = cva(
     defaultVariants: { variant: "default", size: "default" },
   },
 );
+
+/** Button classes; a `className` passed here is merged (tailwind-merge), so it can override a size or color. */
+export const buttonVariants = (props?: Parameters<typeof buttonCva>[0]) => cn(buttonCva(props));
 
 export function Button({
   className,

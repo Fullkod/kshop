@@ -1,3 +1,4 @@
+import { chipVariants, SlidersHorizontal, X } from "@kshop/ui";
 import {
   listingFilterIds,
   listingQuery,
@@ -93,19 +94,22 @@ export function ListingView({
   );
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
-      <aside className="hidden w-60 shrink-0 lg:block">{panel}</aside>
+    <div className="flex flex-col gap-6 @min-[1000px]:flex-row @min-[1000px]:gap-10">
+      <aside className="hidden w-60 shrink-0 @min-[1000px]:block">{panel}</aside>
       <div className="flex min-w-0 flex-1 flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground" aria-live="polite">
             {total === 1 ? "1 producto" : `${total} productos`}
           </p>
           <div className="flex items-center gap-2">
-            <details className="lg:hidden">
-              <summary className="flex h-9 cursor-pointer list-none items-center rounded-sf-btn border px-3 text-sm [&::-webkit-details-marker]:hidden">
+            <details className="@min-[1000px]:hidden">
+              <summary
+                className={chipVariants({ className: "list-none [&::-webkit-details-marker]:hidden" })}
+              >
+                <SlidersHorizontal size={14} aria-hidden />
                 Filtros{chips.length ? ` (${chips.length})` : ""}
               </summary>
-              <div className="fixed inset-x-0 bottom-0 z-40 max-h-[75dvh] overflow-y-auto rounded-t-2xl border-t bg-background p-4 shadow-2xl">
+              <div className="fixed inset-x-0 bottom-0 z-40 max-h-[75dvh] overflow-y-auto rounded-t-sf-lg border-t border-border bg-background p-4 shadow-sf-lg">
                 {panel}
               </div>
             </details>
@@ -117,18 +121,18 @@ export function ListingView({
           <ul className="flex flex-wrap gap-2" aria-label="Filtros activos">
             {chips.map((chip) => (
               <li key={chip.label}>
-                <Link
-                  href={href(chip.remove)}
-                  rel="nofollow"
-                  className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs hover:bg-surface"
-                >
-                  {chip.label} <span aria-hidden>×</span>
+                <Link href={href(chip.remove)} rel="nofollow" className={chipVariants({ active: true })}>
+                  {chip.label} <X size={14} aria-hidden />
                   <span className="sr-only">(quitar)</span>
                 </Link>
               </li>
             ))}
             <li>
-              <Link href={basePath} rel="nofollow" className="inline-flex px-2 py-1 text-xs underline">
+              <Link
+                href={basePath}
+                rel="nofollow"
+                className="inline-flex h-[34px] items-center px-2 text-[13px] underline"
+              >
                 Quitar todo
               </Link>
             </li>
@@ -139,7 +143,7 @@ export function ListingView({
         {products.length ? (
           <ProductGrid products={products} priorityCount={4} />
         ) : (
-          <div className="rounded-sf border border-dashed px-6 py-16 text-center">
+          <div className="rounded-sf border border-dashed border-border px-6 py-16 text-center">
             <p className="font-medium">No encontramos productos.</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Prueba con otros filtros o con otra búsqueda.
@@ -185,7 +189,7 @@ function PageLink({
       href={href}
       rel={rel}
       aria-current={current ? "page" : undefined}
-      className={`min-w-10 rounded-sf-btn border px-3 py-2 text-center text-sm ${current ? "border-primary bg-primary text-primary-foreground" : "hover:bg-surface"}`}
+      className={`flex h-11 min-w-11 items-center justify-center rounded-sf-btn border px-3 text-sm ${current ? "border-primary bg-primary font-semibold text-primary-foreground" : "border-border hover:border-foreground"}`}
     >
       {label}
     </Link>
@@ -370,15 +374,18 @@ export function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
 export function ListingSkeleton() {
   return (
     <div
-      className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4"
+      className="grid grid-cols-2 gap-x-3 gap-y-7 @min-[640px]:grid-cols-3 @min-[1024px]:grid-cols-4 @min-[1024px]:gap-x-5"
       aria-busy="true"
       aria-label="Cargando"
     >
       {Array.from({ length: 8 }, (_, i) => (
-        <div key={i} className="flex flex-col gap-2">
+        <div key={i} className="flex flex-col gap-2.5">
           <div className="aspect-[4/5] animate-pulse rounded-sf bg-surface" />
-          <div className="h-4 w-3/4 animate-pulse rounded bg-surface" />
-          <div className="h-4 w-1/3 animate-pulse rounded bg-surface" />
+          <div className="flex flex-col gap-1.5 px-0.5">
+            <div className="h-3 w-1/3 animate-pulse rounded bg-surface" />
+            <div className="h-10 w-3/4 animate-pulse rounded bg-surface" />
+            <div className="h-[34px] w-1/2 animate-pulse rounded bg-surface" />
+          </div>
         </div>
       ))}
     </div>

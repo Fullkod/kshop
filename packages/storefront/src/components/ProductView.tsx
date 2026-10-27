@@ -5,18 +5,13 @@ import { useMemo, useState } from "react";
 import { useCart } from "../cart/CartProvider";
 import type { StorefrontProduct } from "@kshop/data";
 import { Price } from "./Currency";
-import { imageSrcSet } from "./ProductCard";
-
-type Variant = StorefrontProduct["variants"][number];
+import { imageSrcSet } from "./images";
+import { useVariantSelection, VariantPicker } from "./VariantPicker";
 
 /** Gallery + variant picker + price + «Añadir al carrito» (phase 3, D17: replaces «Pedir por WhatsApp»). */
 export function ProductView({ product }: { product: StorefrontProduct }) {
-  const axes = useMemo(() => variantAxes(product.variants), [product.variants]);
-  const initial = product.variants.find((v) => v.available) ?? product.variants[0];
-  const [selected, setSelected] = useState<Record<string, string>>(() =>
-    Object.fromEntries((initial?.options ?? []).map((o) => [o.attributeId, o.valueId])),
-  );
-  const variant = product.variants.find((v) => v.options.every((o) => selected[o.attributeId] === o.valueId));
+  const selection = useVariantSelection(product.variants);
+  const { variant } = selection;
 
   // Images of the chosen variant first.
   const media = useMemo(() => {
@@ -25,19 +20,6 @@ export function ProductView({ product }: { product: StorefrontProduct }) {
   }, [product.media, variant]);
   const [imageIndex, setImageIndex] = useState(0);
   const image = media[Math.min(imageIndex, media.length - 1)];
-
-  const pick = (attributeId: string, valueId: string) => {
-    setSelected((s) => ({ ...s, [attributeId]: valueId }));
-    setImageIndex(0);
-  };
-  // A value is available if some available variant has it together with the other selected values.
-  const valueAvailable = (attributeId: string, valueId: string) =>
-    product.variants.some(
-      (v) =>
-        v.available &&
-        v.options.some((o) => o.attributeId === attributeId && o.valueId === valueId) &&
-        v.options.every((o) => o.attributeId === attributeId || selected[o.attributeId] === o.valueId),
-    );
 
   return (
     <div className="grid gap-8 md:grid-cols-2 md:gap-12">
@@ -119,42 +101,7 @@ export function ProductView({ product }: { product: StorefrontProduct }) {
           {variant?.promotionName && <p className="text-sm text-primary">{variant.promotionName}</p>}
         </div>
 
-        {axes.map((axis) => (
-          <fieldset key={axis.attributeId} className="flex flex-col gap-2">
-            <legend className="mb-2 text-sm font-medium">
-              {axis.name}:{" "}
-              <span className="text-muted-foreground">
-                {axis.values.find((v) => v.valueId === selected[axis.attributeId])?.value ??
-                  "elige una opción"}
-              </span>
-            </legend>
-            <div className="flex flex-wrap gap-2">
-              {axis.values.map((v) => {
-                const on = selected[axis.attributeId] === v.valueId;
-                const available = valueAvailable(axis.attributeId, v.valueId);
-                return (
-                  <button
-                    key={v.valueId}
-                    type="button"
-                    onClick={() => pick(axis.attributeId, v.valueId)}
-                    aria-pressed={on}
-                    className={`flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-sf-btn border px-3 text-sm ${on ? "border-primary ring-2 ring-primary" : "hover:bg-surface"} ${available ? "" : "text-muted-foreground line-through"}`}
-                  >
-                    {v.swatch && (
-                      <span
-                        className="h-4 w-4 rounded-full border"
-                        style={{ background: v.swatch }}
-                        aria-hidden
-                      />
-                    )}
-                    {v.value}
-                    {!available && <span className="sr-only">(agotado)</span>}
-                  </button>
-                );
-              })}
-            </div>
-          </fieldset>
-        ))}
+        <VariantPicker selection={selection} onPick={() => setImageIndex(0)} />
 
         <p className="text-sm" aria-live="polite">
           {!variant ? (
@@ -250,31 +197,4 @@ function AddToCart({ variantId }: { variantId: string }) {
       </p>
     </div>
   );
-}
-
-type Axis = {
-  attributeId: string;
-  name: string;
-  values: { valueId: string; value: string; swatch: string | null; sort: number }[];
-};
-
-function variantAxes(variants: Variant[]): Axis[] {
-  const axes = new Map<string, Axis & { sort: number }>();
-  for (const v of variants) {
-    for (const o of v.options) {
-      const axis = axes.get(o.attributeId) ?? {
-        attributeId: o.attributeId,
-        name: o.attribute,
-        values: [],
-        sort: o.attributeSort,
-      };
-      if (!axis.values.some((x) => x.valueId === o.valueId)) {
-        axis.values.push({ valueId: o.valueId, value: o.value, swatch: o.swatch, sort: o.valueSort });
-      }
-      axes.set(o.attributeId, axis);
-    }
-  }
-  return [...axes.values()]
-    .sort((a, b) => a.sort - b.sort)
-    .map((a) => ({ ...a, values: a.values.sort((x, y) => x.sort - y.sort) }));
 }

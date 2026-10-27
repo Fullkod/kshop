@@ -2,6 +2,7 @@ import type { StorefrontShell } from "@kshop/data";
 import {
   BottomTabBar,
   CartProvider,
+  CartUiProvider,
   CurrencyProvider,
   CustomerSessionProvider,
   FavoritesProvider,
@@ -183,34 +184,40 @@ function StoreApp() {
               <CustomerSessionProvider>
                 <FavoritesProvider>
                   <CartProvider>
-                    <StoreHeader store={s} links={headerLinks(shell.data)} chips={headerChips(shell.data)} />
-                    <Banners stale={store.stale || shell.stale} info={info.data} />
-                    <ScrollToTop />
-                    <main id="content" className="flex-1">
-                      <Routes>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/products" element={<ListingRoute kind="all" />} />
-                        <Route path="/search" element={<ListingRoute kind="search" />} />
-                        <Route path="/category/:slug" element={<ListingRoute kind="category" />} />
-                        <Route path="/collection/:slug" element={<ListingRoute kind="collection" />} />
-                        <Route path="/brand/:slug" element={<ListingRoute kind="brand" />} />
-                        <Route path="/product/:slug" element={<ProductPage />} />
-                        <Route path="/page/:slug" element={<StaticPage />} />
-                        <Route path="/categories" element={<CategoriesPage />} />
-                        <Route path="/favorites" element={<FavoritesPage />} />
-                        <Route path="/cart" element={<CartPage />} />
-                        <Route path="/checkout" element={<CheckoutPage />} />
-                        <Route path="/order/:token" element={<OrderPage />} />
-                        <Route path="/account" element={<AccountPage />} />
-                        <Route path="/account/login" element={<LoginPage />} />
-                        <Route path="/account/register" element={<RegisterPage />} />
-                        <Route path="/account/recover" element={<RecoverPage />} />
-                        <Route path="/account/orders/:orderId" element={<MyOrderPage />} />
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </main>
-                    <StoreFooter store={s} links={shell.data.footer} currencies={shell.data.currencies} />
-                    <BottomTabBar fixed />
+                    <CartUiProvider freeShipping={shell.data.freeShipping}>
+                      <StoreHeader
+                        store={s}
+                        links={headerLinks(shell.data)}
+                        chips={headerChips(shell.data)}
+                      />
+                      <Banners stale={store.stale || shell.stale} info={info.data} />
+                      <ScrollToTop />
+                      <main id="content" className="flex-1">
+                        <Routes>
+                          <Route path="/" element={<HomePage />} />
+                          <Route path="/products" element={<ListingRoute kind="all" />} />
+                          <Route path="/search" element={<ListingRoute kind="search" />} />
+                          <Route path="/category/:slug" element={<ListingRoute kind="category" />} />
+                          <Route path="/collection/:slug" element={<ListingRoute kind="collection" />} />
+                          <Route path="/brand/:slug" element={<ListingRoute kind="brand" />} />
+                          <Route path="/product/:slug" element={<ProductPage />} />
+                          <Route path="/page/:slug" element={<StaticPage />} />
+                          <Route path="/categories" element={<CategoriesPage />} />
+                          <Route path="/favorites" element={<FavoritesPage />} />
+                          <Route path="/cart" element={<CartPage />} />
+                          <Route path="/checkout" element={<CheckoutPage />} />
+                          <Route path="/order/:token" element={<OrderPage />} />
+                          <Route path="/account" element={<AccountPage />} />
+                          <Route path="/account/login" element={<LoginPage />} />
+                          <Route path="/account/register" element={<RegisterPage />} />
+                          <Route path="/account/recover" element={<RecoverPage />} />
+                          <Route path="/account/orders/:orderId" element={<MyOrderPage />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </main>
+                      <StoreFooter store={s} links={shell.data.footer} currencies={shell.data.currencies} />
+                      <BottomTabBar fixed />
+                    </CartUiProvider>
                   </CartProvider>
                 </FavoritesProvider>
               </CustomerSessionProvider>
