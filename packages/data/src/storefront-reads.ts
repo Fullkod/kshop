@@ -16,6 +16,8 @@ import {
   StorefrontFacetsQuery,
   StorefrontHomeQuery,
   StorefrontPageQuery,
+  StorefrontProductCardFragment,
+  StorefrontProductCardsQuery,
   StorefrontProductQuery,
   StorefrontProductsQuery,
   StorefrontShellQuery,
@@ -259,35 +261,52 @@ export async function fetchProducts(
   const connection = result.data?.storefrontSearchProducts;
   return {
     total: connection?.totalCount ?? 0,
-    products: nodes(connection).map((p) => {
-      const variants = nodes(p.productVariantsCollection).map((v) =>
-        withPromotion(
-          Number(v.price),
-          v.compareAtPrice != null ? Number(v.compareAtPrice) : null,
-          nodes(v.variantPricesCollection).map((o) => ({
-            currency: String(o.currency),
-            price: Number(o.price),
-          })),
-          v.variantPromotions,
-        ),
-      );
-      const cheapest = [...variants].sort((a, b) => a.price - b.price)[0];
-      return {
-        id: p.id,
-        slug: p.slug,
-        name: p.name,
-        brand: p.brands?.name ?? null,
-        imageUrl: p.primaryMediaUrl ?? null,
-        minPrice: Number(p.minPrice ?? 0),
-        maxPrice: Number(p.maxPrice ?? 0),
-        compareAtPrice: cheapest?.compareAtPrice ?? null,
-        compareAtOverrides: cheapest?.compareAtOverrides ?? [],
-        badge: cheapest?.badge ?? null,
-        inStock: p.inStock,
-        overrides: cheapest?.overrides ?? [],
-      };
-    }),
+    products: nodes(connection).map(toProductCard),
   };
+}
+
+function toProductCard(p: ResultOf<typeof StorefrontProductCardFragment>): ProductCardData {
+  const variants = nodes(p.productVariantsCollection).map((v) =>
+    withPromotion(
+      Number(v.price),
+      v.compareAtPrice != null ? Number(v.compareAtPrice) : null,
+      nodes(v.variantPricesCollection).map((o) => ({
+        currency: String(o.currency),
+        price: Number(o.price),
+      })),
+      v.variantPromotions,
+    ),
+  );
+  const cheapest = [...variants].sort((a, b) => a.price - b.price)[0];
+  return {
+    id: p.id,
+    slug: p.slug,
+    name: p.name,
+    brand: p.brands?.name ?? null,
+    imageUrl: p.primaryMediaUrl ?? null,
+    minPrice: Number(p.minPrice ?? 0),
+    maxPrice: Number(p.maxPrice ?? 0),
+    compareAtPrice: cheapest?.compareAtPrice ?? null,
+    compareAtOverrides: cheapest?.compareAtOverrides ?? [],
+    badge: cheapest?.badge ?? null,
+    inStock: p.inStock,
+    overrides: cheapest?.overrides ?? [],
+  };
+}
+
+/** Published product cards by id, in the order given (favorites); unknown or unpublished ids are left out. */
+export async function fetchProductCards(
+  gql: Client,
+  storeId: string,
+  ids: string[],
+): Promise<ProductCardData[]> {
+  if (ids.length === 0) return [];
+  const result = await gql
+    .query(StorefrontProductCardsQuery, { storeId, ids: [...new Set(ids)] })
+    .toPromise();
+  if (result.error) throw result.error;
+  const cards = new Map(nodes(result.data?.productsCollection).map((p) => [p.id, toProductCard(p)]));
+  return ids.flatMap((id) => cards.get(id) ?? []);
 }
 
 export type Facets = {

@@ -4,12 +4,14 @@ import {
   AccountView,
   Breadcrumbs,
   CartView,
+  CategoriesView,
   categoryTrail,
   CheckoutView,
   CustomerLoginForm,
   CustomerRecoverForm,
   CustomerRegisterForm,
   defaultHome,
+  FavoritesView,
   HomeSections,
   Link,
   ListingSkeleton,
@@ -231,6 +233,10 @@ export function StaticPage() {
     </article>
   );
 }
+
+export const CategoriesPage = () => <CategoriesView shell={useShell()} />;
+
+export const FavoritesPage = () => <FavoritesView />;
 
 export const CartPage = () => (
   <Narrow width="max-w-5xl" title="Carrito">

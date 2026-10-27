@@ -1,86 +1,84 @@
+import type { NavLink } from "@kshop/data";
+import { chipVariants, ChevronDown, Flame, Heart, Menu, Search, User } from "@kshop/ui";
+import { CartLink } from "../cart/CartProvider";
 import { Link } from "../navigation";
 import type { PublicStore } from "../store-context";
-import type { NavLink } from "@kshop/data";
-import { CartLink } from "../cart/CartProvider";
 import { CurrencySelect } from "./Currency";
 
-/** Header: name/logo, menu (dropdowns on desktop, a <details> panel on mobile, no JS needed), search, currency. */
-export function StoreHeader({ store, links }: { store: PublicStore; links: NavLink[] }) {
-  return (
-    <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
-        <details className="group relative md:hidden">
-          <summary
-            className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-sf-btn hover:bg-surface [&::-webkit-details-marker]:hidden"
-            aria-label="Menú"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden
-            >
-              <path d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </summary>
-          <nav
-            aria-label="Menú principal"
-            className="fixed inset-x-0 top-[61px] max-h-[80dvh] overflow-y-auto border-b bg-background px-4 py-3 shadow-lg"
-          >
-            <ul className="flex flex-col">
-              {links.map((link) => (
-                <li key={link.href + link.label}>
-                  <Link href={link.href} className="block py-2 font-medium">
-                    {link.label}
-                  </Link>
-                  {link.children.length > 0 && (
-                    <ul className="mb-2 border-l pl-4">
-                      {link.children.map((child) => (
-                        <li key={child.href + child.label}>
-                          <Link href={child.href} className="block py-1.5 text-sm text-muted-foreground">
-                            {child.label}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </details>
+// Breakpoints are container queries on .sf-root (the same component in the web, the app and the theme preview):
+// < 720 phone (search and category chips under the row), < 1180 hamburger, ≥ 1400 search field instead of an icon.
+// The logo and the actions never shrink and the menu clips, so the store name never runs into the menu.
 
-        <Link href="/" className="flex min-w-0 items-center gap-2" aria-label={`${store.name}, inicio`}>
-          {store.logoUrl ? (
-            // store logo from Supabase Storage
-            <img
-              src={store.logoUrl}
-              alt=""
-              width={36}
-              height={36}
-              className="h-9 w-9 rounded object-contain"
-            />
-          ) : null}
-          <span className="sf-heading truncate text-lg font-semibold">{store.name}</span>
+const SALE_HREF = "/products?sale=1";
+const iconButton =
+  "flex size-11 shrink-0 items-center justify-center rounded-sf-btn text-foreground transition-colors hover:bg-surface";
+
+export function StoreLogo({ store, inverse = false }: { store: PublicStore; inverse?: boolean }) {
+  return (
+    <span className="flex min-w-0 items-center gap-2.5">
+      {store.logoUrl ? (
+        // store logo from Supabase Storage
+        <img
+          src={store.logoUrl}
+          alt=""
+          width={36}
+          height={36}
+          className="size-9 shrink-0 rounded-sf-sm object-contain"
+        />
+      ) : (
+        <span
+          aria-hidden
+          className={`sf-heading flex size-9 shrink-0 items-center justify-center rounded-sf-sm text-lg font-extrabold ${inverse ? "bg-secondary text-secondary-foreground" : "bg-primary text-primary-foreground"}`}
+        >
+          {store.name.trim().charAt(0).toUpperCase()}
+        </span>
+      )}
+      <span className="sf-heading truncate text-[19px] leading-none font-bold">{store.name}</span>
+    </span>
+  );
+}
+
+export function StoreHeader({
+  store,
+  links,
+  chips,
+}: {
+  store: PublicStore;
+  links: NavLink[];
+  /** Phone row under the header (top categories). */
+  chips: { label: string; href: string }[];
+}) {
+  return (
+    <header className="sticky top-0 z-30 border-b border-border bg-[color-mix(in_srgb,var(--bg)_92%,transparent)] backdrop-blur-md">
+      <div className="flex items-center gap-[clamp(6px,1.8cqw,24px)] px-[clamp(16px,4.4cqw,56px)] py-3">
+        <MobileMenu links={links} />
+
+        <Link href="/" className="flex max-w-[60%] min-w-0 flex-none" aria-label={`${store.name}, inicio`}>
+          <StoreLogo store={store} />
         </Link>
 
-        <nav aria-label="Menú principal" className="ml-4 hidden md:block">
-          <ul className="flex items-center gap-1">
+        <nav
+          aria-label="Menú principal"
+          className="ml-2 hidden min-w-0 flex-1 overflow-x-clip @min-[1180px]:block"
+        >
+          <ul className="flex items-center gap-0.5">
             {links.map((link) => (
-              <li key={link.href + link.label} className="group relative">
+              <li key={link.href + link.label} className="group relative flex-none">
                 <Link
                   href={link.href}
-                  className="block rounded-sf-btn px-3 py-2 text-sm font-medium hover:bg-surface"
+                  className="flex items-center gap-1 rounded-sf-btn px-2.5 py-[9px] text-sm font-medium whitespace-nowrap hover:bg-surface"
                 >
                   {link.label}
+                  {link.children.length > 0 && <ChevronDown size={14} className="opacity-60" aria-hidden />}
                 </Link>
                 {link.children.length > 0 && (
-                  <ul className="invisible absolute left-0 top-full min-w-48 rounded-sf border bg-background p-1 opacity-0 shadow-lg transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+                  <ul className="invisible absolute top-full left-0 z-10 min-w-48 rounded-sf border border-border bg-background p-1 opacity-0 shadow-sf-lg transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
                     {link.children.map((child) => (
                       <li key={child.href + child.label}>
-                        <Link href={child.href} className="block rounded px-3 py-2 text-sm hover:bg-surface">
+                        <Link
+                          href={child.href}
+                          className="block rounded-sf-sm px-3 py-2 text-sm whitespace-nowrap hover:bg-surface"
+                        >
                           {child.label}
                         </Link>
                       </li>
@@ -89,60 +87,117 @@ export function StoreHeader({ store, links }: { store: PublicStore; links: NavLi
                 )}
               </li>
             ))}
+            <li className="flex-none">
+              <Link
+                href={SALE_HREF}
+                className="flex items-center gap-1.5 rounded-sf-btn px-2.5 py-[9px] text-sm font-semibold whitespace-nowrap text-sale hover:bg-sale-soft"
+              >
+                <Flame size={15} aria-hidden />
+                Ofertas
+              </Link>
+            </li>
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
-          <form action="/search" role="search" className="hidden sm:block">
-            <label htmlFor="store-search" className="sr-only">
-              Buscar productos
+        <div className="ml-auto flex flex-none items-center gap-1">
+          <form action="/search" role="search" className="mr-1.5 hidden @min-[1400px]:block">
+            <label className="flex h-[42px] w-[clamp(150px,15cqw,240px)] items-center gap-2 rounded-sf-btn border border-border bg-surface px-3.5 text-sm text-muted-foreground focus-within:border-primary">
+              <Search size={18} aria-hidden className="shrink-0" />
+              <span className="sr-only">Buscar productos</span>
+              <input
+                name="q"
+                type="search"
+                placeholder="Buscar productos"
+                className="w-full min-w-0 bg-transparent text-foreground outline-none placeholder:text-muted-foreground"
+              />
             </label>
-            <input
-              id="store-search"
-              name="q"
-              type="search"
-              placeholder="Buscar productos"
-              className="h-9 w-48 rounded-sf-btn border bg-background px-3 text-sm lg:w-64"
-            />
           </form>
           <Link
             href="/search"
-            className="flex h-10 w-10 items-center justify-center rounded-sf-btn hover:bg-surface sm:hidden"
             aria-label="Buscar"
+            className={`${iconButton} hidden @min-[720px]:flex @min-[1400px]:hidden`}
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
+            <Search size={21} aria-hidden />
           </Link>
           <CurrencySelect />
-          <CartLink />
-          <Link
-            href="/account"
-            className="flex h-10 w-10 items-center justify-center rounded-sf-btn hover:bg-surface"
-            aria-label="Mi cuenta"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden
-            >
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 21a8 8 0 0 1 16 0" />
-            </svg>
+          <Link href="/favorites" aria-label="Favoritos" className={`${iconButton} hidden @min-[720px]:flex`}>
+            <Heart size={21} aria-hidden />
           </Link>
+          <Link href="/account" aria-label="Mi cuenta" className={`${iconButton} hidden @min-[720px]:flex`}>
+            <User size={21} aria-hidden />
+          </Link>
+          <CartLink />
         </div>
       </div>
+
+      <div className="flex flex-col gap-3 pb-3 @min-[720px]:hidden">
+        <form action="/search" role="search" className="px-4">
+          <label className="flex h-11 items-center gap-2 rounded-sf-btn border border-border bg-surface px-3.5 text-sm text-muted-foreground focus-within:border-primary">
+            <Search size={18} aria-hidden className="shrink-0" />
+            <span className="sr-only">Buscar productos</span>
+            <input
+              name="q"
+              type="search"
+              placeholder={`Buscar en ${store.name}`}
+              className="w-full min-w-0 bg-transparent text-[15px] text-foreground outline-none placeholder:text-muted-foreground"
+            />
+          </label>
+        </form>
+        {chips.length > 0 && (
+          <nav aria-label="Categorías" className="sf-scroller flex gap-2 overflow-x-auto px-4">
+            {chips.map((chip) => (
+              <Link key={chip.href} href={chip.href} className={chipVariants()}>
+                {chip.label}
+              </Link>
+            ))}
+          </nav>
+        )}
+      </div>
     </header>
+  );
+}
+
+/** Hamburger below 1180: a <details> panel under the header, no JS needed. */
+function MobileMenu({ links }: { links: NavLink[] }) {
+  return (
+    <details className="group @min-[1180px]:hidden">
+      <summary
+        className={`${iconButton} -ml-2.5 cursor-pointer list-none [&::-webkit-details-marker]:hidden`}
+        aria-label="Menú"
+      >
+        <Menu size={22} aria-hidden />
+      </summary>
+      <nav
+        aria-label="Menú principal"
+        className="absolute inset-x-0 top-full max-h-[75dvh] overflow-y-auto border-b border-border bg-background px-[clamp(16px,4.4cqw,56px)] py-3 shadow-sf-lg"
+      >
+        <ul className="flex flex-col">
+          {links.map((link) => (
+            <li key={link.href + link.label}>
+              <Link href={link.href} className="block py-2.5 font-medium">
+                {link.label}
+              </Link>
+              {link.children.length > 0 && (
+                <ul className="mb-2 border-l border-border pl-4">
+                  {link.children.map((child) => (
+                    <li key={child.href + child.label}>
+                      <Link href={child.href} className="block py-2 text-sm text-muted-foreground">
+                        {child.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+          <li>
+            <Link href={SALE_HREF} className="flex items-center gap-1.5 py-2.5 font-semibold text-sale">
+              <Flame size={16} aria-hidden />
+              Ofertas
+            </Link>
+          </li>
+        </ul>
+      </nav>
+    </details>
   );
 }

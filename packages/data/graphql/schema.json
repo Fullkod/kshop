@@ -8461,6 +8461,379 @@
         },
         {
           "kind": "OBJECT",
+          "name": "CustomerFavorites",
+          "fields": [
+            {
+              "args": [],
+              "name": "nodeId",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "ID",
+                  "ofType": null
+                }
+              },
+              "description": "Globally Unique Record Identifier",
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "storeId",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "UUID",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "customerId",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "UUID",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "productId",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "UUID",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "createdAt",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Datetime",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "customers",
+              "type": {
+                "kind": "OBJECT",
+                "name": "Customers",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "products",
+              "type": {
+                "kind": "OBJECT",
+                "name": "Products",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            }
+          ],
+          "enumValues": [],
+          "interfaces": [
+            {
+              "kind": "INTERFACE",
+              "name": "Node",
+              "ofType": null
+            }
+          ],
+          "description": null,
+          "inputFields": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "OBJECT",
+          "name": "CustomerFavoritesConnection",
+          "fields": [
+            {
+              "args": [],
+              "name": "edges",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "OBJECT",
+                      "name": "CustomerFavoritesEdge",
+                      "ofType": null
+                    }
+                  }
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "pageInfo",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "PageInfo",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            }
+          ],
+          "enumValues": [],
+          "interfaces": [],
+          "description": null,
+          "inputFields": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "OBJECT",
+          "name": "CustomerFavoritesEdge",
+          "fields": [
+            {
+              "args": [],
+              "name": "cursor",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "node",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "CustomerFavorites",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            }
+          ],
+          "enumValues": [],
+          "interfaces": [],
+          "description": null,
+          "inputFields": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "INPUT_OBJECT",
+          "name": "CustomerFavoritesFilter",
+          "fields": null,
+          "enumValues": [],
+          "interfaces": [],
+          "description": null,
+          "inputFields": [
+            {
+              "name": "storeId",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "UUIDFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "customerId",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "UUIDFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "productId",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "UUIDFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "createdAt",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "DatetimeFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "nodeId",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "IDFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "and",
+              "type": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "CustomerFavoritesFilter",
+                    "ofType": null
+                  }
+                }
+              },
+              "description": "Returns true only if all its inner filters are true, otherwise returns false",
+              "defaultValue": null
+            },
+            {
+              "name": "or",
+              "type": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "CustomerFavoritesFilter",
+                    "ofType": null
+                  }
+                }
+              },
+              "description": "Returns true if at least one of its inner filters is true, otherwise returns false",
+              "defaultValue": null
+            },
+            {
+              "name": "not",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "CustomerFavoritesFilter",
+                "ofType": null
+              },
+              "description": "Negates a filter",
+              "defaultValue": null
+            }
+          ],
+          "possibleTypes": null
+        },
+        {
+          "kind": "INPUT_OBJECT",
+          "name": "CustomerFavoritesOrderBy",
+          "fields": null,
+          "enumValues": [],
+          "interfaces": [],
+          "description": null,
+          "inputFields": [
+            {
+              "name": "storeId",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "customerId",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "productId",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "createdAt",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            }
+          ],
+          "possibleTypes": null
+        },
+        {
+          "kind": "OBJECT",
           "name": "Customers",
           "fields": [
             {
@@ -8665,6 +9038,97 @@
               "type": {
                 "kind": "OBJECT",
                 "name": "Stores",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [
+                {
+                  "name": "first",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Query the first `n` records in the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "last",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Query the last `n` records in the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "before",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Cursor",
+                    "ofType": null
+                  },
+                  "description": "Query values in the collection before the provided cursor",
+                  "defaultValue": null
+                },
+                {
+                  "name": "after",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Cursor",
+                    "ofType": null
+                  },
+                  "description": "Query values in the collection after the provided cursor",
+                  "defaultValue": null
+                },
+                {
+                  "name": "offset",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.",
+                  "defaultValue": null
+                },
+                {
+                  "name": "filter",
+                  "type": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "CustomerFavoritesFilter",
+                    "ofType": null
+                  },
+                  "description": "Filters to apply to the results set when querying from the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "orderBy",
+                  "type": {
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "INPUT_OBJECT",
+                        "name": "CustomerFavoritesOrderBy",
+                        "ofType": null
+                      }
+                    }
+                  },
+                  "description": "Sort order to apply to the collection",
+                  "defaultValue": null
+                }
+              ],
+              "name": "customerFavoritesCollection",
+              "type": {
+                "kind": "OBJECT",
+                "name": "CustomerFavoritesConnection",
                 "ofType": null
               },
               "description": null,
@@ -17211,6 +17675,11 @@
             {
               "kind": "OBJECT",
               "name": "CustomerAddresses",
+              "ofType": null
+            },
+            {
+              "kind": "OBJECT",
+              "name": "CustomerFavorites",
               "ofType": null
             },
             {
@@ -34574,6 +35043,97 @@
                   "name": "filter",
                   "type": {
                     "kind": "INPUT_OBJECT",
+                    "name": "CustomerFavoritesFilter",
+                    "ofType": null
+                  },
+                  "description": "Filters to apply to the results set when querying from the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "orderBy",
+                  "type": {
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "INPUT_OBJECT",
+                        "name": "CustomerFavoritesOrderBy",
+                        "ofType": null
+                      }
+                    }
+                  },
+                  "description": "Sort order to apply to the collection",
+                  "defaultValue": null
+                }
+              ],
+              "name": "customerFavoritesCollection",
+              "type": {
+                "kind": "OBJECT",
+                "name": "CustomerFavoritesConnection",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [
+                {
+                  "name": "first",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Query the first `n` records in the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "last",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Query the last `n` records in the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "before",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Cursor",
+                    "ofType": null
+                  },
+                  "description": "Query values in the collection before the provided cursor",
+                  "defaultValue": null
+                },
+                {
+                  "name": "after",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Cursor",
+                    "ofType": null
+                  },
+                  "description": "Query values in the collection after the provided cursor",
+                  "defaultValue": null
+                },
+                {
+                  "name": "offset",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.",
+                  "defaultValue": null
+                },
+                {
+                  "name": "filter",
+                  "type": {
+                    "kind": "INPUT_OBJECT",
                     "name": "OrderLinesFilter",
                     "ofType": null
                   },
@@ -38191,6 +38751,156 @@
                 }
               },
               "description": "A pagable collection of type `CustomerAddresses`",
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [
+                {
+                  "name": "storeId",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "UUID",
+                      "ofType": null
+                    }
+                  },
+                  "description": "The record's `store_id` value",
+                  "defaultValue": null
+                },
+                {
+                  "name": "customerId",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "UUID",
+                      "ofType": null
+                    }
+                  },
+                  "description": "The record's `customer_id` value",
+                  "defaultValue": null
+                },
+                {
+                  "name": "productId",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "UUID",
+                      "ofType": null
+                    }
+                  },
+                  "description": "The record's `product_id` value",
+                  "defaultValue": null
+                }
+              ],
+              "name": "customerFavoritesByPk",
+              "type": {
+                "kind": "OBJECT",
+                "name": "CustomerFavorites",
+                "ofType": null
+              },
+              "description": "Retrieve a record of type `CustomerFavorites` by its primary key",
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [
+                {
+                  "name": "first",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Query the first `n` records in the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "last",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Query the last `n` records in the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "before",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Cursor",
+                    "ofType": null
+                  },
+                  "description": "Query values in the collection before the provided cursor",
+                  "defaultValue": null
+                },
+                {
+                  "name": "after",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Cursor",
+                    "ofType": null
+                  },
+                  "description": "Query values in the collection after the provided cursor",
+                  "defaultValue": null
+                },
+                {
+                  "name": "offset",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.",
+                  "defaultValue": null
+                },
+                {
+                  "name": "filter",
+                  "type": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "CustomerFavoritesFilter",
+                    "ofType": null
+                  },
+                  "description": "Filters to apply to the results set when querying from the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "orderBy",
+                  "type": {
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "INPUT_OBJECT",
+                        "name": "CustomerFavoritesOrderBy",
+                        "ofType": null
+                      }
+                    }
+                  },
+                  "description": "Sort order to apply to the collection",
+                  "defaultValue": null
+                }
+              ],
+              "name": "customerFavoritesCollection",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "CustomerFavoritesConnection",
+                  "ofType": null
+                }
+              },
+              "description": "A pagable collection of type `CustomerFavorites`",
               "isDeprecated": false,
               "deprecationReason": null
             },

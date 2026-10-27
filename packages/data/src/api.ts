@@ -1084,6 +1084,10 @@ export function createApiClient(options: ApiClientOptions) {
         updateAddress: (id: string, input: CustomerAddressInput) =>
           request<{ address: CustomerAddress }>("PATCH", `${base}/addresses/${id}`, input),
         deleteAddress: (id: string) => request<null>("DELETE", `${base}/addresses/${id}`),
+        favorites: () =>
+          request<{ productIds: string[]; products: ProductCardData[] }>("GET", `${base}/favorites`),
+        addFavorite: (productId: string) => request<null>("PUT", `${base}/favorites/${productId}`),
+        removeFavorite: (productId: string) => request<null>("DELETE", `${base}/favorites/${productId}`),
         orders: () => request<{ orders: CustomerOrderSummary[] }>("GET", `${base}/orders`),
         order: (orderId: string) => request<{ publicToken: string }>("GET", `${base}/orders/${orderId}`),
       };

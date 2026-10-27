@@ -1,6 +1,7 @@
 "use client";
 
 import { ApiError, type Cart } from "@kshop/data";
+import { ShoppingBag } from "@kshop/ui";
 import { Link } from "../navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useStore } from "../store-context";
@@ -137,32 +138,28 @@ export function useCart(): CartValue {
   return value;
 }
 
-/** Header link to the cart with the number of units. */
+/** Header link to the cart (filled, with the number of units). */
 export function CartLink() {
   const { count } = useCart();
   return (
     <Link
       href="/cart"
-      className="relative flex h-10 w-10 items-center justify-center rounded-sf-btn hover:bg-surface"
+      className="ml-1 flex h-11 min-w-11 items-center justify-center gap-2 rounded-sf-btn bg-primary px-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
       aria-label={count ? `Carrito, ${count} ${count === 1 ? "producto" : "productos"}` : "Carrito"}
     >
-      <svg
-        viewBox="0 0 24 24"
-        className="h-5 w-5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        aria-hidden
-      >
-        <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6" />
-        <circle cx="10" cy="20" r="1.3" />
-        <circle cx="17" cy="20" r="1.3" />
-      </svg>
-      {count > 0 && (
-        <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold text-primary-foreground">
-          {count > 99 ? "99+" : count}
-        </span>
-      )}
+      <ShoppingBag size={19} aria-hidden />
+      {count > 0 && <CountBadge count={count} />}
     </Link>
+  );
+}
+
+/** Units in the cart: header button and bottom tab bar. */
+export function CountBadge({ count, className = "" }: { count: number; className?: string }) {
+  return (
+    <span
+      className={`flex h-5 min-w-5 items-center justify-center rounded-full bg-secondary px-1.5 text-[11px] leading-none font-bold text-secondary-foreground ${className}`}
+    >
+      {count > 99 ? "99+" : count}
+    </span>
   );
 }

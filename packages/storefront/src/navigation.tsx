@@ -21,6 +21,8 @@ export type LinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & 
 
 export type Navigation = {
   Link: ComponentType<LinkProps>;
+  /** Hook: current path as the shopper sees it (/product/x), without the internal /s/{slug} rewrite. */
+  usePathname: () => string;
   push: (href: string) => void;
   replace: (href: string) => void;
 };
@@ -40,6 +42,11 @@ function useNavigation(): Navigation {
 export function Link(props: LinkProps) {
   const { Link: Impl } = useNavigation();
   return <Impl {...props} />;
+}
+
+/** Reads the URL: on the web, render it inside <Suspense> (Cache Components prerender). */
+export function usePathname(): string {
+  return useNavigation().usePathname();
 }
 
 export function useRouter(): Pick<Navigation, "push" | "replace"> {

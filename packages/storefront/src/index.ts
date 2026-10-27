@@ -3,6 +3,8 @@
 export * from "./navigation";
 export * from "./store-context";
 export * from "./theme-style";
+export * from "./components/AnnouncementBar";
+export * from "./components/BottomTabBar";
 export * from "./components/Currency";
 export * from "./components/HeroSlider";
 export * from "./components/HomeSections";
@@ -22,6 +24,7 @@ export * from "./cart/OrderView";
 export * from "./account/AccountForms";
 export * from "./account/AccountView";
 export * from "./account/CustomerSession";
+export * from "./account/Favorites";
 export * from "./account/MyOrder";
 export * from "./account/MyOrders";
 export * from "./components/pages";

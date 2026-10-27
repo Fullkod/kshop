@@ -85,11 +85,14 @@ function Link({ href, prefetch: _prefetch, scroll, replace, ...props }: LinkProp
   return <RouterLink to={href} replace={replace} preventScrollReset={scroll === false} {...props} />;
 }
 
+const useRouterPathname = () => useLocation().pathname;
+
 function RouterNavigation({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const value = useMemo(
     () => ({
       Link,
+      usePathname: useRouterPathname,
       push: (href: string) => void navigate(href),
       replace: (href: string) => void navigate(href, { replace: true }),
     }),

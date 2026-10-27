@@ -29,6 +29,7 @@
     "e2e:excel-load": "node scripts/e2e-excel-load.mjs",
     "e2e:orders": "node scripts/e2e-orders.mjs",
     "e2e:discounts": "node scripts/e2e-discounts.mjs",
+    "e2e:favorites": "node scripts/e2e-favorites.mjs",
     "e2e:billing": "node scripts/e2e-billing.mjs",
     "qa:billing": "node scripts/qa-billing.mjs",
     "e2e:pro": "node scripts/e2e-pro.mjs",

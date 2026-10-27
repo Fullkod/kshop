@@ -1,12 +1,16 @@
 import {
+  BottomTabBar,
   CartProvider,
   CurrencyProvider,
   CustomerSessionProvider,
+  FavoritesProvider,
+  headerChips,
   headerLinks,
   StoreFooter,
   StoreHeader,
   themeStyle,
 } from "@kshop/storefront";
+import { Suspense } from "react";
 import { AndroidAppBanner } from "@/features/mobile-app/components/AndroidAppBanner";
 import { getPublicStoreApp } from "@/server/app-builds";
 import { getStorefrontShell } from "@/server/storefront/data";
@@ -45,14 +49,19 @@ export default async function StorefrontLayout({ children, params }: LayoutProps
       </a>
       <CurrencyProvider storeId={store.id} currencies={shell.currencies}>
         <CustomerSessionProvider>
-          <CartProvider>
-            {app && <AndroidAppBanner storeName={store.name} />}
-            <StoreHeader store={store} links={header} />
-            <main id="content" className="flex-1">
-              {children}
-            </main>
-            <StoreFooter store={store} links={shell.footer} />
-          </CartProvider>
+          <FavoritesProvider>
+            <CartProvider>
+              {app && <AndroidAppBanner storeName={store.name} />}
+              <StoreHeader store={store} links={header} chips={headerChips(shell)} />
+              <main id="content" className="flex-1">
+                {children}
+              </main>
+              <StoreFooter store={store} links={shell.footer} currencies={shell.currencies} />
+              <Suspense fallback={null}>
+                <BottomTabBar />
+              </Suspense>
+            </CartProvider>
+          </FavoritesProvider>
         </CustomerSessionProvider>
       </CurrencyProvider>
     </div>

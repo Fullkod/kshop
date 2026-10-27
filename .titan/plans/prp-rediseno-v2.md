@@ -218,6 +218,23 @@ favoritos según D3. Hasta R5 la barra de anuncio se alimenta de una sección `a
 en R5; en R2 solo el componente).
 **Validación**: capturas a 1280, 1180, 1000, 720 y 390 sin solapes; la APK (Vite 5173 en Chromium a 390) con la barra
 fija; buscador, «sin conexión» y «versión nueva» siguen funcionando (`qa:apps`).
+**Hecha (2026-10-27)**: `StoreHeader` (consultas de contenedor `@min-[720px]`/`@min-[1180px]`/`@min-[1400px]` sobre
+`.sf-root`; logo y acciones `flex-none`, menú `overflow-x-clip` para no recortar los desplegables; «Ofertas» →
+`/products?sale=1`; en móvil buscador y chips de categorías; carrito relleno con contador `bg-secondary`),
+`StoreFooter` (`bg-ink`, columnas del menú `footer`: cada padre con hijos es una columna y los sueltos van en «Tienda»),
+`BottomTabBar` (sticky en la web dentro de `<Suspense>`, `fixed` + espaciador en la app, oculta en la ficha) y
+`AnnouncementBar` (sin conectar hasta R5). **Favoritos en BD (D3) adelantados a R2**, porque la cabecera y la barra los
+enlazan: `20261104100000_customer_favorites.sql`, suite `10_favorites_isolation` (14), API
+`/api/v1/stores/{id}/customer/favorites[/{productId}]` (GET, PUT y DELETE idempotentes), `FavoritesProvider`/`useFavorites` y
+página `/favorites` (sin sesión invita a entrar); `pnpm e2e:favorites` (12). El corazón de la tarjeta llega en R3.
+Página nueva `/categories` (pestaña «Categorías»). Lecturas: fragmento `StorefrontProductCard` compartido por el listado y
+`StorefrontProductCards` (tarjetas por id).
+Sin campo en BD, así que no se inventa: la **descripción de la tienda del pie** (propuesta: `stores.description text`
+≤ 300, editable en Apariencia; decidir en R5/R6) y el **año** del «©» (con Cache Components, `new Date()` en un componente
+prerenderizado falla; se pone «© {tienda}»). Evidencia: `.titan/qa/rediseno-v2/R2/` (1280, 1180, 1000, 720 y 390 en web y
+app, sin solapes ni scroll horizontal; barra inferior a y=775 + 68 = 844 tras el scroll; pestaña activa correcta en
+7 rutas en web y app). `qa:apps` 28/28 (la primera pasada dio un 500 puntual de pg_graphql tras la migración, ver
+«Ojo» de la Fase 7), RLS 568/568, typecheck, lint, test y build en verde.
 
 ### Fase R3: ProductCard, listados y carrito
 **Objetivo**: `ProductCard` `grid`/`row`/`compact` (favorito, -%, añadir rápido con selector de variante, puntos de
@@ -307,6 +324,10 @@ del estudio de precios), CTA final y pie con «Acceso Fullkod»; CTAs según D8.
   (y `pnpm codegen`) después. Para capturas «antes/después» con el dev corriendo, el stash funciona (HMR recompila).
 - **R0 — `container-type: inline-size` en `.sf-root`** no rompe los `position: fixed` de la tienda (menú móvil, hoja
   de filtros): comprobado a 390 tras hacer scroll.
+- **R2 — `usePathname()` de Next en el proveedor de navegación rompe el build** (`/s/[storeSlug]` envuelve también el
+  admin, con rutas de parámetros sin generar): «URL data outside of <Suspense>». El proveedor pasa un **hook**
+  (`Navigation.usePathname`) y solo lo llama quien lo necesita (la barra inferior, dentro de `<Suspense>` en la web).
+- **R2 — Vite no llega a `networkidle`** en Playwright: en la app usar `load` + espera.
 - **Aviso de Next en dev ajeno al rediseño**: «Could not validate that a segment in your UI has instant navigation» en
   `/admin` (`admin/page.tsx`) y `/admin/themes` (`themes/layout.tsx`). No rompe nada; revisar en R6 (admin).
 

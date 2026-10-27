@@ -1,8 +1,11 @@
 import type { StorefrontShell } from "@kshop/data";
 import {
+  BottomTabBar,
   CartProvider,
   CurrencyProvider,
   CustomerSessionProvider,
+  FavoritesProvider,
+  headerChips,
   headerLinks,
   NavigationProvider,
   StoreFooter,
@@ -28,7 +31,9 @@ import {
 import {
   AccountPage,
   CartPage,
+  CategoriesPage,
   CheckoutPage,
+  FavoritesPage,
   HomePage,
   ListingRoute,
   LoginPage,
@@ -52,11 +57,14 @@ function Link({ href, prefetch: _prefetch, scroll, replace, ...props }: LinkProp
   return <RouterLink to={href} replace={replace} preventScrollReset={scroll === false} {...props} />;
 }
 
+const useRouterPathname = () => useLocation().pathname;
+
 function RouterNavigation({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const value = useMemo(
     () => ({
       Link,
+      usePathname: useRouterPathname,
       push: (href: string) => void navigate(href),
       replace: (href: string) => void navigate(href, { replace: true }),
     }),
@@ -173,33 +181,38 @@ function StoreApp() {
           <div className="sf-root app-root flex min-h-dvh flex-col" style={themeStyle(s.theme)}>
             <CurrencyProvider storeId={s.id} currencies={shell.data.currencies}>
               <CustomerSessionProvider>
-                <CartProvider>
-                  <StoreHeader store={s} links={headerLinks(shell.data)} />
-                  <Banners stale={store.stale || shell.stale} info={info.data} />
-                  <ScrollToTop />
-                  <main id="content" className="flex-1">
-                    <Routes>
-                      <Route path="/" element={<HomePage />} />
-                      <Route path="/products" element={<ListingRoute kind="all" />} />
-                      <Route path="/search" element={<ListingRoute kind="search" />} />
-                      <Route path="/category/:slug" element={<ListingRoute kind="category" />} />
-                      <Route path="/collection/:slug" element={<ListingRoute kind="collection" />} />
-                      <Route path="/brand/:slug" element={<ListingRoute kind="brand" />} />
-                      <Route path="/product/:slug" element={<ProductPage />} />
-                      <Route path="/page/:slug" element={<StaticPage />} />
-                      <Route path="/cart" element={<CartPage />} />
-                      <Route path="/checkout" element={<CheckoutPage />} />
-                      <Route path="/order/:token" element={<OrderPage />} />
-                      <Route path="/account" element={<AccountPage />} />
-                      <Route path="/account/login" element={<LoginPage />} />
-                      <Route path="/account/register" element={<RegisterPage />} />
-                      <Route path="/account/recover" element={<RecoverPage />} />
-                      <Route path="/account/orders/:orderId" element={<MyOrderPage />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </main>
-                  <StoreFooter store={s} links={shell.data.footer} />
-                </CartProvider>
+                <FavoritesProvider>
+                  <CartProvider>
+                    <StoreHeader store={s} links={headerLinks(shell.data)} chips={headerChips(shell.data)} />
+                    <Banners stale={store.stale || shell.stale} info={info.data} />
+                    <ScrollToTop />
+                    <main id="content" className="flex-1">
+                      <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/products" element={<ListingRoute kind="all" />} />
+                        <Route path="/search" element={<ListingRoute kind="search" />} />
+                        <Route path="/category/:slug" element={<ListingRoute kind="category" />} />
+                        <Route path="/collection/:slug" element={<ListingRoute kind="collection" />} />
+                        <Route path="/brand/:slug" element={<ListingRoute kind="brand" />} />
+                        <Route path="/product/:slug" element={<ProductPage />} />
+                        <Route path="/page/:slug" element={<StaticPage />} />
+                        <Route path="/categories" element={<CategoriesPage />} />
+                        <Route path="/favorites" element={<FavoritesPage />} />
+                        <Route path="/cart" element={<CartPage />} />
+                        <Route path="/checkout" element={<CheckoutPage />} />
+                        <Route path="/order/:token" element={<OrderPage />} />
+                        <Route path="/account" element={<AccountPage />} />
+                        <Route path="/account/login" element={<LoginPage />} />
+                        <Route path="/account/register" element={<RegisterPage />} />
+                        <Route path="/account/recover" element={<RecoverPage />} />
+                        <Route path="/account/orders/:orderId" element={<MyOrderPage />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </main>
+                    <StoreFooter store={s} links={shell.data.footer} currencies={shell.data.currencies} />
+                    <BottomTabBar fixed />
+                  </CartProvider>
+                </FavoritesProvider>
               </CustomerSessionProvider>
             </CurrencyProvider>
           </div>

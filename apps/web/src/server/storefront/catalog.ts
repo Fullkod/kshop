@@ -5,6 +5,7 @@ import {
   fetchHome,
   fetchPage,
   fetchProduct,
+  fetchProductCards,
   fetchProducts,
   type Facets,
   type HomeSection,
@@ -35,6 +36,13 @@ export async function getProducts(
   "use cache";
   storefrontCache(storeId);
   return fetchProducts(anonGraphql, storeId, filters, sort, page, perPage);
+}
+
+/** Product cards by id (favorites): cached per set of ids, like the listings. */
+export async function getProductCards(storeId: string, ids: string[]): Promise<ProductCardData[]> {
+  "use cache";
+  storefrontCache(storeId);
+  return fetchProductCards(anonGraphql, storeId, ids);
 }
 
 export async function getFacets(storeId: string, filters: ProductFilters): Promise<Facets> {

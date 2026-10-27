@@ -125,6 +125,44 @@ export const StorefrontHomeQuery = graphql(`
 `);
 
 /** Product card fields, shared by listings, carousels and related products. */
+/** Fields of a product card (listings, carousels, favorites). */
+export const StorefrontProductCardFragment = graphql(`
+  fragment StorefrontProductCard on Products {
+    id
+    slug
+    name
+    minPrice
+    maxPrice
+    inStock
+    primaryMediaUrl
+    brands {
+      name
+    }
+    productVariantsCollection(first: 20) {
+      edges {
+        node {
+          price
+          compareAtPrice
+          variantPromotions {
+            promoPrice
+            reward
+            value
+            promotionName
+          }
+          variantPricesCollection(first: 3) {
+            edges {
+              node {
+                currency
+                price
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`);
+
 export const StorefrontProductsQuery = graphql(`
   query StorefrontProducts(
     $storeId: UUID!
@@ -159,38 +197,20 @@ export const StorefrontProductsQuery = graphql(`
       totalCount
       edges {
         node {
-          id
-          slug
-          name
-          minPrice
-          maxPrice
-          inStock
-          primaryMediaUrl
-          brands {
-            name
-          }
-          productVariantsCollection(first: 20) {
-            edges {
-              node {
-                price
-                compareAtPrice
-                variantPromotions {
-                  promoPrice
-                  reward
-                  value
-                  promotionName
-                }
-                variantPricesCollection(first: 3) {
-                  edges {
-                    node {
-                      currency
-                      price
-                    }
-                  }
-                }
-              }
-            }
-          }
+          ...StorefrontProductCard
+        }
+      }
+    }
+  }
+`);
+
+/** Published product cards by id (favorites), at most 100. */
+export const StorefrontProductCardsQuery = graphql(`
+  query StorefrontProductCards($storeId: UUID!, $ids: [UUID!]!) {
+    productsCollection(filter: { storeId: { eq: $storeId }, id: { in: $ids } }, first: 100) {
+      edges {
+        node {
+          ...StorefrontProductCard
         }
       }
     }
