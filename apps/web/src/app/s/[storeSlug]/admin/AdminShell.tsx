@@ -27,6 +27,7 @@ import { platformProtocol, publicEnv } from "@/env";
 import { ADMIN_MODULES } from "@/features/registry";
 import { ADMIN_GROUPS, type AdminGroup } from "@/features/types";
 import { useSession } from "@/lib/session";
+import { useStoreVersion } from "@kshop/admin";
 import { useStore } from "@kshop/storefront";
 import { AdminContext, loadAdminState, type AdminState } from "./admin-context";
 import { AccountBanner } from "./AccountBanner";
@@ -70,6 +71,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [state, setState] = useState<LoadState>({ kind: "loading" });
   const [toConfirm, setToConfirm] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const live = useStoreVersion(isPublic ? null : store.id);
   const userId = session?.user.id;
 
   useEffect(() => {
@@ -92,7 +94,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
     };
   }, [userId, isPublic, api, graphql, store.id]);
 
-  // Orders waiting for confirmation: the bell's dot and the counter of «Pedidos», refreshed on every page change.
+  // Orders waiting for confirmation: the bell's dot and the counter of «Pedidos», refreshed on every page change and
+  // on every order change (Realtime).
   const ordersOn = state.kind === "ready" && state.admin.enabledModules.has("orders");
   useEffect(() => {
     if (!ordersOn) return;
@@ -107,7 +110,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [ordersOn, api, store.id, pathname]);
+  }, [ordersOn, api, store.id, pathname, live]);
 
   if (isPublic) return <>{children}</>;
   if (!ready || !session || state.kind === "loading") {

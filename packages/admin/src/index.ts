@@ -2,6 +2,7 @@
 // the storefront's NavigationProvider, the store from StoreProvider and the staff session from SessionProvider:
 // nothing here imports Next.
 export * from "./session";
+export * from "./realtime";
 export * from "./admin-context";
 export * from "./images";
 export * from "./catalog/use-catalog";

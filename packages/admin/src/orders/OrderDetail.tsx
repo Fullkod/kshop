@@ -21,6 +21,7 @@ import { AdminOrderQuery, type ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, Card, cn, Input, Label, Select } from "@kshop/ui";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useApiAction } from "../catalog/use-catalog";
+import { useStoreVersion } from "../realtime";
 import { useSession } from "../session";
 import { Link, useStore } from "@kshop/storefront";
 import { useCheckoutSettings } from "./use-orders";
@@ -88,6 +89,8 @@ export function OrderDetail({
   const [order, setOrder] = useState<OrderNode | null>(null);
   const [missing, setMissing] = useState(false);
   const [version, setVersion] = useState(0);
+  // Read again when the order changes elsewhere (another device, the customer, a payment).
+  const live = useStoreVersion(store.id);
   const signedEvidenceUrl = useCallback(
     async (path: string) =>
       (await supabase.storage.from(EVIDENCE_BUCKET).createSignedUrl(path, 60 * 60)).data?.signedUrl ?? null,
@@ -108,7 +111,7 @@ export function OrderDetail({
     return () => {
       cancelled = true;
     };
-  }, [graphql, orderId, store.id, version]);
+  }, [graphql, orderId, store.id, version, live]);
 
   const reload = useCallback(() => setVersion((v) => v + 1), []);
   const run = async (fn: () => Promise<unknown>) => {

@@ -4,6 +4,7 @@ import { formatMoney, ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS, SHIPPING_TYPE_
 import type { PublicOrder } from "@kshop/data";
 import { Alert, Badge, Card } from "@kshop/ui";
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { useOrderVersion } from "../account/CustomerSession";
 import { usePublicApi, useStore } from "../store-context";
 
 // Public order page (/order/{token}): confirmation after the checkout and the link the customer keeps.
@@ -27,6 +28,7 @@ export function OrderView({ token }: { token: string }) {
   const [order, setOrder] = useState<PublicOrder | null>(null);
   const [missing, setMissing] = useState(false);
   const isNew = useSyncExternalStore(noSubscribe, readIsNew, () => false);
+  const live = useOrderVersion(token);
 
   useEffect(() => {
     publicApi
@@ -36,7 +38,7 @@ export function OrderView({ token }: { token: string }) {
         (r) => setOrder(r.order),
         () => setMissing(true),
       );
-  }, [publicApi, store.id, token]);
+  }, [publicApi, store.id, token, live]);
 
   if (missing) return <p className="py-12 text-center">No encontramos este pedido.</p>;
   if (!order) return <p className="py-12 text-center text-muted-foreground">Cargando…</p>;

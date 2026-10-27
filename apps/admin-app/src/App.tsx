@@ -97,8 +97,6 @@ const sessionConfig: AdminConfig = {
   takePhoto: isNative ? takePhoto : undefined,
 };
 
-/** Orders are refreshed every minute while the list is open (D9: no push notifications in v1). */
-const ORDERS_REFRESH_MS = 60_000;
 const SELECTED_STORE_KEY = "kshop-admin-store";
 
 function readSelectedStore(): string | null {
@@ -432,7 +430,7 @@ function Shell({ onSwitch }: { onSwitch?: () => void }) {
                 path="/admin/orders"
                 element={
                   <Screen title="Pedidos">
-                    <OrderList refreshEvery={ORDERS_REFRESH_MS} />
+                    <OrderList />
                     <a
                       href={webAdminUrl(store.slug, "/admin/orders/new")}
                       target="_blank"

@@ -18,6 +18,7 @@ import { AdminOrdersQuery, type VariablesOf } from "@kshop/data";
 import { Alert, Badge, Button, Card, Input, MessageCircle, cn } from "@kshop/ui";
 import { useEffect, useState } from "react";
 import { useApiAction } from "../catalog/use-catalog";
+import { useStoreVersion } from "../realtime";
 import { useSession } from "../session";
 import { Link, useStore } from "@kshop/storefront";
 import { useCheckoutSettings } from "./use-orders";
@@ -81,8 +82,8 @@ export function StatusPill({ status }: { status: OrderStatus }) {
   );
 }
 
-/** `refreshEvery` (ms): reloads the list while it is open (admin app, PRP-7 D9: no push notifications). */
-export function OrderList({ refreshEvery }: { refreshEvery?: number } = {}) {
+/** The list reads again on its own when an order of the store changes (Realtime). */
+export function OrderList() {
   const store = useStore();
   const { graphql, api } = useSession();
   const { data: settings } = useCheckoutSettings();
@@ -93,6 +94,7 @@ export function OrderList({ refreshEvery }: { refreshEvery?: number } = {}) {
   const [total, setTotal] = useState(0);
   const [cursor, setCursor] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
+  const live = useStoreVersion(store.id);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const filter = (): Filter => {
@@ -109,12 +111,6 @@ export function OrderList({ refreshEvery }: { refreshEvery?: number } = {}) {
       ],
     };
   };
-
-  useEffect(() => {
-    if (!refreshEvery) return;
-    const timer = setInterval(() => setVersion((v) => v + 1), refreshEvery);
-    return () => clearInterval(timer);
-  }, [refreshEvery]);
 
   async function load(after: string | null) {
     const result = await graphql
@@ -154,7 +150,7 @@ export function OrderList({ refreshEvery }: { refreshEvery?: number } = {}) {
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load() is derived from these
-  }, [graphql, store.id, tab, query, version]);
+  }, [graphql, store.id, tab, query, version, live]);
 
   async function quick(row: Row, to: Exclude<OrderStatus, "cancelled">) {
     const ok = await action.run(() => api.orders(store.id).transition(row.id, to));

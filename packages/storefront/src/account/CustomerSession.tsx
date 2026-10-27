@@ -3,6 +3,7 @@
 import {
   createApiClient,
   createAuthClient,
+  subscribeToChanges,
   type ApiClient,
   type CustomerAuthResponse,
   type CustomerProfile,
@@ -143,4 +144,20 @@ export function PreviewCustomerSessionProvider({ api, children }: { api: ApiClie
     setCustomer: () => {},
   };
   return <CustomerSessionContext.Provider value={value}>{children}</CustomerSessionContext.Provider>;
+}
+
+/**
+ * A counter that goes up when the order with this public token changes (Realtime, public topic: the token is the
+ * secret of its page). The order page reads again with it: the customer sees «Confirmado», «Pagado»… on their own.
+ */
+export function useOrderVersion(token: string | null): number {
+  const config = useStorefrontConfig();
+  const [version, setVersion] = useState(0);
+  useEffect(() => {
+    if (!token) return;
+    return subscribeToChanges(getCustomerClient(config), `order:${token}`, () => setVersion((v) => v + 1), {
+      isPrivate: false,
+    });
+  }, [config, token]);
+  return version;
 }

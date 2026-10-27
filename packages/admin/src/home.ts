@@ -4,6 +4,7 @@ import type { CurrencyCode, OrderStatus, PaymentStatus, ShippingType } from "@ks
 import { AdminOrdersQuery, type HomeSummary, type SalesToday } from "@kshop/data";
 import { useStore } from "@kshop/storefront";
 import { useEffect, useState } from "react";
+import { useStoreVersion } from "./realtime";
 import { useSession } from "./session";
 
 export type RecentOrder = {
@@ -39,6 +40,8 @@ export function useAdminHome({
   const store = useStore();
   const { api, graphql } = useSession();
   const [data, setData] = useState<AdminHome>({ summary: null, today: null, recent: null });
+  // Read again on every order or payment of the store (Realtime).
+  const version = useStoreVersion(store.id);
 
   useEffect(() => {
     let cancelled = false;
@@ -71,7 +74,7 @@ export function useAdminHome({
     return () => {
       cancelled = true;
     };
-  }, [api, graphql, store.id, salesToday, recent]);
+  }, [api, graphql, store.id, salesToday, recent, version]);
 
   return data;
 }

@@ -20,6 +20,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useApiAction } from "@/features/catalog/use-catalog";
 import { useCheckoutSettings } from "@/features/orders/use-orders";
+import { useStoreVersion } from "@kshop/admin";
 import { useSession } from "@/lib/session";
 import { useStore } from "@kshop/storefront";
 
@@ -474,6 +475,8 @@ function useNotificationLog(orderId?: string) {
   const { graphql } = useSession();
   const [rows, setRows] = useState<LogRow[] | null>(null);
   const [version, setVersion] = useState(0);
+  // New notices and their sending status arrive on their own (Realtime).
+  const live = useStoreVersion(store.id);
   useEffect(() => {
     let cancelled = false;
     graphql
@@ -503,7 +506,7 @@ function useNotificationLog(orderId?: string) {
     return () => {
       cancelled = true;
     };
-  }, [graphql, store.id, orderId, version]);
+  }, [graphql, store.id, orderId, version, live]);
   const reload = useCallback(() => setVersion((v) => v + 1), []);
   return { rows, reload };
 }

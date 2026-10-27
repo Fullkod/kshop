@@ -2,6 +2,7 @@ export * from "./api";
 export * from "./graphql";
 export * from "./queries";
 export * from "./supabase";
+export * from "./realtime";
 export type { ResultOf, VariablesOf } from "@graphql-typed-document-node/core";
 export * from "./catalog-queries";
 export * from "./storefront-queries";

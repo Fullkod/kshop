@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { InvoiceActions } from "@/features/billing/components/InvoiceActions";
 import { InvoiceCard } from "@/features/billing/components/BillingParts";
+import { useRealtimeVersion } from "@kshop/admin";
 import { useSession } from "@/lib/session";
 
 // Superadmin › Cobros: what to collect (overdue first), the cash received, and the settings of the billing cycle.
@@ -28,6 +29,8 @@ export default function SuperadminBillingPage() {
   const [fields, setFields] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
+  // New invoices and payments show on their own (Realtime).
+  const live = useRealtimeVersion("platform");
 
   useEffect(() => {
     let cancelled = false;
@@ -38,7 +41,7 @@ export default function SuperadminBillingPage() {
     return () => {
       cancelled = true;
     };
-  }, [api, tab, version]);
+  }, [api, tab, version, live]);
 
   useEffect(() => {
     api.platform.billingSettings().then(setSettings, () => setError("No se pudo cargar la configuración."));

@@ -4,6 +4,7 @@ import { WHATSAPP_MODE_LABELS, WHATSAPP_MODES, type WhatsappMode } from "@kshop/
 import { ApiError, type PlatformWhatsapp } from "@kshop/data";
 import { Alert, Button, Card, FieldError, Input, Label, Select } from "@kshop/ui";
 import { useEffect, useState, type FormEvent } from "react";
+import { useRealtimeVersion } from "@kshop/admin";
 import { useSession } from "@/lib/session";
 
 // The platform WhatsApp (one OpenWA session for every store, only outgoing notices). While there is no instance
@@ -33,18 +34,16 @@ export default function SuperadminWhatsappPage() {
     };
   }, [api]);
 
-  // Notices leave within a minute (pg_cron): the counters are read again while the page is open, without touching
-  // the form.
+  // Notices leave within a minute (pg_cron): the counters are read again on every notice change (Realtime), without
+  // touching the form.
+  const live = useRealtimeVersion("platform");
   useEffect(() => {
-    const timer = setInterval(() => {
-      if (document.visibilityState !== "visible") return;
-      api.platform
-        .whatsapp()
-        .then((d) => setData((current) => (current ? { ...current, queue: d.queue } : d)))
-        .catch(() => {});
-    }, 15_000);
-    return () => clearInterval(timer);
-  }, [api]);
+    if (!live) return;
+    api.platform
+      .whatsapp()
+      .then((d) => setData((current) => (current ? { ...current, queue: d.queue } : d)))
+      .catch(() => {});
+  }, [api, live]);
 
   async function run(action: () => Promise<void>) {
     setPending(true);
