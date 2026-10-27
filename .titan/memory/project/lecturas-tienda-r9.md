@@ -22,9 +22,22 @@ de subir la instancia. Diagnóstico y decisiones en `.titan/plans/prp-r9-lectura
   ediciones del admin siguen expirando al momento (`invalidateCatalog`).
 - `getCarousel` cacheado en `apps/web` para relacionados de la ficha y portada de respaldo.
 
-## Pendiente (medido, no hecho)
-- RLS por fila de variantes/precios/valores (`product_is_public`, `variant_is_public`): 3 tablas por fila.
-- `storefront_product_facets` recorre el catálogo una vez por atributo filtrable.
-- `hasModule` → `store_entitlements` en cada llamada a la API (7 322 llamadas, 13 ms); cacheable por tienda.
-- `storefront_features` (10–13 ms) en cada shell.
+## Deuda resuelta en R10 (2026-10-27, `prp-r10-deuda-lecturas.md`)
+- RLS de `products` y sus 8 tablas hijas: ya no llaman una función por fila; usan `product_id in (select
+  private.public_product_ids())` (y `public_variant_ids`, `public_store_ids`), subconsultas sin correlación que
+  Postgres convierte en un subplan hash construido **una vez por consulta** (también una vez por colección anidada
+  de pg_graphql, no por producto). 777 variantes de la Demo como anon: 16–101 ms y 3 968 bloques → **3,9 ms y
+  919 bloques**. Coste nuevo: una pasada por los productos publicados de toda la plataforma por consulta (hoy 255
+  ids); si algún día son cientos de miles, repensar (p. ej. ids por tienda). Mismas reglas de visibilidad; 598 tests.
+- `storefront_product_facets`: calcula los ids una vez y solo vuelve a buscar para un atributo con valor
+  seleccionado, para el precio si hay filtro de precio y para las marcas si hay filtro de marca. Sin filtros:
+  **267 ms y 23 563 bloques → 36 ms y 3 205 bloques**.
+- `hasModule` (API): `getStoreModules` con `"use cache"` por tienda (`entitlements:{storeId}`, `cacheLife("minutes")`);
+  `expireStoreCaches` la expira en cada cambio de plan, add-on, grant o estado. Cambios hechos **por SQL directo**
+  (o el job diario) tardan hasta ≈ 1 min en verse en la API, como el `stores` cacheado; la BD sigue comprobando
+  `private.store_has_module` en las escrituras críticas. Los `e2e:*` deben conceder módulos por la API del superadmin
+  (así lo hace ya `e2e-catalog.mjs`), no por `set_store_module_grant` a mano.
+- `storefront_features`: medida en 2,7 ms (no 10–13) y va en el shell cacheado; se deja.
+
+## Pendiente
 - Subir la instancia cuando entren tiendas reales (klauShop): la Nano se estrangula con cualquier ráfaga.

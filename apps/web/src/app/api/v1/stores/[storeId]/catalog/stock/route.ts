@@ -1,5 +1,6 @@
 import { stockInputSchema } from "@kshop/core";
 import { NextResponse } from "next/server";
+import { requireModule } from "@/server/auth";
 import { invalidateCatalog, requireCatalogAccess } from "@/server/catalog/access";
 import { mapDbError } from "@/server/db-errors";
 import { apiHandler, HttpError, readJson } from "@/server/http";
@@ -21,18 +22,7 @@ export const PUT = apiHandler(
       .maybeSingle();
     if (!warehouse) throw new HttpError(400, "invalid_reference", "El almacén no existe en esta tienda.");
     // Stock outside the default warehouse is part of multi_warehouse.
-    if (!warehouse.is_default) {
-      const { data: enabled } = await db
-        .rpc("store_entitlements", { p_store_id: storeId })
-        .eq("module_code", "multi_warehouse");
-      if (!enabled?.length) {
-        throw new HttpError(
-          403,
-          "module_not_enabled",
-          "Esta función no está incluida en el plan de la tienda.",
-        );
-      }
-    }
+    if (!warehouse.is_default) await requireModule(storeId, "multi_warehouse");
 
     const { data, error } = await db.rpc("set_stock_quantity", {
       p_store_id: storeId,

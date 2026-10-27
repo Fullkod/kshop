@@ -25,6 +25,7 @@ const USERS = {
   ownerA: "cat-owner-a@e2e.kshop.test",
   staffA: "cat-staff-a@e2e.kshop.test",
   ownerB: "cat-owner-b@e2e.kshop.test",
+  superadmin: "cat-superadmin@e2e.kshop.test",
 };
 const SLUGS = ["cat-e2e-a", "cat-e2e-b"];
 
@@ -79,6 +80,7 @@ async function run() {
       email,
       password: PASSWORD,
       email_confirm: true,
+      ...(key === "superadmin" && { app_metadata: { role: "superadmin" } }),
     });
     if (error) throw error;
     ids[key] = data.user.id;
@@ -121,6 +123,7 @@ async function run() {
   const ownerA = api(await token(USERS.ownerA));
   const staffA = api(await token(USERS.staffA));
   const ownerB = api(await token(USERS.ownerB));
+  const superadmin = api(await token(USERS.superadmin));
   const A = `/stores/${storeA.id}/catalog`;
   const B = `/stores/${storeB.id}/catalog`;
 
@@ -282,15 +285,13 @@ async function run() {
   // Phase 5: the look is not in Base; the platform gives it to store A as a grant.
   r = await ownerA("PUT", `${CA}/theme`, { preset: "warm" });
   check("content: Base store without the look module -> 403", r.status === 403, r);
-  const { error: grantError } = await service.rpc("set_store_module_grant", {
-    p_store_id: storeA.id,
-    p_module_code: "themes",
-    p_enabled: true,
-    p_ends_at: null,
-    p_reason: "e2e",
-    p_user_id: null,
+  // Through the platform API, like the superadmin panel: the app also expires its per-store module cache (R10).
+  r = await superadmin("PUT", `/platform/stores/${storeA.id}/subscription/module-grants`, {
+    moduleCode: "themes",
+    enabled: true,
+    reason: "e2e",
   });
-  if (grantError) throw grantError;
+  check("platform: look module granted to A -> 200", r.status === 200, r);
   r = await ownerA("PUT", `${CA}/theme`, { preset: "nope" });
   check("content: invalid preset -> 400", r.status === 400, r);
   r = await ownerA("PUT", `${CA}/theme`, { preset: "warm", colors: { accent: "#112233" } });

@@ -79,6 +79,7 @@ Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desa
 | v2. Rediseño (R0–R7) | Hecha. **Pendiente**: recompilar las APK (con permiso) y probar en móvil real realtime y favoritos tras «sin conexión»; Lighthouse móvil de la landing 87 (objetivo 90, limitación de todo el sitio) | `prp-rediseno-v2.md`, `project/2026-10-27-rediseno-v2.md` | `0c71388`, `f6aa223` |
 | R8. Superadmin v2 + Realtime | Hecha, pendiente de la revisión de Roberto | `prp-r8-superadmin-y-realtime.md`, `project/pendiente-realtime.md` | `da1a97d`, `eecd58f` |
 | R9. Lecturas de la tienda | Hecha, pendiente de la revisión de Roberto: portada en 2 tandas, carruseles por índice, conteos de lo mostrado, refresco en segundo plano tras un pedido; sidebars con arriba y abajo fijos | `prp-r9-lecturas-tienda.md`, `project/lecturas-tienda-r9.md` | `8be1278` |
+| R10. Deuda de lecturas | Hecha (aprobada por Roberto el 2026-10-27): RLS del catálogo con subplan hash (777 variantes 16–101 ms → 3,9 ms), facetas en una pasada (267 → 36 ms), `hasModule` cacheado por tienda | `prp-r10-deuda-lecturas.md`, `project/lecturas-tienda-r9.md` | ver PRP |
 | 8. Migrar klauShop | **Sin empezar.** Antes: decidir la instancia de Supabase (la Nano se estrangula con ráfagas) | — | — |
 
 El remoto `origin` (`Fullkod/kshop`) lo sube Roberto. Al 2026-10-27 está al día hasta `f6aa223`; `8be1278` (R9) y

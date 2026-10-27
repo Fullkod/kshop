@@ -21,6 +21,7 @@ import type {
   StoreUsage,
 } from "@kshop/data";
 import { revalidateTag } from "next/cache";
+import { entitlementsCacheTag } from "../auth";
 import { invalidateCatalog } from "../catalog/access";
 import { mapDbError } from "../db-errors";
 import { notFound } from "../http";
@@ -49,6 +50,7 @@ export async function expireStoreCaches(storeIds: string[]): Promise<void> {
   const { data } = await getServiceClient().from("stores").select("id, slug").in("id", storeIds);
   for (const store of data ?? []) {
     revalidateTag(storeCacheTag(store.slug), { expire: 0 });
+    revalidateTag(entitlementsCacheTag(store.id), { expire: 0 });
     invalidateCatalog(store.id);
   }
 }

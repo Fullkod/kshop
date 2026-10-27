@@ -1,5 +1,6 @@
 import "server-only";
 import { hasMinRole, type ModuleCode, type StoreRole } from "@kshop/core";
+import { cacheLife, cacheTag } from "next/cache";
 import { forbidden, HttpError, unauthorized } from "./http";
 import { getServiceClient } from "./supabase";
 
@@ -61,13 +62,26 @@ export async function requireStoreRole(
   return role;
 }
 
+export const entitlementsCacheTag = (storeId: string) => `entitlements:${storeId}`;
+
+/**
+ * Active modules of a store, cached per store (R10): requireModule ran store_entitlements on every API call
+ * (14 modules × store_has_module, ~5 ms). Plan, add-on, grant and status changes expire the tag
+ * (expireStoreCaches); the daily suspension from the database shows within about a minute, like the cached store.
+ * The database keeps its own check (private.store_has_module) on every critical write.
+ */
+async function getStoreModules(storeId: string): Promise<string[]> {
+  "use cache";
+  cacheTag(entitlementsCacheTag(storeId));
+  cacheLife("minutes");
+  const { data, error } = await getServiceClient().rpc("store_entitlements", { p_store_id: storeId });
+  if (error) throw error;
+  return ((data ?? []) as { module_code: string }[]).map((m) => m.module_code);
+}
+
 /** Whether the store has an active module (service role: no membership needed). */
 export async function hasModule(storeId: string, code: ModuleCode): Promise<boolean> {
-  const { data, error } = await getServiceClient()
-    .rpc("store_entitlements", { p_store_id: storeId })
-    .eq("module_code", code);
-  if (error) throw error;
-  return !!data && data.length > 0;
+  return (await getStoreModules(storeId)).includes(code);
 }
 
 /** API layer of the module check (UI uses entitlements, the database uses private.store_has_module). */
