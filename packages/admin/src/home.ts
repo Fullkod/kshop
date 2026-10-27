@@ -90,6 +90,11 @@ export function dayChange(
   return yesterday > 0 ? Math.round(((today - yesterday) / yesterday) * 100) : null;
 }
 
+/** Change against the previous period in whole percent (null when the previous one had nothing). */
+export function periodChange(current: number, previous: number): number | null {
+  return previous > 0 ? Math.round(((current - previous) / previous) * 100) : null;
+}
+
 /** «Buenos días / tardes / noches» by the local hour. */
 export function greeting(date = new Date()): string {
   const h = date.getHours();

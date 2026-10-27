@@ -29,7 +29,7 @@ insert into public.notification_log (store_id, audience, event, recipient, messa
 values (tests.fx('store_b'), 'store', 'test', '+5350000002', 'x', 'simulated');
 
 -- ---------------------------------------------------------------------------
--- Signals
+-- Signals (only this transaction's: the table keeps the real ones of the last days)
 -- ---------------------------------------------------------------------------
 
 select tests.eq('an order of A signals its store topic (insert and update), without row data', (
@@ -42,7 +42,8 @@ select tests.check('the order page topic is public and carries only the status',
 select tests.check('a WhatsApp notice of B signals the topic of B and the platform', (
   select count(*) from realtime.messages
   where private and payload ->> 'table' = 'notification_log'
-    and topic in ('store:' || tests.fx('store_b'), 'platform')) = 2);
+    and topic in ('store:' || tests.fx('store_b'), 'platform')
+    and inserted_at >= now() at time zone 'utc') = 2);
 
 -- ---------------------------------------------------------------------------
 -- Isolation (realtime.topic() is what the Realtime server sets for the channel being joined)

@@ -18,13 +18,13 @@ export function OrdersNav() {
       ? pathname === href || /^\/admin\/orders\/[0-9a-f-]{36}$/.test(pathname)
       : pathname.startsWith(href);
   return (
-    <nav className="mb-6 flex gap-5 overflow-x-auto border-b" aria-label="Secciones de pedidos">
+    <nav className="mb-6 flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none]" aria-label="Secciones de pedidos">
       {SECTIONS.map((s) => (
         <Link
           key={s.href}
           href={s.href}
           className={cn(
-            "-mb-px border-b-2 border-transparent pt-1 pb-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground hover:text-foreground",
+            "shrink-0 border-b-2 border-transparent pt-1 pb-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground hover:text-foreground",
             active(s.href) && "border-primary font-bold text-primary",
           )}
         >

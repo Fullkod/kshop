@@ -1,6 +1,8 @@
-import { storeOrigin, type ModuleCode } from "@kshop/core";
+import { resolveTheme, storeOrigin, THEME_PRESETS, type ModuleCode, type ThemePresetKey } from "@kshop/core";
 import type { BillingPlan } from "@kshop/data";
-import { CurrentYear, whatsappUrl } from "@kshop/storefront";
+import { whatsappUrl } from "@kshop/storefront";
+// Subpath: the barrel would put the whole storefront in the landing's first JS.
+import { CurrentYear } from "@kshop/storefront/current-year";
 import {
   ArrowRight,
   Check,
@@ -117,6 +119,15 @@ function planLines(plan: BillingPlan, previous: BillingPlan | undefined, order: 
       : `${maxStaff} ${maxStaff === 1 ? "persona" : "personas"} en el equipo`,
   ];
 }
+
+// The six presets resolved here: the theme block (client) gets plain data instead of importing @kshop/core (zod).
+const PRESETS = (Object.keys(THEME_PRESETS) as ThemePresetKey[]).map((key) => ({
+  key,
+  label: THEME_PRESETS[key].label,
+  accent: THEME_PRESETS[key].colors.accent,
+  secondary: THEME_PRESETS[key].colors.secondary,
+  theme: resolveTheme({ preset: key }),
+}));
 
 const container = "relative mx-auto w-full max-w-[1200px] px-[clamp(16px,4cqw,40px)]";
 const eyebrow = "text-[13px] leading-none font-bold tracking-[.1em] text-primary uppercase";
@@ -270,7 +281,7 @@ export default async function PlatformHome() {
       {/* Themes */}
       {demo && (
         <section id="temas" className={`${container} scroll-mt-4 pt-[clamp(56px,7cqw,104px)]`}>
-          <LandingThemes demo={demo} />
+          <LandingThemes demo={demo} presets={PRESETS} />
         </section>
       )}
 

@@ -2,8 +2,8 @@
 
 import { formatMoney, formatPhone, orderCode, SHIPPING_TYPE_LABELS, type CurrencyCode } from "@kshop/core";
 import {
-  dayChange,
   greeting,
+  periodChange,
   StatusPill,
   useAdminHome,
   useCheckoutSettings,
@@ -18,18 +18,25 @@ import {
   type LucideIcon,
   MessageCircle,
   Package,
+  Segmented,
   ShoppingBag,
   TrendingUp,
   Truck,
   Wallet,
 } from "@kshop/ui";
-import type { HomeSummary } from "@kshop/data";
+import type { HomePeriod, HomeSummary } from "@kshop/data";
 import { Link, useStore } from "@kshop/storefront";
 import { useState } from "react";
 import { useAdmin } from "./admin-context";
 
-// Admin › Inicio (redesign R6): greeting, four KPIs (sold today, received, owed, orders today), the week's sales,
-// «Por hacer» and the latest orders. Money in the base currency; «vs ayer» comes from the week (no extra endpoint).
+// Admin › Inicio (redesign R6): greeting, four KPIs (sold, received, owed, orders) for «Hoy · 7 días · Mes» against
+// the previous period, the week's sales, «Por hacer» and the latest orders. Money in the base currency.
+
+const PERIODS: Record<HomePeriod, { tab: string; when: string; vs: string }> = {
+  day: { tab: "Hoy", when: "hoy", vs: "vs ayer" },
+  week: { tab: "7 días", when: "en 7 días", vs: "vs 7 días antes" },
+  month: { tab: "Mes", when: "este mes", vs: "vs mes pasado" },
+};
 
 export default function AdminHomePage() {
   const store = useStore();
@@ -39,38 +46,54 @@ export default function AdminHomePage() {
   const [now] = useState(() => new Date());
   const base = store.baseCurrency as CurrencyCode;
   const week = summary?.week ?? null;
-  const day = week?.[week.length - 1];
+  const [period, setPeriod] = useState<HomePeriod>("day");
+  const figures = summary?.periods?.[period] ?? null;
+  const vs = PERIODS[period].vs;
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <p className="text-[13px] text-muted-foreground first-letter:uppercase">
-          {now.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" })}
-        </p>
-        <h1 className="font-display text-[28px] leading-tight font-bold">
-          {greeting(now)}, {store.name}
-        </h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-[13px] text-muted-foreground first-letter:uppercase">
+            {now.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" })}
+          </p>
+          <h1 className="font-display text-[28px] leading-tight font-bold">
+            {greeting(now)}, {store.name}
+          </h1>
+        </div>
+        {salesToday && (
+          <Segmented
+            label="Periodo"
+            value={period}
+            onSelect={setPeriod}
+            options={(Object.keys(PERIODS) as HomePeriod[]).map((p) => ({ value: p, label: PERIODS[p].tab }))}
+          />
+        )}
       </div>
 
       {salesToday ? (
         <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4" data-testid="sales-today">
           <Kpi
-            label="Vendido hoy"
+            label={`Vendido ${PERIODS[period].when}`}
             icon={TrendingUp}
-            value={day ? formatMoney(day.amount, base) : "…"}
-            change={dayChange(week, (d) => d.amount)}
+            value={figures ? formatMoney(figures.sold, base) : "…"}
+            change={figures && periodChange(figures.sold, figures.previous.sold)}
+            vs={vs}
             filled
           />
           <Kpi
             label="Cobrado"
             icon={Wallet}
             value={
-              !today
-                ? "…"
-                : today.received.length
-                  ? today.received.map((r) => formatMoney(r.amount, r.currency as CurrencyCode)).join(" · ")
-                  : formatMoney(0, base)
+              period === "day" && today?.received.length
+                ? // Today in the currency it was paid in (several currencies stay apart).
+                  today.received.map((r) => formatMoney(r.amount, r.currency as CurrencyCode)).join(" · ")
+                : figures
+                  ? formatMoney(figures.received, base)
+                  : "…"
             }
+            change={figures && periodChange(figures.received, figures.previous.received)}
+            vs={vs}
           />
           <Kpi
             label="Por cobrar"
@@ -80,10 +103,11 @@ export default function AdminHomePage() {
             note="Pedidos abiertos sin pagar"
           />
           <Kpi
-            label="Pedidos hoy"
+            label={`Pedidos ${PERIODS[period].when}`}
             icon={ShoppingBag}
-            value={day ? String(day.orders) : "…"}
-            change={dayChange(week, (d) => d.orders)}
+            value={figures ? String(figures.orders) : "…"}
+            change={figures && periodChange(figures.orders, figures.previous.orders)}
+            vs={vs}
           />
         </div>
       ) : (
@@ -168,6 +192,7 @@ function Kpi({
   icon: Icon,
   value,
   change,
+  vs,
   filled = false,
   tone,
   note,
@@ -176,13 +201,14 @@ function Kpi({
   icon: LucideIcon;
   value: string;
   change?: number | null;
+  vs?: string;
   filled?: boolean;
   tone?: string;
   note?: string;
 }) {
   return (
     <div
-      className={`flex flex-col gap-2.5 rounded-[14px] p-[18px] ${filled ? "bg-primary text-primary-foreground" : "border bg-background"}`}
+      className={`flex min-w-0 flex-col gap-2.5 rounded-[14px] p-[14px] sm:p-[18px] ${filled ? "bg-primary text-primary-foreground" : "border bg-background"}`}
     >
       <span
         className={`flex items-center justify-between text-[13px] ${filled ? "opacity-90" : "text-muted-foreground"}`}
@@ -190,13 +216,18 @@ function Kpi({
         {label}
         <Icon size={17} aria-hidden />
       </span>
-      <span className={`font-display text-[28px] leading-none font-extrabold ${tone ?? ""}`}>{value}</span>
+      {/* Five-digit amounts fit half a phone width at 22 px. */}
+      <span
+        className={`font-display text-[22px] leading-none font-extrabold break-words sm:text-[28px] ${tone ?? ""}`}
+      >
+        {value}
+      </span>
       {change != null ? (
         <span
           className={`text-[12.5px] font-semibold ${filled ? "text-gold" : change >= 0 ? "text-success" : "text-destructive"}`}
         >
           {change >= 0 ? "+" : ""}
-          {change}% vs ayer
+          {change}% {vs}
         </span>
       ) : (
         <span className={`text-[12.5px] ${filled ? "opacity-80" : "text-muted-foreground"}`}>

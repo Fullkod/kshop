@@ -1,150 +1,64 @@
 "use client";
 
-import { resolveTheme, THEME_PRESETS, type Theme, type ThemePresetKey } from "@kshop/core";
-import { createApiClient, type HomeSection, type StorefrontShell } from "@kshop/data";
-import {
-  headerChips,
-  headerLinks,
-  HomeSections,
-  NavigationProvider,
-  StoreAnnouncement,
-  StoreHeader,
-  StoreProvider,
-  StorefrontPreviewProviders,
-  themeStyle,
-  type LinkProps,
-  type PublicStore,
-} from "@kshop/storefront";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { supabaseConfig } from "@/env";
+import type { Theme } from "@kshop/core";
+import type { HomeSection } from "@kshop/data";
+import type { PublicStore } from "@kshop/storefront";
+import dynamic from "next/dynamic";
+import { useEffect, useRef, useState } from "react";
 
 export type LandingDemo = { store: PublicStore; origin: string };
-type DemoContent = { shell: StorefrontShell; home: HomeSection[] };
 
-const api = createApiClient({ baseUrl: "", getAccessToken: () => null });
-let demoContent: Promise<DemoContent> | null = null;
-
-/** The demo store's shell and home from the public API, read once for the phone and the theme block. */
-function loadDemo(storeId: string): Promise<DemoContent> {
-  demoContent ??= Promise.all([api.storefront(storeId).shell(), api.storefront(storeId).home()]).then(
-    ([shell, home]) => ({ shell, home }),
-  );
-  return demoContent;
-}
+const DemoFrame = dynamic(() => import("./DemoStore"), { ssr: false });
 
 /**
- * The demo store drawn on the landing (redesign R7) once its frame nears the screen. It is decoration drawn twice:
- * read and drawn in the browser it stays out of the page's first load (Lighthouse on a phone). The frames have a
- * fixed size, so nothing moves when it appears.
+ * True once the element nears the screen: the demo store is decoration drawn twice, so it is loaded and drawn only
+ * then. The frames have a fixed size, so nothing moves when it appears.
  */
-function useDemoNearScreen<T extends Element>(storeId: string) {
+function useNearScreen<T extends Element>() {
   const ref = useRef<T>(null);
-  const [content, setContent] = useState<DemoContent | null>(null);
+  const [near, setNear] = useState(false);
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    let cancelled = false;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting) return;
-        observer.disconnect();
-        loadDemo(storeId).then(
-          (c) => !cancelled && setContent(c),
-          () => {}, // the frame stays empty
-        );
-      },
-      { rootMargin: "200px" },
-    );
+    if (!el || near) return;
+    const observer = new IntersectionObserver(([entry]) => entry?.isIntersecting && setNear(true), {
+      rootMargin: "200px",
+    });
     observer.observe(el);
-    return () => {
-      cancelled = true;
-      observer.disconnect();
-    };
-  }, [storeId]);
-  return [ref, content] as const;
+    return () => observer.disconnect();
+  }, [near]);
+  return [ref, near] as const;
 }
 
-/**
- * The real storefront components, inert, with the providers in preview mode (no cart, session or favorites) and
- * plain links to the demo store (no prefetch on the platform host).
- */
-function DemoStore({
-  demo,
-  content,
-  theme,
-  sections,
-}: {
-  demo: LandingDemo;
-  content: DemoContent;
-  theme: Theme;
-  sections: HomeSection[];
-}) {
-  const navigation = useMemo(
-    () => ({
-      Link: ({ href, prefetch: _prefetch, scroll: _scroll, replace: _replace, ...props }: LinkProps) => (
-        <a href={`${demo.origin}${href}`} {...props} />
-      ),
-      usePathname: () => "/",
-      push: () => {},
-      replace: () => {},
-    }),
-    [demo.origin],
-  );
-  const { shell } = content;
-  return (
-    <StoreProvider store={demo.store} config={{ supabase: supabaseConfig, apiBaseUrl: "", channel: "web" }}>
-      <NavigationProvider value={navigation}>
-        <StorefrontPreviewProviders storeId={demo.store.id} currencies={shell.currencies} api={api}>
-          <div className="sf-root flex flex-col bg-background text-foreground" style={themeStyle(theme)}>
-            <StoreAnnouncement announcement={shell.announcement} />
-            <StoreHeader store={demo.store} links={headerLinks(shell)} chips={headerChips(shell)} />
-            <HomeSections sections={sections} delivery={shell} />
-          </div>
-        </StorefrontPreviewProviders>
-      </NavigationProvider>
-    </StoreProvider>
-  );
-}
+const firstThree = (home: HomeSection[]) => home.slice(0, 3);
+const heroAndCarousel = (home: HomeSection[]) =>
+  [
+    home.find((s) => s.type === "hero_slider" || s.type === "banner"),
+    home.find((s) => s.type === "product_carousel"),
+  ].flatMap((s) => (s ? [s] : []));
 
 /** Hero phone: the demo store at 390 px with its own theme, scaled into a 320 px screen cut at the bottom. */
 export function LandingPhone({ demo }: { demo: LandingDemo }) {
-  const [ref, content] = useDemoNearScreen<HTMLDivElement>(demo.store.id);
+  const [ref, near] = useNearScreen<HTMLDivElement>();
   return (
     <div
       ref={ref}
       className="isolate mx-auto h-[560px] w-[340px] overflow-hidden rounded-t-[40px] border-[10px] border-b-0 border-[#0E0820] bg-white shadow-[0_40px_100px_-30px_rgb(0_0_0/.6)]"
     >
       <div className="w-[390px] [zoom:0.82]" inert aria-label="Tienda de ejemplo">
-        {content && (
-          <DemoStore
-            demo={demo}
-            content={content}
-            theme={demo.store.theme}
-            sections={content.home.slice(0, 3)}
-          />
-        )}
+        {near && <DemoFrame demo={demo} theme={demo.store.theme} pick={firstThree} />}
       </div>
     </div>
   );
 }
 
-const PRESET_KEYS = Object.keys(THEME_PRESETS) as ThemePresetKey[];
+export type LandingPreset = { key: string; label: string; accent: string; secondary: string; theme: Theme };
 
 /** Theme block: the six presets and the demo store's hero and first carousel redrawn with the one picked. */
-export function LandingThemes({ demo }: { demo: LandingDemo }) {
-  const [preset, setPreset] = useState<ThemePresetKey>("kshop");
-  const [ref, content] = useDemoNearScreen<HTMLDivElement>(demo.store.id);
-  const theme = useMemo(() => resolveTheme({ preset }), [preset]);
-  const sections = useMemo(
-    () =>
-      content
-        ? [
-            content.home.find((s) => s.type === "hero_slider" || s.type === "banner"),
-            content.home.find((s) => s.type === "product_carousel"),
-          ].flatMap((s) => (s ? [s] : []))
-        : [],
-    [content],
-  );
+export function LandingThemes({ demo, presets }: { demo: LandingDemo; presets: LandingPreset[] }) {
+  const [preset, setPreset] = useState(presets[0]!.key);
+  const [ref, near] = useNearScreen<HTMLDivElement>();
+  const current = presets.find((p) => p.key === preset) ?? presets[0]!;
+
   return (
     <div className="flex flex-wrap items-center gap-[clamp(28px,4cqw,48px)] rounded-[28px] bg-surface p-[clamp(24px,4cqw,48px)]">
       <div className="flex flex-[1_1_320px] flex-col gap-4">
@@ -159,19 +73,18 @@ export function LandingThemes({ demo }: { demo: LandingDemo }) {
           actualizan a la vez.
         </p>
         <div className="flex flex-wrap gap-2" role="group" aria-label="Estilos">
-          {PRESET_KEYS.map((key) => {
-            const p = THEME_PRESETS[key];
-            const selected = key === preset;
+          {presets.map((p) => {
+            const selected = p.key === preset;
             return (
               <button
-                key={key}
+                key={p.key}
                 type="button"
-                onClick={() => setPreset(key)}
+                onClick={() => setPreset(p.key)}
                 aria-pressed={selected}
                 className={`flex h-11 items-center gap-2 rounded-xl bg-background pr-3.5 pl-2 text-sm font-semibold ${selected ? "ring-2 ring-primary" : "ring-1 ring-border"}`}
               >
                 <span className="flex" aria-hidden>
-                  {[p.colors.accent, p.colors.secondary].map((c, i) => (
+                  {[p.accent, p.secondary].map((c, i) => (
                     <span
                       key={i}
                       className={`size-[22px] rounded-full ring-2 ring-background ${i ? "-ml-1.5" : ""}`}
@@ -192,9 +105,9 @@ export function LandingThemes({ demo }: { demo: LandingDemo }) {
         <div
           className="w-[1280px] [zoom:0.5]"
           inert
-          aria-label={`Tienda de ejemplo con el estilo ${THEME_PRESETS[preset].label}`}
+          aria-label={`Tienda de ejemplo con el estilo ${current.label}`}
         >
-          {content && <DemoStore demo={demo} content={content} theme={theme} sections={sections} />}
+          {near && <DemoFrame demo={demo} theme={current.theme} pick={heroAndCarousel} />}
         </div>
       </div>
     </div>

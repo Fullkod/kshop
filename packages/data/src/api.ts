@@ -329,10 +329,17 @@ export type CheckoutResponse = {
 
 /** Admin: «Ventas de hoy» (day in America/Havana). */
 /** Admin home (redesign R6): what to do, and with the sales_today module the week and what is owed (base currency). */
+/** Periods of the admin home KPIs: today, the last 7 days and this month (vs yesterday, the 7 before, last month). */
+export const HOME_PERIODS = ["day", "week", "month"] as const;
+export type HomePeriod = (typeof HOME_PERIODS)[number];
+export type HomePeriodFigures = { orders: number; sold: number; received: number };
+
 export type HomeSummary = {
   todo: { toConfirm: number; toDeliver: number; lowStock: number };
   week: { day: string; orders: number; amount: number }[] | null;
   toCollect: number | null;
+  /** In the base currency; null without the sales_today module. */
+  periods: Record<HomePeriod, HomePeriodFigures & { previous: HomePeriodFigures }> | null;
 };
 
 export type SalesToday = {

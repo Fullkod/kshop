@@ -46,6 +46,24 @@ admin, 1280/390, claro y oscuro; sin errores ni scroll horizontal). QA con Whats
 16/16, `qa:orders` 14/14, `qa:pro` 18/18, `qa:discounts` 9/9, `qa:apps` 27/28 (un 500 de la portada en frío, ver
 abajo).
 
+### Lo que faltaba de v2 (2026-10-27, segunda tanda: «implementemos todo lo que falta»)
+- **Búsqueda global** (`admin/AdminSearch.tsx`): pedidos (número con o sin prefijo, nombre, teléfono), productos
+  (`adminSearchProducts`), clientes (abre sus pedidos con `?q=`) y secciones del menú; Ctrl/⌘ K, flechas y Enter; en
+  móvil un icono abre el campo sobre la barra. La lista de pedidos con texto busca en todos los estados.
+- **Hoy · 7 días · Mes** en Inicio: migración `20261106100300_admin_home_periods.sql` (`periods` en
+  `admin_home_summary`: vendido, pedidos y cobrado en moneda base con la tasa del pedido, y el periodo anterior) +
+  tests en `11_home_v2_isolation`; el «vs» dice ayer / 7 días antes / mes pasado.
+- **Arreglos visuales** (captura de Roberto en Cupones, 1920 oscuro): las pestañas subrayadas sacaban una barrita de
+  scroll (el subrayado con `-mb-px` desbordaba): ahora la línea es una sombra interior; el contenido del admin va en
+  una columna centrada de `max-w-6xl` y las páginas estrechas se centran en ella; los importes de los KPIs caben en
+  móvil; el panel reintenta 3 veces antes de «No se pudo cargar» y ofrece «Reintentar». Barrido automático de 40
+  pantallas × (1920 oscuro, 1280 claro, 390 claro): sin scroll horizontal, barritas ni desbordes.
+- **Landing móvil**: la tienda de ejemplo (`_landing/DemoStore.tsx`) se carga con `next/dynamic` al acercarse, los
+  presets llegan resueltos del servidor y `CurrentYear` por subruta (`@kshop/storefront/current-year`); JetBrains Mono
+  sin precarga. Lighthouse móvil (mediana de 3): **87** (antes 76); el login del superadmin, la página más simple, da
+  84: lo que falta hasta 90 es común a todo el sitio (LCP simulado de 3,3–4 s). Escritorio 100.
+- QA con WhatsApp en «Simulado»: `qa:orders` 14/14, `qa:pro` 18/18, `qa:apps` 28/28; RLS 597/597.
+
 ### Build de Vercel (2026-10-27) — Arreglado
 El despliegue del push falló en el prerender de `/s/demo` por `57014`. Causa: Supabase en la instancia más pequeña
 (`max_connections` 60, CPU compartida); cada consulta de la tienda gasta 0,4–0,6 s de CPU en `graphql.resolve` y el

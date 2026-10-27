@@ -89,7 +89,10 @@ export function OrderList() {
   const { data: settings } = useCheckoutSettings();
   const action = useApiAction();
   const [tab, setTab] = useState<OrderTabKey>("pending");
-  const [query, setQuery] = useState("");
+  // ?q= opens the list already searched (a customer picked in the global search shows their orders).
+  const [query, setQuery] = useState(() =>
+    typeof window === "undefined" ? "" : (new URLSearchParams(window.location.search).get("q") ?? ""),
+  );
   const [rows, setRows] = useState<Row[] | null>(null);
   const [total, setTotal] = useState(0);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -100,7 +103,8 @@ export function OrderList() {
   const filter = (): Filter => {
     const statuses = ORDER_TABS.find((t) => t.key === tab)!.statuses as unknown as OrderStatus[];
     const q = query.trim().replace(/^[A-Z0-9]+-/i, "");
-    const base: Filter = { storeId: { eq: store.id }, status: { in: statuses } };
+    // A search looks in every status (a customer's delivered orders too); the tabs filter the plain list.
+    const base: Filter = { storeId: { eq: store.id }, ...(q ? {} : { status: { in: statuses } }) };
     if (!q) return base;
     if (/^\d{1,9}$/.test(q) && Number(q) >= 1000) return { ...base, number: { eq: Number(q) } };
     return {
@@ -193,6 +197,7 @@ export function OrderList() {
           aria-label="Buscar pedidos"
         />
       </div>
+      {query.trim() && <p className="-mt-2 text-xs text-muted-foreground">Buscando en todos los estados.</p>}
 
       {(loadError || action.error) && <Alert variant="destructive">{loadError ?? action.error}</Alert>}
 

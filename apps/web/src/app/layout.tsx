@@ -5,7 +5,8 @@ import "./globals.css";
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
-const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono" });
+// Only the admin's codes use it (order numbers, hex): not preloaded on every page.
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono", preload: false });
 // Store theme fonts (decision D3): not preloaded, the browser only downloads the ones a store uses.
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", preload: false });
 const poppins = Poppins({

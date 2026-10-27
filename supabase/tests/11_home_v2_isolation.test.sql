@@ -130,3 +130,19 @@ select tests.eq('summary: seven days, oldest first',
 select tests.eq('summary: a new store has nothing to do',
   (public.admin_home_summary(tests.fx('store_a')) -> 'todo')::text,
   '{"low_stock": 0, "to_confirm": 0, "to_deliver": 0}');
+
+-- Periods («Hoy · 7 días · Mes»): sold, orders and received per period, one store only
+insert into public.orders (store_id, number, currency, subtotal, shipping_total, total, customer_name,
+  customer_phone, warehouse_id)
+select tests.fx('store_b'), 1, 'CUP', 100, 0, 100, 'Cliente',   '+5350000003', w.id
+from public.warehouses w where w.store_id = tests.fx('store_b') limit 1;
+insert into public.payments (store_id, order_id, amount, currency)
+select o.store_id, o.id, 40, 'CUP' from public.orders o where o.store_id = tests.fx('store_b');
+select tests.eq('periods: today, the week and the month of B count its order and payment', (
+  select string_agg(format('%s:%s/%s/%s', k, v ->> 'orders', v ->> 'sold', v ->> 'received'), ' ' order by k)
+  from jsonb_each(public.admin_home_summary(tests.fx('store_b')) -> 'periods') e(k, v)),
+  'day:1/100.00/40.00 month:1/100.00/40.00 week:1/100.00/40.00');
+select tests.eq('periods: A sees nothing of B', (
+  select string_agg(format('%s:%s/%s/%s', k, v ->> 'orders', v ->> 'sold', v ->> 'received'), ' ' order by k)
+  from jsonb_each(public.admin_home_summary(tests.fx('store_a')) -> 'periods') e(k, v)),
+  'day:0/0.00/0.00 month:0/0.00/0.00 week:0/0.00/0.00');

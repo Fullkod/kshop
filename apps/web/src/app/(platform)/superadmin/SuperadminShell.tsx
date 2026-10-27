@@ -179,7 +179,7 @@ export function SuperadminShell({ children }: { children: ReactNode }) {
           </div>
         </header>
         <main className={cn("min-w-0 flex-1 px-4 py-6 md:px-7", ADMIN_CONTENT_CLASS)}>
-          <div className="mx-auto w-full max-w-6xl">
+          <div className="mx-auto w-full max-w-6xl [&>[class*=max-w-]]:mx-auto">
             {isSuperadmin ? (
               children
             ) : (

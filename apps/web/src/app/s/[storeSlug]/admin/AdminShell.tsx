@@ -32,6 +32,7 @@ import { useStoreVersion } from "@kshop/admin";
 import { useStore } from "@kshop/storefront";
 import { AdminContext, loadAdminState, type AdminState } from "./admin-context";
 import { AccountBanner } from "./AccountBanner";
+import { AdminSearch } from "./AdminSearch";
 
 // Pages that work without a store session.
 const PUBLIC_PATHS = ["/admin/login", "/admin/set-password"];
@@ -72,6 +73,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [state, setState] = useState<LoadState>({ kind: "loading" });
   const [toConfirm, setToConfirm] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const live = useStoreVersion(isPublic ? null : store.id);
   const userId = session?.user.id;
 
@@ -83,17 +85,22 @@ export function AdminShell({ children }: { children: ReactNode }) {
     if (!userId || isPublic) return;
     let cancelled = false;
     (async () => {
-      try {
-        const admin = await loadAdminState(api, graphql, store.id);
-        if (!cancelled) setState(admin ? { kind: "ready", admin } : { kind: "forbidden" });
-      } catch {
-        if (!cancelled) setState({ kind: "error" });
+      // A busy database can fail one read (57014): try three times before showing the error.
+      for (let i = 0; i < 3 && !cancelled; i++) {
+        try {
+          const admin = await loadAdminState(api, graphql, store.id);
+          if (!cancelled) setState(admin ? { kind: "ready", admin } : { kind: "forbidden" });
+          return;
+        } catch {
+          await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+        }
       }
+      if (!cancelled) setState({ kind: "error" });
     })();
     return () => {
       cancelled = true;
     };
-  }, [userId, isPublic, api, graphql, store.id]);
+  }, [userId, isPublic, api, graphql, store.id, attempt]);
 
   // Orders waiting for confirmation: the bell's dot and the counter of «Pedidos», refreshed on every page change and
   // on every order change (Realtime).
@@ -133,9 +140,21 @@ export function AdminShell({ children }: { children: ReactNode }) {
             : "No se pudo cargar el panel. Inténtalo de nuevo."}
         </Alert>
         <p className="text-sm text-muted-foreground">Sesión iniciada como {session.user.email}.</p>
-        <Button variant="outline" onClick={signOut} className="self-start">
-          Cerrar sesión
-        </Button>
+        <div className="flex gap-2">
+          {state.kind === "error" && (
+            <Button
+              onClick={() => {
+                setState({ kind: "loading" });
+                setAttempt((a) => a + 1);
+              }}
+            >
+              Reintentar
+            </Button>
+          )}
+          <Button variant="outline" onClick={signOut}>
+            Cerrar sesión
+          </Button>
+        </div>
       </main>
     );
   }
@@ -283,6 +302,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
             >
               {store.name}
             </Link>
+            <AdminSearch
+              sections={[
+                { href: "/admin", label: "Inicio", icon: House },
+                ...Object.values(groups)
+                  .flat()
+                  .filter((i) => !i.locked),
+              ]}
+              orders={ordersOn}
+              catalog={admin.enabledModules.has("catalog")}
+            />
             <div className="ml-auto flex items-center gap-2">
               <a
                 href="/"
@@ -319,8 +348,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </div>
           </header>
           <main className={cn("min-w-0 flex-1 px-4 py-6 md:px-7", ADMIN_CONTENT_CLASS)}>
-            <AccountBanner admin={admin} />
-            {children}
+            {/* One centered column on wide screens, as in the superadmin; narrower pages are centered in it. */}
+            <div className="mx-auto w-full max-w-6xl [&>[class*=max-w-]]:mx-auto">
+              <AccountBanner admin={admin} />
+              {children}
+            </div>
           </main>
         </div>
       </div>
