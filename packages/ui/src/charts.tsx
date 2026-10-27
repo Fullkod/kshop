@@ -37,7 +37,14 @@ export function BarChart({
         className="w-full overflow-visible"
         style={{ height }}
       >
-        <line x1="0" x2="100" y1={height} y2={height} className="stroke-border" vectorEffect="non-scaling-stroke" />
+        <line
+          x1="0"
+          x2="100"
+          y1={height}
+          y2={height}
+          className="stroke-border"
+          vectorEffect="non-scaling-stroke"
+        />
         {data.map((d, i) =>
           d.values.map((value, s) => {
             const h = (Math.max(0, value) / max) * (height - 4);

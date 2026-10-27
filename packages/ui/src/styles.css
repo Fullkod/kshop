@@ -70,6 +70,7 @@
   --accent-hover: #4c1d95;
   --accent-fg: #ffffff;
   --accent-soft: #efeafb;
+  --ring: color-mix(in srgb, var(--accent) 45%, transparent);
   --secondary: #f2b705;
   --secondary-fg: #24104f;
   --secondary-soft: #fdf1cd;

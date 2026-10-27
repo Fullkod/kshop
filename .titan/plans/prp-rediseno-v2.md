@@ -204,6 +204,12 @@ tamaño `icon`), Badge (`sale`, `secondary`, `warning`), Input con foco y error,
 página de muestras según D12.
 **Validación**: la página de muestras se parece a §02 de `Tienda Biblioteca.dc.html` con 2–3 presets (capturas); el
 admin sigue igual (los átomos del admin no cambian de aspecto salvo lo pedido); typecheck, lint, test.
+**Hecha (2026-10-27)**: `lucide-react` en `@kshop/ui` con lista explícita en `icons.ts` (re-exportada por `@kshop/ui`:
+lucide también exporta `Badge`/`Table`, que chocarían). Button (8 variantes, sm 36 · md 44 · lg 52 · icon 44,
+`rounded-sf-btn`, foco `--ring`), Badge (`shape: pill | tag`, + `sale`, `secondary`, `warning`, `outline`), Input/Select
+46→44 con foco y error, Alert (`warning`, `info`), `Segmented` y `Chip`/`chipVariants`. `--ring` añadido a `:root` para
+el admin. `destructive` usa `text-background` (blanco sobre el rosa del tema oscuro no se leía). Muestras en
+`/admin/_ui` (carpeta `%5Fui`: `_` es carpeta privada en Next), solo en desarrollo. Capturas en `.titan/qa/rediseno-v2/R1/`.
 
 ### Fase R2: Cabecera, pie y navegación móvil
 **Objetivo**: `StoreHeader` (sin solapes, cortes 720/1180/1400, «Ofertas», buscador y chips en móvil), `StoreFooter`,
