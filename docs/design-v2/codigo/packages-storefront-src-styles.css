@@ -1,0 +1,36 @@
+/* Storefront v2 (web y app de tienda). Reemplaza packages/storefront/src/styles.css.
+   El tema (themeStyle) decide letra, mayúsculas, radios y sombras. --bg/--fg se leen directamente:
+   los --color-* resuelven en :root (paleta del admin, con modo oscuro). */
+.sf-root {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sf-body);
+  container-type: inline-size; /* los tamaños fluidos usan cqw, igual que los prototipos */
+}
+.sf-root h1,
+.sf-root h2,
+.sf-root h3,
+.sf-root .sf-heading {
+  font-family: var(--sf-heading);
+  text-transform: var(--sf-case);
+  letter-spacing: var(--sf-track);
+}
+/* Fotos sin subir: rayado suave con el acento (sustituye al texto «Sin imagen» plano). */
+.sf-root .sf-placeholder {
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 8%, var(--surface)) 0 12px,
+    var(--surface) 12px 24px
+  );
+}
+/* Carruseles con scroll lateral sin barra visible */
+.sf-root .sf-scroller {
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+}
+.sf-root .sf-scroller::-webkit-scrollbar {
+  display: none;
+}
+.sf-root .sf-scroller > * {
+  scroll-snap-align: start;
+}

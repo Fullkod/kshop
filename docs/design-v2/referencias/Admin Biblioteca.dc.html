@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&family=JetBrains+Mono:wght@500&family=Outfit:wght@400..800&display=swap" rel="stylesheet">
+<script src="themes.js"></script>
+<style>body{margin:0;background:#ECEAF1}a{color:#5B21B6;text-decoration:none}a:hover{color:#4C1D95}</style>
+</helmet>
+<div style="width:1840px;padding:48px;box-sizing:border-box;font-family:'DM Sans',sans-serif;color:#17132A;background:#ECEAF1;display:flex;flex-direction:column;gap:56px">
+
+<header style="display:flex;flex-direction:column;gap:14px">
+  <img src="brand/kshop-horizontal.svg" alt="Kshop" style="height:34px;width:auto;align-self:flex-start">
+  <h1 style="margin:0;font:700 44px/1.05 'Outfit',sans-serif;letter-spacing:-0.02em">Biblioteca del admin</h1>
+  <p style="margin:0;max-width:760px;font-size:16px;line-height:1.55;color:#5E5873">El admin usa siempre la marca Kshop (violeta, noche y oro), no el tema de la tienda. En web: barra lateral agrupada. En la APK Kshop Admin: pestañas inferiores y «Más» para el resto de módulos.</p>
+</header>
+
+<section data-screen-label="A1 Admin inicio" style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:baseline;gap:14px"><span style="font:500 13px/1 'JetBrains Mono',monospace;color:#7C3AED">A1</span><h2 style="margin:0;font:700 28px/1 'Outfit',sans-serif">Web · Inicio</h2><span style="font-size:14px;color:#5E5873">AdminShell + SalesTodayCard rediseñados</span></div>
+  <div style="width:1280px;height:880px;display:flex;border-radius:14px;overflow:hidden;box-shadow:0 30px 80px -30px rgb(23 19 42/.35);background:#F7F5FC">
+    <dc-import name="AdminSidebar" active="home" style="height:100%" hint-size="248px,880px"></dc-import>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <div style="height:64px;flex:none;display:flex;align-items:center;gap:12px;padding:0 28px;background:#fff;border-bottom:1px solid #E6E1F2">
+        <span style="flex:1;max-width:420px;height:40px;display:flex;align-items:center;gap:8px;padding:0 12px;border-radius:10px;background:#F7F5FC;border:1px solid #E6E1F2;color:#625C7A;font-size:14px"><dc-import name="Icon" n="search" style="width:17px;height:17px" hint-size="17px,17px"></dc-import>Buscar pedidos, productos o clientes<span style="margin-left:auto;font:500 11px/1 'JetBrains Mono',monospace;padding:4px 6px;border-radius:6px;background:#fff;border:1px solid #E6E1F2">Ctrl K</span></span>
+        <a href="#" style="margin-left:auto;height:40px;display:flex;align-items:center;gap:6px;padding:0 14px;border-radius:10px;border:1px solid #E6E1F2;color:#17132A;font-weight:600;font-size:14px">Ver tienda<dc-import name="Icon" n="external-link" style="width:15px;height:15px" hint-size="15px,15px"></dc-import></a>
+        <span style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid #E6E1F2"><dc-import name="Icon" n="bell" style="width:18px;height:18px" hint-size="18px,18px"></dc-import><span style="position:absolute;top:8px;right:9px;width:8px;height:8px;border-radius:99px;background:#C42350;box-shadow:0 0 0 2px #fff"></span></span>
+        <a href="#" style="height:40px;display:flex;align-items:center;gap:6px;padding:0 16px;border-radius:10px;background:#5B21B6;color:#fff;font-weight:600;font-size:14px" style-hover="color:#fff;background:#4C1D95"><dc-import name="Icon" n="plus" style="width:17px;height:17px" hint-size="17px,17px"></dc-import>Nuevo pedido</a>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:28px;display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between">
+          <div><span style="font-size:13px;color:#625C7A">Lunes, 26 de octubre</span><h3 style="margin:2px 0 0;font:700 28px/1.1 'Outfit',sans-serif;letter-spacing:-0.015em">Buenos días, Roberto</h3></div>
+          <div style="display:flex;padding:4px;border-radius:10px;background:#fff;border:1px solid #E6E1F2;font-size:13px;font-weight:600"><span style="padding:7px 12px;border-radius:7px;background:#EFE9F8;color:#5B21B6">Hoy</span><span style="padding:7px 12px;color:#625C7A">7 días</span><span style="padding:7px 12px;color:#625C7A">Mes</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+          <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:14px;background:{{ s.bg }};color:{{ s.fg }};border:1px solid {{ s.bd }}">
+              <span style="display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:500;opacity:.85">{{ s.l }}<dc-import name="Icon" n="{{ s.icon }}" style="width:17px;height:17px" hint-size="17px,17px"></dc-import></span>
+              <span style="font:800 28px/1 'Outfit',sans-serif;letter-spacing:-0.01em">{{ s.v }}</span>
+              <span style="font-size:12.5px;font-weight:600;color:{{ s.dc }}">{{ s.d }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:14px">
+          <div style="padding:20px;border-radius:14px;background:#fff;border:1px solid #E6E1F2;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center"><b style="font:700 16px/1 'Outfit',sans-serif">Ventas de la semana</b><span style="font-size:13px;color:#625C7A">CUP</span></div>
+            <div style="height:150px;display:flex;align-items:flex-end;gap:14px">
+              <sc-for list="{{ week }}" as="d" hint-placeholder-count="7">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end">
+                  <span style="font:600 11px/1 'DM Sans',sans-serif;color:#625C7A">{{ d.v }}</span>
+                  <span style="width:100%;height:{{ d.h }};border-radius:8px 8px 4px 4px;background:{{ d.c }}"></span>
+                  <span style="font-size:12px;color:#625C7A;font-weight:{{ d.w }}">{{ d.l }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="padding:20px;border-radius:14px;background:#fff;border:1px solid #E6E1F2;display:flex;flex-direction:column;gap:12px">
+            <b style="font:700 16px/1 'Outfit',sans-serif">Por hacer</b>
+            <sc-for list="{{ todo }}" as="t" hint-placeholder-count="3">
+              <a href="#" style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:{{ t.bg }};color:#17132A">
+                <span style="width:36px;height:36px;flex:none;border-radius:10px;background:#fff;color:{{ t.c }};display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="{{ t.icon }}" style="width:18px;height:18px" hint-size="18px,18px"></dc-import></span>
+                <span style="flex:1;font-size:14px;font-weight:500">{{ t.l }}</span>
+                <dc-import name="Icon" n="chevron-right" style="width:16px;height:16px;color:#625C7A" hint-size="16px,16px"></dc-import>
+              </a>
+            </sc-for>
+          </div>
+        </div>
+        <div style="border-radius:14px;background:#fff;border:1px solid #E6E1F2;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px"><b style="font:700 16px/1 'Outfit',sans-serif">Últimos pedidos</b><a href="#" style="font-size:13.5px;font-weight:600">Ver todos</a></div>
+          <div style="display:grid;grid-template-columns:90px 1.4fr 1fr 120px 130px 110px 40px;gap:12px;padding:10px 20px;background:#F7F5FC;font:600 11.5px/1 'DM Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#625C7A"><span>Pedido</span><span>Cliente</span><span>Entrega</span><span>Total</span><span>Estado</span><span>Hora</span><span></span></div>
+          <sc-for list="{{ orders }}" as="o" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:90px 1.4fr 1fr 120px 130px 110px 40px;gap:12px;align-items:center;padding:12px 20px;border-top:1px solid #F0EDF6;font-size:14px">
+              <span style="font:500 13px/1 'JetBrains Mono',monospace;color:#5B21B6">{{ o.id }}</span>
+              <span style="display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;border-radius:99px;background:#EFE9F8;color:#5B21B6;display:flex;align-items:center;justify-content:center;font:700 11px/1 'Outfit',sans-serif">{{ o.i }}</span><span style="display:flex;flex-direction:column;line-height:1.25"><b style="font-weight:600">{{ o.n }}</b><span style="font-size:12px;color:#625C7A">{{ o.items }}</span></span></span>
+              <span style="color:#625C7A">{{ o.zone }}</span>
+              <b style="font-family:'Outfit',sans-serif">{{ o.total }}</b>
+              <span style="justify-self:start;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;font-size:12px;font-weight:600;background:{{ o.sbg }};color:{{ o.sfg }}"><span style="width:6px;height:6px;border-radius:99px;background:{{ o.sfg }}"></span>{{ o.s }}</span>
+              <span style="color:#625C7A">{{ o.t }}</span>
+              <span style="color:#1FA855"><dc-import name="Icon" n="message-circle" style="width:18px;height:18px" hint-size="18px,18px"></dc-import></span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="A2 Apariencia" style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:baseline;gap:14px"><span style="font:500 13px/1 'JetBrains Mono',monospace;color:#7C3AED">A2</span><h2 style="margin:0;font:700 28px/1 'Outfit',sans-serif">Web · Apariencia › Tema</h2><span style="font-size:14px;color:#5E5873">Interactivo: elige un estilo, cambia colores, letra y forma; la vista previa usa los mismos tokens que la tienda.</span></div>
+  <div style="width:1280px;height:1130px;display:flex;border-radius:14px;overflow:hidden;box-shadow:0 30px 80px -30px rgb(23 19 42/.35);background:#F7F5FC">
+    <dc-import name="AdminSidebar" active="theme" style="height:100%" hint-size="248px,1130px"></dc-import>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <div style="flex:none;display:flex;flex-direction:column;gap:14px;padding:22px 28px 0;background:#fff;border-bottom:1px solid #E6E1F2">
+        <div style="display:flex;align-items:center;justify-content:space-between"><h3 style="margin:0;font:700 26px/1 'Outfit',sans-serif;letter-spacing:-0.015em">Apariencia</h3><a href="#" style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px">Ver la tienda<dc-import name="Icon" n="external-link" style="width:15px;height:15px" hint-size="15px,15px"></dc-import></a></div>
+        <div style="display:flex;gap:4px">
+          <sc-for list="{{ appTabs }}" as="t" hint-placeholder-count="5"><span style="padding:10px 14px;font-size:14px;font-weight:{{ t.w }};color:{{ t.c }};box-shadow:inset 0 -2px 0 {{ t.bar }}">{{ t.l }}</span></sc-for>
+        </div>
+      </div>
+      <div style="flex:1;min-height:0;display:grid;grid-template-columns:440px 1fr;gap:20px;padding:20px 28px 0">
+        <div style="display:flex;flex-direction:column;gap:14px;overflow:hidden">
+          <div style="padding:18px;border-radius:14px;background:#fff;border:1px solid #E6E1F2;display:flex;flex-direction:column;gap:12px">
+            <b style="font:700 15px/1 'Outfit',sans-serif">Estilo de partida</b>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+              <sc-for list="{{ presetCards }}" as="p" hint-placeholder-count="6">
+                <button onClick="{{ p.pick }}" style="display:flex;flex-direction:column;gap:0;padding:0;border:none;border-radius:10px;overflow:hidden;background:#fff;box-shadow:{{ p.ring }};cursor:pointer;text-align:left">
+                  <span style="height:38px;display:flex;align-items:flex-end;gap:4px;padding:6px 8px;background:{{ p.accent }}"><span style="width:14px;height:14px;border-radius:99px;background:{{ p.secondary }}"></span><span style="width:14px;height:14px;border-radius:99px;background:{{ p.ink }};box-shadow:0 0 0 1.5px rgb(255 255 255/.5)"></span></span>
+                  <span style="padding:7px 8px;font:600 12.5px/1 'DM Sans',sans-serif;color:#17132A;background:{{ p.bg }}">{{ p.label }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="padding:18px;border-radius:14px;background:#fff;border:1px solid #E6E1F2;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center"><b style="font:700 15px/1 'Outfit',sans-serif">Colores</b><button onClick="{{ resetColors }}" style="border:none;background:transparent;color:#5B21B6;font:600 13px/1 'DM Sans',sans-serif;cursor:pointer">Restablecer</button></div>
+            <sc-for list="{{ colorGroups }}" as="g" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <span style="font:700 10.5px/1 'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8A84A0">{{ g.t }}</span>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                  <sc-for list="{{ g.items }}" as="c" hint-placeholder-count="4">
+                    <label style="display:flex;align-items:center;gap:8px;padding:4px;border-radius:9px;border:1px solid #EEEAF5;cursor:pointer">
+                      <input type="color" value="{{ c.hex }}" onChange="{{ c.set }}" style="width:30px;height:30px;padding:0;border:none;border-radius:7px;background:none;cursor:pointer;flex:none">
+                      <span style="display:flex;flex-direction:column;min-width:0;line-height:1.2"><span style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.label }}</span><span style="font:500 10.5px/1.3 'JetBrains Mono',monospace;color:#8A84A0">{{ c.hex }}</span></span>
+                    </label>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding:18px;border-radius:14px;background:#fff;border:1px solid #E6E1F2;display:flex;flex-direction:column;gap:12px">
+            <b style="font:700 15px/1 'Outfit',sans-serif">Letra y forma</b>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <label style="display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:600">Títulos<select onChange="{{ setHf }}" style="height:38px;border-radius:9px;border:1px solid #E6E1F2;padding:0 10px;font:500 13.5px 'DM Sans',sans-serif;background:#fff"><sc-for list="{{ fontsH }}" as="f" hint-placeholder-count="6"><option value="{{ f.v }}" selected="{{ f.sel }}">{{ f.l }}</option></sc-for></select></label>
+              <label style="display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:600">Texto<select onChange="{{ setBf }}" style="height:38px;border-radius:9px;border:1px solid #E6E1F2;padding:0 10px;font:500 13.5px 'DM Sans',sans-serif;background:#fff"><sc-for list="{{ fontsB }}" as="f" hint-placeholder-count="6"><option value="{{ f.v }}" selected="{{ f.sel }}">{{ f.l }}</option></sc-for></select></label>
+            </div>
+            <sc-for list="{{ segs }}" as="sg" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="width:72px;font-size:12.5px;font-weight:600;flex:none">{{ sg.t }}</span>
+                <div style="flex:1;display:flex;padding:3px;gap:2px;border-radius:9px;background:#F3F0F9">
+                  <sc-for list="{{ sg.opts }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.pick }}" style="flex:1;height:30px;border:none;border-radius:7px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }};font:600 12px/1 'DM Sans',sans-serif;cursor:pointer;white-space:nowrap">{{ o.l }}</button></sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <b style="font-size:14px">Vista previa</b>
+            <div style="display:flex;padding:3px;gap:2px;border-radius:9px;background:#fff;border:1px solid #E6E1F2">
+              <sc-for list="{{ devices }}" as="d" hint-placeholder-count="2"><button onClick="{{ d.pick }}" style="display:flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:none;border-radius:7px;background:{{ d.bg }};color:{{ d.fg }};font:600 12.5px/1 'DM Sans',sans-serif;cursor:pointer"><dc-import name="Icon" n="{{ d.icon }}" style="width:15px;height:15px" hint-size="15px,15px"></dc-import>{{ d.l }}</button></sc-for>
+            </div>
+          </div>
+          <div style="flex:1;min-height:0;display:flex;justify-content:center;border-radius:14px;background:repeating-linear-gradient(45deg,#EEEBF4 0 8px,#F4F2F8 8px 16px);padding:16px;overflow:hidden">
+            <div ref="{{ previewRef }}" style="width:{{ previewW }};height:max-content;background:var(--bg);color:var(--fg);font-family:var(--sf-body);border-radius:12px;overflow:hidden;box-shadow:0 20px 50px -20px rgb(23 19 42/.35);font-size:14px">
+              <div style="background:var(--ink);color:var(--ink-fg);text-align:center;font-size:11.5px;font-weight:500;padding:7px">Envío gratis desde 5 000 CUP</div>
+              <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)">
+                <span style="width:28px;height:28px;border-radius:var(--sf-radius-sm);background:var(--accent);color:var(--accent-fg);display:flex;align-items:center;justify-content:center;font:800 14px/1 var(--sf-heading)">T</span>
+                <b style="font:700 15px/1 var(--sf-heading);text-transform:var(--sf-case);letter-spacing:var(--sf-track)">Tienda Demo</b>
+                <span style="margin-left:auto;display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;border-radius:var(--sf-btn-radius);background:var(--accent);color:var(--accent-fg)"><dc-import name="Icon" n="shopping-bag" style="width:15px;height:15px" hint-size="15px,15px"></dc-import><span style="min-width:16px;height:16px;border-radius:99px;background:var(--secondary);color:var(--secondary-fg);font:700 10px/16px var(--sf-body);text-align:center">3</span></span>
+              </div>
+              <div style="padding:12px 14px 0">
+                <div style="border-radius:var(--sf-radius-lg);background:var(--accent);color:var(--accent-fg);padding:20px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden">
+                  <span style="position:absolute;right:-50px;bottom:-60px;width:150px;height:150px;border-radius:99px;background:var(--secondary)"></span>
+                  <span style="align-self:flex-start;background:var(--secondary);color:var(--secondary-fg);font:700 10px/1 var(--sf-body);padding:5px 9px;border-radius:99px;letter-spacing:.1em;text-transform:uppercase;position:relative">Nueva temporada</span>
+                  <b style="font:800 26px/1.05 var(--sf-heading);letter-spacing:var(--sf-track);text-transform:var(--sf-case);max-width:300px;position:relative">Colores que se quedan contigo</b>
+                  <span style="align-self:flex-start;height:38px;padding:0 16px;display:flex;align-items:center;border-radius:var(--sf-btn-radius);background:var(--accent-fg);color:var(--accent);font-weight:700;font-size:13px;position:relative">Ver colección</span>
+                </div>
+              </div>
+              <div style="padding:16px 14px 4px;display:flex;justify-content:space-between;align-items:flex-end"><b style="font:700 18px/1 var(--sf-heading);text-transform:var(--sf-case);letter-spacing:var(--sf-track)">Novedades</b><span style="font-size:12px;font-weight:600;color:var(--accent)">Ver todo</span></div>
+              <div style="display:grid;grid-template-columns:repeat({{ previewCols }},1fr);gap:12px;padding:10px 14px 16px">
+                <sc-for list="{{ previewProducts }}" as="p" hint-placeholder-count="3"><dc-import name="ProductCard" p="{{ p }}" compact="{{ true }}" hint-size="100%,300px"></dc-import></sc-for>
+              </div>
+              <div style="background:var(--ink);color:var(--ink-muted);font-size:11.5px;padding:12px 14px;display:flex;justify-content:space-between"><span>© Tienda Demo</span><span>Creada con Kshop</span></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:14px 0 20px">
+            <sc-if value="{{ contrastOk }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1F7A4D;font-weight:500"><dc-import name="Icon" n="circle-check" style="width:17px;height:17px" hint-size="17px,17px"></dc-import>Contraste correcto en todas las parejas</span></sc-if>
+            <sc-if value="{{ hasIssues }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#A3262E;font-weight:500"><dc-import name="Icon" n="triangle-alert" style="width:17px;height:17px" hint-size="17px,17px"></dc-import>{{ issueText }}</span></sc-if>
+            <button style="margin-left:auto;height:42px;padding:0 16px;border-radius:10px;border:1px solid #E6E1F2;background:#fff;font:600 14px/1 'DM Sans',sans-serif;color:#17132A;white-space:nowrap">Descartar</button>
+            <button style="height:42px;padding:0 20px;border-radius:10px;border:none;background:#5B21B6;font:600 14px/1 'DM Sans',sans-serif;color:#fff;white-space:nowrap">Guardar tema</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="A3 Kshop Admin APK" style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:baseline;gap:14px"><span style="font:500 13px/1 'JetBrains Mono',monospace;color:#7C3AED">A3</span><h2 style="margin:0;font:700 28px/1 'Outfit',sans-serif">Kshop Admin · APK</h2><span style="font-size:14px;color:#5E5873">Mismos datos y componentes; navegación por pestañas. Las tarjetas de pedido sustituyen a la tabla.</span></div>
+  <div style="display:flex;gap:40px;align-items:flex-start">
+
+    <div style="width:390px;height:844px;flex:none;border-radius:44px;overflow:hidden;border:10px solid #17132A;box-shadow:0 30px 80px -30px rgb(23 19 42/.35);background:#F7F5FC;display:flex;flex-direction:column;position:relative">
+      <div style="background:#24104F;color:#fff;padding:18px 18px 64px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="width:36px;height:36px;border-radius:10px;background:#F2B705;color:#24104F;display:flex;align-items:center;justify-content:center;font:800 17px/1 'Outfit',sans-serif">T</span>
+          <span style="display:flex;flex-direction:column;flex:1"><b style="font:700 15px/1.2 'Outfit',sans-serif;display:flex;align-items:center;gap:4px">Tienda Demo<dc-import name="Icon" n="chevron-down" style="width:14px;height:14px" hint-size="14px,14px"></dc-import></b><span style="font-size:11.5px;color:#C8C0DA">Lunes, 26 de octubre</span></span>
+          <span style="position:relative;width:44px;height:44px;border-radius:12px;background:rgb(255 255 255/.08);display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="bell" style="width:20px;height:20px" hint-size="20px,20px"></dc-import><span style="position:absolute;top:10px;right:11px;width:8px;height:8px;border-radius:99px;background:#F2B705"></span></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;color:#C8C0DA">Vendido hoy</span><b style="font:800 34px/1.1 'Outfit',sans-serif;letter-spacing:-0.01em">5 100 CUP</b><span style="font-size:12.5px;color:#6FD39C;font-weight:600">+18% que ayer · 3 pedidos</span></div>
+      </div>
+      <div style="margin:-48px 14px 0;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="padding:14px;border-radius:14px;background:#fff;box-shadow:0 8px 24px -14px rgb(36 16 79/.3);display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;color:#625C7A">Cobrado</span><b style="font:800 20px/1 'Outfit',sans-serif">3 600 CUP</b></div>
+        <div style="padding:14px;border-radius:14px;background:#fff;box-shadow:0 8px 24px -14px rgb(36 16 79/.3);display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;color:#625C7A">Por cobrar</span><b style="font:800 20px/1 'Outfit',sans-serif;color:#8A5A00">1 500 CUP</b></div>
+      </div>
+      <div style="padding:18px 14px 0;display:flex;flex-direction:column;gap:10px;flex:1;overflow:hidden">
+        <b style="font:700 16px/1 'Outfit',sans-serif">Por hacer</b>
+        <sc-for list="{{ todo }}" as="t" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:12px;min-height:56px;padding:0 12px;border-radius:14px;background:#fff;border:1px solid #E6E1F2">
+            <span style="width:36px;height:36px;flex:none;border-radius:10px;background:{{ t.bg }};color:{{ t.c }};display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="{{ t.icon }}" style="width:18px;height:18px" hint-size="18px,18px"></dc-import></span>
+            <span style="flex:1;font-size:14px;font-weight:500">{{ t.l }}</span>
+            <dc-import name="Icon" n="chevron-right" style="width:16px;height:16px;color:#625C7A" hint-size="16px,16px"></dc-import>
+          </div>
+        </sc-for>
+        <b style="font:700 16px/1 'Outfit',sans-serif;margin-top:6px">Accesos rápidos</b>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+          <sc-for list="{{ quick }}" as="q" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:14px;background:#fff;border:1px solid #E6E1F2;font-size:11.5px;font-weight:600;text-align:center"><span style="width:38px;height:38px;border-radius:12px;background:#EFE9F8;color:#5B21B6;display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="{{ q.icon }}" style="width:19px;height:19px" hint-size="19px,19px"></dc-import></span>{{ q.l }}</div>
+          </sc-for>
+        </div>
+      </div>
+      <nav style="display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid #E6E1F2;padding:6px 4px 10px">
+        <sc-for list="{{ adminTabsHome }}" as="t" hint-placeholder-count="5">
+          <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:{{ t.color }}"><span style="position:relative;width:56px;height:30px;border-radius:99px;background:{{ t.pill }};display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="{{ t.icon }}" style="width:21px;height:21px" hint-size="21px,21px"></dc-import><sc-if value="{{ t.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:-2px;right:8px;min-width:18px;height:18px;border-radius:99px;background:#C42350;color:#fff;font:700 10px/18px 'DM Sans',sans-serif;text-align:center">{{ t.badge }}</span></sc-if></span>{{ t.label }}</span>
+        </sc-for>
+      </nav>
+    </div>
+
+    <div style="width:390px;height:844px;flex:none;border-radius:44px;overflow:hidden;border:10px solid #17132A;box-shadow:0 30px 80px -30px rgb(23 19 42/.35);background:#F7F5FC;display:flex;flex-direction:column;position:relative">
+      <div style="background:#fff;padding:16px 16px 12px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid #E6E1F2">
+        <div style="display:flex;align-items:center;justify-content:space-between"><b style="font:700 24px/1 'Outfit',sans-serif">Pedidos</b><span style="width:44px;height:44px;border-radius:12px;border:1px solid #E6E1F2;display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="sliders-horizontal" style="width:19px;height:19px" hint-size="19px,19px"></dc-import></span></div>
+        <span style="height:44px;display:flex;align-items:center;gap:8px;padding:0 12px;border-radius:12px;background:#F7F5FC;border:1px solid #E6E1F2;color:#625C7A;font-size:14px"><dc-import name="Icon" n="search" style="width:17px;height:17px" hint-size="17px,17px"></dc-import>Buscar por cliente o número</span>
+        <div style="display:flex;gap:8px;overflow:hidden">
+          <sc-for list="{{ orderFilters }}" as="f" hint-placeholder-count="4"><span style="flex:none;height:34px;padding:0 12px;display:flex;align-items:center;gap:6px;border-radius:99px;font-size:13px;font-weight:600;background:{{ f.bg }};color:{{ f.fg }};border:1px solid {{ f.bd }}">{{ f.l }}<sc-if value="{{ f.n }}" hint-placeholder-val="{{ false }}"><span style="min-width:18px;height:18px;border-radius:99px;background:#F2B705;color:#24104F;font:700 10.5px/18px 'DM Sans',sans-serif;text-align:center">{{ f.n }}</span></sc-if></span></sc-for>
+        </div>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ orders }}" as="o" hint-placeholder-count="4">
+          <div style="padding:14px;border-radius:14px;background:#fff;border:1px solid #E6E1F2;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="width:36px;height:36px;border-radius:99px;background:#EFE9F8;color:#5B21B6;display:flex;align-items:center;justify-content:center;font:700 12px/1 'Outfit',sans-serif">{{ o.i }}</span>
+              <span style="display:flex;flex-direction:column;flex:1;line-height:1.25"><b style="font-size:14.5px">{{ o.n }}</b><span style="font:500 11.5px/1.3 'JetBrains Mono',monospace;color:#625C7A">{{ o.id }} · {{ o.t }}</span></span>
+              <b style="font:700 16px/1 'Outfit',sans-serif">{{ o.total }}</b>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;font-size:12px;font-weight:600;background:{{ o.sbg }};color:{{ o.sfg }}"><span style="width:6px;height:6px;border-radius:99px;background:{{ o.sfg }}"></span>{{ o.s }}</span>
+              <span style="font-size:12.5px;color:#625C7A">{{ o.items }} · {{ o.zone }}</span>
+              <span style="margin-left:auto;width:36px;height:36px;border-radius:10px;border:1px solid #D7F0E0;color:#1FA855;display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="message-circle" style="width:17px;height:17px" hint-size="17px,17px"></dc-import></span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <span style="position:absolute;right:18px;bottom:92px;width:58px;height:58px;border-radius:18px;background:#5B21B6;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 14px 30px -10px rgb(91 33 182/.6)"><dc-import name="Icon" n="plus" style="width:24px;height:24px" hint-size="24px,24px"></dc-import></span>
+      <nav style="display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid #E6E1F2;padding:6px 4px 10px">
+        <sc-for list="{{ adminTabsOrders }}" as="t" hint-placeholder-count="5">
+          <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:{{ t.color }}"><span style="position:relative;width:56px;height:30px;border-radius:99px;background:{{ t.pill }};display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="{{ t.icon }}" style="width:21px;height:21px" hint-size="21px,21px"></dc-import><sc-if value="{{ t.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:-2px;right:8px;min-width:18px;height:18px;border-radius:99px;background:#C42350;color:#fff;font:700 10px/18px 'DM Sans',sans-serif;text-align:center">{{ t.badge }}</span></sc-if></span>{{ t.label }}</span>
+        </sc-for>
+      </nav>
+    </div>
+
+    <div style="flex:1;max-width:560px;padding:28px;border-radius:18px;background:#fff;display:flex;flex-direction:column;gap:14px">
+      <b style="font:700 18px/1.2 'Outfit',sans-serif">Cómo se reparte la navegación</b>
+      <sc-for list="{{ navMap }}" as="m" hint-placeholder-count="5">
+        <div style="display:grid;grid-template-columns:110px 1fr;gap:12px;padding:10px 0;border-top:1px solid #F0EDF6;font-size:14px"><b style="font-weight:600">{{ m.tab }}</b><span style="color:#5E5873">{{ m.web }}</span></div>
+      </sc-for>
+      <p style="margin:0;font-size:13.5px;color:#5E5873;line-height:1.55">Módulos sin contratar se ven con candado PRO y llevan a Plan y facturación, como hoy. En la APK aparecen dentro de «Más».</p>
+    </div>
+  </div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { tp: "warm", ov: {}, hf: null, bf: null, radius: null, btn: null, elev: null, hcase: null, device: "web" };
+  previewRef = React.createRef();
+  onReady = () => { this.forceUpdate(); this.applyPreview(); };
+  overrides() {
+    const s = this.state, o = { colors: s.ov };
+    if (s.hf) o.headingFont = s.hf; if (s.bf) o.bodyFont = s.bf; if (s.radius) o.radius = s.radius;
+    if (s.btn) o.buttonShape = s.btn; if (s.elev) o.elevation = s.elev; if (s.hcase) o.headingCase = s.hcase;
+    return o;
+  }
+  applyPreview() { if (window.KSHOP && this.previewRef.current) window.KSHOP.apply(this.state.tp, this.overrides(), this.previewRef.current); }
+  componentDidMount() { window.addEventListener("kshop-themes", this.onReady); this.applyPreview(); }
+  componentDidUpdate() { this.applyPreview(); }
+  componentWillUnmount() { window.removeEventListener("kshop-themes", this.onReady); }
+  renderVals() {
+    const K = window.KSHOP;
+    const s = this.state;
+    const t = K ? K.resolve(s.tp, this.overrides()) : null;
+    const seg = (title, key, cur, opts) => ({ t: title, opts: opts.map(([v, l]) => ({ l, bg: cur === v ? "#fff" : "transparent", fg: cur === v ? "#17132A" : "#625C7A", sh: cur === v ? "0 1px 3px rgb(23 19 42/.15)" : "none", pick: () => this.setState({ [key]: v }) })) });
+    const status = {
+      p: ["Por confirmar", "#FFF3D6", "#8A5A00"], c: ["En camino", "#EFE9F8", "#5B21B6"], d: ["Entregado", "#E3F4EA", "#1F7A4D"], x: ["Cancelado", "#FBE6E7", "#A3262E"],
+    };
+    const orders = [
+      { id: "#1046", n: "Daniela Rodríguez", i: "DR", items: "2 productos", zone: "Plaza", total: "2 650 CUP", st: "p", t: "10:24" },
+      { id: "#1045", n: "Yoel Martínez", i: "YM", items: "1 producto", zone: "Playa", total: "4 200 CUP", st: "c", t: "09:51" },
+      { id: "#1044", n: "Marta González", i: "MG", items: "3 productos", zone: "Vedado", total: "1 700 CUP", st: "d", t: "Ayer" },
+      { id: "#1043", n: "Luis Pérez", i: "LP", items: "1 producto", zone: "Cerro", total: "850 CUP", st: "x", t: "Ayer" },
+    ].map((o) => ({ ...o, s: status[o.st][0], sbg: status[o.st][1], sfg: status[o.st][2] }));
+    const tabsFor = (a) => [
+      { k: "home", icon: "house", label: "Inicio" }, { k: "orders", icon: "receipt", label: "Pedidos", badge: 2 },
+      { k: "prod", icon: "package", label: "Productos" }, { k: "sales", icon: "trending-up", label: "Ventas" }, { k: "more", icon: "layout-grid", label: "Más" },
+    ].map((x) => ({ ...x, color: x.k === a ? "#5B21B6" : "#625C7A", pill: x.k === a ? "#EFE9F8" : "transparent" }));
+    const wk = [["L", 2100], ["M", 3400], ["X", 2800], ["J", 4600], ["V", 6200], ["S", 7100], ["D", 5100]];
+    const groups = [["Marca", ["accent", "accentFg", "secondary", "secondaryFg"]], ["Superficies", ["background", "surface", "ink", "inkFg"]], ["Texto", ["foreground", "muted", "line", "sale"]]];
+    const docs = K ? Object.fromEntries(K.TOKEN_DOCS.map((d) => [d.k, d])) : {};
+    const issues = t ? K.issues(t.colors) : [];
+    return {
+      stats: [
+        { l: "Vendido hoy", v: "5 100 CUP", d: "+18% que ayer", icon: "trending-up", bg: "#5B21B6", fg: "#fff", bd: "#5B21B6", dc: "#F2B705" },
+        { l: "Cobrado", v: "3 600 CUP", d: "2 de 3 pedidos", icon: "wallet", bg: "#fff", fg: "#17132A", bd: "#E6E1F2", dc: "#1F7A4D" },
+        { l: "Por cobrar", v: "1 500 CUP", d: "1 pedido pendiente", icon: "clock", bg: "#fff", fg: "#17132A", bd: "#E6E1F2", dc: "#8A5A00" },
+        { l: "Pedidos hoy", v: "3", d: "+1 que ayer", icon: "receipt", bg: "#fff", fg: "#17132A", bd: "#E6E1F2", dc: "#1F7A4D" },
+      ],
+      week: wk.map(([l, v], i) => ({ l, v: (v / 1000).toFixed(1).replace(".", ",") + "k", h: Math.round((v / 7100) * 100) + "px", c: i === 6 ? "#5B21B6" : "#E3DAF6", w: i === 6 ? 700 : 500 })),
+      todo: [
+        { l: "2 pedidos por confirmar", icon: "receipt", bg: "#FFF3D6", c: "#8A5A00" },
+        { l: "1 entrega para hoy", icon: "truck", bg: "#EFE9F8", c: "#5B21B6" },
+        { l: "3 productos con poco stock", icon: "package", bg: "#FBE6E7", c: "#A3262E" },
+      ],
+      orders, quick: [{ icon: "plus", l: "Pedido" }, { icon: "package-plus", l: "Producto" }, { icon: "tag", l: "Cupón" }, { icon: "share-2", l: "Compartir" }],
+      adminTabsHome: tabsFor("home"), adminTabsOrders: tabsFor("orders"),
+      orderFilters: [["Todos", 0, true], ["Por confirmar", 2], ["En camino"], ["Entregados"]].map(([l, n, a]) => ({ l, n, bg: a ? "#24104F" : "#fff", fg: a ? "#fff" : "#17132A", bd: a ? "#24104F" : "#E6E1F2" })),
+      navMap: [
+        { tab: "Inicio", web: "Inicio + Ventas de hoy" }, { tab: "Pedidos", web: "Pedidos, Entregas, Clientes" },
+        { tab: "Productos", web: "Catálogo, Importar Excel, Almacenes" }, { tab: "Ventas", web: "Finanzas, Descuentos, Monedas" },
+        { tab: "Más", web: "Apariencia, Avisos WhatsApp, App móvil, Dominio, Equipo, Plan" },
+      ],
+      appTabs: ["Tema", "Portada", "Banners", "Menús", "Páginas"].map((l, i) => ({ l, w: i === 0 ? 700 : 500, c: i === 0 ? "#5B21B6" : "#625C7A", bar: i === 0 ? "#5B21B6" : "transparent" })),
+      presetCards: K ? Object.entries(K.PRESETS).map(([k, p]) => ({ label: p.label, accent: p.colors.accent, secondary: p.colors.secondary, ink: p.colors.ink, bg: k === s.tp ? "#EFE9F8" : "#fff", ring: k === s.tp ? "0 0 0 2px #5B21B6" : "0 0 0 1px #E6E1F2", pick: () => this.setState({ tp: k, ov: {}, hf: null, bf: null, radius: null, btn: null, elev: null, hcase: null }) })) : [],
+      colorGroups: t ? groups.map(([g, ks]) => ({ t: g, items: ks.map((k) => ({ label: docs[k].label, hex: t.colors[k], set: (e) => { const v = e.target.value.toUpperCase(); this.setState((st) => ({ ov: { ...st.ov, [k]: v } })); } })) })) : [],
+      resetColors: () => this.setState({ ov: {} }),
+      fontsH: K && t ? Object.entries(K.FONT_LABELS).map(([v, l]) => ({ v, l, sel: v === t.headingFont })) : [],
+      fontsB: K && t ? Object.entries(K.FONT_LABELS).map(([v, l]) => ({ v, l, sel: v === t.bodyFont })) : [],
+      hf: t ? t.headingFont : "outfit", bf: t ? t.bodyFont : "dm-sans",
+      setHf: (e) => this.setState({ hf: e.target.value }), setBf: (e) => this.setState({ bf: e.target.value }),
+      segs: t ? [
+        seg("Esquinas", "radius", t.radius, [["none", "Rectas"], ["sm", "Suaves"], ["md", "Medias"], ["lg", "Redondas"], ["full", "Píldora"]]),
+        seg("Botones", "btn", t.buttonShape, [["auto", "Como esquinas"], ["pill", "Píldora"]]),
+        seg("Sombras", "elev", t.elevation, [["flat", "Planas"], ["soft", "Suaves"], ["lifted", "Marcadas"]]),
+        seg("Títulos", "hcase", t.headingCase, [["normal", "Normal"], ["uppercase", "MAYÚSCULAS"]]),
+      ] : [],
+      devices: [["web", "Web", "monitor"], ["m", "Móvil", "smartphone"]].map(([k, l, icon]) => ({ l, icon, bg: s.device === k ? "#EFE9F8" : "transparent", fg: s.device === k ? "#5B21B6" : "#625C7A", pick: () => this.setState({ device: k }) })),
+      previewW: s.device === "web" ? "100%" : "340px", previewCols: s.device === "web" ? 3 : 2,
+      previewProducts: [
+        { name: "Vestido de lino Ñandú", brand: "Kaya", price: "1 500 CUP", badge: "Nuevo", colors: ["#C2410C", "#1F2937"], label: "foto" },
+        { name: "Audífonos Pulse", brand: "Sonik", price: "4 200 CUP", compare: "5 250 CUP", off: 20, label: "foto" },
+        { name: "Café serrano 500 g", brand: "Finca Alta", price: "850 CUP", label: "foto" },
+      ].slice(0, s.device === "web" ? 3 : 2),
+      previewRef: this.previewRef,
+      contrastOk: issues.length === 0, hasIssues: issues.length > 0,
+      issueText: issues.map((i) => `${i.pair} (${i.ratio}:1)`).join(" · "),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<aside style="width:248px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;padding:16px 12px;background:#24104F;color:#fff;font-family:'DM Sans',sans-serif">
+  <div style="display:flex;align-items:center;gap:10px;padding:6px 8px 14px">
+    <span style="width:36px;height:36px;border-radius:10px;background:#F2B705;color:#24104F;display:flex;align-items:center;justify-content:center;font:800 17px/1 'Outfit',sans-serif">T</span>
+    <span style="display:flex;flex-direction:column;min-width:0;flex:1"><b style="font:700 15px/1.2 'Outfit',sans-serif">Tienda Demo</b><span style="font-size:11.5px;color:#C8C0DA">Dueño · Plan Pro</span></span>
+    <dc-import name="Icon" n="chevrons-up-down" style="width:16px;height:16px;color:#C8C0DA" hint-size="16px,16px"></dc-import>
+  </div>
+  <sc-for list="{{ groups }}" as="g" hint-placeholder-count="5">
+    <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:8px">
+      <sc-if value="{{ g.t }}" hint-placeholder-val="{{ true }}"><span style="padding:6px 10px 4px;font:700 10.5px/1 'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#9C93B8">{{ g.t }}</span></sc-if>
+      <sc-for list="{{ g.items }}" as="i" hint-placeholder-count="3">
+        <a href="#" style="display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:9px;font-size:13.5px;font-weight:{{ i.weight }};color:{{ i.color }};background:{{ i.bg }}" style-hover="background:rgb(255 255 255/.08);color:#fff">
+          <dc-import name="Icon" n="{{ i.icon }}" style="width:17px;height:17px;flex:none" hint-size="17px,17px"></dc-import>
+          <span style="flex:1">{{ i.l }}</span>
+          <sc-if value="{{ i.count }}" hint-placeholder-val="{{ false }}"><span style="min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:#F2B705;color:#24104F;font:700 11px/20px 'DM Sans',sans-serif;text-align:center">{{ i.count }}</span></sc-if>
+          <sc-if value="{{ i.pro }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:3px;padding:3px 6px;border-radius:99px;background:rgb(242 183 5/.16);color:#F2B705;font:700 10px/1 'DM Sans',sans-serif"><dc-import name="Icon" n="lock" style="width:10px;height:10px" hint-size="10px,10px"></dc-import>PRO</span></sc-if>
+        </a>
+      </sc-for>
+    </div>
+  </sc-for>
+  <div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 10px;border-radius:12px;background:rgb(255 255 255/.06)">
+    <span style="width:32px;height:32px;border-radius:99px;background:#5B21B6;display:flex;align-items:center;justify-content:center;font:700 12px/1 'Outfit',sans-serif">RD</span>
+    <span style="display:flex;flex-direction:column;flex:1;min-width:0;font-size:12px;color:#C8C0DA"><b style="color:#fff;font-size:13px">Roberto</b>dueno@demo.kshop.test</span>
+    <dc-import name="Icon" n="log-out" style="width:16px;height:16px;color:#C8C0DA" hint-size="16px,16px"></dc-import>
+  </div>
+</aside>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:248,&quot;height&quot;:860},&quot;active&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;home&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const a = this.props.active || "home";
+    const G = [
+      { t: "", items: [{ k: "home", l: "Inicio", icon: "house" }] },
+      { t: "Ventas", items: [{ k: "orders", l: "Pedidos", icon: "receipt", count: 2 }, { k: "deliv", l: "Entregas", icon: "truck" }, { k: "cust", l: "Clientes", icon: "users" }, { k: "disc", l: "Descuentos", icon: "tag" }, { k: "wa", l: "Avisos WhatsApp", icon: "message-circle" }] },
+      { t: "Catálogo", items: [{ k: "cat", l: "Productos", icon: "package" }, { k: "xls", l: "Importar Excel", icon: "file-spreadsheet" }, { k: "wh", l: "Almacenes", icon: "warehouse" }, { k: "cur", l: "Monedas", icon: "coins" }] },
+      { t: "Tienda", items: [{ k: "theme", l: "Apariencia", icon: "palette" }, { k: "dom", l: "Dominio propio", icon: "globe", pro: true }, { k: "app", l: "App móvil", icon: "smartphone" }] },
+      { t: "Negocio", items: [{ k: "today", l: "Ventas de hoy", icon: "trending-up" }, { k: "fin", l: "Finanzas", icon: "wallet", pro: true }, { k: "bill", l: "Plan y facturación", icon: "credit-card" }] },
+    ];
+    return {
+      groups: G.map((g) => ({ ...g, items: g.items.map((i) => ({ ...i, color: i.k === a ? "#fff" : "#D9D3EA", bg: i.k === a ? "#5B21B6" : "transparent", weight: i.k === a ? 600 : 500 })) })),
+    };
+  }
+}
+</script>
+</body>
+</html>

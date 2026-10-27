@@ -1,0 +1,147 @@
+/*
+ * Kshop design tokens v2 (rediseño 2026-10). Reemplaza packages/ui/src/styles.css.
+ * Marca: violeta #5B21B6, noche #24104F, oro #F2B705. Letra: Outfit (display), DM Sans (texto), JetBrains Mono (código).
+ * Las tiendas sobrescriben estas variables con su tema (themeStyle en .sf-root). El admin usa siempre :root.
+ */
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-muted-foreground: var(--muted);
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--accent);
+  --color-primary: var(--accent);
+  --color-primary-hover: var(--accent-hover);
+  --color-primary-foreground: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  /* v2 */
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-fg);
+  --color-secondary-soft: var(--secondary-soft);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-fg);
+  --color-ink-muted: var(--ink-muted);
+  --color-sale: var(--sale);
+  --color-sale-foreground: var(--sale-fg);
+  --color-sale-soft: var(--sale-soft);
+  --color-whatsapp: var(--wa);
+  --color-scrim: var(--scrim);
+  /* marca fija (admin, plataforma) */
+  --color-gold: var(--gold);
+  --color-night: var(--night);
+  /* estados */
+  --color-success: var(--ok);
+  --color-success-soft: var(--ok-bg);
+  --color-warning: var(--warn);
+  --color-warning-soft: var(--warn-bg);
+  --color-destructive: var(--bad);
+  --color-destructive-soft: var(--bad-bg);
+
+  --font-display: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  /* radios del tema de tienda (clases rounded-sf, rounded-sf-sm, rounded-sf-lg, rounded-sf-btn) */
+  --radius-sf-sm: var(--sf-radius-sm);
+  --radius-sf: var(--sf-radius);
+  --radius-sf-lg: var(--sf-radius-lg);
+  --radius-sf-btn: var(--sf-btn-radius);
+
+  /* sombras del tema (shadow-sf, shadow-sf-lg) */
+  --shadow-sf: var(--sf-shadow);
+  --shadow-sf-lg: var(--sf-shadow-lg);
+}
+
+:root {
+  --bg: #ffffff;
+  --fg: #17132a;
+  --surface: #f7f4fd;
+  --surface-2: #efebf7;
+  --muted: #625c7a;
+  --line: #e3dcf3;
+  --accent: #5b21b6;
+  --accent-hover: #4c1d95;
+  --accent-fg: #ffffff;
+  --accent-soft: #efeafb;
+  --secondary: #f2b705;
+  --secondary-fg: #24104f;
+  --secondary-soft: #fdf1cd;
+  --ink: #24104f;
+  --ink-fg: #ffffff;
+  --ink-muted: #c8c0da;
+  --sale: #c42350;
+  --sale-fg: #ffffff;
+  --sale-soft: #f9e9ee;
+  --scrim: rgb(36 16 79 / 0.72);
+  --wa: #1fa855;
+  --gold: #f2b705;
+  --night: #24104f;
+  --ok: #1f7a4d;
+  --ok-bg: #e3f4ea;
+  --warn: #8a5a00;
+  --warn-bg: #fff3d6;
+  --bad: #a3262e;
+  --bad-bg: #fbe6e7;
+  /* valores por defecto del tema de tienda (preset kshop) por si un componente se usa fuera de .sf-root */
+  --sf-heading: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --sf-body: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --sf-case: normal;
+  --sf-track: -0.015em;
+  --sf-radius-sm: 8px;
+  --sf-radius: 14px;
+  --sf-radius-lg: 22px;
+  --sf-btn-radius: 12px;
+  --sf-shadow: 0 1px 2px rgb(36 16 79 / 0.08), 0 8px 24px -14px rgb(36 16 79 / 0.2);
+  --sf-shadow-lg: 0 24px 60px -24px rgb(36 16 79 / 0.25);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #120a28;
+    --fg: #f1edfa;
+    --surface: #1c1238;
+    --surface-2: #241947;
+    --muted: #a79fc2;
+    --line: #2f2353;
+    --accent: #b79cff;
+    --accent-hover: #c9b5ff;
+    --accent-fg: #120a28;
+    --accent-soft: #261a4a;
+    --ink: #0b0618;
+    --ink-muted: #a79fc2;
+    --ok: #6fd39c;
+    --ok-bg: #17321f;
+    --warn: #f5c451;
+    --warn-bg: #3a2e12;
+    --bad: #ff8f95;
+    --bad-bg: #3a1a1e;
+    color-scheme: dark;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}

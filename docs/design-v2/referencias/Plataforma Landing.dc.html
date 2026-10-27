@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&family=JetBrains+Mono:wght@500&family=Outfit:wght@400..800&display=swap" rel="stylesheet">
+<script src="themes.js"></script>
+<style>body{margin:0;background:#fff}a{color:#5B21B6;text-decoration:none}a:hover{color:#4C1D95}</style>
+</helmet>
+<div style="container-type:inline-size;font-family:'DM Sans',sans-serif;color:#17132A;background:#fff;font-size:16px;line-height:1.5">
+
+<div data-screen-label="Hero" style="background:#24104F;color:#fff;position:relative;overflow:hidden">
+  <span style="position:absolute;right:-160px;top:-160px;width:520px;height:520px;border-radius:999px;background:#5B21B6;opacity:.55"></span>
+  <span style="position:absolute;left:-120px;bottom:-220px;width:380px;height:380px;border-radius:999px;background:#F2B705;opacity:.14"></span>
+  <header style="position:relative;max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:28px;padding:22px clamp(16px,4cqw,40px)">
+    <img src="brand/kshop-horizontal-reversed.svg" alt="Kshop" style="height:34px;width:auto">
+    <nav style="display:flex;gap:4px;margin-left:12px;flex-wrap:nowrap;overflow:hidden;min-width:0">
+      <sc-for list="{{ nav }}" as="n" hint-placeholder-count="4"><a href="#" style="padding:8px 12px;border-radius:10px;color:#D9D3EA;font-size:15px;font-weight:500;white-space:nowrap" style-hover="color:#fff;background:rgb(255 255 255/.06)">{{ n }}</a></sc-for>
+    </nav>
+    <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+      <a href="#" style="color:#D9D3EA;font-size:15px;font-weight:500;white-space:nowrap" style-hover="color:#fff">Entrar</a>
+      <a href="#" style="height:44px;padding:0 18px;display:flex;align-items:center;border-radius:12px;background:#F2B705;color:#24104F;font-weight:700;font-size:15px;white-space:nowrap" style-hover="color:#24104F;background:#FFC727">Crear mi tienda</a>
+    </div>
+  </header>
+  <section style="position:relative;max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:clamp(32px,5cqw,64px);padding:clamp(32px,5cqw,64px) clamp(16px,4cqw,40px) 0">
+    <div style="flex:1 1 440px;display:flex;flex-direction:column;gap:22px;padding-bottom:clamp(32px,6cqw,96px)">
+      <span style="align-self:flex-start;display:flex;align-items:center;gap:8px;padding:7px 12px 7px 8px;border-radius:999px;background:rgb(255 255 255/.08);font-size:13px;font-weight:600;color:#F2B705"><span style="padding:3px 8px;border-radius:99px;background:#F2B705;color:#24104F;font-size:11px;font-weight:800">NUEVO</span>Tu propia app Android, incluida en el plan</span>
+      <h1 style="margin:0;font:800 clamp(40px,5.4cqw,68px)/1.02 'Outfit',sans-serif;letter-spacing:-0.03em;text-wrap:balance">Tu tienda online, con tu dirección y tus pedidos por <span style="color:#F2B705">WhatsApp</span>.</h1>
+      <p style="margin:0;max-width:520px;font-size:clamp(16px,1.5cqw,19px);color:#D9D3EA;text-wrap:pretty">Catálogo con variantes, precios en CUP, USD o MLC y un panel para gestionar tu negocio desde el móvil. Lista en una tarde.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px">
+        <a href="#" style="height:54px;padding:0 24px;display:flex;align-items:center;gap:10px;border-radius:14px;background:#F2B705;color:#24104F;font-weight:800;font-size:16px" style-hover="color:#24104F;background:#FFC727">Prueba 30 días gratis<dc-import name="Icon" n="arrow-right" style="width:18px;height:18px" hint-size="18px,18px"></dc-import></a>
+        <a href="#" style="height:54px;padding:0 22px;display:flex;align-items:center;gap:10px;border-radius:14px;border:1.5px solid rgb(255 255 255/.25);color:#fff;font-weight:600;font-size:16px" style-hover="color:#fff;background:rgb(255 255 255/.06)">Ver una tienda de ejemplo</a>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;color:#C8C0DA">
+        <sc-for list="{{ trust }}" as="t" hint-placeholder-count="3"><span style="display:flex;align-items:center;gap:6px"><dc-import name="Icon" n="check" style="width:16px;height:16px;color:#6FD39C" hint-size="16px,16px"></dc-import>{{ t }}</span></sc-for>
+      </div>
+    </div>
+    <div style="flex:0 1 380px;margin:0 auto;position:relative;align-self:flex-end">
+      <div style="width:340px;height:560px;margin:0 auto;border-radius:40px 40px 0 0;border:10px solid #0E0820;border-bottom:none;overflow:hidden;background:#fff;box-shadow:0 40px 100px -30px rgb(0 0 0/.6)">
+        <iframe title="Tienda de ejemplo" src="TiendaPortada.dc.html?labels=0&amp;preset={{ demoPreset }}" style="display:block;width:390px;height:740px;border:none;transform:scale(.82);transform-origin:0 0"></iframe>
+      </div>
+      <div style="position:absolute;left:-36px;top:120px;display:flex;align-items:center;gap:12px;padding:12px 16px 12px 12px;border-radius:16px;background:#fff;color:#17132A;box-shadow:0 24px 50px -16px rgb(0 0 0/.45)">
+        <span style="width:42px;height:42px;border-radius:12px;background:#1FA855;color:#fff;display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="message-circle" style="width:21px;height:21px" hint-size="21px,21px"></dc-import></span>
+        <span style="display:flex;flex-direction:column;line-height:1.25"><b style="font-size:14px">Nuevo pedido #1046</b><span style="font-size:12.5px;color:#625C7A">Daniela · 2 650 CUP</span></span>
+      </div>
+      <div style="position:absolute;right:-20px;top:300px;padding:12px 16px;border-radius:16px;background:#F2B705;color:#24104F;box-shadow:0 24px 50px -16px rgb(0 0 0/.45);display:flex;flex-direction:column;line-height:1.2"><span style="font-size:12px;font-weight:600">Vendido hoy</span><b style="font:800 22px/1.1 'Outfit',sans-serif">5 100 CUP</b></div>
+    </div>
+  </section>
+</div>
+
+<section data-screen-label="Funciones" style="max-width:1200px;margin:0 auto;padding:clamp(56px,7cqw,104px) clamp(16px,4cqw,40px) 0;display:flex;flex-direction:column;gap:36px">
+  <div style="display:flex;flex-direction:column;gap:10px;max-width:640px">
+    <span style="font:700 13px/1 'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#5B21B6">Todo lo que necesitas</span>
+    <h2 style="margin:0;font:800 clamp(30px,3.6cqw,46px)/1.08 'Outfit',sans-serif;letter-spacing:-0.02em;text-wrap:balance">Vende como una tienda grande, sin complicarte</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px">
+    <sc-for list="{{ features }}" as="f" hint-placeholder-count="6">
+      <div style="display:flex;flex-direction:column;gap:12px;padding:26px;border-radius:20px;background:{{ f.bg }};color:{{ f.fg }}">
+        <span style="width:48px;height:48px;border-radius:14px;background:{{ f.ibg }};color:{{ f.ifg }};display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="{{ f.icon }}" style="width:23px;height:23px" hint-size="23px,23px"></dc-import></span>
+        <b style="font:700 20px/1.2 'Outfit',sans-serif;margin-top:6px">{{ f.t }}</b>
+        <span style="font-size:15px;line-height:1.55;opacity:.82;text-wrap:pretty">{{ f.d }}</span>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section data-screen-label="Temas" style="max-width:1200px;margin:0 auto;padding:clamp(56px,7cqw,104px) clamp(16px,4cqw,40px) 0">
+  <div style="border-radius:28px;background:#F7F5FC;padding:clamp(24px,4cqw,48px);display:flex;flex-wrap:wrap;gap:clamp(28px,4cqw,48px);align-items:center">
+    <div style="flex:1 1 320px;display:flex;flex-direction:column;gap:16px">
+      <span style="font:700 13px/1 'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#5B21B6">Temas</span>
+      <h2 style="margin:0;font:800 clamp(28px,3.2cqw,42px)/1.08 'Outfit',sans-serif;letter-spacing:-0.02em;text-wrap:balance">Elige un estilo y hazlo tuyo</h2>
+      <p style="margin:0;color:#5E5873;max-width:420px">Seis estilos de partida. Cambia colores, letra y esquinas: tu tienda, tu app y tus banners se actualizan a la vez.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <sc-for list="{{ presets }}" as="p" hint-placeholder-count="6">
+          <button onClick="{{ p.pick }}" style="display:flex;align-items:center;gap:8px;height:44px;padding:0 14px 0 8px;border-radius:12px;border:none;background:#fff;box-shadow:{{ p.ring }};font:600 14px/1 'DM Sans',sans-serif;color:#17132A;cursor:pointer"><span style="display:flex"><span style="width:22px;height:22px;border-radius:99px;background:{{ p.a }};box-shadow:0 0 0 2px #fff"></span><span style="width:22px;height:22px;margin-left:-6px;border-radius:99px;background:{{ p.s }};box-shadow:0 0 0 2px #fff"></span></span>{{ p.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+    <div style="flex:1.4 1 420px;height:440px;border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 30px 70px -30px rgb(23 19 42/.35);position:relative">
+      <iframe title="Vista de tema" src="TiendaPortada.dc.html?labels=0&amp;preset={{ demoPreset }}" style="position:absolute;left:0;top:0;width:1280px;height:880px;border:none;transform:scale(.5);transform-origin:0 0;pointer-events:none"></iframe>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Pasos" style="max-width:1200px;margin:0 auto;padding:clamp(56px,7cqw,104px) clamp(16px,4cqw,40px) 0;display:flex;flex-direction:column;gap:32px">
+  <h2 style="margin:0;font:800 clamp(28px,3.2cqw,42px)/1.08 'Outfit',sans-serif;letter-spacing:-0.02em;text-align:center">En marcha en tres pasos</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px">
+    <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+      <div style="display:flex;flex-direction:column;gap:10px;padding:26px;border-radius:20px;border:1px solid #E6E1F2">
+        <span style="font:800 44px/1 'Outfit',sans-serif;color:#5B21B6">{{ s.n }}</span>
+        <b style="font:700 19px/1.2 'Outfit',sans-serif">{{ s.t }}</b>
+        <span style="font-size:15px;color:#5E5873">{{ s.d }}</span>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section data-screen-label="Precios" style="max-width:1200px;margin:0 auto;padding:clamp(56px,7cqw,104px) clamp(16px,4cqw,40px) 0;display:flex;flex-direction:column;gap:32px;align-items:center">
+  <div style="display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center">
+    <span style="font:700 13px/1 'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#5B21B6">Precios</span>
+    <h2 style="margin:0;font:800 clamp(30px,3.6cqw,46px)/1.08 'Outfit',sans-serif;letter-spacing:-0.02em">Paga en efectivo, sin tarjeta</h2>
+    <p style="margin:0;color:#5E5873">30 días de prueba con todo el plan Pro. Luego eliges.</p>
+  </div>
+  <div style="width:100%;max-width:880px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px">
+    <div style="display:flex;flex-direction:column;gap:18px;padding:30px;border-radius:24px;border:1px solid #E6E1F2">
+      <b style="font:700 22px/1 'Outfit',sans-serif">Base</b>
+      <span style="display:flex;align-items:baseline;gap:6px"><b style="font:800 52px/1 'Outfit',sans-serif;letter-spacing:-0.02em">5</b><span style="color:#5E5873">USD / mes</span></span>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ baseList }}" as="i" hint-placeholder-count="5"><span style="display:flex;gap:10px;font-size:15px"><dc-import name="Icon" n="check" style="width:18px;height:18px;flex:none;margin-top:2px;color:#5B21B6" hint-size="18px,18px"></dc-import>{{ i }}</span></sc-for>
+      </div>
+      <a href="#" style="margin-top:auto;height:50px;display:flex;align-items:center;justify-content:center;border-radius:14px;border:1.5px solid #17132A;color:#17132A;font-weight:700" style-hover="color:#17132A;background:#F7F5FC">Empezar gratis</a>
+    </div>
+    <div style="position:relative;display:flex;flex-direction:column;gap:18px;padding:30px;border-radius:24px;background:#24104F;color:#fff;box-shadow:0 30px 70px -30px rgb(36 16 79/.6)">
+      <span style="position:absolute;top:22px;right:22px;padding:6px 10px;border-radius:99px;background:#F2B705;color:#24104F;font:800 11px/1 'DM Sans',sans-serif;letter-spacing:.06em">MÁS ELEGIDO</span>
+      <b style="font:700 22px/1 'Outfit',sans-serif">Pro</b>
+      <span style="display:flex;align-items:baseline;gap:6px"><b style="font:800 52px/1 'Outfit',sans-serif;letter-spacing:-0.02em;color:#F2B705">12</b><span style="color:#C8C0DA">USD / mes</span></span>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ proList }}" as="i" hint-placeholder-count="6"><span style="display:flex;gap:10px;font-size:15px"><dc-import name="Icon" n="check" style="width:18px;height:18px;flex:none;margin-top:2px;color:#F2B705" hint-size="18px,18px"></dc-import>{{ i }}</span></sc-for>
+      </div>
+      <a href="#" style="margin-top:auto;height:50px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:#F2B705;color:#24104F;font-weight:800" style-hover="color:#24104F;background:#FFC727">Probar Pro 30 días</a>
+    </div>
+  </div>
+  <p style="margin:0;font-size:14px;color:#5E5873;text-align:center;max-width:640px">Módulos sueltos sobre el Base desde 2 USD/mes. Las primeras 20 tiendas son <b style="color:#17132A">socios fundadores</b>: precio congelado para siempre.</p>
+</section>
+
+<section data-screen-label="CTA" style="max-width:1200px;margin:0 auto;padding:clamp(56px,7cqw,104px) clamp(16px,4cqw,40px)">
+  <div style="border-radius:28px;background:#5B21B6;color:#fff;padding:clamp(28px,5cqw,64px);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:24px;position:relative;overflow:hidden">
+    <span style="position:absolute;right:-80px;bottom:-120px;width:300px;height:300px;border-radius:999px;background:#F2B705"></span>
+    <div style="position:relative;display:flex;flex-direction:column;gap:10px;max-width:560px"><b style="font:800 clamp(28px,3.4cqw,44px)/1.08 'Outfit',sans-serif;letter-spacing:-0.02em;text-wrap:balance">Abre tu tienda hoy y recibe el primer pedido esta semana</b><span style="color:#E4DBF7">Te ayudamos a subir tu catálogo desde Excel.</span></div>
+    <a href="#" style="position:relative;height:56px;padding:0 26px;display:flex;align-items:center;gap:10px;border-radius:14px;background:#fff;color:#24104F;font-weight:800;font-size:16px" style-hover="color:#24104F"><dc-import name="Icon" n="message-circle" style="width:19px;height:19px;color:#1FA855" hint-size="19px,19px"></dc-import>Hablar con Kshop</a>
+  </div>
+</section>
+
+<footer style="border-top:1px solid #E6E1F2">
+  <div style="max-width:1200px;margin:0 auto;padding:28px clamp(16px,4cqw,40px);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;font-size:14px;color:#5E5873">
+    <img src="brand/kshop-horizontal.svg" alt="Kshop" style="height:28px;width:auto">
+    <span>© 2026 Fullkod · kshop.fullkod.com</span>
+    <a href="#" style="color:#5E5873">Acceso Fullkod</a>
+  </div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { p: "kshop" };
+  onReady = () => this.forceUpdate();
+  componentDidMount() { window.addEventListener("kshop-themes", this.onReady); }
+  componentWillUnmount() { window.removeEventListener("kshop-themes", this.onReady); }
+  renderVals() {
+    const K = window.KSHOP;
+    return {
+      nav: ["Funciones", "Temas", "Precios", "App"],
+      trust: ["Pago en efectivo", "Sin tarjeta", "Soporte por WhatsApp"],
+      features: [
+        { icon: "globe", t: "Tu dirección propia", d: "tutienda.kshop.fullkod.com desde el primer día, o tu propio dominio en Pro.", bg: "#5B21B6", fg: "#fff", ibg: "rgb(255 255 255/.14)", ifg: "#F2B705" },
+        { icon: "message-circle", t: "Pedidos por WhatsApp", d: "El cliente arma su carrito y te llega el pedido listo para confirmar.", bg: "#F7F5FC", fg: "#17132A", ibg: "#E3F4EA", ifg: "#1FA855" },
+        { icon: "coins", t: "CUP, USD y MLC", d: "Precios en varias monedas con la tasa del día.", bg: "#F7F5FC", fg: "#17132A", ibg: "#EFE9F8", ifg: "#5B21B6" },
+        { icon: "file-spreadsheet", t: "Catálogo desde Excel", d: "Sube cientos de productos con tallas, colores y fotos de una vez.", bg: "#F7F5FC", fg: "#17132A", ibg: "#EFE9F8", ifg: "#5B21B6" },
+        { icon: "smartphone", t: "Tu app Android", d: "Una app con tu logo para tus clientes, y Kshop Admin para ti.", bg: "#F2B705", fg: "#24104F", ibg: "rgb(36 16 79/.1)", ifg: "#24104F" },
+        { icon: "tag", t: "Ofertas que venden", d: "Precio tachado, -20 % y cuenta atrás en la portada.", bg: "#F7F5FC", fg: "#17132A", ibg: "#F9E9EE", ifg: "#C42350" },
+      ],
+      presets: K ? Object.entries(K.PRESETS).map(([k, p]) => ({ label: p.label, a: p.colors.accent, s: p.colors.secondary, ring: k === this.state.p ? "0 0 0 2px #5B21B6" : "0 0 0 1px #E6E1F2", pick: () => this.setState({ p: k }) })) : [],
+      demoPreset: this.state.p,
+      steps: [
+        { n: "01", t: "Crea tu tienda", d: "Elige nombre y dirección. Te damos 30 días de Pro." },
+        { n: "02", t: "Sube tus productos", d: "A mano o desde Excel, con fotos, tallas y colores." },
+        { n: "03", t: "Comparte y vende", d: "Pasa el enlace por WhatsApp y recibe pedidos." },
+      ],
+      baseList: ["Hasta 300 productos", "Pedidos por WhatsApp", "Ofertas visibles (-20 %)", "Importar desde Excel", "2 personas en el equipo"],
+      proList: ["Productos ilimitados", "Temas, portada y banners", "Cupones y avisos por WhatsApp", "Multimoneda y almacenes", "Finanzas y dominio propio", "10 personas en el equipo"],
+    };
+  }
+}
+</script>
+</body>
+</html>

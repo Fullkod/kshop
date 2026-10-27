@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&family=JetBrains+Mono:wght@500&family=Outfit:wght@400..800&display=swap" rel="stylesheet">
+<script src="themes.js"></script>
+<style>:root{--bg:#fff;--fg:#24104F;--surface:#F7F5FC;--muted:#5E5873;--line:#E6E1F2;--accent:#5B21B6;--accent-fg:#fff;--accent-hover:#4E1C9C;--accent-soft:#EFE9F8;--secondary:#F2B705;--secondary-fg:#24104F;--secondary-soft:#FDF1CD;--ink:#24104F;--ink-fg:#fff;--ink-muted:#C8C0DA;--sale:#C42350;--sale-fg:#fff;--sale-soft:#F9E9EE;--surface-2:#EFEBF7;--scrim:rgb(36 16 79/.72);--ring:rgb(91 33 182/.45);--wa:#1FA855;--ok:#1F7A4D;--ok-bg:#E3F4EA;--bad:#A3262E;--bad-bg:#FBE6E7;--warn:#8A5A00;--warn-bg:#FFF3D6;--sf-heading:'Outfit',sans-serif;--sf-body:'DM Sans',sans-serif;--sf-case:normal;--sf-track:-0.015em;--sf-radius-sm:8px;--sf-radius:14px;--sf-radius-lg:22px;--sf-btn-radius:12px;--sf-shadow:0 1px 2px rgb(36 16 79/.08),0 8px 24px -14px rgb(36 16 79/.2);--sf-shadow-lg:0 24px 60px -24px rgb(36 16 79/.25)}body{margin:0;background:#ECEAF1}a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-hover)}</style>
+</helmet>
+<div style="width:1840px;padding:48px;box-sizing:border-box;font-family:'DM Sans',sans-serif;color:#17132A;background:#ECEAF1;display:flex;flex-direction:column;gap:56px">
+
+<header style="display:flex;align-items:flex-end;justify-content:space-between;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <img src="brand/kshop-horizontal.svg" alt="Kshop" style="height:34px;width:auto;align-self:flex-start">
+    <h1 style="margin:0;font:700 44px/1.05 'Outfit',sans-serif;letter-spacing:-0.02em">Biblioteca de la tienda</h1>
+    <div style="display:flex;gap:8px"><a href="Admin Biblioteca.dc.html" style="padding:8px 12px;border-radius:10px;background:#fff;font-weight:600;font-size:14px">Admin y APK →</a><a href="Plataforma Landing.dc.html" style="padding:8px 12px;border-radius:10px;background:#fff;font-weight:600;font-size:14px">Landing de Kshop →</a><a href="../01-TOKENS.md" style="padding:8px 12px;border-radius:10px;background:#fff;font-weight:600;font-size:14px">Especificación de temas →</a></div>
+    <p style="margin:0;max-width:720px;font-size:16px;line-height:1.55;color:#5E5873">Tokens, átomos, tarjeta de producto y las 12 secciones de portada, en web (1280) y móvil/APK (390). Todo lee variables del tema: cambia el estilo de partida y se repinta la biblioteca entera.</p>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-end">
+    <span style="font:500 11px/1 'JetBrains Mono',monospace;color:#5E5873;letter-spacing:.06em">ESTILO DE PARTIDA (preset)</span>
+    <div style="display:flex;gap:8px;padding:6px;background:#fff;border-radius:14px;box-shadow:0 1px 2px rgb(0 0 0/.06)">
+      <sc-for list="{{ presets }}" as="p" hint-placeholder-count="6">
+        <button onClick="{{ p.pick }}" style="position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:10px 12px;border:none;border-radius:10px;background:{{ p.bg }};cursor:pointer;font:600 13px/1 'DM Sans',sans-serif;color:#17132A;min-width:96px">
+          <span style="display:flex;gap:3px"><sc-for list="{{ p.dots }}" as="d" hint-placeholder-count="4"><span style="width:16px;height:16px;border-radius:999px;background:{{ d }};box-shadow:inset 0 0 0 1px rgb(0 0 0/.12)"></span></sc-for></span>
+          {{ p.label }}
+        </button>
+      </sc-for>
+    </div>
+  </div>
+</header>
+
+<section data-screen-label="01 Tokens" style="display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;align-items:baseline;gap:14px"><span style="font:500 13px/1 'JetBrains Mono',monospace;color:#7C3AED">01</span><h2 style="margin:0;font:700 28px/1 'Outfit',sans-serif">Tema · tokens</h2><span style="font-size:14px;color:#5E5873">12 colores editables (4 nuevos) + forma y letra. El resto se deriva solo.</span></div>
+  <div style="display:grid;grid-template-columns:1.35fr 1fr;gap:24px">
+    <div style="background:#fff;border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:4px">
+      <div style="display:grid;grid-template-columns:44px 190px 130px 90px 1fr;gap:14px;padding:0 0 10px;border-bottom:1px solid #EEEAF5;font:500 11px/1 'JetBrains Mono',monospace;color:#8A84A0;letter-spacing:.04em"><span></span><span>CAMPO · ADMIN</span><span>VARIABLE</span><span>VALOR</span><span>USO</span></div>
+      <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="12">
+        <div style="display:grid;grid-template-columns:44px 190px 130px 90px 1fr;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid #F3F1F7">
+          <span style="width:44px;height:32px;border-radius:8px;background:{{ t.hex }};box-shadow:inset 0 0 0 1px rgb(0 0 0/.1)"></span>
+          <span style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px">{{ t.label }}<sc-if value="{{ t.isNew }}" hint-placeholder-val="{{ false }}"><span style="font:700 10px/1 'DM Sans',sans-serif;padding:4px 6px;border-radius:999px;background:#FDF1CD;color:#6B4E00;letter-spacing:.04em">NUEVO</span></sc-if></span>
+          <span style="font:500 12px/1 'JetBrains Mono',monospace;color:#5B21B6">{{ t.v }}</span>
+          <span style="font:500 12px/1 'JetBrains Mono',monospace;color:#5E5873">{{ t.hex }}</span>
+          <span style="font-size:13px;color:#5E5873">{{ t.role }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div style="background:#fff;border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:14px">
+        <span style="font:600 15px/1 'Outfit',sans-serif">Derivados (no se editan, los calcula themeStyle)</span>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+          <sc-for list="{{ derived }}" as="d" hint-placeholder-count="12">
+            <div style="display:flex;flex-direction:column;gap:6px"><span style="height:40px;border-radius:8px;background:{{ d.css }};box-shadow:inset 0 0 0 1px rgb(0 0 0/.08)"></span><span style="font:500 11px/1.2 'JetBrains Mono',monospace;color:#17132A">{{ d.v }}</span><span style="font-size:11.5px;color:#8A84A0;line-height:1.3">{{ d.how }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="background:#fff;border-radius:18px;padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font:600 15px/1 'Outfit',sans-serif">Letra</span>
+          <span style="font:700 32px/1.05 var(--sf-heading);letter-spacing:var(--sf-track);text-transform:var(--sf-case);color:var(--fg)">Títulos Aa</span>
+          <span style="font:500 11px/1 'JetBrains Mono',monospace;color:#5E5873">headingFont · {{ headingFont }}</span>
+          <span style="font:400 16px/1.5 var(--sf-body);color:var(--fg)">Texto de la tienda, precios y botones.</span>
+          <span style="font:500 11px/1 'JetBrains Mono',monospace;color:#5E5873">bodyFont · {{ bodyFont }}</span>
+          <span style="font:500 11px/1.4 'JetBrains Mono',monospace;color:#5E5873">headingCase · {{ headingCase }}  <b style="color:#B4441E">nuevo</b></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font:600 15px/1 'Outfit',sans-serif">Forma</span>
+          <div style="display:flex;gap:10px;align-items:flex-end">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span style="width:40px;height:40px;background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:var(--sf-radius-sm)"></span><span style="font:500 10px/1 'JetBrains Mono',monospace;color:#5E5873">sm</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span style="width:52px;height:52px;background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:var(--sf-radius)"></span><span style="font:500 10px/1 'JetBrains Mono',monospace;color:#5E5873">card</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span style="width:64px;height:64px;background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:var(--sf-radius-lg)"></span><span style="font:500 10px/1 'JetBrains Mono',monospace;color:#5E5873">lg</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span style="width:72px;height:36px;background:var(--accent);border-radius:var(--sf-btn-radius)"></span><span style="font:500 10px/1 'JetBrains Mono',monospace;color:#5E5873">btn</span></div>
+          </div>
+          <span style="font:500 11px/1.5 'JetBrains Mono',monospace;color:#5E5873">radius · {{ radius }}<br>buttonShape · {{ buttonShape }} <b style="color:#B4441E">nuevo</b><br>elevation · {{ elevation }} <b style="color:#B4441E">nuevo</b></span>
+          <div style="display:flex;gap:10px;margin-top:4px"><span style="flex:1;height:44px;border-radius:var(--sf-radius);background:var(--bg);box-shadow:var(--sf-shadow);border:1px solid var(--line)"></span><span style="flex:1;height:44px;border-radius:var(--sf-radius);background:var(--bg);box-shadow:var(--sf-shadow-lg);border:1px solid var(--line)"></span></div>
+        </div>
+      </div>
+      <div style="background:#fff;border-radius:18px;padding:20px 24px;display:flex;flex-direction:column;gap:10px">
+        <span style="font:600 15px/1 'Outfit',sans-serif">Contraste (WCAG AA 4.5:1)</span>
+        <sc-if value="{{ contrastOk }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:8px;font-size:14px;color:#1F7A4D"><dc-import name="Icon" n="circle-check" style="width:18px;height:18px" hint-size="18px,18px"></dc-import>Las 6 parejas pasan. El editor avisa si una combinación propia no llega.</span></sc-if>
+        <sc-for list="{{ contrastIssues }}" as="c" hint-placeholder-count="0"><span style="display:flex;align-items:center;gap:8px;font-size:14px;color:#A3262E"><dc-import name="Icon" n="triangle-alert" style="width:18px;height:18px" hint-size="18px,18px"></dc-import>{{ c.pair }} · {{ c.ratio }}:1</span></sc-for>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="02 Átomos" style="display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;align-items:baseline;gap:14px"><span style="font:500 13px/1 'JetBrains Mono',monospace;color:#7C3AED">02</span><h2 style="margin:0;font:700 28px/1 'Outfit',sans-serif">Átomos</h2><span style="font-size:14px;color:#5E5873">Mismos componentes en web y APK. Objetivo táctil ≥ 44 px en móvil.</span></div>
+  <div style="background:var(--bg);color:var(--fg);font-family:var(--sf-body);border-radius:18px;padding:32px;display:grid;grid-template-columns:repeat(3,1fr);gap:36px 48px">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font:500 11px/1 'JetBrains Mono',monospace;color:var(--muted)">Button · variantes</span>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <button style="height:48px;padding:0 20px;border:none;border-radius:var(--sf-btn-radius);background:var(--accent);color:var(--accent-fg);font:700 15px/1 var(--sf-body);display:flex;align-items:center;gap:8px" style-hover="background:var(--accent-hover)"><dc-import name="Icon" n="shopping-bag" style="width:18px;height:18px" hint-size="18px,18px"></dc-import>Añadir al carrito</button>
+        <button style="height:48px;padding:0 20px;border:none;border-radius:var(--sf-btn-radius);background:var(--secondary);color:var(--secondary-fg);font:700 15px/1 var(--sf-body)">Secundario</button>
+        <button style="height:48px;padding:0 20px;border:1.5px solid var(--line);border-radius:var(--sf-btn-radius);background:var(--bg);color:var(--fg);font:600 15px/1 var(--sf-body)" style-hover="border-color:var(--fg)">Contorno</button>
+        <button style="height:48px;padding:0 16px;border:none;border-radius:var(--sf-btn-radius);background:transparent;color:var(--accent);font:600 15px/1 var(--sf-body)" style-hover="background:var(--accent-soft)">Fantasma</button>
+        <button style="height:48px;padding:0 20px;border:none;border-radius:var(--sf-btn-radius);background:var(--wa);color:#fff;font:600 15px/1 var(--sf-body);display:flex;align-items:center;gap:8px"><dc-import name="Icon" n="message-circle" style="width:18px;height:18px" hint-size="18px,18px"></dc-import>WhatsApp</button>
+        <button style="height:48px;padding:0 20px;border:none;border-radius:var(--sf-btn-radius);background:var(--accent);color:var(--accent-fg);font:700 15px/1 var(--sf-body);opacity:.45">Desactivado</button>
+      </div>
+      <span style="font:500 11px/1 'JetBrains Mono',monospace;color:var(--muted);margin-top:6px">Button · tamaños sm 36 · md 44 · lg 52 · icono 44</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button style="height:36px;padding:0 14px;border:none;border-radius:var(--sf-btn-radius);background:var(--accent);color:var(--accent-fg);font:600 13px/1 var(--sf-body)">Pequeño</button>
+        <button style="height:44px;padding:0 18px;border:none;border-radius:var(--sf-btn-radius);background:var(--accent);color:var(--accent-fg);font:600 14px/1 var(--sf-body)">Mediano</button>
+        <button style="height:52px;padding:0 24px;border:none;border-radius:var(--sf-btn-radius);background:var(--accent);color:var(--accent-fg);font:700 16px/1 var(--sf-body)">Grande</button>
+        <button aria-label="Favorito" style="width:44px;height:44px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--fg);display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="heart" style="width:20px;height:20px" hint-size="20px,20px"></dc-import></button>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font:500 11px/1 'JetBrains Mono',monospace;color:var(--muted)">Badge</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <span style="background:var(--sale);color:var(--sale-fg);font:700 12px/1 var(--sf-body);padding:6px 8px;border-radius:var(--sf-radius-sm)">-20%</span>
+        <span style="background:var(--secondary);color:var(--secondary-fg);font:600 12px/1 var(--sf-body);padding:6px 8px;border-radius:var(--sf-radius-sm)">Nuevo</span>
+        <span style="background:var(--accent-soft);color:var(--accent);font:600 12px/1 var(--sf-body);padding:6px 8px;border-radius:var(--sf-radius-sm)">Envío gratis</span>
+        <span style="background:var(--bg);color:var(--fg);border:1px solid var(--line);font:600 12px/1 var(--sf-body);padding:6px 8px;border-radius:var(--sf-radius-sm)">Agotado</span>
+        <span style="background:var(--ok-bg);color:var(--ok);font:600 12px/1 var(--sf-body);padding:6px 8px;border-radius:999px">Entregado</span>
+        <span style="background:var(--warn-bg);color:var(--warn);font:600 12px/1 var(--sf-body);padding:6px 8px;border-radius:999px">Pendiente</span>
+        <span style="background:var(--bad-bg);color:var(--bad);font:600 12px/1 var(--sf-body);padding:6px 8px;border-radius:999px">Cancelado</span>
+      </div>
+      <span style="font:500 11px/1 'JetBrains Mono',monospace;color:var(--muted);margin-top:6px">Price</span>
+      <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:baseline">
+        <span style="font:700 18px/1 var(--sf-heading)">1 500 CUP</span>
+        <span style="display:flex;gap:6px;align-items:baseline"><span style="font-size:12px;color:var(--muted)">Desde</span><span style="font:700 18px/1 var(--sf-heading)">1 500 CUP</span></span>
+        <span style="display:flex;gap:8px;align-items:baseline"><span style="font:700 18px/1 var(--sf-heading)">4 200 CUP</span><span style="font-size:13px;color:var(--muted);text-decoration:line-through">5 250</span><span style="font:700 12px/1 var(--sf-body);color:var(--sale)">-20%</span></span>
+      </div>
+      <span style="font:500 11px/1 'JetBrains Mono',monospace;color:var(--muted);margin-top:6px">Rating</span>
+      <span style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><span style="display:flex;gap:2px;color:var(--secondary)"><sc-for list="{{ stars }}" as="s" hint-placeholder-count="5"><dc-import name="Icon" n="star" f="1" style="width:16px;height:16px" hint-size="16px,16px"></dc-import></sc-for></span><b style="color:var(--fg)">4,8</b> · 126 opiniones</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font:500 11px/1 'JetBrains Mono',monospace;color:var(--muted)">Input · Select · Search</span>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600">Teléfono (WhatsApp)<span style="height:46px;display:flex;align-items:center;padding:0 14px;border:1.5px solid var(--accent);box-shadow:0 0 0 4px var(--ring);border-radius:var(--sf-btn-radius);background:var(--bg);font-weight:400;font-size:15px">+53 5 123 4567</span></label>
+      <div style="display:flex;gap:10px">
+        <span style="flex:1;height:46px;display:flex;align-items:center;gap:8px;padding:0 14px;border-radius:var(--sf-btn-radius);background:var(--surface);border:1px solid var(--line);color:var(--muted);font-size:14px"><dc-import name="Icon" n="search" style="width:18px;height:18px" hint-size="18px,18px"></dc-import>Buscar productos</span>
+        <span style="height:46px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:var(--sf-btn-radius);border:1px solid var(--line);font:600 14px/1 var(--sf-body)">CUP<dc-import name="Icon" n="chevron-down" style="width:15px;height:15px" hint-size="15px,15px"></dc-import></span>
+      </div>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600">Dirección<span style="height:46px;display:flex;align-items:center;padding:0 14px;border:1.5px solid var(--bad);border-radius:var(--sf-btn-radius);background:var(--bg);font-weight:400;font-size:15px;color:var(--muted)">Calle, número, entre calles</span><span style="font-weight:400;color:var(--bad);font-size:12.5px">Escribe la dirección de entrega.</span></label>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font:500 11px/1 'JetBrains Mono',monospace;color:var(--muted)">VariantPicker · talla y color</span>
+      <div style="display:flex;gap:8px">
+        <span style="width:48px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--sf-btn-radius);border:2px solid var(--accent);background:var(--accent-soft);font-weight:600;color:var(--accent)">S</span>
+        <span style="width:48px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--sf-btn-radius);border:1px solid var(--line);font-weight:500">M</span>
+        <span style="width:48px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--sf-btn-radius);border:1px solid var(--line);font-weight:500">L</span>
+        <span style="width:48px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--sf-btn-radius);border:1px dashed var(--line);color:var(--muted);text-decoration:line-through">XL</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <span style="height:44px;padding:0 14px 0 10px;display:flex;align-items:center;gap:8px;border-radius:var(--sf-btn-radius);border:2px solid var(--accent);font-size:14px;font-weight:500"><span style="width:18px;height:18px;border-radius:999px;background:#C2410C"></span>Teja</span>
+        <span style="height:44px;padding:0 14px 0 10px;display:flex;align-items:center;gap:8px;border-radius:var(--sf-btn-radius);border:1px solid var(--line);font-size:14px"><span style="width:18px;height:18px;border-radius:999px;background:#1F2937"></span>Carbón</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font:500 11px/1 'JetBrains Mono',monospace;color:var(--muted)">QuantityStepper · Tabs · Chip</span>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="height:44px;display:flex;align-items:center;border:1px solid var(--line);border-radius:var(--sf-btn-radius)">
+          <span style="width:40px;display:flex;justify-content:center"><dc-import name="Icon" n="minus" style="width:16px;height:16px" hint-size="16px,16px"></dc-import></span><span style="width:24px;text-align:center;font-weight:600">2</span><span style="width:40px;display:flex;justify-content:center"><dc-import name="Icon" n="plus" style="width:16px;height:16px" hint-size="16px,16px"></dc-import></span>
+        </div>
+        <div style="display:flex;padding:4px;gap:4px;border-radius:var(--sf-btn-radius);background:var(--surface)">
+          <span style="padding:9px 14px;border-radius:var(--sf-btn-radius);background:var(--bg);box-shadow:var(--sf-shadow);font-weight:600;font-size:14px">Descripción</span>
+          <span style="padding:9px 14px;font-size:14px;color:var(--muted)">Envío</span>
+          <span style="padding:9px 14px;font-size:14px;color:var(--muted)">Opiniones</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span style="height:34px;padding:0 14px;display:flex;align-items:center;gap:6px;border-radius:999px;background:var(--fg);color:var(--bg);font-size:13px;font-weight:600">En oferta<dc-import name="Icon" n="x" style="width:14px;height:14px" hint-size="14px,14px"></dc-import></span>
+        <span style="height:34px;padding:0 14px;display:flex;align-items:center;border-radius:999px;border:1px solid var(--line);font-size:13px">Kaya</span>
+        <span style="height:34px;padding:0 14px;display:flex;align-items:center;border-radius:999px;border:1px solid var(--line);font-size:13px">Hasta 3 000 CUP</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font:500 11px/1 'JetBrains Mono',monospace;color:var(--muted)">Toast · Alert</span>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--sf-radius);background:var(--ink);color:var(--ink-fg);box-shadow:var(--sf-shadow-lg)">
+        <span style="width:36px;height:36px;border-radius:999px;background:var(--ok);color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><dc-import name="Icon" n="check" style="width:18px;height:18px" hint-size="18px,18px"></dc-import></span>
+        <span style="flex:1;font-size:14px"><b>Añadido al carrito</b><br><span style="color:var(--ink-muted)">Vestido Ñandú · S · Teja</span></span>
+        <a href="#" style="color:var(--secondary);font-weight:600;font-size:14px">Ver carrito</a>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--sf-radius);background:var(--accent-soft);color:var(--fg);font-size:14px"><dc-import name="Icon" n="smartphone" style="width:18px;height:18px;color:var(--accent)" hint-size="18px,18px"></dc-import>Descarga nuestra app para Android<a href="#" style="margin-left:auto;font-weight:700">Instalar</a></div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="03 Tarjeta de producto" style="display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;align-items:baseline;gap:14px"><span style="font:500 13px/1 'JetBrains Mono',monospace;color:#7C3AED">03</span><h2 style="margin:0;font:700 28px/1 'Outfit',sans-serif">ProductCard</h2><span style="font-size:14px;color:#5E5873">Favorito, % descuento, añadir rápido, colores y pedir por WhatsApp. Variante <b>row</b> para carrito, búsqueda y ofertas.</span></div>
+  <div style="display:grid;grid-template-columns:300px 1fr 1fr;gap:24px;align-items:start">
+    <div style="background:#fff;border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:14px">
+      <span style="font:500 11px/1 'JetBrains Mono',monospace;color:#8A84A0">HOY (ProductCard.tsx)</span>
+      <div style="display:flex;flex-direction:column;gap:8px;font-family:'DM Sans',sans-serif;color:#24104F">
+        <div style="position:relative;aspect-ratio:4/5;border-radius:14px;background:#F7F5FC;display:flex;align-items:center;justify-content:center;font-size:14px;color:#5E5873">Sin imagen<span style="position:absolute;left:8px;top:8px;border-radius:999px;background:#5B21B6;color:#fff;padding:2px 8px;font-size:12px;font-weight:600">Nuevo</span></div>
+        <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#5E5873">Kaya</span><span style="font-size:14px;font-weight:500">Vestido Ñandú</span><span style="font-size:14px"><span style="color:#5E5873">Desde</span>  <b>1500 CUP</b></span></div>
+      </div>
+      <p style="margin:0;font-size:13px;line-height:1.5;color:#5E5873">Sin acciones, sin colores, sin jerarquía de precio. Por eso la tienda se siente plana.</p>
+    </div>
+    <div style="background:var(--bg);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:14px">
+      <span style="font:500 11px/1 'JetBrains Mono',monospace;color:var(--muted)">WEB · grid (4 col en 1280)</span>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px">
+        <sc-for list="{{ cards }}" as="p" hint-placeholder-count="4"><dc-import name="ProductCard" p="{{ p }}" hint-size="100%,420px"></dc-import></sc-for>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div style="background:var(--bg);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:14px">
+        <span style="font:500 11px/1 'JetBrains Mono',monospace;color:var(--muted)">MÓVIL · grid compacto (2 col, solo «+»)</span>
+        <div style="width:342px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+          <sc-for list="{{ cardsMobile }}" as="p" hint-placeholder-count="2"><dc-import name="ProductCard" p="{{ p }}" compact="{{ true }}" hint-size="100%,300px"></dc-import></sc-for>
+        </div>
+      </div>
+      <div style="background:var(--bg);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:14px">
+        <span style="font:500 11px/1 'JetBrains Mono',monospace;color:var(--muted)">row · carrito, búsqueda, oferta</span>
+        <sc-for list="{{ cardsMobile }}" as="p" hint-placeholder-count="2"><dc-import name="ProductCard" p="{{ p }}" layout="row" hint-size="100%,96px"></dc-import></sc-for>
+      </div>
+    </div>
+  </div>
+</section>
+
+<sc-if value="{{ showPortada }}" hint-placeholder-val="{{ false }}"><section data-screen-label="04 Portada" style="display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;align-items:baseline;gap:14px"><span style="font:500 13px/1 'JetBrains Mono',monospace;color:#7C3AED">04</span><h2 style="margin:0;font:700 28px/1 'Outfit',sans-serif">Portada · secciones</h2><span style="font-size:14px;color:#5E5873">6 tipos actuales + 6 nuevos. La etiqueta negra es el <code>type</code> de home_sections.</span></div>
+  <div style="display:flex;gap:40px;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span style="font:500 12px/1 'JetBrains Mono',monospace;color:#5E5873">WEB · 1280</span>
+      <iframe title="Portada web" src="TiendaPortada.dc.html?frame=home-web&amp;preset={{ preset }}" style="display:block;width:1280px;height:{{ homeWebH }};border:none;border-radius:14px;box-shadow:0 30px 80px -30px rgb(23 19 42/.35);background:#fff"></iframe>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font:500 12px/1 'JetBrains Mono',monospace;color:#5E5873">MÓVIL / APK · 390</span>
+        <div style="width:390px;height:844px;border-radius:44px;overflow:hidden;border:10px solid #17132A;box-shadow:0 30px 80px -30px rgb(23 19 42/.35);background:#fff">
+          <iframe title="Portada móvil" src="TiendaPortada.dc.html?frame=home-m&amp;preset={{ preset }}" style="display:block;width:390px;height:844px;border:none"></iframe>
+        </div>
+        <span style="font-size:13px;color:#5E5873;max-width:390px;line-height:1.5">Desplázate dentro del teléfono: la barra inferior queda fija como en la APK.</span>
+      </div>
+    </div>
+  </div>
+</section></sc-if>
+
+<section data-screen-label="05 Ficha y carrito" style="display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;align-items:baseline;gap:14px"><span style="font:500 13px/1 'JetBrains Mono',monospace;color:#7C3AED">05</span><h2 style="margin:0;font:700 28px/1 'Outfit',sans-serif">Ficha de producto y carrito</h2><span style="font-size:14px;color:#5E5873">Web: galería vertical + panel. Móvil: galería arriba, barra de compra fija con WhatsApp.</span></div>
+  <div style="display:flex;gap:40px;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span style="font:500 12px/1 'JetBrains Mono',monospace;color:#5E5873">WEB · 1280</span>
+      <iframe title="Ficha web" src="TiendaFicha.dc.html?frame=ficha-web&amp;preset={{ preset }}" style="display:block;width:1280px;height:{{ fichaWebH }};border:none;border-radius:14px;box-shadow:0 30px 80px -30px rgb(23 19 42/.35);background:#fff"></iframe>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span style="font:500 12px/1 'JetBrains Mono',monospace;color:#5E5873">MÓVIL / APK · 390</span>
+      <div style="width:390px;height:844px;border-radius:44px;overflow:hidden;border:10px solid #17132A;box-shadow:0 30px 80px -30px rgb(23 19 42/.35);background:#fff">
+        <iframe title="Ficha móvil" src="TiendaFicha.dc.html?frame=ficha-m&amp;preset={{ preset }}" style="display:block;width:390px;height:844px;border:none"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;preset&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;kshop&quot;,&quot;classic&quot;,&quot;minimal&quot;,&quot;warm&quot;,&quot;fresh&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;kshop&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { preset: null, ready: !!window.KSHOP, frames: {} };
+  onMsg = (e) => { const d = e.data || {}; if (d.kshopFrame && d.h && this.state.frames[d.kshopFrame] !== d.h) this.setState((s) => ({ frames: { ...s.frames, [d.kshopFrame]: d.h } })); };
+  onReady = () => { if (!this.state.ready) this.setState({ ready: true }, this.applyTheme); };
+  applyTheme = () => { if (window.KSHOP) window.KSHOP.apply(this.cur()); };
+  cur() { return this.state.preset || this.props.preset || "kshop"; }
+  componentDidMount() { window.addEventListener("kshop-themes", this.onReady); window.addEventListener("message", this.onMsg); this.applyTheme(); }
+  componentDidUpdate() { this.applyTheme(); }
+  poll = setInterval(() => { document.querySelectorAll("iframe[src*=frame]").forEach((f) => { try { const id = new URL(f.src).searchParams.get("frame"); const h = f.contentDocument && f.contentDocument.documentElement.scrollHeight; if (id && h && this.state.frames[id] !== h) this.setState((s) => ({ frames: { ...s.frames, [id]: h } })); } catch (e) {} }); }, 1000);
+  componentWillUnmount() { window.removeEventListener("kshop-themes", this.onReady); window.removeEventListener("message", this.onMsg); clearInterval(this.poll); }
+  renderVals() {
+    const K = window.KSHOP;
+    const key = this.cur();
+    const t = K ? K.resolve(key) : null;
+    const presets = K ? Object.entries(K.PRESETS).map(([k, p]) => ({
+      label: p.label, dots: [p.colors.accent, p.colors.secondary, p.colors.ink, p.colors.background],
+      bg: k === key ? "#EFE9F8" : "transparent", pick: () => this.setState({ preset: k }, () => window.KSHOP && window.KSHOP.apply(k)),
+    })) : [];
+    const tokens = K ? K.TOKEN_DOCS.map((d) => ({ ...d, hex: t.colors[d.k] })) : [];
+    const derived = [
+      ["--accent-hover", "acento 86% + negro/blanco"], ["--accent-soft", "acento 12% sobre fondo"], ["--secondary-soft", "secundario 20%"], ["--sale-soft", "oferta 12%"],
+      ["--sale-fg", "blanco o negro, el que contraste"], ["--surface-2", "bordes + superficie"], ["--ink-muted", "texto banda 70%"], ["--ring", "foco: acento 45%"],
+      ["--ok", "estado · claro/oscuro"], ["--warn", "estado · claro/oscuro"], ["--bad", "estado · claro/oscuro"], ["--wa", "WhatsApp, fijo"],
+    ].map(([v, how]) => ({ v, how, css: `var(${v})` }));
+    const issues = t ? K.issues(t.colors) : [];
+    const P = [
+      { name: "Vestido de lino Ñandú", brand: "Kaya", price: "1 500 CUP", from: true, badge: "Nuevo", colors: ["#C2410C", "#1F2937", "#E7D8C9"], label: "foto · vestido" },
+      { name: "Audífonos inalámbricos Pulse", brand: "Sonik", price: "4 200 CUP", compare: "5 250 CUP", off: 20, colors: ["#1F1F24", "#F4F4F4"], label: "foto · audífonos" },
+      { name: "Café molido serrano 500 g", brand: "Finca Alta", price: "850 CUP", label: "foto · café" },
+      { name: "Set de cuidado facial", brand: "Aloe & Co", price: "1 900 CUP", sold: true, label: "foto · set facial" },
+    ];
+    return {
+      showPortada: true, homeWebH: (this.state.frames["home-web"] || 5200) + "px", fichaWebH: (this.state.frames["ficha-web"] || 1900) + "px", preset: key, presets, tokens, derived,
+      headingFont: t ? K.FONT_LABELS[t.headingFont] : "Outfit", bodyFont: t ? K.FONT_LABELS[t.bodyFont] : "DM Sans",
+      headingCase: t ? t.headingCase : "normal", radius: t ? t.radius : "lg", buttonShape: t ? t.buttonShape : "auto", elevation: t ? t.elevation : "soft",
+      contrastOk: issues.length === 0, contrastIssues: issues,
+      stars: [1, 2, 3, 4, 5], cards: P, cardsMobile: [P[1], P[0]],
+    };
+  }
+}
+</script>
+</body>
+</html>

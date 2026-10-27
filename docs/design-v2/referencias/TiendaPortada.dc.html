@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&family=JetBrains+Mono:wght@500&family=Outfit:wght@400..800&display=swap" rel="stylesheet">
+<script src="themes.js"></script>
+<style>:root{--bg:#fff;--fg:#24104F;--surface:#F7F5FC;--muted:#5E5873;--line:#E6E1F2;--accent:#5B21B6;--accent-fg:#fff;--accent-hover:#4E1C9C;--accent-soft:#EFE9F8;--secondary:#F2B705;--secondary-fg:#24104F;--secondary-soft:#FDF1CD;--ink:#24104F;--ink-fg:#fff;--ink-muted:#C8C0DA;--sale:#C42350;--sale-fg:#fff;--sale-soft:#F9E9EE;--surface-2:#EFEBF7;--scrim:rgb(36 16 79/.72);--wa:#1FA855;--ok:#1F7A4D;--ok-bg:#E3F4EA;--bad:#A3262E;--bad-bg:#FBE6E7;--warn:#8A5A00;--warn-bg:#FFF3D6;--sf-heading:'Outfit',sans-serif;--sf-body:'DM Sans',sans-serif;--sf-case:normal;--sf-track:-0.015em;--sf-radius-sm:8px;--sf-radius:14px;--sf-radius-lg:22px;--sf-btn-radius:12px;--sf-shadow:0 1px 2px rgb(36 16 79/.08),0 8px 24px -14px rgb(36 16 79/.2);--sf-shadow-lg:0 24px 60px -24px rgb(36 16 79/.25)}body{margin:0;background:var(--bg)}a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-hover)}</style>
+</helmet>
+<div ref="{{ rootRef }}" style="container-type:inline-size;background:var(--bg);color:var(--fg);font-family:var(--sf-body);font-size:15px;line-height:1.5">
+
+<div data-screen-label="Anuncio" style="position:relative;background:var(--ink);color:var(--ink-fg);padding:10px clamp(16px,4.4cqw,56px);display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;font-weight:500;text-align:center">
+  <sc-if value="{{ labels }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;left:6px;z-index:6;font:500 10px/1 'JetBrains Mono',monospace;background:#0B0B0F;color:#fff;padding:4px 6px;border-radius:4px;pointer-events:none">announcement_bar</span></sc-if>
+  <dc-import name="Icon" n="truck" style="width:16px;height:16px;flex:none" hint-size="16px,16px"></dc-import>
+  <span>Envío gratis en La Habana desde 5 000 CUP</span>
+  <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}"><span style="opacity:.5">·</span><span>Paga al recibir</span><a href="#" style="color:var(--secondary);font-weight:600">Ver condiciones</a></sc-if>
+</div>
+
+<header data-screen-label="Cabecera" style="position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)">
+  <sc-if value="{{ labels }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;left:6px;z-index:6;font:500 10px/1 'JetBrains Mono',monospace;background:#0B0B0F;color:#fff;padding:4px 6px;border-radius:4px;pointer-events:none">StoreHeader</span></sc-if>
+  <div style="display:flex;align-items:center;gap:clamp(6px,1.8cqw,24px);padding:12px clamp(12px,4.4cqw,56px)">
+    <sc-if value="{{ showBurger }}" hint-placeholder-val="{{ false }}">
+      <button aria-label="Menú" style="width:44px;height:44px;border:none;background:transparent;color:var(--fg);display:flex;align-items:center;justify-content:center;border-radius:var(--sf-btn-radius)"><dc-import name="Icon" n="menu" style="width:22px;height:22px" hint-size="22px,22px"></dc-import></button>
+    </sc-if>
+    <a href="#" style="display:flex;align-items:center;gap:10px;color:var(--fg);flex:none;min-width:0;max-width:60%">
+      <span style="flex:none;width:36px;height:36px;border-radius:var(--sf-radius-sm);background:var(--accent);color:var(--accent-fg);display:flex;align-items:center;justify-content:center;font:800 18px/1 var(--sf-heading)">T</span>
+      <span style="font:700 19px/1.2 var(--sf-heading);letter-spacing:var(--sf-track);text-transform:var(--sf-case);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Tienda Demo</span>
+    </a>
+    <sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+      <nav style="flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:2px;margin-left:8px;overflow:hidden">
+        <sc-for list="{{ nav }}" as="l" hint-placeholder-count="5">
+          <a href="#" style="flex:none;display:flex;align-items:center;gap:4px;padding:9px 10px;border-radius:var(--sf-btn-radius);color:var(--fg);font-weight:500;font-size:14px;white-space:nowrap" style-hover="background:var(--surface);color:var(--fg)">{{ l.label }}<sc-if value="{{ l.menu }}" hint-placeholder-val="{{ false }}"><dc-import name="Icon" n="chevron-down" style="width:14px;height:14px;opacity:.6" hint-size="14px,14px"></dc-import></sc-if></a>
+        </sc-for>
+        <a href="#" style="flex:none;display:flex;align-items:center;gap:6px;padding:9px 10px;border-radius:var(--sf-btn-radius);color:var(--sale);font-weight:600;font-size:14px;white-space:nowrap" style-hover="background:var(--sale-soft);color:var(--sale)"><dc-import name="Icon" n="flame" style="width:15px;height:15px" hint-size="15px,15px"></dc-import>Ofertas</a>
+      </nav>
+    </sc-if>
+    <div style="margin-left:auto;flex:none;display:flex;align-items:center;gap:4px">
+      <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{ searchField }}" hint-placeholder-val="{{ true }}"><label style="display:flex;align-items:center;gap:8px;height:42px;width:clamp(150px,15cqw,240px);padding:0 14px;margin-right:6px;white-space:nowrap;overflow:hidden;border-radius:var(--sf-btn-radius);background:var(--surface);border:1px solid var(--line);color:var(--muted);font-size:14px"><dc-import name="Icon" n="search" style="width:18px;height:18px" hint-size="18px,18px"></dc-import>Buscar productos</label></sc-if><sc-if value="{{ searchIcon }}" hint-placeholder-val="{{ false }}"><a href="#" aria-label="Buscar" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--fg);border-radius:var(--sf-btn-radius)" style-hover="background:var(--surface);color:var(--fg)"><dc-import name="Icon" n="search" style="width:21px;height:21px" hint-size="21px,21px"></dc-import></a></sc-if>
+        <button style="height:42px;display:flex;align-items:center;gap:4px;padding:0 10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:var(--sf-btn-radius);font:600 13px/1 var(--sf-body);margin-right:6px">CUP<dc-import name="Icon" n="chevron-down" style="width:14px;height:14px" hint-size="14px,14px"></dc-import></button>
+        <a href="#" aria-label="Favoritos" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--fg);border-radius:var(--sf-btn-radius)" style-hover="background:var(--surface);color:var(--fg)"><dc-import name="Icon" n="heart" style="width:21px;height:21px" hint-size="21px,21px"></dc-import></a>
+        <a href="#" aria-label="Mi cuenta" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--fg);border-radius:var(--sf-btn-radius)" style-hover="background:var(--surface);color:var(--fg)"><dc-import name="Icon" n="user" style="width:21px;height:21px" hint-size="21px,21px"></dc-import></a>
+      </sc-if>
+      <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+        <button style="height:36px;display:flex;align-items:center;gap:2px;padding:0 8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:var(--sf-btn-radius);font:600 12px/1 var(--sf-body)">CUP<dc-import name="Icon" n="chevron-down" style="width:12px;height:12px" hint-size="12px,12px"></dc-import></button>
+      </sc-if>
+      <a href="#" aria-label="Carrito, 3 productos" style="position:relative;height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;color:var(--accent-fg);background:var(--accent);border-radius:var(--sf-btn-radius);font-weight:600;font-size:14px;margin-left:4px" style-hover="background:var(--accent-hover);color:var(--accent-fg)">
+        <dc-import name="Icon" n="shopping-bag" style="width:19px;height:19px" hint-size="19px,19px"></dc-import>
+        <span style="min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--secondary);color:var(--secondary-fg);font:700 11px/20px var(--sf-body);text-align:center">3</span>
+      </a>
+    </div>
+  </div>
+  <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:0 16px 12px;display:flex;flex-direction:column;gap:12px">
+      <label style="display:flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:var(--sf-btn-radius);background:var(--surface);border:1px solid var(--line);color:var(--muted);font-size:14px"><dc-import name="Icon" n="search" style="width:18px;height:18px" hint-size="18px,18px"></dc-import>Buscar en Tienda Demo</label>
+      <div style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px">
+        <sc-for list="{{ chips }}" as="c" hint-placeholder-count="5">
+          <a href="#" style="flex:none;height:34px;padding:0 14px;display:flex;align-items:center;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font-size:13px;font-weight:500">{{ c }}</a>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+</header>
+
+<section data-screen-label="Hero" style="position:relative;padding:clamp(12px,2cqw,24px) clamp(16px,4.4cqw,56px) 0">
+  <sc-if value="{{ labels }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;left:6px;z-index:6;font:500 10px/1 'JetBrains Mono',monospace;background:#0B0B0F;color:#fff;padding:4px 6px;border-radius:4px;pointer-events:none">hero_slider</span></sc-if>
+  <div style="display:flex;flex-wrap:wrap;border-radius:var(--sf-radius-lg);overflow:hidden;background:var(--accent);color:var(--accent-fg)">
+    <div style="flex:1 1 380px;display:flex;flex-direction:column;justify-content:space-between;gap:32px;padding:clamp(24px,4.4cqw,56px);position:relative;overflow:hidden">
+      <span style="position:absolute;right:-90px;bottom:-110px;width:260px;height:260px;border-radius:999px;background:var(--secondary);opacity:.95"></span>
+      <div style="display:flex;flex-direction:column;gap:18px;position:relative">
+        <span style="align-self:flex-start;background:var(--secondary);color:var(--secondary-fg);font:700 11px/1 var(--sf-body);padding:7px 12px;border-radius:999px;letter-spacing:.1em;text-transform:uppercase">Nueva temporada</span>
+        <h1 style="margin:0;font:800 clamp(38px,5cqw,68px)/1.02 var(--sf-heading);letter-spacing:var(--sf-track);text-transform:var(--sf-case);text-wrap:balance">Colores que se quedan contigo</h1>
+        <p style="margin:0;max-width:440px;font-size:clamp(15px,1.4cqw,18px);line-height:1.5;opacity:.9;text-wrap:pretty">Vestidos, sandalias y complementos de lino. Pide hoy y recíbelo mañana en casa.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">
+          <a href="#" style="height:50px;padding:0 22px;display:flex;align-items:center;gap:8px;border-radius:var(--sf-btn-radius);background:var(--accent-fg);color:var(--accent);font-weight:700;font-size:15px" style-hover="color:var(--accent);opacity:.92">Ver colección<dc-import name="Icon" n="arrow-right" style="width:18px;height:18px" hint-size="18px,18px"></dc-import></a>
+          <a href="#" style="height:50px;padding:0 20px;display:flex;align-items:center;gap:8px;border-radius:var(--sf-btn-radius);border:1.5px solid color-mix(in srgb,var(--accent-fg) 40%,transparent);color:var(--accent-fg);font-weight:600;font-size:15px" style-hover="color:var(--accent-fg);background:color-mix(in srgb,var(--accent-fg) 10%,transparent)"><dc-import name="Icon" n="message-circle" style="width:18px;height:18px" hint-size="18px,18px"></dc-import>Pedir por WhatsApp</a>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;position:relative">
+        <span style="font:500 12px/1 'JetBrains Mono',monospace;white-space:nowrap">01 / 03</span>
+        <div style="display:flex;gap:6px;flex:1;max-width:140px"><span style="flex:1;height:3px;border-radius:2px;background:var(--accent-fg)"></span><span style="flex:1;height:3px;border-radius:2px;background:var(--accent-fg);opacity:.3"></span><span style="flex:1;height:3px;border-radius:2px;background:var(--accent-fg);opacity:.3"></span></div>
+        <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;gap:8px;margin-left:auto;margin-right:150px">
+            <button aria-label="Anterior" style="width:42px;height:42px;border-radius:999px;border:1.5px solid color-mix(in srgb,var(--accent-fg) 40%,transparent);background:transparent;color:var(--accent-fg);display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="chevron-left" style="width:18px;height:18px" hint-size="18px,18px"></dc-import></button>
+            <button aria-label="Siguiente" style="width:42px;height:42px;border-radius:999px;border:none;background:var(--accent-fg);color:var(--accent);display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="chevron-right" style="width:18px;height:18px" hint-size="18px,18px"></dc-import></button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+    <div style="flex:1.25 1 420px;min-height:clamp(300px,40cqw,540px);position:relative;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--accent-fg) 16%,var(--accent)) 0 14px,color-mix(in srgb,var(--accent-fg) 7%,var(--accent)) 14px 28px)">
+      <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:500 12px/1 'JetBrains Mono',monospace;color:var(--accent-fg);opacity:.8">foto de portada · 1920×1080 / móvil 1080×1350</span>
+      <div style="position:absolute;left:20px;bottom:20px;display:flex;align-items:center;gap:12px;padding:10px 12px 10px 10px;border-radius:var(--sf-radius);background:var(--bg);color:var(--fg);box-shadow:var(--sf-shadow-lg)">
+        <span style="width:48px;height:48px;border-radius:var(--sf-radius-sm);background:repeating-linear-gradient(135deg,var(--accent-soft) 0 6px,var(--surface) 6px 12px)"></span>
+        <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;font-weight:500">Vestido de lino Ñandú</span><span style="font:700 14px/1.2 var(--sf-heading)">1 500 CUP</span></div>
+        <span style="width:34px;height:34px;border-radius:var(--sf-btn-radius);background:var(--accent);color:var(--accent-fg);display:flex;align-items:center;justify-content:center;margin-left:6px"><dc-import name="Icon" n="plus" style="width:16px;height:16px" hint-size="16px,16px"></dc-import></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Beneficios" style="position:relative;padding:clamp(16px,2.4cqw,28px) clamp(16px,4.4cqw,56px) 0">
+  <sc-if value="{{ labels }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;left:6px;z-index:6;font:500 10px/1 'JetBrains Mono',monospace;background:#0B0B0F;color:#fff;padding:4px 6px;border-radius:4px;pointer-events:none">benefits · nuevo</span></sc-if>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:clamp(8px,1.4cqw,16px)">
+    <sc-for list="{{ benefits }}" as="b" hint-placeholder-count="4">
+      <div style="display:flex;align-items:center;gap:12px;padding:clamp(12px,1.4cqw,18px);border-radius:var(--sf-radius);background:var(--surface);border:1px solid var(--line)">
+        <span style="flex:none;width:42px;height:42px;border-radius:999px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="{{ b.icon }}" style="width:20px;height:20px" hint-size="20px,20px"></dc-import></span>
+        <div style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:600;font-size:14px;line-height:1.25">{{ b.title }}</span><span style="font-size:12.5px;color:var(--muted);line-height:1.35">{{ b.text }}</span></div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section data-screen-label="Categorías" style="position:relative;padding:clamp(44px,5.6cqw,72px) clamp(16px,4.4cqw,56px) 0;display:flex;flex-direction:column;gap:20px">
+  <sc-if value="{{ labels }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;left:6px;z-index:6;font:500 10px/1 'JetBrains Mono',monospace;background:#0B0B0F;color:#fff;padding:4px 6px;border-radius:4px;pointer-events:none">category_grid</span></sc-if>
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:700 12px/1 var(--sf-body);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)">Explora</span><h2 style="margin:0;font:700 clamp(24px,2.6cqw,34px)/1.1 var(--sf-heading);letter-spacing:var(--sf-track);text-transform:var(--sf-case)">Compra por categoría</h2></div>
+    <a href="#" style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px;white-space:nowrap">Todas<dc-import name="Icon" n="arrow-right" style="width:16px;height:16px" hint-size="16px,16px"></dc-import></a>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(max(96px,12cqw),1fr));gap:clamp(10px,1.6cqw,20px)">
+    <sc-for list="{{ categories }}" as="c" hint-placeholder-count="6">
+      <a href="#" style="display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--fg);text-align:center">
+        <span style="position:relative;width:100%;aspect-ratio:1;margin-bottom:8px;border-radius:var(--sf-radius-lg);overflow:hidden;background:repeating-linear-gradient(135deg,var(--secondary-soft) 0 10px,color-mix(in srgb,var(--secondary) 9%,var(--bg)) 10px 20px);display:flex;align-items:center;justify-content:center;font:500 10px/1 'JetBrains Mono',monospace;color:var(--muted)">foto</span>
+        <span style="font-weight:600;font-size:14px;line-height:1.2">{{ c.name }}</span>
+        <span style="font-size:12px;color:var(--muted)">{{ c.count }} productos</span>
+      </a>
+    </sc-for>
+  </div>
+</section>
+
+<section data-screen-label="Novedades" style="position:relative;padding-top:clamp(44px,5.6cqw,72px);display:flex;flex-direction:column;gap:4px">
+  <sc-if value="{{ labels }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;left:6px;z-index:6;font:500 10px/1 'JetBrains Mono',monospace;background:#0B0B0F;color:#fff;padding:4px 6px;border-radius:4px;pointer-events:none">product_carousel</span></sc-if>
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:0 clamp(16px,4.4cqw,56px)">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:700 12px/1 var(--sf-body);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)">Recién llegados</span><h2 style="margin:0;font:700 clamp(24px,2.6cqw,34px)/1.1 var(--sf-heading);letter-spacing:var(--sf-track);text-transform:var(--sf-case)">Novedades de la semana</h2></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <a href="#" style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px;white-space:nowrap;margin-right:6px">Ver todo<dc-import name="Icon" n="arrow-right" style="width:16px;height:16px" hint-size="16px,16px"></dc-import></a>
+      <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+        <button aria-label="Anterior" style="width:40px;height:40px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--fg);display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="chevron-left" style="width:18px;height:18px" hint-size="18px,18px"></dc-import></button>
+        <button aria-label="Siguiente" style="width:40px;height:40px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--fg);display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="chevron-right" style="width:18px;height:18px" hint-size="18px,18px"></dc-import></button>
+      </sc-if>
+    </div>
+  </div>
+  <div style="display:grid;grid-auto-flow:column;grid-auto-columns:clamp(164px,calc((100cqw - 172px) / 4),300px);gap:clamp(12px,1.6cqw,20px);overflow-x:auto;padding:16px clamp(16px,4.4cqw,56px) 4px;scrollbar-width:none">
+    <sc-for list="{{ newProducts }}" as="p" hint-placeholder-count="4">
+      <dc-import name="ProductCard" p="{{ p }}" compact="{{ isMobile }}" hint-size="100%,400px"></dc-import>
+    </sc-for>
+  </div>
+</section>
+
+<section data-screen-label="Mosaico" style="position:relative;padding:clamp(44px,5.6cqw,72px) clamp(16px,4.4cqw,56px) 0">
+  <sc-if value="{{ labels }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;left:6px;z-index:6;font:500 10px/1 'JetBrains Mono',monospace;background:#0B0B0F;color:#fff;padding:4px 6px;border-radius:4px;pointer-events:none">banner_mosaic · nuevo</span></sc-if>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:clamp(12px,1.6cqw,20px)">
+    <a href="#" style="position:relative;min-height:clamp(280px,30cqw,400px);border-radius:var(--sf-radius-lg);overflow:hidden;display:flex;align-items:flex-end;padding:clamp(22px,2.8cqw,36px);color:var(--ink-fg);background:repeating-linear-gradient(135deg,var(--ink) 0 14px,color-mix(in srgb,var(--ink-fg) 8%,var(--ink)) 14px 28px)">
+      <span style="position:absolute;top:18px;right:18px;font:500 11px/1 'JetBrains Mono',monospace;color:var(--ink-fg);opacity:.7">foto · colección</span>
+      <span style="position:absolute;inset:0;background:linear-gradient(to top,var(--scrim),transparent 65%)"></span>
+      <div style="position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:10px">
+        <span style="font:700 12px/1 var(--sf-body);letter-spacing:.1em;text-transform:uppercase;color:var(--secondary)">Colección</span>
+        <span style="font:800 clamp(28px,3.2cqw,42px)/1.05 var(--sf-heading);letter-spacing:var(--sf-track);text-transform:var(--sf-case)">Verano en lino</span>
+        <span style="margin-top:6px;height:44px;padding:0 18px;display:flex;align-items:center;gap:8px;border-radius:var(--sf-btn-radius);background:var(--bg);color:var(--fg);font-weight:600;font-size:14px">Descubrir<dc-import name="Icon" n="arrow-right" style="width:16px;height:16px" hint-size="16px,16px"></dc-import></span>
+      </div>
+    </a>
+    <a href="#" style="position:relative;min-height:clamp(280px,30cqw,400px);border-radius:var(--sf-radius-lg);overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;gap:24px;padding:clamp(22px,2.8cqw,36px);background:var(--secondary);color:var(--secondary-fg)">
+      <span style="position:absolute;right:-12px;bottom:-40px;font:900 clamp(150px,18cqw,240px)/1 var(--sf-heading);letter-spacing:-0.05em;opacity:.12;pointer-events:none">30%</span>
+      <span style="align-self:flex-start;display:flex;align-items:center;gap:6px;font:700 12px/1 var(--sf-body);letter-spacing:.1em;text-transform:uppercase;padding:7px 12px;border-radius:999px;background:var(--secondary-fg);color:var(--secondary)"><dc-import name="Icon" n="tag" style="width:13px;height:13px" hint-size="13px,13px"></dc-import>Solo esta semana</span>
+      <div style="position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:10px">
+        <span style="font:800 clamp(28px,3.2cqw,42px)/1.05 var(--sf-heading);letter-spacing:var(--sf-track);text-transform:var(--sf-case);max-width:420px;text-wrap:balance">Hasta -30% en complementos</span>
+        <span style="font-size:15px;max-width:360px;opacity:.85">Bolsos, gafas y bisutería con precio rebajado en toda la tienda.</span>
+        <span style="margin-top:6px;height:44px;padding:0 18px;display:flex;align-items:center;gap:8px;border-radius:var(--sf-btn-radius);background:var(--ink);color:var(--ink-fg);font-weight:600;font-size:14px">Ver ofertas<dc-import name="Icon" n="arrow-right" style="width:16px;height:16px" hint-size="16px,16px"></dc-import></span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<section data-screen-label="Oferta flash" style="position:relative;padding:clamp(44px,5.6cqw,72px) clamp(16px,4.4cqw,56px) 0">
+  <sc-if value="{{ labels }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;left:6px;z-index:6;font:500 10px/1 'JetBrains Mono',monospace;background:#0B0B0F;color:#fff;padding:4px 6px;border-radius:4px;pointer-events:none">offer_countdown · nuevo</span></sc-if>
+  <div style="border-radius:var(--sf-radius-lg);background:var(--sale-soft);border:1px solid color-mix(in srgb,var(--sale) 22%,transparent);padding:clamp(20px,3.4cqw,44px);display:flex;flex-wrap:wrap;gap:clamp(24px,3cqw,44px);align-items:center">
+    <div style="flex:1 1 280px;display:flex;flex-direction:column;gap:14px">
+      <span style="align-self:flex-start;display:flex;align-items:center;gap:6px;font:700 12px/1 var(--sf-body);letter-spacing:.1em;text-transform:uppercase;padding:7px 12px;border-radius:999px;background:var(--sale);color:var(--sale-fg)"><dc-import name="Icon" n="zap" style="width:13px;height:13px" hint-size="13px,13px"></dc-import>Oferta flash</span>
+      <h2 style="margin:0;font:800 clamp(26px,3cqw,40px)/1.08 var(--sf-heading);letter-spacing:var(--sf-track);text-transform:var(--sf-case);text-wrap:balance">Precios de locura hasta el domingo</h2>
+      <p style="margin:0;color:var(--muted);max-width:380px">Electrónica y hogar con descuento. Unidades limitadas.</p>
+      <dc-import name="Countdown" style="margin-top:6px" hint-size="320px,78px"></dc-import>
+    </div>
+    <div style="flex:2 1 420px;display:grid;grid-template-columns:repeat(auto-fill,minmax(146px,1fr));gap:clamp(12px,1.4cqw,18px)">
+      <sc-for list="{{ offerProducts }}" as="p" hint-placeholder-count="3">
+        <dc-import name="ProductCard" p="{{ p }}" compact="{{ true }}" hint-size="100%,360px"></dc-import>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Producto destacado" style="position:relative;padding:clamp(44px,5.6cqw,72px) clamp(16px,4.4cqw,56px) 0">
+  <sc-if value="{{ labels }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;left:6px;z-index:6;font:500 10px/1 'JetBrains Mono',monospace;background:#0B0B0F;color:#fff;padding:4px 6px;border-radius:4px;pointer-events:none">featured_product · nuevo</span></sc-if>
+  <div style="display:flex;flex-wrap:wrap;gap:clamp(24px,4.4cqw,64px);align-items:center">
+    <div style="flex:1 1 340px;display:flex;flex-direction:column;gap:12px">
+      <div style="position:relative;aspect-ratio:1;border-radius:var(--sf-radius-lg);overflow:hidden;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--accent) 9%,var(--surface)) 0 14px,var(--surface) 14px 28px);box-shadow:var(--sf-shadow)">
+        <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:500 12px/1 'JetBrains Mono',monospace;color:var(--muted)">foto · producto destacado</span>
+        <span style="position:absolute;left:14px;top:14px;display:flex;align-items:center;gap:6px;background:var(--secondary);color:var(--secondary-fg);font:700 12px/1 var(--sf-body);padding:7px 10px;border-radius:var(--sf-radius-sm)"><dc-import name="Icon" n="trophy" style="width:13px;height:13px" hint-size="13px,13px"></dc-import>Más vendido</span>
+      </div>
+      <div style="display:flex;gap:10px">
+        <span style="width:64px;height:64px;border-radius:var(--sf-radius-sm);background:repeating-linear-gradient(135deg,var(--accent-soft) 0 6px,var(--surface) 6px 12px);box-shadow:0 0 0 2px var(--accent)"></span>
+        <span style="width:64px;height:64px;border-radius:var(--sf-radius-sm);background:repeating-linear-gradient(135deg,var(--accent-soft) 0 6px,var(--surface) 6px 12px);box-shadow:0 0 0 1px var(--line)"></span>
+        <span style="width:64px;height:64px;border-radius:var(--sf-radius-sm);background:repeating-linear-gradient(135deg,var(--accent-soft) 0 6px,var(--surface) 6px 12px);box-shadow:0 0 0 1px var(--line)"></span>
+      </div>
+    </div>
+    <div style="flex:1 1 340px;display:flex;flex-direction:column;gap:16px">
+      <span style="font:700 12px/1 var(--sf-body);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)">Producto destacado</span>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <span style="font:500 12px/1 var(--sf-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Sonik</span>
+        <h2 style="margin:0;font:800 clamp(28px,3.2cqw,44px)/1.05 var(--sf-heading);letter-spacing:var(--sf-track);text-transform:var(--sf-case);text-wrap:balance">Audífonos inalámbricos Pulse</h2>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">
+        <div style="display:flex;gap:2px;color:var(--secondary)"><sc-for list="{{ stars }}" as="s" hint-placeholder-count="5"><dc-import name="Icon" n="star" f="1" style="width:16px;height:16px" hint-size="16px,16px"></dc-import></sc-for></div>
+        <span><b style="color:var(--fg)">4,8</b> · 126 opiniones</span>
+      </div>
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px">
+        <span style="font:800 clamp(26px,2.6cqw,32px)/1 var(--sf-heading)">4 200 CUP</span>
+        <span style="font-size:15px;color:var(--muted);text-decoration:line-through">5 250 CUP</span>
+        <span style="background:var(--sale);color:var(--sale-fg);font:700 12px/1 var(--sf-body);padding:6px 8px;border-radius:var(--sf-radius-sm)">-20%</span>
+      </div>
+      <p style="margin:0;color:var(--muted);max-width:460px;text-wrap:pretty">Hasta 30 horas de batería, carga rápida por USB-C y estuche de bolsillo. Garantía de 3 meses en tienda.</p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:13px;font-weight:600">Color: <span style="font-weight:400;color:var(--muted)">Negro</span></span>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <span style="height:40px;padding:0 14px 0 10px;display:flex;align-items:center;gap:8px;border-radius:var(--sf-btn-radius);border:2px solid var(--accent);font-size:14px;font-weight:500"><span style="width:16px;height:16px;border-radius:999px;background:#1F1F24"></span>Negro</span>
+          <span style="height:40px;padding:0 14px 0 10px;display:flex;align-items:center;gap:8px;border-radius:var(--sf-btn-radius);border:1px solid var(--line);font-size:14px"><span style="width:16px;height:16px;border-radius:999px;background:#F4F4F4;box-shadow:inset 0 0 0 1px #ccc"></span>Blanco</span>
+          <span style="height:40px;padding:0 14px 0 10px;display:flex;align-items:center;gap:8px;border-radius:var(--sf-btn-radius);border:1px solid var(--line);font-size:14px"><span style="width:16px;height:16px;border-radius:999px;background:#9C86D9"></span>Lila</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px">
+        <div style="height:52px;display:flex;align-items:center;border:1px solid var(--line);border-radius:var(--sf-btn-radius);background:var(--bg)">
+          <button aria-label="Menos" style="width:44px;height:100%;border:none;background:transparent;color:var(--fg);display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="minus" style="width:16px;height:16px" hint-size="16px,16px"></dc-import></button>
+          <span style="width:28px;text-align:center;font-weight:600">1</span>
+          <button aria-label="Más" style="width:44px;height:100%;border:none;background:transparent;color:var(--fg);display:flex;align-items:center;justify-content:center"><dc-import name="Icon" n="plus" style="width:16px;height:16px" hint-size="16px,16px"></dc-import></button>
+        </div>
+        <a href="#" style="flex:1 1 200px;height:52px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--sf-btn-radius);background:var(--accent);color:var(--accent-fg);font-weight:700;font-size:15px;box-shadow:var(--sf-shadow)" style-hover="background:var(--accent-hover);color:var(--accent-fg)"><dc-import name="Icon" n="shopping-bag" style="width:18px;height:18px" hint-size="18px,18px"></dc-import>Añadir al carrito</a>
+        <a href="#" style="flex:1 1 100%;height:48px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--sf-btn-radius);border:1.5px solid var(--wa);color:var(--wa);font-weight:600;font-size:15px" style-hover="color:var(--wa);background:color-mix(in srgb,var(--wa) 8%,transparent)"><dc-import name="Icon" n="message-circle" style="width:18px;height:18px" hint-size="18px,18px"></dc-import>Pedir por WhatsApp</a>
+      </div>
+      <span style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><dc-import name="Icon" n="truck" style="width:16px;height:16px;color:var(--ok)" hint-size="16px,16px"></dc-import>Recíbelo mañana en La Habana</span>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Colecciones" style="position:relative;padding-top:clamp(44px,5.6cqw,72px);display:flex;flex-direction:column;gap:4px">
+  <sc-if value="{{ labels }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;left:6px;z-index:6;font:500 10px/1 'JetBrains Mono',monospace;background:#0B0B0F;color:#fff;padding:4px 6px;border-radius:4px;pointer-events:none">collection_cards · nuevo</span></sc-if>
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:0 clamp(16px,4.4cqw,56px)">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:700 12px/1 var(--sf-body);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)">Para cada momento</span><h2 style="margin:0;font:700 clamp(24px,2.6cqw,34px)/1.1 var(--sf-heading);letter-spacing:var(--sf-track);text-transform:var(--sf-case)">Colecciones</h2></div>
+  </div>
+  <div style="display:grid;grid-auto-flow:column;grid-auto-columns:clamp(240px,calc((100cqw - 152px) / 3),420px);gap:clamp(12px,1.6cqw,20px);overflow-x:auto;padding:16px clamp(16px,4.4cqw,56px) 4px;scrollbar-width:none">
+    <sc-for list="{{ collections }}" as="c" hint-placeholder-count="3">
+      <a href="#" style="position:relative;aspect-ratio:4/5;border-radius:var(--sf-radius-lg);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding:22px;color:var(--ink-fg);background:repeating-linear-gradient(135deg,var(--ink) 0 14px,color-mix(in srgb,var(--ink-fg) 8%,var(--ink)) 14px 28px)" style-hover="color:var(--ink-fg)">
+        <span style="position:absolute;top:18px;left:18px;font:500 11px/1 'JetBrains Mono',monospace;opacity:.7">foto · {{ c.slug }}</span>
+        <span style="position:absolute;inset:0;background:linear-gradient(to top,var(--scrim),transparent 60%)"></span>
+        <div style="position:relative;display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:12.5px;opacity:.8">{{ c.count }} productos</span>
+          <span style="font:800 26px/1.1 var(--sf-heading);letter-spacing:var(--sf-track);text-transform:var(--sf-case)">{{ c.name }}</span>
+          <span style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px;color:var(--secondary);margin-top:4px">Ver colección<dc-import name="Icon" n="arrow-right" style="width:16px;height:16px" hint-size="16px,16px"></dc-import></span>
+        </div>
+      </a>
+    </sc-for>
+  </div>
+</section>
+
+<section data-screen-label="Marcas" style="position:relative;padding:clamp(44px,5.6cqw,72px) clamp(16px,4.4cqw,56px) 0;display:flex;flex-direction:column;gap:18px">
+  <sc-if value="{{ labels }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;left:6px;z-index:6;font:500 10px/1 'JetBrains Mono',monospace;background:#0B0B0F;color:#fff;padding:4px 6px;border-radius:4px;pointer-events:none">brand_strip</span></sc-if>
+  <span style="font:700 12px/1 var(--sf-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:center">Marcas que vendemos</span>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(max(100px,13cqw),1fr));gap:12px">
+    <sc-for list="{{ brands }}" as="b" hint-placeholder-count="6">
+      <a href="#" style="height:72px;border-radius:var(--sf-radius);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font:700 17px/1 var(--sf-heading);color:var(--muted);letter-spacing:.01em" style-hover="color:var(--fg);border-color:var(--fg)">{{ b }}</a>
+    </sc-for>
+  </div>
+</section>
+
+<section data-screen-label="Testimonios" style="position:relative;margin-top:clamp(44px,5.6cqw,72px);background:var(--surface);padding:clamp(44px,5.6cqw,72px) 0;display:flex;flex-direction:column;gap:20px">
+  <sc-if value="{{ labels }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;left:6px;z-index:6;font:500 10px/1 'JetBrains Mono',monospace;background:#0B0B0F;color:#fff;padding:4px 6px;border-radius:4px;pointer-events:none">testimonials · nuevo</span></sc-if>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:0 16px">
+    <span style="font:700 12px/1 var(--sf-body);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)">Opiniones</span>
+    <h2 style="margin:0;font:700 clamp(24px,2.6cqw,34px)/1.1 var(--sf-heading);letter-spacing:var(--sf-track);text-transform:var(--sf-case)">Lo que dicen nuestros clientes</h2>
+    <span style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)"><span style="display:flex;gap:2px;color:var(--secondary)"><sc-for list="{{ stars }}" as="s" hint-placeholder-count="5"><dc-import name="Icon" n="star" f="1" style="width:15px;height:15px" hint-size="15px,15px"></dc-import></sc-for></span><b style="color:var(--fg)">4,9</b> de 5 · 312 opiniones</span>
+  </div>
+  <div style="display:grid;grid-auto-flow:column;grid-auto-columns:clamp(280px,calc((100cqw - 152px) / 3),420px);gap:clamp(12px,1.6cqw,20px);overflow-x:auto;padding:8px clamp(16px,4.4cqw,56px);scrollbar-width:none">
+    <sc-for list="{{ testimonials }}" as="t" hint-placeholder-count="3">
+      <figure style="margin:0;display:flex;flex-direction:column;gap:14px;padding:24px;border-radius:var(--sf-radius);background:var(--bg);border:1px solid var(--line);box-shadow:var(--sf-shadow)">
+        <div style="display:flex;gap:2px;color:var(--secondary)"><sc-for list="{{ stars }}" as="s" hint-placeholder-count="5"><dc-import name="Icon" n="star" f="1" style="width:16px;height:16px" hint-size="16px,16px"></dc-import></sc-for></div>
+        <blockquote style="margin:0;font-size:15px;line-height:1.55;text-wrap:pretty">“{{ t.q }}”</blockquote>
+        <figcaption style="display:flex;align-items:center;gap:10px;margin-top:auto">
+          <span style="flex:none;width:40px;height:40px;border-radius:999px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font:700 14px/1 var(--sf-heading)">{{ t.i }}</span>
+          <span style="display:flex;flex-direction:column"><b style="font-size:14px">{{ t.n }}</b><span style="font-size:12.5px;color:var(--muted)">{{ t.c }} · compró {{ t.p }}</span></span>
+        </figcaption>
+      </figure>
+    </sc-for>
+  </div>
+</section>
+
+<section data-screen-label="Texto" style="position:relative;padding:clamp(48px,6cqw,80px) clamp(16px,4.4cqw,56px)">
+  <sc-if value="{{ labels }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;left:6px;z-index:6;font:500 10px/1 'JetBrains Mono',monospace;background:#0B0B0F;color:#fff;padding:4px 6px;border-radius:4px;pointer-events:none">rich_text</span></sc-if>
+  <div style="max-width:680px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center">
+    <span style="font:700 12px/1 var(--sf-body);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)">Sobre nosotros</span>
+    <h2 style="margin:0;font:700 clamp(24px,2.6cqw,34px)/1.15 var(--sf-heading);letter-spacing:var(--sf-track);text-transform:var(--sf-case);text-wrap:balance">Una tienda de barrio, ahora en tu teléfono</h2>
+    <p style="margin:0;color:var(--muted);font-size:16px;line-height:1.65;text-wrap:pretty">Empezamos vendiendo ropa a los vecinos y hoy llevamos moda, hogar y electrónica a toda La Habana. Elige, pide por WhatsApp y paga en efectivo cuando lo recibas.</p>
+    <a href="#" style="display:flex;align-items:center;gap:6px;font-weight:600">Conoce la tienda<dc-import name="Icon" n="arrow-right" style="width:16px;height:16px" hint-size="16px,16px"></dc-import></a>
+  </div>
+</section>
+
+<footer data-screen-label="Pie" style="position:relative;background:var(--ink);color:var(--ink-fg);padding:clamp(40px,5cqw,64px) clamp(16px,4.4cqw,56px) 0">
+  <sc-if value="{{ labels }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;left:6px;z-index:6;font:500 10px/1 'JetBrains Mono',monospace;background:#fff;color:#0B0B0F;padding:4px 6px;border-radius:4px;pointer-events:none">StoreFooter</span></sc-if>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;justify-content:space-between">
+    <div style="flex:1 1 260px;max-width:360px;display:flex;flex-direction:column;align-items:flex-start;gap:14px">
+      <span style="display:flex;align-items:center;gap:10px"><span style="width:36px;height:36px;border-radius:var(--sf-radius-sm);background:var(--secondary);color:var(--secondary-fg);display:flex;align-items:center;justify-content:center;font:800 18px/1 var(--sf-heading)">T</span><span style="font:700 19px/1 var(--sf-heading);text-transform:var(--sf-case)">Tienda Demo</span></span>
+      <p style="margin:0;color:var(--ink-muted);font-size:14px;line-height:1.6">Moda, hogar y electrónica con entrega en La Habana. Atendemos por WhatsApp de 9:00 a 20:00.</p>
+      <a href="#" style="height:46px;padding:0 18px;display:flex;align-items:center;gap:8px;border-radius:var(--sf-btn-radius);background:var(--wa);color:#fff;font-weight:600;font-size:14px" style-hover="color:#fff;opacity:.92"><dc-import name="Icon" n="message-circle" style="width:18px;height:18px" hint-size="18px,18px"></dc-import>Escríbenos por WhatsApp</a>
+    </div>
+    <div style="flex:2 1 420px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:28px">
+      <sc-for list="{{ footerCols }}" as="col" hint-placeholder-count="3">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font:700 11.5px/1 var(--sf-body);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted)">{{ col.t }}</span>
+          <sc-for list="{{ col.links }}" as="l" hint-placeholder-count="3"><a href="#" style="color:var(--ink-fg);font-size:14px" style-hover="color:var(--secondary)">{{ l }}</a></sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="margin-top:40px;padding:18px 0;border-top:1px solid color-mix(in srgb,var(--ink-fg) 14%,transparent);display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--ink-muted)">
+    <span>© 2026 Tienda Demo · Precios en CUP, USD y MLC</span>
+    <span>Tienda creada con <a href="#" style="color:var(--ink-fg);text-decoration:underline">Kshop</a></span>
+  </div>
+</footer>
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+  <nav data-screen-label="Barra inferior" style="position:sticky;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(5,1fr);background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:6px 4px 10px">
+    <sc-if value="{{ labels }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-22px;left:6px;z-index:6;font:500 10px/1 'JetBrains Mono',monospace;background:#0B0B0F;color:#fff;padding:4px 6px;border-radius:4px;pointer-events:none">BottomTabBar · app / móvil</span></sc-if>
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+      <a href="#" style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:{{ t.color }};padding-top:2px">
+        <span style="position:relative;width:56px;height:30px;border-radius:999px;background:{{ t.pill }};display:flex;align-items:center;justify-content:center">
+          <dc-import name="Icon" n="{{ t.icon }}" style="width:21px;height:21px" hint-size="21px,21px"></dc-import>
+          <sc-if value="{{ t.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:-2px;right:8px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--secondary);color:var(--secondary-fg);font:700 10px/18px var(--sf-body);text-align:center">{{ t.badge }}</span></sc-if>
+        </span>
+        {{ t.label }}
+      </a>
+    </sc-for>
+  </nav>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;labels&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { w: window.innerWidth };
+  rootRef = React.createRef();
+  q = new URLSearchParams(location.search);
+  preset() { return this.props.preset || this.q.get("preset") || "kshop"; }
+  applyTheme = () => { if (window.KSHOP) window.KSHOP.apply(this.preset()); };
+  onResize = () => { const w = this.rootRef.current ? this.rootRef.current.clientWidth : window.innerWidth; if (w !== this.state.w) this.setState({ w }); };
+  componentDidMount() {
+    this.applyTheme();
+    window.addEventListener("kshop-themes", this.applyTheme);
+    window.addEventListener("resize", this.onResize);
+    if (this.rootRef.current) { this.ro2 = new ResizeObserver(this.onResize); this.ro2.observe(this.rootRef.current); }
+    if (window.parent !== window) {
+      const post = () => window.parent.postMessage({ kshopFrame: this.q.get("frame"), h: document.documentElement.scrollHeight }, "*");
+      this.ro = new ResizeObserver(post);
+      this.ro.observe(document.body);
+      window.addEventListener("load", post);
+      [500, 1500, 3000].forEach((t) => setTimeout(post, t));
+    }
+  }
+  componentDidUpdate(pp) { if (pp.preset !== this.props.preset) this.applyTheme(); }
+  componentWillUnmount() { window.removeEventListener("kshop-themes", this.applyTheme); window.removeEventListener("resize", this.onResize); this.ro && this.ro.disconnect(); this.ro2 && this.ro2.disconnect(); }
+  renderVals() {
+    const mobile = this.props.mobile ?? this.state.w < 720;
+    const P = [
+      { name: "Vestido de lino Ñandú", brand: "Kaya", price: "1 500 CUP", from: true, badge: "Nuevo", colors: ["#C2410C", "#1F2937", "#E7D8C9"], label: "foto · vestido" },
+      { name: "Audífonos inalámbricos Pulse", brand: "Sonik", price: "4 200 CUP", compare: "5 250 CUP", off: 20, colors: ["#1F1F24", "#F4F4F4", "#9C86D9"], label: "foto · audífonos" },
+      { name: "Café molido serrano 500 g", brand: "Finca Alta", price: "850 CUP", label: "foto · café" },
+      { name: "Sandalias Brisa de cuero", brand: "Kaya", price: "2 300 CUP", colors: ["#8B5E3C", "#111111"], label: "foto · sandalias" },
+      { name: "Lámpara de mesa Nórdica", brand: "Casa Lumen", price: "3 100 CUP", compare: "3 650 CUP", off: 15, label: "foto · lámpara" },
+      { name: "Set de cuidado facial", brand: "Aloe & Co", price: "1 900 CUP", sold: true, label: "foto · set facial" },
+      { name: "Ventilador recargable 12\"", brand: "Fresco", price: "6 800 CUP", badge: "Nuevo", label: "foto · ventilador" },
+      { name: "Mochila urbana impermeable", brand: "Ruta", price: "2 750 CUP", compare: "3 050 CUP", off: 10, colors: ["#334155", "#7C2D12"], label: "foto · mochila" },
+    ];
+    const active = this.props.tab || "home";
+    const tabs = [
+      { k: "home", icon: "house", label: "Inicio" },
+      { k: "cats", icon: "layout-grid", label: "Categorías" },
+      { k: "fav", icon: "heart", label: "Favoritos" },
+      { k: "cart", icon: "shopping-bag", label: "Carrito", badge: 3 },
+      { k: "acc", icon: "user", label: "Cuenta" },
+    ].map((t) => ({ ...t, color: t.k === active ? "var(--accent)" : "var(--muted)", pill: t.k === active ? "var(--accent-soft)" : "transparent" }));
+    return {
+      rootRef: this.rootRef, isMobile: mobile, isDesktop: !mobile, searchField: this.state.w >= 1400, searchIcon: this.state.w < 1400, showNav: !mobile && this.state.w >= 1180, showBurger: mobile || this.state.w < 1180, labels: this.q.get("labels") === "0" ? false : (this.props.labels ?? true),
+      nav: [{ label: "Novedades" }, { label: "Mujer", menu: true }, { label: "Hogar", menu: true }, { label: "Electrónica", menu: true }, { label: "Mercado" }],
+      chips: ["Novedades", "Mujer", "Hogar", "Electrónica", "Mercado", "Ofertas"],
+      benefits: [
+        { icon: "truck", title: "Envío a domicilio", text: "Mañana en La Habana" },
+        { icon: "banknote", title: "Paga al recibir", text: "Efectivo o transferencia" },
+        { icon: "message-circle", title: "Pide por WhatsApp", text: "Te atendemos al momento" },
+        { icon: "refresh-ccw", title: "Cambios en 7 días", text: "Sin complicaciones" },
+      ],
+      categories: [{ name: "Mujer", count: 48 }, { name: "Hombre", count: 32 }, { name: "Hogar", count: 57 }, { name: "Electrónica", count: 24 }, { name: "Mercado", count: 81 }, { name: "Belleza", count: 19 }],
+      newProducts: P.slice(0, 4).concat(mobile ? [] : []),
+      offerProducts: mobile ? [P[1], P[4]] : [P[1], P[4], P[7]],
+      stars: [1, 2, 3, 4, 5],
+      collections: [{ name: "Verano en lino", count: 24, slug: "verano" }, { name: "Casa fresca", count: 18, slug: "hogar" }, { name: "Despensa del mes", count: 36, slug: "mercado" }],
+      brands: ["KAYA", "Sonik", "Finca Alta", "Casa Lumen", "Aloe & Co", "RUTA"],
+      testimonials: [
+        { q: "Pedí por WhatsApp a las 10 y a las 4 ya tenía el vestido en casa. La tela es preciosa.", n: "Daniela R.", c: "Plaza", p: "Vestido Ñandú", i: "DR" },
+        { q: "Me encanta poder pagar en efectivo al recibir. Los audífonos llegaron perfectos.", n: "Yoel M.", c: "Playa", p: "Audífonos Pulse", i: "YM" },
+        { q: "El café serrano es el mejor que he probado en mucho tiempo. Ya voy por el tercer paquete.", n: "Marta G.", c: "Vedado", p: "Café serrano", i: "MG" },
+      ],
+      footerCols: [
+        { t: "Tienda", links: ["Novedades", "Ofertas", "Colecciones", "Marcas"] },
+        { t: "Ayuda", links: ["Envíos", "Formas de pago", "Cambios", "Preguntas"] },
+        { t: "Mi cuenta", links: ["Entrar", "Mis pedidos", "Favoritos", "Descargar la app"] },
+      ],
+      tabs,
+    };
+  }
+}
+</script>
+</body>
+</html>
