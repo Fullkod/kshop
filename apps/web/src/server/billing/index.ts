@@ -40,6 +40,9 @@ async function rpc<T>(fn: string, args: Record<string, unknown>, entity = "El re
   return data as T;
 }
 
+/** The platform landing shows the public plans, add-on prices and support WhatsApp (redesign R7). */
+export const LANDING_CACHE_TAG = "platform-landing";
+
 /** A plan, add-on or status change shows at once in the storefront (currencies, coupons, suspension). */
 export async function expireStoreCaches(storeIds: string[]): Promise<void> {
   if (!storeIds.length) return;
@@ -121,11 +124,13 @@ export async function updatePlan(code: PlanCode, input: PlanUpdateInput) {
     "El plan",
   );
   await expireStoreCaches(result.store_ids);
+  revalidateTag(LANDING_CACHE_TAG, { expire: 0 });
   return getPlans();
 }
 
 export async function setAddonPrice(code: ModuleCode, price: number | null) {
   await rpc("module_set_addon_price", { p_module_code: code, p_price: price }, "El módulo");
+  revalidateTag(LANDING_CACHE_TAG, { expire: 0 });
   return getPlans();
 }
 
@@ -356,6 +361,7 @@ export async function setBillingSettings(input: BillingSettingsInput): Promise<B
       support_whatsapp: input.supportWhatsapp,
     },
   });
+  revalidateTag(LANDING_CACHE_TAG, { expire: 0 });
   return getBillingSettings();
 }
 

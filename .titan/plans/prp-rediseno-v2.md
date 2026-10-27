@@ -359,15 +359,34 @@ real a escala y selector de preset, pasos, precios leídos de `plans` (Base y Pr
 del estudio de precios), CTA final y pie con «Acceso Fullkod»; CTAs según D8.
 **Validación**: capturas 1280 y 390; cambiar el precio de un plan en BD cambia la landing; Lighthouse de la landing
 (rendimiento y accesibilidad ≥ 90).
+**Hecha (2026-10-27)**: `(platform)/page.tsx` nueva con la marca Kshop fija: hero `night` (píldora «NUEVO», H1 con
+«WhatsApp» en dorado, CTA «Prueba N días gratis» y «Ver una tienda de ejemplo», garantías), teléfono con la **Tienda
+Demo real** (sus componentes, inertes, con su propio tema) y las dos tarjetas flotantes; funciones (6 tarjetas, **CUP,
+USD y EUR**, sin MLC), temas (6 presets que redibujan la portada de la Demo al 50 %), pasos, precios, CTA final y pie
+con «© año · dominio» y «Acceso Fullkod». **Sin «Entrar»** (D8). **Datos**: `server/landing.ts` lee los planes
+públicos (precio, límites `max_products`/`max_staff` y módulos de `plan_modules`: cada plan lista sus módulos y el
+superior «Todo lo del Base» + lo que añade), el módulo suelto más barato («desde 2 USD/mes»), los días de prueba
+(`default_trial_days`) y el WhatsApp de soporte (`support_whatsapp`, Superadmin › Facturación): todos los CTAs abren
+`wa.me` con un mensaje prellenado (sin número, los CTAs del hero van a #precios y el resto no se pinta). Caché
+`platform-landing` (horas) que expiran `updatePlan`, `setAddonPrice` y `setBillingSettings`. «Socios fundadores» sin
+número (el «20» del estudio no tiene campo: se dice «las primeras tiendas»). La Demo se lee **en el navegador** por la
+API pública cuando su marco se acerca a la pantalla (marcos de tamaño fijo, CLS 0). Número de soporte guardado:
++15752639686 (Roberto). **Evidencia** (`.titan/qa/rediseno-v2/R7/`): `landing-1280/390`, `temas-minimal/oscuro-1280`,
+QA 6/6 (sin scroll horizontal, sin errores, sin «Entrar»), precio editado por `PUT /api/v1/platform/plans/base` →
+la landing pasa de 5 a 6 y vuelve (4/4), Lighthouse en `lighthouse-desktop.html` (rendimiento **100**, accesibilidad,
+buenas prácticas y SEO 100) y `lighthouse-mobile.html` (rendimiento **76**, el resto 100). **Rendimiento móvil < 90**:
+el LCP simulado (3,8 s) es el del proyecto, no de la landing (el login del superadmin da 83 con el mismo LCP 3,9 s:
+script de React/Next con CPU ×4; LCP real observado 0,5 s); queda propuesto revisarlo para todo el sitio.
 
 ### Fase Final: Validación
 **Objetivo**: todo el rediseño funcionando de punta a punta en web y APKs.
 **Validación**:
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm test:rls` en verde
-- [ ] `e2e:orders`, `e2e:discounts`, `e2e:catalog`, `qa:orders`, `qa:discounts`, `qa:apps`, `qa:pro` en verde
-- [ ] Sin hex fijos en `packages/storefront` (salvo `--wa` y swatches)
-- [ ] Capturas 1280/390 de cada fase en `.titan/qa/rediseno-v2/`
-- [ ] Criterios de éxito cumplidos; memoria `project/2026-10-xx-rediseno-v2.md` enlazada en `MEMORY.md`;
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test` (66 + 2), `pnpm build`, `pnpm test:rls` (584/584) en verde
+- [x] `e2e:orders` 94/94, `e2e:discounts` 35/35, `e2e:catalog` 46/46, `qa:orders` 14/14, `qa:discounts` 9/9, `qa:apps`
+  28/28, `qa:pro` 18/18, `qa:billing` 16/16 (las QA en navegador necesitaron reintentos por `57014`, ver aprendizajes)
+- [x] Sin hex fijos en `packages/storefront` (solo en `theme-style.ts`, que define `--wa` y los colores de estado)
+- [x] Capturas 1280/390 de cada fase en `.titan/qa/rediseno-v2/`
+- [x] Criterios de éxito cumplidos (salvo Lighthouse móvil de la landing, 76); memoria `project/2026-10-xx-rediseno-v2.md` enlazada en `MEMORY.md`;
   fila del rediseño en la tabla de `arranque-y-fases.md`
 - [ ] APK de la Tienda Demo y Kshop Admin recompiladas por el workflow (solo con permiso de Roberto: es GitHub Actions)
 
@@ -452,6 +471,20 @@ del estudio de precios), CTA final y pie con «Acceso Fullkod»; CTAs según D8.
 - **Aviso de Next en dev ajeno al rediseño**: «Could not validate that a segment in your UI has instant navigation» en
   `/admin` (`admin/page.tsx`) y `/admin/themes` (`themes/layout.tsx`). No rompe nada. **Resuelto en R6** con
   `instant = false` en los layouts de admin y superadmin.
+- **R7 — Node no resuelve `*.localhost`**: los scripts que leen la web local van a `127.0.0.1:3000` con la cabecera
+  `Host: kshop.localhost:3000` (`localhost:3000` cae en la tienda por defecto/404).
+- **R7 — Tarjeta flotante tapada**: la cabecera de la tienda tiene `z-index`; el teléfono necesita `isolate` para que lo
+  de fuera quede encima.
+- **R7 — Lighthouse** no está en el repo: se usó `pnpm dlx lighthouse@12.8.2` (sin tocar `package.json`) con el
+  Chromium de Playwright (`CHROME_PATH`), contra `next build` + `next start`. Pasar la tienda de ejemplo del RSC al
+  navegador subió el móvil de 64 a 76 y el escritorio a 100.
+- **R7 — Favoritos 401 tras «sin conexión»** (pendiente de R6): no se reproduce dejando abierta la página que pasó por sin
+  conexión (todas las peticiones de favoritos van con token y dan 200, también al recargar). Queda vigilarlo en la APK.
+- **R7 — Red lenta a Supabase**: una consulta trivial tarda 0,6–1,5 s desde este equipo; en la BD `graphql.resolve` va a
+  ~0,5 s de media. La portada en frío de la app hace varias tandas y tarda ~10 s; con carga, alguna lectura pasa de 3 s
+  (`57014`) y `qa:apps` falla en pasos distintos cada vez. Es de infraestructura; si se repite en producción, juntar
+  las tandas de `fetchHome` o subir el `statement_timeout` de anon.
+- **Aviso «instant navigation»** en dev: sigue saliendo para páginas hijas (`admin/mobile-app`), solo en el log.
 
 ---
 
@@ -483,4 +516,4 @@ del estudio de precios), CTA final y pie con «Acceso Fullkod»; CTAs según D8.
 
 ---
 
-*PRP pendiente de aprobación. No se ha modificado código.*
+*PRP aprobado por Roberto (2026-10-27). R0–R7 hechas; validación final abajo.*

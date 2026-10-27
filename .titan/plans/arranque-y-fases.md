@@ -92,6 +92,7 @@ sigue en commits locales hasta que Roberto autorice el push.
 | 5. Suscripciones y módulos | Planes Base/Pro, add-ons, grants, facturas manuales, límites, suspensión | Bajar/subir de plan activa/desactiva funciones sin perder datos |
 | 6. Pro | Finanzas, multi-almacén, multimoneda, dominio propio | Informes por moneda cuadran con las órdenes |
 | 7. Apps | Capacitor tienda + admin, build por tienda | APK instalable de una tienda de prueba |
+| v2. Rediseño | Diseño v2 (`docs/design-v2/`): tokens y 6 temas, tienda, ficha, portada de 13 secciones, admin, Kshop Admin y landing (PRP `prp-rediseno-v2.md`, HECHO 2026-10-27) | Capturas 1280/390 por fase; QA, RLS y build en verde |
 | 8. Migrar klauShop | Datos de klauShop como tienda nº 1 | Comparativa de productos/órdenes; cambio de dominio con permiso |
 
 ## Lo que aún no bloquea pero hay que decidir en su fase

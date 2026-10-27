@@ -29,6 +29,7 @@
 - [2026-10-25-fase-5-suscripciones-y-modulos.md](project/2026-10-25-fase-5-suscripciones-y-modulos.md) — Fase 5 hecha: precios USD, cupones y apariencia fuera del Base, dónde está cada pieza, pendientes
 - [2026-10-26-fase-6-pro.md](project/2026-10-26-fase-6-pro.md) — Fase 6 hecha: decisiones de Roberto, dónde está cada pieza, pendientes de Roberto (elTOQUE, Vercel real)
 - [2026-10-27-fase-7-apps.md](project/2026-10-27-fase-7-apps.md) — Fase 7 hecha: apps Capacitor (tienda por slug + Kshop Admin), GitHub Actions, claves de firma, `/app`, pendientes
+- [2026-10-27-rediseno-v2.md](project/2026-10-27-rediseno-v2.md) — Rediseño v2 hecho (R0–R7): decisiones de Roberto, tienda sin hex, landing con datos de planes, dónde está cada pieza, pendientes
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
 
 ## feedback/ — Correcciones y preferencias
@@ -52,3 +53,4 @@
 - `prp-fase-5-suscripciones-y-modulos.md` — Fase 5: planes, add-ons, grants, facturas manuales, límites, equipo, suspensión (HECHA)
 - `prp-fase-6-pro.md` — Fase 6: Finanzas, multi-almacén, multimoneda, dominio propio (HECHA)
 - `prp-fase-7-apps.md` — Fase 7: app de tienda y Kshop Admin con Capacitor (HECHA; cómo generar un APK en `docs/APPS.md`)
+- `prp-rediseno-v2.md` — Rediseño v2 (R0–R7: tokens, tienda, ficha, portada, admin, Kshop Admin, landing) (HECHO 2026-10-27)

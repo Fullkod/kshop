@@ -7,6 +7,7 @@ export * from "./components/AnnouncementBar";
 export * from "./components/BottomTabBar";
 export * from "./components/Countdown";
 export * from "./components/Currency";
+export * from "./components/CurrentYear";
 export * from "./components/HeroSlider";
 export * from "./components/HomeSections";
 export * from "./components/images";
