@@ -46,11 +46,11 @@ async function SearchBox({
         type="search"
         defaultValue={typeof q === "string" ? q : ""}
         placeholder="¿Qué buscas?"
-        className="h-11 flex-1 rounded-[var(--sf-radius)] border bg-background px-4"
+        className="h-11 flex-1 rounded-sf-btn border bg-background px-4"
       />
       <button
         type="submit"
-        className="h-11 rounded-[var(--sf-radius)] bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90"
+        className="h-11 rounded-sf-btn bg-primary px-5 font-medium text-primary-foreground hover:bg-primary-hover"
       >
         Buscar
       </button>

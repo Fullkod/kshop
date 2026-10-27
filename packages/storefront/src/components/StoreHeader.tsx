@@ -11,7 +11,7 @@ export function StoreHeader({ store, links }: { store: PublicStore; links: NavLi
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
         <details className="group relative md:hidden">
           <summary
-            className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-[var(--sf-radius)] hover:bg-surface [&::-webkit-details-marker]:hidden"
+            className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-sf-btn hover:bg-surface [&::-webkit-details-marker]:hidden"
             aria-label="Menú"
           >
             <svg
@@ -72,12 +72,12 @@ export function StoreHeader({ store, links }: { store: PublicStore; links: NavLi
               <li key={link.href + link.label} className="group relative">
                 <Link
                   href={link.href}
-                  className="block rounded-[var(--sf-radius)] px-3 py-2 text-sm font-medium hover:bg-surface"
+                  className="block rounded-sf-btn px-3 py-2 text-sm font-medium hover:bg-surface"
                 >
                   {link.label}
                 </Link>
                 {link.children.length > 0 && (
-                  <ul className="invisible absolute left-0 top-full min-w-48 rounded-[var(--sf-radius)] border bg-background p-1 opacity-0 shadow-lg transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+                  <ul className="invisible absolute left-0 top-full min-w-48 rounded-sf border bg-background p-1 opacity-0 shadow-lg transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
                     {link.children.map((child) => (
                       <li key={child.href + child.label}>
                         <Link href={child.href} className="block rounded px-3 py-2 text-sm hover:bg-surface">
@@ -102,12 +102,12 @@ export function StoreHeader({ store, links }: { store: PublicStore; links: NavLi
               name="q"
               type="search"
               placeholder="Buscar productos"
-              className="h-9 w-48 rounded-[var(--sf-radius)] border bg-background px-3 text-sm lg:w-64"
+              className="h-9 w-48 rounded-sf-btn border bg-background px-3 text-sm lg:w-64"
             />
           </form>
           <Link
             href="/search"
-            className="flex h-10 w-10 items-center justify-center rounded-[var(--sf-radius)] hover:bg-surface sm:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-sf-btn hover:bg-surface sm:hidden"
             aria-label="Buscar"
           >
             <svg
@@ -126,7 +126,7 @@ export function StoreHeader({ store, links }: { store: PublicStore; links: NavLi
           <CartLink />
           <Link
             href="/account"
-            className="flex h-10 w-10 items-center justify-center rounded-[var(--sf-radius)] hover:bg-surface"
+            className="flex h-10 w-10 items-center justify-center rounded-sf-btn hover:bg-surface"
             aria-label="Mi cuenta"
           >
             <svg

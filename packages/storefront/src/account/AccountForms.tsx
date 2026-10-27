@@ -235,7 +235,7 @@ export function CustomerRecoverForm() {
           target="_blank"
           rel="noopener noreferrer"
           aria-disabled={!normalized}
-          className="inline-flex h-10 items-center justify-center rounded-[var(--sf-radius)] border px-4 text-sm font-medium aria-disabled:pointer-events-none aria-disabled:opacity-50"
+          className="inline-flex h-10 items-center justify-center rounded-sf-btn border px-4 text-sm font-medium aria-disabled:pointer-events-none aria-disabled:opacity-50"
         >
           Pedir código por WhatsApp
         </a>

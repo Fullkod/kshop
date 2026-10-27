@@ -200,7 +200,7 @@ export function CheckoutView() {
                 {zoneMethods.map((m) => (
                   <label
                     key={m.id}
-                    className="flex cursor-pointer items-start gap-3 rounded-[var(--sf-radius)] border p-3 has-[:checked]:border-primary"
+                    className="flex cursor-pointer items-start gap-3 rounded-sf border p-3 has-[:checked]:border-primary"
                   >
                     <input
                       type="radio"
@@ -265,7 +265,7 @@ export function CheckoutView() {
             {payments.map((p) => (
               <label
                 key={p.id}
-                className="flex cursor-pointer items-start gap-3 rounded-[var(--sf-radius)] border p-3 has-[:checked]:border-primary"
+                className="flex cursor-pointer items-start gap-3 rounded-sf border p-3 has-[:checked]:border-primary"
               >
                 <input
                   type="radio"
@@ -335,7 +335,7 @@ export function CheckoutView() {
         )}
       </div>
 
-      <aside className="flex h-fit flex-col gap-3 rounded-[var(--sf-radius)] border p-4 lg:sticky lg:top-24">
+      <aside className="flex h-fit flex-col gap-3 rounded-sf border p-4 lg:sticky lg:top-24">
         <h2 className="text-lg font-semibold">Tu pedido</h2>
         <ul className="flex flex-col gap-2 text-sm">
           {cart.lines.map((l) => (

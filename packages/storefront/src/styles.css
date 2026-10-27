@@ -1,13 +1,35 @@
-/* Storefront (web and store app): the store theme (CSS variables set by themeStyle) decides fonts and corner radius.
+/* Storefront v2 (web and store app): the store theme (themeStyle) decides fonts, heading case, radii and shadows.
    --bg/--fg are read directly: the --color-* tokens resolve on :root (admin palette, dark mode included). */
 .sf-root {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--sf-body);
+  container-type: inline-size; /* fluid sizes use cqw, so web and app share components */
 }
 .sf-root h1,
 .sf-root h2,
 .sf-root h3,
 .sf-root .sf-heading {
   font-family: var(--sf-heading);
+  text-transform: var(--sf-case);
+  letter-spacing: var(--sf-track);
+}
+/* Missing photos: soft stripes tinted with the accent. */
+.sf-root .sf-placeholder {
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 8%, var(--surface)) 0 12px,
+    var(--surface) 12px 24px
+  );
+}
+/* Horizontal carousels without a visible scrollbar */
+.sf-root .sf-scroller {
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+}
+.sf-root .sf-scroller::-webkit-scrollbar {
+  display: none;
+}
+.sf-root .sf-scroller > * {
+  scroll-snap-align: start;
 }

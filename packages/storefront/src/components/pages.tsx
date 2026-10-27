@@ -81,7 +81,7 @@ export function ProductDetails({
           {product.attributes.length > 0 && (
             <div className="flex flex-col gap-3">
               <h2 className="text-xl font-semibold">Características</h2>
-              <dl className="divide-y rounded-[var(--sf-radius)] border">
+              <dl className="divide-y rounded-sf border">
                 {product.attributes.map((a) => (
                   <div key={a.name} className="grid grid-cols-2 gap-4 px-4 py-2 text-sm">
                     <dt className="text-muted-foreground">{a.name}</dt>

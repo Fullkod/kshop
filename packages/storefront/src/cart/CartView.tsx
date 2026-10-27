@@ -17,7 +17,7 @@ export function CartView() {
         <p className="text-lg">Tu carrito está vacío.</p>
         <Link
           href="/products"
-          className="inline-flex h-11 items-center rounded-[var(--sf-radius)] bg-primary px-6 font-semibold text-primary-foreground"
+          className="inline-flex h-11 items-center rounded-sf-btn bg-primary px-6 font-semibold text-primary-foreground"
         >
           Ver productos
         </Link>
@@ -39,7 +39,7 @@ export function CartView() {
           />
         ))}
       </ul>
-      <aside className="flex h-fit flex-col gap-4 rounded-[var(--sf-radius)] border p-4">
+      <aside className="flex h-fit flex-col gap-4 rounded-sf border p-4">
         <CartTotals cart={cart} money={money} />
         {cart.vouchersEnabled && <VoucherForm />}
         <p className="text-sm text-muted-foreground">La entrega se calcula en el siguiente paso.</p>
@@ -49,7 +49,7 @@ export function CartView() {
         <Link
           href="/checkout"
           aria-disabled={cart.hasIssues}
-          className="inline-flex h-12 items-center justify-center rounded-[var(--sf-radius)] bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary/90 aria-disabled:pointer-events-none aria-disabled:opacity-50"
+          className="inline-flex h-12 items-center justify-center rounded-sf-btn bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary/90 aria-disabled:pointer-events-none aria-disabled:opacity-50"
         >
           Continuar con el pedido
         </Link>
@@ -76,7 +76,7 @@ function CartLineRow({
     <li className="flex gap-3 py-4">
       <Link
         href={`/product/${line.productSlug}`}
-        className="h-24 w-20 shrink-0 overflow-hidden rounded-[var(--sf-radius)] bg-surface"
+        className="h-24 w-20 shrink-0 overflow-hidden rounded-sf-sm bg-surface"
       >
         {line.imageUrl && (
           // D12: our own WebP sizes, no image optimizer
@@ -109,7 +109,7 @@ function CartLineRow({
           </p>
         )}
         <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-          <div className="flex h-9 items-center rounded-[var(--sf-radius)] border">
+          <div className="flex h-9 items-center rounded-sf-btn border">
             <button
               type="button"
               className="h-full w-9 disabled:opacity-40"

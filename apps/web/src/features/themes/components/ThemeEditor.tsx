@@ -3,12 +3,16 @@
 import {
   resolveTheme,
   THEME_FONTS,
+  THEME_COLOR_FIELDS,
   THEME_PRESETS,
   THEME_RADII,
+  THEME_RADIUS_LABELS,
   themeContrastIssues,
   type Theme,
-  type ThemeColors,
+  type ThemeButtonShape,
+  type ThemeElevation,
   type ThemeFont,
+  type ThemeHeadingCase,
   type ThemePresetKey,
   type ThemeRadius,
 } from "@kshop/core";
@@ -18,22 +22,28 @@ import { useApiAction } from "@/features/catalog/use-catalog";
 import { themeStyle, useStore } from "@kshop/storefront";
 import type { AdminContent } from "../use-content";
 
-const COLOR_LABELS: Record<keyof ThemeColors, string> = {
-  accent: "Color principal (botones, enlaces)",
-  accentFg: "Texto sobre el color principal",
-  background: "Fondo",
-  foreground: "Texto",
-  surface: "Tarjetas, cabecera y pie",
-  muted: "Texto secundario",
-  line: "Bordes",
-};
-const RADIUS_LABELS: Record<ThemeRadius, string> = {
-  none: "Rectas",
-  sm: "Poco redondeadas",
-  md: "Redondeadas",
-  lg: "Muy redondeadas",
-  full: "Píldora",
-};
+const COLOR_FIELDS = THEME_COLOR_FIELDS.flatMap((g) => g.keys);
+const SHAPE_OPTIONS: {
+  key: "buttonShape" | "elevation" | "headingCase";
+  label: string;
+  options: Record<string, string>;
+}[] = [
+  {
+    key: "buttonShape",
+    label: "Botones",
+    options: { auto: "Como las esquinas", pill: "Píldora" } satisfies Record<ThemeButtonShape, string>,
+  },
+  {
+    key: "elevation",
+    label: "Sombras",
+    options: { flat: "Planas", soft: "Suaves", lifted: "Marcadas" } satisfies Record<ThemeElevation, string>,
+  },
+  {
+    key: "headingCase",
+    label: "Mayúsculas",
+    options: { normal: "Normal", uppercase: "MAYÚSCULAS" } satisfies Record<ThemeHeadingCase, string>,
+  },
+];
 
 export function ThemeEditor({
   content,
@@ -49,18 +59,11 @@ export function ThemeEditor({
   const issues = themeContrastIssues(theme.colors);
 
   const applyPreset = (preset: ThemePresetKey) => {
-    const p = THEME_PRESETS[preset];
-    setTheme({
-      preset,
-      colors: { ...p.colors },
-      headingFont: p.headingFont,
-      bodyFont: p.bodyFont,
-      radius: p.radius,
-    });
+    setTheme(resolveTheme({ preset }));
     setSaved(false);
   };
   const update = (patch: Partial<Theme>) => {
-    setTheme((t) => ({ ...t, ...patch }));
+    setTheme((t) => resolveTheme({ ...t, ...patch }));
     setSaved(false);
   };
 
@@ -69,7 +72,7 @@ export function ThemeEditor({
       <div className="flex flex-col gap-4">
         <Card className="flex flex-col gap-3">
           <h2 className="font-semibold">Estilo de partida</h2>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {(Object.keys(THEME_PRESETS) as ThemePresetKey[]).map((key) => {
               const p = THEME_PRESETS[key];
               return (
@@ -96,7 +99,7 @@ export function ThemeEditor({
 
         <Card className="grid gap-3 sm:grid-cols-2">
           <h2 className="font-semibold sm:col-span-2">Colores</h2>
-          {(Object.keys(COLOR_LABELS) as (keyof ThemeColors)[]).map((key) => (
+          {COLOR_FIELDS.map(({ key, label }) => (
             <label key={key} className="flex items-center gap-3 text-sm">
               <input
                 type="color"
@@ -104,7 +107,7 @@ export function ThemeEditor({
                 onChange={(e) => update({ colors: { ...theme.colors, [key]: e.target.value.toUpperCase() } })}
                 className="h-9 w-12 cursor-pointer rounded border"
               />
-              {COLOR_LABELS[key]}
+              {label}
             </label>
           ))}
           {issues.length > 0 && (
@@ -144,11 +147,28 @@ export function ThemeEditor({
             >
               {(Object.keys(THEME_RADII) as ThemeRadius[]).map((r) => (
                 <option key={r} value={r}>
-                  {RADIUS_LABELS[r]}
+                  {THEME_RADIUS_LABELS[r]}
                 </option>
               ))}
             </select>
           </div>
+          {SHAPE_OPTIONS.map(({ key, label, options }) => (
+            <div key={key} className="flex flex-col gap-1">
+              <Label htmlFor={key}>{label}</Label>
+              <select
+                id={key}
+                value={theme[key]}
+                onChange={(e) => update({ [key]: e.target.value })}
+                className="h-10 rounded-md border bg-background px-2 text-sm"
+              >
+                {Object.entries(options).map(([value, text]) => (
+                  <option key={value} value={value}>
+                    {text}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
         </Card>
 
         {action.error && <Alert variant="destructive">{action.error}</Alert>}
@@ -181,10 +201,10 @@ export function ThemeEditor({
             <h3 className="text-xl font-semibold">Vestido de verano</h3>
             <p className="text-sm text-muted-foreground">Algodón, tallas S a L.</p>
             <p className="font-semibold">1500 CUP</p>
-            <span className="rounded-[var(--sf-radius)] bg-primary px-4 py-2 text-center text-sm font-semibold text-primary-foreground">
+            <span className="rounded-sf-btn bg-primary px-4 py-2 text-center text-sm font-semibold text-primary-foreground">
               Pedir por WhatsApp
             </span>
-            <span className="rounded-[var(--sf-radius)] border px-4 py-2 text-center text-sm">Ver más</span>
+            <span className="rounded-sf-btn border px-4 py-2 text-center text-sm">Ver más</span>
           </div>
         </div>
       </div>

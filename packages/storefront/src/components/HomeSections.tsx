@@ -50,7 +50,7 @@ export function HomeSections({ sections }: { sections: HomeSection[] }) {
                     <li key={c.slug}>
                       <Link
                         href={`/category/${c.slug}`}
-                        className="group relative flex aspect-[4/3] items-end overflow-hidden rounded-[var(--sf-radius)] bg-surface p-4"
+                        className="group relative flex aspect-[4/3] items-end overflow-hidden rounded-sf bg-surface p-4"
                       >
                         {c.imageUrl && (
                           // category image
@@ -81,7 +81,7 @@ export function HomeSections({ sections }: { sections: HomeSection[] }) {
                     <li key={b.slug}>
                       <Link
                         href={`/brand/${b.slug}`}
-                        className="flex h-14 items-center gap-2 rounded-[var(--sf-radius)] border px-4 hover:bg-surface"
+                        className="flex h-14 items-center gap-2 rounded-sf border px-4 hover:bg-surface"
                       >
                         {b.logoUrl ? (
                           // brand logo
@@ -139,7 +139,7 @@ function Banner({
 }) {
   const content = (
     <div
-      className={`relative flex w-full overflow-hidden bg-surface ${tall ? "aspect-[4/5] sm:aspect-[21/9]" : "aspect-[16/9] sm:aspect-[21/7]"} ${rounded ? "rounded-[var(--sf-radius)]" : ""}`}
+      className={`relative flex w-full overflow-hidden bg-surface ${tall ? "aspect-[4/5] sm:aspect-[21/9]" : "aspect-[16/9] sm:aspect-[21/7]"} ${rounded ? "rounded-sf-lg" : ""}`}
     >
       <picture>
         {banner.imageMobileUrl && <source media="(max-width: 640px)" srcSet={banner.imageMobileUrl} />}
@@ -155,11 +155,11 @@ function Banner({
         />
       </picture>
       {(banner.title || banner.subtitle || banner.ctaLabel) && (
-        <div className="relative mt-auto flex w-full flex-col items-start gap-2 bg-gradient-to-t from-black/60 to-transparent p-6 text-white sm:p-10">
+        <div className="relative mt-auto flex w-full flex-col items-start gap-2 bg-gradient-to-t from-scrim to-transparent p-6 text-ink-foreground sm:p-10">
           {banner.title && <p className="sf-heading text-2xl font-semibold sm:text-4xl">{banner.title}</p>}
           {banner.subtitle && <p className="max-w-xl text-sm sm:text-base">{banner.subtitle}</p>}
           {banner.ctaLabel && banner.href && (
-            <span className="mt-2 rounded-[var(--sf-radius)] bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
+            <span className="mt-2 rounded-sf-btn bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
               {banner.ctaLabel}
             </span>
           )}

@@ -14,7 +14,7 @@ export function imageSrcSet(url: string): string | undefined {
 export function ProductCard({ product, priority = false }: { product: ProductCardData; priority?: boolean }) {
   return (
     <Link href={`/product/${product.slug}`} className="group flex flex-col gap-2">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--sf-radius)] bg-surface">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-sf bg-surface">
         {product.imageUrl ? (
           // D12: our own WebP sizes, no image optimizer
           <img

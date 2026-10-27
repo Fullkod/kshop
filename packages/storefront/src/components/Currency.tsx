@@ -93,7 +93,7 @@ export function CurrencySelect() {
       <select
         value={state.selected.currency}
         onChange={(e) => state.select(e.target.value as CurrencyCode)}
-        className="h-9 rounded-[var(--sf-radius)] border bg-background px-2 text-sm"
+        className="h-9 rounded-sf-btn border bg-background px-2 text-sm"
         aria-label="Moneda"
       >
         {state.currencies.map((c) => (

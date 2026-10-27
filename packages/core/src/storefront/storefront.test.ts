@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { collectionRulesSchema, homeSectionInputSchema, linkHref, linkSchema } from "./content";
 import { listingFilterIds, listingQuery, parseListingParams, sortOrderBy } from "./filters";
-import { contrastRatio, resolveTheme, THEME_PRESETS, themeContrastIssues } from "./theme";
+import {
+  contrastRatio,
+  readableOn,
+  resolveTheme,
+  THEME_PRESETS,
+  THEME_RADII,
+  themeContrastIssues,
+  type ThemeColors,
+} from "./theme";
 
 const id = "4f6c2f5e-6a4b-4c1e-9f3a-2b8d7c6e5a41";
 
@@ -31,6 +39,43 @@ describe("theme", () => {
   it("flags low-contrast pairs", () => {
     const colors = { ...THEME_PRESETS.kshop.colors, accent: "#FFE066" };
     expect(themeContrastIssues(colors).map((i) => i.pair)).toEqual(["Texto de los botones"]);
+  });
+
+  it("fills the v2 fields of a v1 theme from its preset", () => {
+    const v1 = { preset: "warm", colors: { accent: "#123456" }, headingFont: "inter", radius: "sm" };
+    const theme = resolveTheme(v1);
+    expect(theme.colors.accent).toBe("#123456");
+    expect(theme.colors.secondary).toBe(THEME_PRESETS.warm.colors.secondary);
+    expect(theme.colors.ink).toBe(THEME_PRESETS.warm.colors.ink);
+    expect(theme.colors.sale).toBe(THEME_PRESETS.warm.colors.sale);
+    expect(theme.radius).toBe("sm");
+    expect(theme.buttonShape).toBe("auto");
+    expect(theme.elevation).toBe("soft");
+    expect(theme.headingCase).toBe("normal");
+  });
+
+  it("derives dark mode from the background, not the preset", () => {
+    expect(resolveTheme({ preset: "dark" }).isDark).toBe(true);
+    expect(resolveTheme({ preset: "kshop" }).isDark).toBe(false);
+    expect(resolveTheme({ preset: "kshop", colors: { background: "#101010" } }).isDark).toBe(true);
+    expect(resolveTheme({ preset: "dark", colors: { background: "#FFFFFF" } }).isDark).toBe(false);
+  });
+
+  it("checks 6 contrast pairs", () => {
+    const bad = Object.fromEntries(
+      Object.keys(THEME_PRESETS.kshop.colors).map((key) => [key, "#777777"]),
+    ) as ThemeColors;
+    expect(themeContrastIssues(bad)).toHaveLength(6);
+  });
+
+  it("picks white or near-black text", () => {
+    expect(readableOn("#FF7A93")).toBe("#111111");
+    expect(readableOn("#C42350")).toBe("#FFFFFF");
+  });
+
+  it("has one radius per piece and a pill preset", () => {
+    expect(THEME_RADII.lg).toEqual({ sm: "8px", md: "14px", lg: "22px", btn: "12px" });
+    expect(resolveTheme({ preset: "fresh" })).toMatchObject({ radius: "full", buttonShape: "pill" });
   });
 });
 

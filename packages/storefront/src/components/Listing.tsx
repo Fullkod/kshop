@@ -102,7 +102,7 @@ export function ListingView({
           </p>
           <div className="flex items-center gap-2">
             <details className="lg:hidden">
-              <summary className="flex h-9 cursor-pointer list-none items-center rounded-[var(--sf-radius)] border px-3 text-sm [&::-webkit-details-marker]:hidden">
+              <summary className="flex h-9 cursor-pointer list-none items-center rounded-sf-btn border px-3 text-sm [&::-webkit-details-marker]:hidden">
                 Filtros{chips.length ? ` (${chips.length})` : ""}
               </summary>
               <div className="fixed inset-x-0 bottom-0 z-40 max-h-[75dvh] overflow-y-auto rounded-t-2xl border-t bg-background p-4 shadow-2xl">
@@ -139,7 +139,7 @@ export function ListingView({
         {products.length ? (
           <ProductGrid products={products} priorityCount={4} />
         ) : (
-          <div className="rounded-[var(--sf-radius)] border border-dashed px-6 py-16 text-center">
+          <div className="rounded-sf border border-dashed px-6 py-16 text-center">
             <p className="font-medium">No encontramos productos.</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Prueba con otros filtros o con otra búsqueda.
@@ -185,7 +185,7 @@ function PageLink({
       href={href}
       rel={rel}
       aria-current={current ? "page" : undefined}
-      className={`min-w-10 rounded-[var(--sf-radius)] border px-3 py-2 text-center text-sm ${current ? "border-primary bg-primary text-primary-foreground" : "hover:bg-surface"}`}
+      className={`min-w-10 rounded-sf-btn border px-3 py-2 text-center text-sm ${current ? "border-primary bg-primary text-primary-foreground" : "hover:bg-surface"}`}
     >
       {label}
     </Link>
@@ -376,7 +376,7 @@ export function ListingSkeleton() {
     >
       {Array.from({ length: 8 }, (_, i) => (
         <div key={i} className="flex flex-col gap-2">
-          <div className="aspect-[4/5] animate-pulse rounded-[var(--sf-radius)] bg-surface" />
+          <div className="aspect-[4/5] animate-pulse rounded-sf bg-surface" />
           <div className="h-4 w-3/4 animate-pulse rounded bg-surface" />
           <div className="h-4 w-1/3 animate-pulse rounded bg-surface" />
         </div>

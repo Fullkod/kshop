@@ -42,7 +42,7 @@ export function ProductView({ product }: { product: StorefrontProduct }) {
   return (
     <div className="grid gap-8 md:grid-cols-2 md:gap-12">
       <div className="flex flex-col gap-3">
-        <div className="aspect-[4/5] overflow-hidden rounded-[var(--sf-radius)] bg-surface">
+        <div className="aspect-[4/5] overflow-hidden rounded-sf bg-surface">
           {image ? (
             // D12: our own WebP sizes, no image optimizer
             <img
@@ -68,7 +68,7 @@ export function ProductView({ product }: { product: StorefrontProduct }) {
                   onClick={() => setImageIndex(i)}
                   aria-label={`Ver imagen ${i + 1}`}
                   aria-current={i === imageIndex}
-                  className={`block h-20 w-16 overflow-hidden rounded-[var(--sf-radius)] border-2 ${i === imageIndex ? "border-primary" : "border-transparent"}`}
+                  className={`block h-20 w-16 overflow-hidden rounded-sf-sm border-2 ${i === imageIndex ? "border-primary" : "border-transparent"}`}
                 >
                   {/* thumbnail */}
                   <img
@@ -138,7 +138,7 @@ export function ProductView({ product }: { product: StorefrontProduct }) {
                     type="button"
                     onClick={() => pick(axis.attributeId, v.valueId)}
                     aria-pressed={on}
-                    className={`flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-[var(--sf-radius)] border px-3 text-sm ${on ? "border-primary ring-2 ring-primary" : "hover:bg-surface"} ${available ? "" : "text-muted-foreground line-through"}`}
+                    className={`flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-sf-btn border px-3 text-sm ${on ? "border-primary ring-2 ring-primary" : "hover:bg-surface"} ${available ? "" : "text-muted-foreground line-through"}`}
                   >
                     {v.swatch && (
                       <span
@@ -172,7 +172,7 @@ export function ProductView({ product }: { product: StorefrontProduct }) {
           <button
             type="button"
             disabled
-            className="inline-flex h-12 items-center justify-center rounded-[var(--sf-radius)] bg-surface px-6 font-semibold text-muted-foreground"
+            className="inline-flex h-12 items-center justify-center rounded-sf-btn bg-surface px-6 font-semibold text-muted-foreground"
           >
             Agotado
           </button>
@@ -200,7 +200,7 @@ function AddToCart({ variantId }: { variantId: string }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex gap-3">
-        <div className="flex h-12 items-center rounded-[var(--sf-radius)] border">
+        <div className="flex h-12 items-center rounded-sf-btn border">
           <button
             type="button"
             className="h-full w-11 text-lg disabled:opacity-40"
@@ -230,7 +230,7 @@ function AddToCart({ variantId }: { variantId: string }) {
           type="button"
           onClick={onAdd}
           disabled={pending}
-          className="inline-flex h-12 flex-1 items-center justify-center rounded-[var(--sf-radius)] bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          className="inline-flex h-12 flex-1 items-center justify-center rounded-sf-btn bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
         >
           {pending ? "Añadiendo…" : "Añadir al carrito"}
         </button>

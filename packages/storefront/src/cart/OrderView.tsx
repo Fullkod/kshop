@@ -57,7 +57,7 @@ export function OrderView({ token }: { token: string }) {
               href={order.whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-[var(--sf-radius)] bg-[#25D366] px-6 font-semibold text-black hover:opacity-90"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-sf-btn bg-whatsapp px-6 font-semibold text-white hover:opacity-90"
             >
               Enviar pedido por WhatsApp
             </a>

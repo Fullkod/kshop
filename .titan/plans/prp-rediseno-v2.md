@@ -190,6 +190,13 @@ la tienda pasados a `rounded-sf-*` según `01-TOKENS.md` §5. El `ThemeEditor` a
 **Validación**: tests ampliados en `storefront.test.ts` (tema v1 → campos del preset, `isDark`, 6 parejas,
 `readableOn("#FF7A93") === "#111111"`); capturas antes/después de la Tienda Demo con el mismo color; typecheck, lint,
 test y build en verde.
+**Hecha (2026-10-27)**: `codigo/` copiado (comentarios pasados a inglés); 44 radios a `rounded-sf-*` pieza a pieza
+(botones/campos/chips `sf-btn`, tarjetas/fotos/cajas `sf`, miniaturas `sf-sm`, banner `sf-lg`); fuera los dos colores
+fijos de la tienda (`bg-[#25D366]` → `bg-whatsapp`, degradado `from-black/60 text-white` → `from-scrim
+text-ink-foreground`); `ThemeEditor` mínimo con los 12 colores, 6 presets y botones/sombras/mayúsculas (el rediseño es
+R6); `docs/design-v2/referencias/**` fuera del lint. Evidencia en `.titan/qa/rediseno-v2/R0/` (antes/después a 1280 y
+390: mismas variables de color, solo cambian radios; menú móvil y hoja de filtros fijos siguen pegados al viewport;
+Apariencia con el preset Fresco sin guardar). 69 tests, typecheck, lint y build en verde.
 
 ### Fase R1: Átomos
 **Objetivo**: `packages/ui/src/components.tsx` con Button (`secondary`, `whatsapp`, `whatsappOutline`, `inverse`,
@@ -289,6 +296,13 @@ del estudio de precios), CTA final y pie con «Acceso Fullkod»; CTAs según D8.
 ## 🧠 Aprendizajes (Self-Annealing)
 
 > Crece con cada error encontrado durante la implementación.
+
+- **R0 — `git stash pop` deja CRLF** (con `core.autocrlf=true`) y Prettier marca los archivos: pasar `prettier --write`
+  (y `pnpm codegen`) después. Para capturas «antes/después» con el dev corriendo, el stash funciona (HMR recompila).
+- **R0 — `container-type: inline-size` en `.sf-root`** no rompe los `position: fixed` de la tienda (menú móvil, hoja
+  de filtros): comprobado a 390 tras hacer scroll.
+- **Aviso de Next en dev ajeno al rediseño**: «Could not validate that a segment in your UI has instant navigation» en
+  `/admin` (`admin/page.tsx`) y `/admin/themes` (`themes/layout.tsx`). No rompe nada; revisar en R6 (admin).
 
 ---
 

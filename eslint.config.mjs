@@ -15,6 +15,7 @@ export default tseslint.config(
       "apps/*/release/**",
       "**/gql/**",
       "**/next-env.d.ts",
+      "docs/design-v2/referencias/**",
       ".claude/**",
       ".codex/**",
       ".agents/**",

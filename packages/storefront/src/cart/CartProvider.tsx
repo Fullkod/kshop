@@ -143,7 +143,7 @@ export function CartLink() {
   return (
     <Link
       href="/cart"
-      className="relative flex h-10 w-10 items-center justify-center rounded-[var(--sf-radius)] hover:bg-surface"
+      className="relative flex h-10 w-10 items-center justify-center rounded-sf-btn hover:bg-surface"
       aria-label={count ? `Carrito, ${count} ${count === 1 ? "producto" : "productos"}` : "Carrito"}
     >
       <svg

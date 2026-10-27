@@ -17,7 +17,7 @@ export function SortSelect({ basePath, state }: { basePath: string; state: Listi
             `${basePath}${listingQuery({ ...state, sort: e.target.value as ProductSort, page: 1 })}`,
           )
         }
-        className="h-9 rounded-[var(--sf-radius)] border bg-background px-2 text-sm"
+        className="h-9 rounded-sf-btn border bg-background px-2 text-sm"
       >
         {Object.entries(SORT_LABELS).map(([value, label]) => (
           <option key={value} value={value}>
@@ -58,7 +58,7 @@ export function PriceFilter({
           inputMode="numeric"
           value={min}
           onChange={(e) => setMin(e.target.value)}
-          className="h-9 w-24 rounded-[var(--sf-radius)] border bg-background px-2 text-sm text-foreground"
+          className="h-9 w-24 rounded-sf-btn border bg-background px-2 text-sm text-foreground"
         />
       </label>
       <label className="flex flex-col gap-1 text-xs text-muted-foreground">
@@ -67,10 +67,10 @@ export function PriceFilter({
           inputMode="numeric"
           value={max}
           onChange={(e) => setMax(e.target.value)}
-          className="h-9 w-24 rounded-[var(--sf-radius)] border bg-background px-2 text-sm text-foreground"
+          className="h-9 w-24 rounded-sf-btn border bg-background px-2 text-sm text-foreground"
         />
       </label>
-      <button type="submit" className="h-9 rounded-[var(--sf-radius)] border px-3 text-sm hover:bg-surface">
+      <button type="submit" className="h-9 rounded-sf-btn border px-3 text-sm hover:bg-surface">
         Aplicar
       </button>
     </form>

@@ -150,11 +150,9 @@ export function ListingRoute({ kind }: { kind: ListingKind }) {
           type="search"
           defaultValue={params.get("q") ?? ""}
           placeholder="¿Qué buscas?"
-          className="h-11 flex-1 rounded-[var(--sf-radius)] border bg-background px-4"
+          className="h-11 flex-1 rounded-sf-btn border bg-background px-4"
         />
-        <button className="h-11 rounded-[var(--sf-radius)] bg-primary px-4 text-primary-foreground">
-          Buscar
-        </button>
+        <button className="h-11 rounded-sf-btn bg-primary px-4 text-primary-foreground">Buscar</button>
       </form>
     );
   }
