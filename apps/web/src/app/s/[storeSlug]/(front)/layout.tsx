@@ -8,6 +8,7 @@ import {
   headerChips,
   headerLinks,
   StoreFooter,
+  StoreAnnouncement,
   StoreHeader,
   themeStyle,
 } from "@kshop/storefront";
@@ -54,6 +55,7 @@ export default async function StorefrontLayout({ children, params }: LayoutProps
             <CartProvider>
               <CartUiProvider freeShipping={shell.freeShipping}>
                 {app && <AndroidAppBanner storeName={store.name} />}
+                <StoreAnnouncement announcement={shell.announcement} />
                 <StoreHeader store={store} links={header} chips={headerChips(shell)} />
                 <main id="content" className="flex-1">
                   {children}

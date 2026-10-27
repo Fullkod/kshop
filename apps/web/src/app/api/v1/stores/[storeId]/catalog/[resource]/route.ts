@@ -17,7 +17,7 @@ export const POST = apiHandler(
 
     const { data, error } = await getServiceClient()
       .from(resource.table)
-      .insert({ ...resource.toRow(input), store_id: storeId })
+      .insert({ ...resource.toRow(input, storeId), store_id: storeId })
       .select("id")
       .single<{ id: string }>();
     if (error) mapDbError(error, resource.entity);

@@ -1,5 +1,11 @@
 import "server-only";
-import { storeOrigin, type CreateStoreInput, type PlanCode, type StoreStatus } from "@kshop/core";
+import {
+  DEFAULT_HOME_SECTIONS,
+  storeOrigin,
+  type CreateStoreInput,
+  type PlanCode,
+  type StoreStatus,
+} from "@kshop/core";
 import type { CreateStoreResponse, PlatformStore } from "@kshop/data";
 import { publicEnv, platformProtocol } from "@/env";
 import { serverEnv } from "./env";
@@ -153,6 +159,21 @@ export async function createPlatformStore(
     });
     if (grant.error) throw grant.error;
   }
+  // Home of a new store (PRP-R D11): the default sections, hidden until the owner fills them in.
+  const sections = await getServiceClient()
+    .from("home_sections")
+    .insert(
+      DEFAULT_HOME_SECTIONS.map((s, index) => ({
+        store_id: data.id,
+        type: s.type,
+        title: s.title,
+        settings: s.settings,
+        sort_order: index,
+        is_visible: false,
+      })),
+    );
+  if (sections.error) throw sections.error;
+
   if (input.founderPrice != null || input.comped) {
     const update = await getServiceClient().rpc("subscription_update", {
       p_store_id: data.id,

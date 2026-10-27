@@ -22,12 +22,20 @@ const brands: SimpleEntityConfig<"brands"> = {
   fields: [
     { key: "name", label: "Nombre", type: "text" },
     { key: "description", label: "Descripción (opcional)", type: "textarea" },
+    {
+      key: "logoUrl",
+      label: "Logo (opcional)",
+      type: "image",
+      folder: "brands",
+      hint: "Sale en la sección «Marcas» de la portada; sin logo se muestra el nombre.",
+    },
     { key: "isPublished", label: "Visible en la tienda", type: "checkbox" },
   ],
   rows: (d) => d.brands,
   toInput: (v) => ({
     name: text(v.name),
     description: text(v.description),
+    logoUrl: text(v.logoUrl) || undefined,
     isPublished: v.isPublished === true,
   }),
   badges: (r) => (r.isPublished ? null : <Badge variant="muted">Oculta</Badge>),
@@ -61,6 +69,13 @@ const collections: SimpleEntityConfig<"collections"> = {
   fields: [
     { key: "name", label: "Nombre", type: "text" },
     { key: "description", label: "Descripción (opcional)", type: "textarea" },
+    {
+      key: "imageUrl",
+      label: "Foto de portada (opcional)",
+      type: "image",
+      folder: "collections",
+      hint: "Vertical (4:5). Sale en la sección «Colecciones» de la portada.",
+    },
     { key: "isPublished", label: "Visible en la tienda", type: "checkbox" },
     {
       key: "auto",
@@ -111,6 +126,7 @@ const collections: SimpleEntityConfig<"collections"> = {
     return {
       name: text(v.name),
       description: text(v.description),
+      imageUrl: text(v.imageUrl) || undefined,
       isPublished: v.isPublished === true,
       rules:
         v.auto === true

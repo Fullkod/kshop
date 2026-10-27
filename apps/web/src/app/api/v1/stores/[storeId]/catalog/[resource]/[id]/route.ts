@@ -21,7 +21,7 @@ export const PATCH = apiHandler(async (request: Request, ctx: Ctx) => {
 
   const { data, error } = await getServiceClient()
     .from(resource.table)
-    .update(resource.toRow(input))
+    .update(resource.toRow(input, storeId))
     .eq("store_id", storeId)
     .eq("id", id)
     .select("id")

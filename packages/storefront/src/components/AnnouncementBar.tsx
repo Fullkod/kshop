@@ -1,8 +1,43 @@
-import { Truck, type LucideIcon } from "@kshop/ui";
+import type { BenefitIcon } from "@kshop/core";
+import type { Announcement } from "@kshop/data";
+import {
+  Banknote,
+  Clock,
+  Gift,
+  type LucideIcon,
+  MessageCircle,
+  RefreshCcw,
+  ShieldCheck,
+  Store,
+  Truck,
+} from "@kshop/ui";
 import { Link } from "../navigation";
 
+/** Icons the owner picks for benefits and the announcement (names from @kshop/core). */
+export const BENEFIT_ICON: Record<BenefitIcon, LucideIcon> = {
+  truck: Truck,
+  banknote: Banknote,
+  "message-circle": MessageCircle,
+  "refresh-ccw": RefreshCcw,
+  "shield-check": ShieldCheck,
+  clock: Clock,
+  gift: Gift,
+  store: Store,
+};
+
+/** The store's announcement (first visible `announcement_bar` section, read with the shell). */
+export const StoreAnnouncement = ({ announcement }: { announcement: Announcement | null }) =>
+  announcement && (
+    <AnnouncementBar
+      text={announcement.text}
+      secondary={announcement.secondaryText}
+      link={announcement.link}
+      icon={BENEFIT_ICON[announcement.icon]}
+    />
+  );
+
 /**
- * Thin band above the header (home section `announcement_bar`, wired in R5). Phones show only the main text; wider
+ * Thin band above the header (home section `announcement_bar`). Phones show only the main text; wider
  * screens add the secondary text and the link.
  */
 export function AnnouncementBar({

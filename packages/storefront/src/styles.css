@@ -22,6 +22,28 @@
     var(--surface) 12px 24px
   );
 }
+/* Placeholders of the home while a photo is missing (category, collection, hero). */
+.sf-root .sf-stripes-secondary {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--secondary-soft) 0 10px,
+    color-mix(in srgb, var(--secondary) 9%, var(--bg)) 10px 20px
+  );
+}
+.sf-root .sf-stripes-ink {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--ink) 0 14px,
+    color-mix(in srgb, var(--ink-fg) 8%, var(--ink)) 14px 28px
+  );
+}
+.sf-root .sf-stripes-accent {
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent-fg) 16%, var(--accent)) 0 14px,
+    color-mix(in srgb, var(--accent-fg) 7%, var(--accent)) 14px 28px
+  );
+}
 /* Horizontal carousels without a visible scrollbar */
 .sf-root .sf-scroller {
   scrollbar-width: none;

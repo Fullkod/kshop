@@ -8,12 +8,14 @@ import { useStore } from "@kshop/storefront";
 
 export type AdminBanner = {
   id: string;
+  eyebrow: string | null;
   title: string | null;
   subtitle: string | null;
   ctaLabel: string | null;
   imageUrl: string;
   imageMobileUrl: string | null;
   alt: string | null;
+  productId: string | null;
   link: Link | null;
   isVisible: boolean;
   startsAt: string | null;
@@ -114,12 +116,14 @@ export function useContent() {
           description: nodes(d.storesCollection)[0]?.description ?? null,
           banners: nodes(d.bannersCollection).map((b) => ({
             id: b.id,
+            eyebrow: b.eyebrow ?? null,
             title: b.title ?? null,
             subtitle: b.subtitle ?? null,
             ctaLabel: b.ctaLabel ?? null,
             imageUrl: b.imageUrl,
             imageMobileUrl: b.imageMobileUrl ?? null,
             alt: b.alt ?? null,
+            productId: b.productId ?? null,
             link: toLink(b.linkType, b.linkTargetId, b.linkUrl),
             isVisible: b.isVisible,
             startsAt: b.startsAt ?? null,

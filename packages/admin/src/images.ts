@@ -85,3 +85,24 @@ export async function uploadProductImage(
     thumbUrl: bucket.getPublicUrl(keys.thumb).data.publicUrl,
   };
 }
+
+/** Photo of a category or a collection, or a brand logo (same two sizes as products); returns the large one's URL. */
+export async function uploadCatalogImage(
+  supabase: SupabaseClient,
+  storeId: string,
+  folder: "categories" | "collections" | "brands",
+  file: File,
+): Promise<string> {
+  if (!file.type.startsWith("image/")) throw new Error("El archivo no es una imagen.");
+  if (file.size > MAX_INPUT_BYTES) throw new Error("La imagen pesa más de 15 MB.");
+  const [full, thumb] = await Promise.all([toWebp(file, IMAGE_SIZES.full), toWebp(file, IMAGE_SIZES.thumb)]);
+  const base = `stores/${storeId}/${folder}/${crypto.randomUUID()}`;
+  const bucket = supabase.storage.from("store-media");
+  const options = { contentType: "image/webp", cacheControl: "31536000", upsert: false };
+  const [a, b] = await Promise.all([
+    bucket.upload(`${base}-${IMAGE_SIZES.full}.webp`, full, options),
+    bucket.upload(`${base}-${IMAGE_SIZES.thumb}.webp`, thumb, options),
+  ]);
+  if (a.error || b.error) throw new Error("No se pudo subir la imagen.");
+  return bucket.getPublicUrl(`${base}-${IMAGE_SIZES.full}.webp`).data.publicUrl;
+}

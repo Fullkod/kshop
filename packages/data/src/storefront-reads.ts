@@ -5,7 +5,9 @@ import {
   PRODUCTS_PER_PAGE,
   savingPercent,
   sortOrderBy,
+  type BenefitIcon,
   type CurrencyCode,
+  type Link,
   type LinkType,
   type ProductSort,
 } from "@kshop/core";
@@ -17,6 +19,7 @@ import {
   StorefrontHomeQuery,
   StorefrontPageQuery,
   StorefrontProductCardFragment,
+  StorefrontProductCountsQuery,
   StorefrontProductCardsQuery,
   StorefrontProductQuery,
   StorefrontProductsQuery,
@@ -42,7 +45,7 @@ export type StorefrontShell = {
   footer: NavLink[];
   categories: { id: string; parentId: string | null; name: string; slug: string; imageUrl: string | null }[];
   brands: { id: string; name: string; slug: string; logoUrl: string | null }[];
-  collections: { id: string; name: string; slug: string }[];
+  collections: { id: string; name: string; slug: string; imageUrl: string | null }[];
   pages: { id: string; slug: string; title: string }[];
   currencies: StoreCurrency[];
   /** What the plan turns on in the storefront (multi_currency, vouchers). */
@@ -53,7 +56,35 @@ export type StorefrontShell = {
   freeShipping: { from: number; method: string } | null;
   /** Active shipping methods (one per name, the cheapest) and payment methods: product page benefits and delivery. */
   delivery: { methods: DeliveryMethod[]; payments: string[] };
+  /** First visible `announcement_bar` section: a band above the header on every page (R5). */
+  announcement: Announcement | null;
 };
+
+export type Announcement = {
+  text: string;
+  secondaryText: string | null;
+  icon: BenefitIcon;
+  link: { href: string; label: string } | null;
+};
+
+/** Path of a typed link stored in settings JSON ("" when the target is gone). */
+function linkPath(link: Link | null | undefined, slugs: Record<string, string>): string {
+  if (!link) return "";
+  return link.type === "url" ? link.url : linkHref(link.type, slugs[link.targetId]);
+}
+
+/** Product ids among the typed links of some settings (their slugs are read apart from the shell's). */
+const productLinkIds = (links: (Link | null | undefined)[]) =>
+  links.flatMap((l) => (l && l.type === "product" ? [l.targetId] : []));
+
+/** Settings JSON of the announcement section, validated (pg_graphql returns jsonb as a string). */
+function parseAnnouncement(raw: string | null | undefined) {
+  const parsed = homeSectionInputSchema.safeParse({
+    type: "announcement_bar",
+    settings: JSON.parse(raw || "{}"),
+  });
+  return parsed.success && parsed.data.type === "announcement_bar" ? parsed.data.settings : null;
+}
 
 export type DeliveryMethod = {
   name: string;
@@ -87,11 +118,15 @@ export async function fetchStorefrontShell(gql: Client, storeId: string): Promis
     ...nodes(d.collectionsCollection).map((c) => [c.id, c.slug]),
     ...nodes(d.pagesCollection).map((p) => [p.id, p.slug]),
   ]);
-  const productIds = nodes(d.menusCollection).flatMap((m) =>
-    nodes(m.menuItemsCollection).flatMap((i) =>
-      i.linkType === "product" && i.linkTargetId ? [i.linkTargetId] : [],
+  const announcement = parseAnnouncement(nodes(d.announcement)[0]?.settings);
+  const productIds = [
+    ...nodes(d.menusCollection).flatMap((m) =>
+      nodes(m.menuItemsCollection).flatMap((i) =>
+        i.linkType === "product" && i.linkTargetId ? [i.linkTargetId] : [],
+      ),
     ),
-  );
+    ...productLinkIds([announcement?.link]),
+  ];
   Object.assign(slugs, await fetchProductSlugs(gql, storeId, productIds));
 
   const menu = (location: "header" | "footer"): NavLink[] => {
@@ -115,7 +150,7 @@ export async function fetchStorefrontShell(gql: Client, storeId: string): Promis
     footer: menu("footer"),
     categories,
     brands,
-    collections: nodes(d.collectionsCollection),
+    collections: nodes(d.collectionsCollection).map((c) => ({ ...c, imageUrl: c.imageUrl ?? null })),
     pages: nodes(d.pagesCollection),
     // Without multi_currency (e.g. after moving down to Base) the extra currencies are kept but not offered.
     currencies: nodes(d.storeCurrenciesCollection)
@@ -154,6 +189,15 @@ export async function fetchStorefrontShell(gql: Client, storeId: string): Promis
           .values(),
       ],
       payments: nodes(d.paymentMethodsCollection).map((p) => p.name),
+    },
+    announcement: announcement && {
+      text: announcement.text,
+      secondaryText: announcement.secondaryText ?? null,
+      icon: announcement.icon,
+      link: (() => {
+        const href = linkPath(announcement.link, slugs);
+        return href && announcement.linkLabel ? { href, label: announcement.linkLabel } : null;
+      })(),
     },
   };
 }
@@ -506,6 +550,7 @@ export async function fetchPage(gql: Client, storeId: string, slug: string) {
 
 export type BannerData = {
   id: string;
+  eyebrow: string | null;
   title: string | null;
   subtitle: string | null;
   ctaLabel: string | null;
@@ -513,30 +558,71 @@ export type BannerData = {
   imageMobileUrl: string | null;
   alt: string;
   href: string;
+  /** Product of the hero's floating mini card (published only). */
+  product: ProductCardData | null;
 };
 
-export type HomeSection =
-  | {
-      id: string;
-      type: "hero_slider" | "banner";
-      title: string | null;
-      banners: BannerData[];
-      autoplaySeconds: number;
-    }
-  | { id: string; type: "product_carousel"; title: string | null; href: string; products: ProductCardData[] }
-  | {
-      id: string;
-      type: "category_grid";
-      title: string | null;
-      categories: { name: string; slug: string; imageUrl: string | null }[];
-    }
-  | {
-      id: string;
-      type: "brand_strip";
-      title: string | null;
-      brands: { name: string; slug: string; logoUrl: string | null }[];
-    }
-  | { id: string; type: "rich_text"; title: string | null; markdown: string };
+type SectionHead = { id: string; title: string | null; eyebrow: string | null };
+
+export type HomeSection = SectionHead &
+  (
+    | { type: "hero_slider"; banners: BannerData[]; autoplaySeconds: number; whatsapp: boolean }
+    | { type: "banner"; banners: BannerData[] }
+    | { type: "benefits"; items: { icon: BenefitIcon; title: string; text: string | null }[] }
+    | {
+        type: "banner_mosaic";
+        banners: BannerData[];
+        block: {
+          eyebrow: string | null;
+          title: string;
+          text: string | null;
+          ctaLabel: string | null;
+          href: string;
+          bigText: string | null;
+        } | null;
+      }
+    | { type: "product_carousel"; href: string; products: ProductCardData[] }
+    | {
+        type: "offer_countdown";
+        endsAt: string;
+        text: string | null;
+        href: string;
+        products: ProductCardData[];
+      }
+    | { type: "featured_product"; badge: string | null; product: StorefrontProduct }
+    | {
+        type: "category_grid";
+        categories: { name: string; slug: string; imageUrl: string | null; count: number | null }[];
+      }
+    | {
+        type: "collection_cards";
+        collections: { name: string; slug: string; imageUrl: string | null; count: number | null }[];
+      }
+    | { type: "brand_strip"; brands: { name: string; slug: string; logoUrl: string | null }[] }
+    | {
+        type: "testimonials";
+        items: {
+          quote: string;
+          name: string;
+          place: string | null;
+          product: string | null;
+          rating: number;
+        }[];
+        summary: { rating: number; count: number } | null;
+      }
+    | { type: "rich_text"; markdown: string; link: { href: string; label: string } | null }
+  );
+
+type ProductCounts = { categories: Record<string, number>; collections: Record<string, number> };
+
+/** Published products per category (subcategories included) and per collection, in one query. Empty if it fails:
+ *  the tiles just omit the number. */
+async function fetchProductCounts(gql: Client, storeId: string): Promise<ProductCounts> {
+  const result = await gql.query(StorefrontProductCountsQuery, { storeId }).toPromise();
+  const raw = result.error ? null : result.data?.storefrontProductCounts;
+  // pg_graphql returns jsonb as a JSON string.
+  return raw ? (JSON.parse(raw) as ProductCounts) : { categories: {}, collections: {} };
+}
 
 export async function fetchHome(gql: Client, storeId: string): Promise<HomeSection[]> {
   const [result, shell] = await Promise.all([
@@ -544,19 +630,60 @@ export async function fetchHome(gql: Client, storeId: string): Promise<HomeSecti
     fetchStorefrontShell(gql, storeId),
   ]);
   if (result.error) throw result.error;
-  const rows = nodes(result.data?.homeSectionsCollection);
+  // The announcement bar is drawn above the header from the shell, not in the flow of the home.
+  const rows = nodes(result.data?.homeSectionsCollection).filter((r) => r.type !== "announcement_bar");
 
+  // pg_graphql returns jsonb as a JSON string; settings are validated per type. The eyebrow of every section lives in
+  // settings as well.
+  const parsedRows = rows.map((row) => {
+    const settings = JSON.parse(row.settings || "{}") as Record<string, unknown>;
+    const parsed = homeSectionInputSchema.safeParse({
+      type: row.type,
+      title: row.title,
+      eyebrow: typeof settings.eyebrow === "string" ? settings.eyebrow : null,
+      endsAt: row.endsAt,
+      settings,
+      bannerIds: nodes(row.homeSectionBannersCollection).map((b) => b.banners?.id ?? ""),
+      source: row.sourceCollectionId
+        ? { kind: "collection", id: row.sourceCollectionId }
+        : row.sourceCategoryId
+          ? { kind: "category", id: row.sourceCategoryId }
+          : row.sourceBrandId
+            ? { kind: "brand", id: row.sourceBrandId }
+            : { kind: row.type === "offer_countdown" ? "on_sale" : "all" },
+    });
+    return { row, input: parsed.success ? parsed.data : null };
+  });
+
+  // Slugs and cards that the sections point to, read once for the whole home.
   const banners = rows.flatMap((s) =>
     nodes(s.homeSectionBannersCollection).flatMap((b) => (b.banners ? [b.banners] : [])),
   );
-  const productSlugs = await fetchProductSlugs(
-    gql,
-    storeId,
-    banners.flatMap((b) => (b.linkType === "product" && b.linkTargetId ? [b.linkTargetId] : [])),
+  const settingLinks = parsedRows.flatMap(({ input }) =>
+    input?.type === "banner_mosaic"
+      ? [input.settings.block?.link]
+      : input?.type === "rich_text"
+        ? [input.settings.link]
+        : [],
   );
+  const [productSlugs, heroProducts] = await Promise.all([
+    fetchProductSlugs(gql, storeId, [
+      ...banners.flatMap((b) => (b.linkType === "product" && b.linkTargetId ? [b.linkTargetId] : [])),
+      ...productLinkIds(settingLinks),
+      ...parsedRows.flatMap(({ input }) =>
+        input?.type === "featured_product" ? [input.settings.productId] : [],
+      ),
+    ]),
+    fetchProductCards(
+      gql,
+      storeId,
+      banners.flatMap((b) => (b.productId ? [b.productId] : [])),
+    ),
+  ]);
   const slugs = { ...shell.slugs, ...productSlugs };
   const toBanner = (b: (typeof banners)[number]): BannerData => ({
     id: b.id,
+    eyebrow: b.eyebrow ?? null,
     title: b.title ?? null,
     subtitle: b.subtitle ?? null,
     ctaLabel: b.ctaLabel ?? null,
@@ -566,70 +693,147 @@ export async function fetchHome(gql: Client, storeId: string): Promise<HomeSecti
     href: b.linkType
       ? linkHref(b.linkType as LinkType, b.linkTargetId ? slugs[b.linkTargetId] : null, b.linkUrl)
       : "",
+    product: heroProducts.find((p) => p.id === b.productId) ?? null,
   });
+  const sectionBanners = (row: (typeof rows)[number]) =>
+    nodes(row.homeSectionBannersCollection).flatMap((b) => (b.banners ? [toBanner(b.banners)] : []));
+  // Counted once, only when a section shows them.
+  const counts = parsedRows.some(
+    ({ input }) => input?.type === "category_grid" || input?.type === "collection_cards",
+  )
+    ? await fetchProductCounts(gql, storeId)
+    : { categories: {}, collections: {} };
+  const sourceHref = (kind: "collection" | "category" | "brand", id: string | null | undefined) =>
+    id && slugs[id] ? `/${kind}/${slugs[id]}` : "/products";
 
   const sections = await Promise.all(
-    rows.map(async (row): Promise<HomeSection | null> => {
-      // pg_graphql returns jsonb as a JSON string; settings are validated per type.
-      const parsed = homeSectionInputSchema.safeParse({
-        type: row.type,
-        title: row.title,
-        settings: JSON.parse(row.settings || "{}"),
-        bannerIds: nodes(row.homeSectionBannersCollection).map((b) => b.banners?.id ?? ""),
-        source: row.sourceCollectionId
-          ? { kind: "collection", id: row.sourceCollectionId }
-          : row.sourceCategoryId
-            ? { kind: "category", id: row.sourceCategoryId }
-            : row.sourceBrandId
-              ? { kind: "brand", id: row.sourceBrandId }
-              : { kind: "all" },
-      });
-      const title = row.title ?? null;
-      switch (row.type) {
-        case "hero_slider":
-        case "banner": {
-          const list = nodes(row.homeSectionBannersCollection).flatMap((b) =>
-            b.banners ? [toBanner(b.banners)] : [],
-          );
+    parsedRows.map(async ({ row, input }): Promise<HomeSection | null> => {
+      if (!input) return null;
+      const head: SectionHead = { id: row.id, title: row.title ?? null, eyebrow: input.eyebrow ?? null };
+      switch (input.type) {
+        case "hero_slider": {
+          const list = sectionBanners(row);
           if (!list.length) return null;
-          const autoplay =
-            parsed.success && parsed.data.type === "hero_slider" ? parsed.data.settings.autoplaySeconds : 0;
-          return { id: row.id, type: row.type, title, banners: list, autoplaySeconds: autoplay };
+          const { autoplaySeconds, whatsapp } = input.settings;
+          return { ...head, type: "hero_slider", banners: list, autoplaySeconds, whatsapp };
+        }
+        case "banner": {
+          const list = sectionBanners(row);
+          return list.length ? { ...head, type: "banner", banners: list } : null;
+        }
+        case "benefits":
+          return {
+            ...head,
+            type: "benefits",
+            items: input.settings.items.map((i) => ({ icon: i.icon, title: i.title, text: i.text ?? null })),
+          };
+        case "banner_mosaic": {
+          const list = sectionBanners(row);
+          if (!list.length) return null;
+          const block = input.settings.block;
+          return {
+            ...head,
+            type: "banner_mosaic",
+            banners: list,
+            block: block && {
+              eyebrow: block.eyebrow ?? null,
+              title: block.title,
+              text: block.text ?? null,
+              ctaLabel: block.ctaLabel ?? null,
+              href: linkPath(block.link, slugs),
+              bigText: block.bigText ?? null,
+            },
+          };
         }
         case "product_carousel": {
-          const settings =
-            parsed.success && parsed.data.type === "product_carousel"
-              ? parsed.data.settings
-              : { limit: 8, sort: "newest" as const };
+          const { limit, sort } = input.settings;
           const filters: ProductFilters = {
             collectionId: row.sourceCollectionId ?? null,
             categoryId: row.sourceCategoryId ?? null,
             brandIds: row.sourceBrandId ?? null,
           };
-          const { products } = await fetchProducts(gql, storeId, filters, settings.sort, 1, settings.limit);
+          const { products } = await fetchProducts(gql, storeId, filters, sort, 1, limit);
           if (!products.length) return null;
-          const sourceId = row.sourceCollectionId ?? row.sourceCategoryId ?? row.sourceBrandId;
-          const kind = row.sourceCollectionId ? "collection" : row.sourceCategoryId ? "category" : "brand";
-          const href = sourceId && slugs[sourceId] ? `/${kind}/${slugs[sourceId]}` : "/products";
-          return { id: row.id, type: "product_carousel", title, href, products };
+          const href = row.sourceCollectionId
+            ? sourceHref("collection", row.sourceCollectionId)
+            : row.sourceCategoryId
+              ? sourceHref("category", row.sourceCategoryId)
+              : sourceHref("brand", row.sourceBrandId);
+          return { ...head, type: "product_carousel", href, products };
+        }
+        case "offer_countdown": {
+          if (!input.endsAt) return null;
+          const collectionId = input.source.kind === "collection" ? input.source.id : null;
+          const filters: ProductFilters = collectionId ? { collectionId } : { onSale: true };
+          const { products } = await fetchProducts(gql, storeId, filters, "newest", 1, input.settings.limit);
+          if (!products.length) return null;
+          return {
+            ...head,
+            type: "offer_countdown",
+            endsAt: input.endsAt,
+            text: input.settings.text ?? null,
+            href: collectionId ? sourceHref("collection", collectionId) : "/products?sale=1",
+            products,
+          };
+        }
+        case "featured_product": {
+          const slug = slugs[input.settings.productId];
+          const product = slug ? await fetchProduct(gql, storeId, slug) : null;
+          return product
+            ? { ...head, type: "featured_product", badge: input.settings.badge ?? null, product }
+            : null;
         }
         case "category_grid": {
-          const ids =
-            parsed.success && parsed.data.type === "category_grid" ? parsed.data.settings.categoryIds : [];
-          const categories = ids.length
+          const ids = input.settings.categoryIds;
+          const list = ids.length
             ? ids.flatMap((id) => shell.categories.find((c) => c.id === id) ?? [])
             : shell.categories.filter((c) => !c.parentId);
-          if (!categories.length) return null;
-          return { id: row.id, type: "category_grid", title, categories };
+          if (!list.length) return null;
+          const categories = list.map((c) => ({
+            name: c.name,
+            slug: c.slug,
+            imageUrl: c.imageUrl,
+            count: counts.categories[c.id] ?? null,
+          }));
+          return { ...head, type: "category_grid", categories };
+        }
+        case "collection_cards": {
+          const list = input.settings.collectionIds.flatMap(
+            (id) => shell.collections.find((c) => c.id === id) ?? [],
+          );
+          if (!list.length) return null;
+          const collections = list.map((c) => ({
+            name: c.name,
+            slug: c.slug,
+            imageUrl: c.imageUrl,
+            count: counts.collections[c.id] ?? null,
+          }));
+          return { ...head, type: "collection_cards", collections };
         }
         case "brand_strip":
-          return shell.brands.length
-            ? { id: row.id, type: "brand_strip", title, brands: shell.brands }
-            : null;
-        case "rich_text":
-          return parsed.success && parsed.data.type === "rich_text"
-            ? { id: row.id, type: "rich_text", title, markdown: parsed.data.settings.markdown }
-            : null;
+          return shell.brands.length ? { ...head, type: "brand_strip", brands: shell.brands } : null;
+        case "testimonials":
+          return {
+            ...head,
+            type: "testimonials",
+            items: input.settings.items.map((t) => ({
+              quote: t.quote,
+              name: t.name,
+              place: t.place ?? null,
+              product: t.product ?? null,
+              rating: t.rating,
+            })),
+            summary: input.settings.summary,
+          };
+        case "rich_text": {
+          const href = linkPath(input.settings.link, slugs);
+          return {
+            ...head,
+            type: "rich_text",
+            markdown: input.settings.markdown,
+            link: href && input.settings.linkLabel ? { href, label: input.settings.linkLabel } : null,
+          };
+        }
         default:
           return null;
       }

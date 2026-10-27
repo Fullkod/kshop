@@ -20,12 +20,14 @@ export const AdminContentQuery = graphql(`
       edges {
         node {
           id
+          eyebrow
           title
           subtitle
           ctaLabel
           imageUrl
           imageMobileUrl
           alt
+          productId
           linkType
           linkTargetId
           linkUrl

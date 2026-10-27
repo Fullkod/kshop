@@ -5,6 +5,7 @@ export * from "./store-context";
 export * from "./theme-style";
 export * from "./components/AnnouncementBar";
 export * from "./components/BottomTabBar";
+export * from "./components/Countdown";
 export * from "./components/Currency";
 export * from "./components/HeroSlider";
 export * from "./components/HomeSections";

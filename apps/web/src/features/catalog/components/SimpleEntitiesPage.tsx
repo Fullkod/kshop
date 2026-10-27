@@ -4,11 +4,12 @@ import type { CatalogResourceInputs } from "@kshop/data";
 import { Alert, Badge, Button, Card, FieldError, Input, Label } from "@kshop/ui";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useApiAction, useCatalogApi, useCatalogStructure, type CatalogStructure } from "../use-catalog";
+import { ImageField } from "./ImageField";
 
 type Field = {
   key: string;
   label: string;
-  type: "text" | "textarea" | "checkbox" | "select";
+  type: "text" | "textarea" | "checkbox" | "select" | "image";
   placeholder?: string;
   /** Checkbox value of a new entity (default: checked). */
   newDefault?: boolean;
@@ -16,6 +17,9 @@ type Field = {
   options?: (data: CatalogStructure) => { value: string; label: string }[];
   /** Section title shown above the field. */
   group?: string;
+  /** Storage folder of an image field. */
+  folder?: "categories" | "collections" | "brands";
+  hint?: string;
 };
 type Row = { id: string; name: string } & Record<string, unknown>;
 
@@ -110,7 +114,16 @@ export function SimpleEntitiesPage<R extends "brands" | "collections" | "warehou
                   {f.group}
                 </p>
               ),
-              f.type === "checkbox" ? (
+              f.type === "image" ? (
+                <ImageField
+                  key={f.key}
+                  name={f.key}
+                  label={f.label}
+                  folder={f.folder ?? "collections"}
+                  hint={f.hint}
+                  defaultValue={editing === "new" ? null : ((editing[f.key] as string | null) ?? null)}
+                />
+              ) : f.type === "checkbox" ? (
                 <label key={f.key} className="flex items-center gap-2 text-sm sm:col-span-2">
                   <input
                     type="checkbox"

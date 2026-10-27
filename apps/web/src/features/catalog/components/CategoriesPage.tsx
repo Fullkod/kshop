@@ -9,6 +9,7 @@ import {
   useCatalogStructure,
   type Category,
 } from "../use-catalog";
+import { ImageField } from "./ImageField";
 
 export function CategoriesPage() {
   const { data, error, reload } = useCatalogStructure();
@@ -29,6 +30,7 @@ export function CategoriesPage() {
       name: String(form.get("name") ?? ""),
       parentId: String(form.get("parentId") ?? "") || null,
       description: String(form.get("description") ?? ""),
+      imageUrl: String(form.get("imageUrl") ?? "") || undefined,
     };
     const ok = await action.run(() =>
       editing && editing !== "new"
@@ -99,6 +101,13 @@ export function CategoriesPage() {
                 className="rounded-md border bg-background px-3 py-2 text-sm"
               />
             </div>
+            <ImageField
+              name="imageUrl"
+              label="Foto (opcional)"
+              folder="categories"
+              defaultValue={editing === "new" ? null : editing.imageUrl}
+              hint="Cuadrada. Sale en la sección «Categorías» de la portada."
+            />
             {action.error && (
               <Alert variant="destructive" className="sm:col-span-2">
                 {action.error}

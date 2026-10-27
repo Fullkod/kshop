@@ -11,11 +11,11 @@ export async function generateMetadata({ params }: PageProps<"/s/[storeSlug]">):
 
 export default async function StoreHomePage({ params }: PageProps<"/s/[storeSlug]">) {
   const store = await requireStore(params);
-  const sections = await getHome(store.id);
+  const [sections, shell] = await Promise.all([getHome(store.id), getStorefrontShell(store.id)]);
   return (
     <>
       <h1 className="sr-only">{store.name}</h1>
-      <HomeSections sections={sections.length ? sections : await fallbackHome(store.id)} />
+      <HomeSections sections={sections.length ? sections : await fallbackHome(store.id)} delivery={shell} />
     </>
   );
 }

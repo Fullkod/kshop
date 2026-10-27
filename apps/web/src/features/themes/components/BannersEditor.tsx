@@ -13,12 +13,14 @@ import { LinkPicker } from "./LinkPicker";
 
 type Draft = Omit<AdminBanner, "id"> & { id?: string };
 const empty: Draft = {
+  eyebrow: "",
   title: "",
   subtitle: "",
   ctaLabel: "",
   imageUrl: "",
   imageMobileUrl: null,
   alt: "",
+  productId: null,
   link: null,
   isVisible: true,
   startsAt: null,
@@ -56,12 +58,14 @@ export function BannersEditor({
   async function save() {
     if (!draft) return;
     const input: BannerInput = {
+      eyebrow: draft.eyebrow || null,
       title: draft.title || null,
       subtitle: draft.subtitle || null,
       ctaLabel: draft.ctaLabel || null,
       imageUrl: draft.imageUrl,
       imageMobileUrl: draft.imageMobileUrl,
       alt: draft.alt || null,
+      productId: draft.productId,
       link: draft.link,
       isVisible: draft.isVisible,
       startsAt: draft.startsAt,
@@ -92,8 +96,8 @@ export function BannersEditor({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Imágenes grandes con texto y enlace. Se usan en las secciones «Carrusel de portada» y «Banner».
-          Puedes programar cuándo se ven.
+          Imágenes grandes con texto y enlace. Se usan en las secciones «Carrusel de portada», «Banner» y
+          «Banner doble». Puedes programar cuándo se ven.
         </p>
         <Button onClick={() => setDraft({ ...empty })}>Nuevo banner</Button>
       </div>
@@ -129,6 +133,7 @@ export function BannersEditor({
           ))}
           {(
             [
+              ["eyebrow", "Antetítulo (opcional, p. ej. «Nueva temporada»)"],
               ["title", "Título (opcional)"],
               ["subtitle", "Subtítulo (opcional)"],
               ["ctaLabel", "Texto del botón (opcional)"],
@@ -144,6 +149,25 @@ export function BannersEditor({
               />
             </div>
           ))}
+          <div className="flex flex-col gap-1 sm:col-span-2">
+            <Label htmlFor="banner-product">Producto destacado en el carrusel (opcional)</Label>
+            <select
+              id="banner-product"
+              value={draft.productId ?? ""}
+              onChange={(e) => setDraft({ ...draft, productId: e.target.value || null })}
+              className="h-11 rounded-md border bg-background px-2 text-sm"
+            >
+              <option value="">Ninguno</option>
+              {content.products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted-foreground">
+              Sale en una tarjeta pequeña sobre la foto, con su precio y el botón de añadir.
+            </p>
+          </div>
           <div className="sm:col-span-2">
             <LinkPicker
               id="banner-link"
@@ -216,8 +240,10 @@ export function BannersEditor({
 export function Schedule({
   draft,
   onChange,
+  endRequired = false,
 }: {
   draft: { isVisible: boolean; startsAt: string | null; endsAt: string | null };
+  endRequired?: boolean;
   onChange: (patch: { isVisible?: boolean; startsAt?: string | null; endsAt?: string | null }) => void;
 }) {
   return (
@@ -240,7 +266,7 @@ export function Schedule({
         />
       </div>
       <div className="flex flex-col gap-1">
-        <Label htmlFor="ends-at">Hasta (opcional)</Label>
+        <Label htmlFor="ends-at">{endRequired ? "Hasta (obligatorio)" : "Hasta (opcional)"}</Label>
         <Input
           id="ends-at"
           type="datetime-local"

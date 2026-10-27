@@ -237,7 +237,15 @@ function WhatsappButton({ product }: { product: ProductCardData }) {
  * Quick add: a product with one variant goes straight to the cart; with several, a picker opens (bottom sheet on
  * phones, dialog on wider screens) with the same variant chips as the product page.
  */
-function QuickAdd({ product, iconOnly = false }: { product: ProductCardData; iconOnly?: boolean }) {
+export function QuickAdd({
+  product,
+  iconOnly = false,
+  className,
+}: {
+  product: ProductCardData;
+  iconOnly?: boolean;
+  className?: string;
+}) {
   const { add, pending } = useCart();
   const { added } = useCartUi();
   const [busy, setBusy] = useState(false);
@@ -270,6 +278,7 @@ function QuickAdd({ product, iconOnly = false }: { product: ProductCardData; ico
           buttonVariants({ size: "sm" }),
           "h-10 w-10 px-0 shadow-sf",
           !iconOnly && "@min-[720px]:w-auto @min-[720px]:px-3",
+          className,
         )}
       >
         <Plus size={18} aria-hidden />

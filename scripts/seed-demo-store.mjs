@@ -227,50 +227,44 @@ if (!promoCount) {
       .select("id")
       .single();
     if (promoError) throw promoError;
-    const { error: targetError } = await service
-      .from("promotion_targets")
-      .insert({
-        store_id: store.id,
-        promotion_id: promo.id,
-        target_type: "category",
-        target_id: category.id,
-      });
+    const { error: targetError } = await service.from("promotion_targets").insert({
+      store_id: store.id,
+      promotion_id: promo.id,
+      target_type: "category",
+      target_id: category.id,
+    });
     if (targetError) throw targetError;
     const { error: refreshError } = await service.rpc("refresh_promotions", { p_store_id: store.id });
     if (refreshError) throw refreshError;
     console.log("Created the promotion «Rebajas de vestidos» (-20 % on Vestidos)");
   }
 }
-const { error: voucherError } = await service
-  .from("vouchers")
-  .upsert(
-    {
-      store_id: store.id,
-      code: "BIENVENIDA10",
-      name: "Bienvenida",
-      scope: "order",
-      reward: "percent",
-      value: 10,
-      min_subtotal: 2000,
-      usage_per_customer: 1,
-    },
-    { onConflict: "store_id,code", ignoreDuplicates: true },
-  );
+const { error: voucherError } = await service.from("vouchers").upsert(
+  {
+    store_id: store.id,
+    code: "BIENVENIDA10",
+    name: "Bienvenida",
+    scope: "order",
+    reward: "percent",
+    value: 10,
+    min_subtotal: 2000,
+    usage_per_customer: 1,
+  },
+  { onConflict: "store_id,code", ignoreDuplicates: true },
+);
 if (voucherError) throw voucherError;
 
 // WhatsApp notices (phase 4): the store's WhatsApp gets the new orders and is shown to customers.
-const { error: contactError } = await service
-  .from("store_notification_contacts")
-  .upsert(
-    {
-      store_id: store.id,
-      name: "Tienda Demo",
-      phone: "+5350000000",
-      notify_new_order: true,
-      show_to_customer: true,
-    },
-    { onConflict: "store_id,phone", ignoreDuplicates: true },
-  );
+const { error: contactError } = await service.from("store_notification_contacts").upsert(
+  {
+    store_id: store.id,
+    name: "Tienda Demo",
+    phone: "+5350000000",
+    notify_new_order: true,
+    show_to_customer: true,
+  },
+  { onConflict: "store_id,phone", ignoreDuplicates: true },
+);
 if (contactError) throw contactError;
 
 // Pro (phase 6): zones served by each warehouse, a USD rate history and a custom domain waiting for DNS. Only what
@@ -333,6 +327,330 @@ if (contactError) throw contactError;
     { onConflict: "domain", ignoreDuplicates: true },
   );
   if (domainError) throw domainError;
+}
+
+// Home of the redesign (R5): every section type, as in docs/design-v2/referencias/TiendaPortada.dc.html. Built once
+// (when the home has no «Opiniones» section yet) from what the store has: its photos, categories and products. Later
+// runs only keep the countdown alive, so the staff can change the home freely.
+{
+  const { data: hasHome } = await service
+    .from("home_sections")
+    .select("id")
+    .eq("store_id", store.id)
+    .eq("type", "testimonials")
+    .limit(1);
+  const nextWeek = () => new Date(Date.now() + 6 * 86_400_000).toISOString();
+
+  if (!hasHome?.length) {
+    // By slug and by its last part («mujer-blusas» is also «blusas»).
+    const categories = Object.fromEntries(
+      ((await service.from("categories").select("id, slug").eq("store_id", store.id)).data ?? []).flatMap(
+        (c) => [
+          [c.slug.split("-").at(-1), c.id],
+          [c.slug, c.id],
+        ],
+      ),
+    );
+    // Photos already in the store's media (banners and product photos), so the demo uploads nothing.
+    const { data: media } = await service
+      .from("product_media")
+      .select("url, products!inner(id, slug, status)")
+      .eq("store_id", store.id)
+      .eq("products.status", "published")
+      .order("sort_order")
+      .limit(20);
+    const photos = [...new Map((media ?? []).map((m) => [m.products.slug, m])).values()];
+    const photo = (i) => photos[i % Math.max(photos.length, 1)]?.url ?? null;
+    const { data: oldBanner } = await service
+      .from("banners")
+      .select("id, title, image_url")
+      .eq("store_id", store.id)
+      .order("created_at")
+      .limit(1)
+      .maybeSingle();
+    const { data: featured } = await service
+      .from("products")
+      .select("id")
+      .eq("store_id", store.id)
+      .eq("slug", "vestido-nandu")
+      .maybeSingle();
+
+    // Brands and automatic collections for the brand strip and the collection cards.
+    for (const name of ["Lino Habana", "Brisa", "Malecón", "Sol Caribe"]) {
+      const slug = name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, "-");
+      const { error: brandError } = await service
+        .from("brands")
+        .upsert({ store_id: store.id, name, slug }, { onConflict: "store_id,slug", ignoreDuplicates: true });
+      if (brandError) throw brandError;
+    }
+    const collectionDefs = [
+      { slug: "vestidos-de-verano", name: "Vestidos de verano", rules: { categoryId: categories.vestidos } },
+      { slug: "blusas-y-camisas", name: "Blusas y camisas", rules: { categoryId: categories.blusas } },
+      { slug: "recien-llegados", name: "Recién llegados", rules: { newerThanDays: 365 } },
+    ].filter((c) => Object.values(c.rules).every(Boolean));
+    for (const [i, c] of collectionDefs.entries()) {
+      const { error: colError } = await service
+        .from("collections")
+        .upsert(
+          { store_id: store.id, ...c, image_url: photo(i), sort_order: 10 + i },
+          { onConflict: "store_id,slug", ignoreDuplicates: true },
+        );
+      if (colError) throw colError;
+    }
+    const collections = (
+      (await service.from("collections").select("id, slug").eq("store_id", store.id)).data ?? []
+    ).filter((c) => collectionDefs.some((d) => d.slug === c.slug));
+    for (const [slug, i] of [
+      ["vestidos", 0],
+      ["blusas", 1],
+    ]) {
+      if (categories[slug] && photo(i)) {
+        await service
+          .from("categories")
+          .update({ image_url: photo(i) })
+          .eq("id", categories[slug])
+          .is("image_url", null);
+      }
+    }
+
+    // Banners: three hero slides and the photo of the mosaic.
+    const link = (type, id) => (id ? { link_type: type, link_target_id: id } : {});
+    const bannerRows = [
+      {
+        eyebrow: "Nueva temporada",
+        title: "Colores que se quedan contigo",
+        subtitle: "Vestidos, blusas y complementos de lino. Pide hoy y recíbelo en casa.",
+        cta_label: "Ver colección",
+        image_url: photo(0),
+        product_id: featured?.id ?? null,
+        ...link("collection", collections[0]?.id),
+      },
+      {
+        eyebrow: "Rebajas",
+        title: "Vestidos con un 20 % menos",
+        subtitle: "Solo esta semana, en todas las tallas que quedan.",
+        cta_label: "Ver ofertas",
+        image_url: photo(0),
+        link_type: "url",
+        link_url: "/products?sale=1",
+      },
+      {
+        eyebrow: "Para cada día",
+        title: "Blusas frescas para el calor",
+        subtitle: "Algodón y lino, en colores de verano.",
+        cta_label: "Ver blusas",
+        image_url: photo(1),
+        ...link("category", categories.blusas),
+      },
+      {
+        eyebrow: "Colección",
+        title: "Verano en lino",
+        cta_label: "Descubrir",
+        image_url: photo(2),
+        ...link("collection", collections[0]?.id),
+      },
+    ].filter((b) => b.image_url);
+    const { data: banners, error: bannerError } = await service
+      .from("banners")
+      .insert(bannerRows.map((b, i) => ({ store_id: store.id, sort_order: 10 + i, alt: b.title, ...b })))
+      .select("id, title");
+    if (bannerError) throw bannerError;
+    const bannerId = (title) => banners.find((b) => b.title === title)?.id;
+
+    // The old home (one plain banner) is replaced by the full one; the old banner stays as the simple banner.
+    await service.from("home_sections").delete().eq("store_id", store.id);
+    const sections = [
+      {
+        type: "announcement_bar",
+        settings: {
+          text: "Envío gratis en La Habana desde 20 000 CUP",
+          secondaryText: "Pagas al recibir",
+          linkLabel: "Ver ofertas",
+          link: { type: "url", url: "/products?sale=1" },
+          icon: "truck",
+        },
+      },
+      {
+        type: "hero_slider",
+        settings: { autoplaySeconds: 6, whatsapp: true },
+        banners: [
+          "Colores que se quedan contigo",
+          "Vestidos con un 20 % menos",
+          "Blusas frescas para el calor",
+        ],
+      },
+      {
+        type: "benefits",
+        settings: {
+          items: [
+            { icon: "truck", title: "Envío a domicilio", text: "En La Habana en 1–2 días" },
+            { icon: "banknote", title: "Paga al recibir", text: "Efectivo o transferencia" },
+            { icon: "message-circle", title: "Pide por WhatsApp", text: "Te respondemos al momento" },
+            { icon: "store", title: "Recoge en la tienda", text: "Calle 23, Vedado" },
+          ],
+        },
+      },
+      {
+        type: "category_grid",
+        title: "Compra por categoría",
+        settings: {
+          eyebrow: "Explora",
+          categoryIds: ["vestidos", "blusas", "faldas", "complementos", "mujer"].flatMap(
+            (s) => categories[s] ?? [],
+          ),
+        },
+      },
+      {
+        type: "product_carousel",
+        title: "Novedades de la semana",
+        settings: { eyebrow: "Recién llegados", limit: 8, sort: "newest" },
+      },
+      {
+        type: "banner_mosaic",
+        banners: ["Verano en lino"],
+        settings: {
+          block: {
+            eyebrow: "Solo esta semana",
+            title: "Hasta -20 % en vestidos",
+            text: "Todos los vestidos con su precio rebajado, mientras queden tallas.",
+            ctaLabel: "Ver ofertas",
+            link: { type: "url", url: "/products?sale=1" },
+            bigText: "20%",
+          },
+        },
+      },
+      {
+        type: "offer_countdown",
+        title: "Rebajas de vestidos hasta el domingo",
+        settings: {
+          eyebrow: "Oferta flash",
+          text: "Vestidos de verano con descuento. Unidades limitadas.",
+          limit: 3,
+        },
+        ends_at: nextWeek(),
+      },
+      featured && {
+        type: "featured_product",
+        settings: { eyebrow: "Producto destacado", productId: featured.id, badge: "Más vendido" },
+      },
+      collections.length >= 2 && {
+        type: "collection_cards",
+        title: "Colecciones",
+        settings: { eyebrow: "Para cada momento", collectionIds: collections.map((c) => c.id) },
+      },
+      { type: "brand_strip", title: "Marcas que vendemos", settings: {} },
+      oldBanner && { type: "banner", settings: {}, bannerIds: [oldBanner.id] },
+      {
+        type: "testimonials",
+        title: "Lo que dicen nuestros clientes",
+        settings: {
+          eyebrow: "Opiniones",
+          items: [
+            {
+              quote:
+                "Pedí el vestido por WhatsApp a las diez y a las cinco ya lo tenía en casa. La talla, perfecta.",
+              name: "Yanet Rodríguez",
+              place: "Plaza",
+              product: "Vestido Ñandú",
+              rating: 5,
+            },
+            {
+              quote:
+                "Me gusta que se paga al recibir. La blusa es igual que en la foto y la tela es fresquita.",
+              name: "Dayana Pérez",
+              place: "Playa",
+              product: "una blusa de lino",
+              rating: 5,
+            },
+            {
+              quote:
+                "Buena atención y me ayudaron a escoger la talla. Repetiré para el cumpleaños de mi madre.",
+              name: "Lisandra Gómez",
+              place: "Centro Habana",
+              product: "una falda",
+              rating: 4,
+            },
+          ],
+          summary: { rating: 4.9, count: 312 },
+        },
+      },
+      {
+        type: "rich_text",
+        title: "Una tienda de barrio, ahora en tu teléfono",
+        settings: {
+          eyebrow: "Sobre nosotros",
+          markdown:
+            "Empezamos vendiendo ropa a los vecinos y hoy llevamos moda a toda La Habana. Elige, pide por WhatsApp y paga cuando lo recibas.",
+          linkLabel: "Ver la tienda",
+          link: { type: "url", url: "/products" },
+        },
+      },
+    ].filter(Boolean);
+    for (const [index, s] of sections.entries()) {
+      const { data: row, error: sectionError } = await service
+        .from("home_sections")
+        .insert({
+          store_id: store.id,
+          type: s.type,
+          title: s.title ?? null,
+          settings: s.settings,
+          ends_at: s.ends_at ?? null,
+          sort_order: index,
+        })
+        .select("id")
+        .single();
+      if (sectionError) throw sectionError;
+      const ids = s.bannerIds ?? (s.banners ?? []).map(bannerId).filter(Boolean);
+      if (ids.length) {
+        const { error: linkError } = await service
+          .from("home_section_banners")
+          .insert(
+            ids.map((banner_id, sort_order) => ({
+              store_id: store.id,
+              section_id: row.id,
+              banner_id,
+              sort_order,
+            })),
+          );
+        if (linkError) throw linkError;
+      }
+    }
+    console.log(`Built the home with ${sections.length} sections`);
+  }
+
+  await spreadBrands();
+
+  // Brands without products take a few of the most common brand's, so no brand page of the strip is empty.
+  async function spreadBrands() {
+    const { data: brands } = await service.from("brands").select("id, name").eq("store_id", store.id);
+    const { data: products } = await service
+      .from("products")
+      .select("id, brand_id, slug")
+      .eq("store_id", store.id)
+      .eq("status", "published")
+      .neq("slug", "vestido-nandu")
+      .order("created_at", { ascending: false })
+      .limit(1000);
+    const counts = new Map((brands ?? []).map((b) => [b.id, 0]));
+    for (const p of products ?? []) if (p.brand_id) counts.set(p.brand_id, (counts.get(p.brand_id) ?? 0) + 1);
+    const [biggest] = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    const pool = (products ?? []).filter((p) => p.brand_id === biggest?.[0]);
+    for (const [brandId, count] of counts) {
+      if (count > 0) continue;
+      const ids = pool.splice(0, 6).map((p) => p.id);
+      if (ids.length) await service.from("products").update({ brand_id: brandId }).in("id", ids);
+    }
+  }
+
+  // The countdown of the demo never runs out: an expired one starts again for another week.
+  const { data: expired } = await service
+    .from("home_sections")
+    .update({ ends_at: nextWeek() })
+    .eq("store_id", store.id)
+    .eq("type", "offer_countdown")
+    .lt("ends_at", new Date().toISOString())
+    .select("id");
+  if (expired?.length) console.log("Restarted the countdown of the offer");
 }
 
 console.log(`Owner: ${DEMO.owner} (DEMO_OWNER_PASSWORD) · Staff: ${DEMO.staff} (DEMO_STAFF_PASSWORD)`);

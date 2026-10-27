@@ -70,6 +70,7 @@ export const CatalogStructureQuery = graphql(`
           parentId
           depth
           description
+          imageUrl
         }
       }
     }
@@ -80,6 +81,7 @@ export const CatalogStructureQuery = graphql(`
           name
           slug
           description
+          logoUrl
           isPublished
         }
       }
@@ -95,6 +97,7 @@ export const CatalogStructureQuery = graphql(`
           name
           slug
           description
+          imageUrl
           isPublished
           rules
         }

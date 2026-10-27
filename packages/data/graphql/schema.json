@@ -2119,10 +2119,46 @@
             },
             {
               "args": [],
+              "name": "eyebrow",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "productId",
+              "type": {
+                "kind": "SCALAR",
+                "name": "UUID",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
               "name": "store",
               "type": {
                 "kind": "OBJECT",
                 "name": "Stores",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "products",
+              "type": {
+                "kind": "OBJECT",
+                "name": "Products",
                 "ofType": null
               },
               "description": null,
@@ -2506,6 +2542,26 @@
               "defaultValue": null
             },
             {
+              "name": "eyebrow",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "StringFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "productId",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "UUIDFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
               "name": "nodeId",
               "type": {
                 "kind": "INPUT_OBJECT",
@@ -2734,6 +2790,26 @@
             },
             {
               "name": "updatedAt",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "eyebrow",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "productId",
               "type": {
                 "kind": "ENUM",
                 "name": "OrderByDirection",
@@ -11916,6 +11992,48 @@
             },
             {
               "name": "rich_text",
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "name": "announcement_bar",
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "name": "benefits",
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "name": "banner_mosaic",
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "name": "offer_countdown",
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "name": "featured_product",
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "name": "collection_cards",
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "name": "testimonials",
               "description": null,
               "isDeprecated": false,
               "deprecationReason": null
@@ -35259,6 +35377,97 @@
               "description": null,
               "isDeprecated": false,
               "deprecationReason": null
+            },
+            {
+              "args": [
+                {
+                  "name": "first",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Query the first `n` records in the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "last",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Query the last `n` records in the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "before",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Cursor",
+                    "ofType": null
+                  },
+                  "description": "Query values in the collection before the provided cursor",
+                  "defaultValue": null
+                },
+                {
+                  "name": "after",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Cursor",
+                    "ofType": null
+                  },
+                  "description": "Query values in the collection after the provided cursor",
+                  "defaultValue": null
+                },
+                {
+                  "name": "offset",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  },
+                  "description": "Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.",
+                  "defaultValue": null
+                },
+                {
+                  "name": "filter",
+                  "type": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "BannersFilter",
+                    "ofType": null
+                  },
+                  "description": "Filters to apply to the results set when querying from the collection",
+                  "defaultValue": null
+                },
+                {
+                  "name": "orderBy",
+                  "type": {
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "INPUT_OBJECT",
+                        "name": "BannersOrderBy",
+                        "ofType": null
+                      }
+                    }
+                  },
+                  "description": "Sort order to apply to the collection",
+                  "defaultValue": null
+                }
+              ],
+              "name": "bannersCollection",
+              "type": {
+                "kind": "OBJECT",
+                "name": "BannersConnection",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
             }
           ],
           "enumValues": [],
@@ -44751,6 +44960,33 @@
                 }
               ],
               "name": "storefrontFeatures",
+              "type": {
+                "kind": "SCALAR",
+                "name": "JSON",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [
+                {
+                  "name": "pStoreId",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "UUID",
+                      "ofType": null
+                    }
+                  },
+                  "description": null,
+                  "defaultValue": null
+                }
+              ],
+              "name": "storefrontProductCounts",
               "type": {
                 "kind": "SCALAR",
                 "name": "JSON",

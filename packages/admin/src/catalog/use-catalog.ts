@@ -34,15 +34,21 @@ export type Category = {
   parentId: string | null;
   depth: number;
   description: string | null;
+  /** Photo of the home category grid. */
+  imageUrl: string | null;
 };
 export type Brand = {
   id: string;
   name: string;
   slug: string;
   description: string | null;
+  logoUrl: string | null;
   isPublished: boolean;
 };
-export type Collection = Brand;
+export type Collection = Omit<Brand, "logoUrl"> & {
+  /** Cover of the home collection cards. */
+  imageUrl: string | null;
+};
 export type Warehouse = {
   id: string;
   name: string;
@@ -120,11 +126,17 @@ export function useCatalogStructure() {
             ...c,
             parentId: c.parentId ?? null,
             description: c.description ?? null,
+            imageUrl: c.imageUrl ?? null,
           })),
-          brands: nodes(d.brandsCollection).map((b) => ({ ...b, description: b.description ?? null })),
+          brands: nodes(d.brandsCollection).map((b) => ({
+            ...b,
+            description: b.description ?? null,
+            logoUrl: b.logoUrl ?? null,
+          })),
           collections: nodes(d.collectionsCollection).map((c) => ({
             ...c,
             description: c.description ?? null,
+            imageUrl: c.imageUrl ?? null,
           })),
           warehouses: nodes(d.warehousesCollection).map((w) => ({
             ...w,

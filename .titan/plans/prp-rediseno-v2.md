@@ -293,6 +293,28 @@ los formularios nuevos; imagen en categorías y colecciones; secciones por defec
 **Validación**: `test:rls`, `db:graphql-schema && codegen`; la Tienda Demo con las 13 secciones como
 `TiendaPortada.dc.html` a 1280 y 390 con los **6 presets** (capturas por preset); la cuenta atrás oculta la sección al
 vencer; editar una sección invalida la portada.
+**Hecha (2026-10-27)**: migraciones `20261105100000_home_sections_v2.sql` (7 valores del enum, `banners.eyebrow` ≤ 40 y
+`banners.product_id` con FK compuesta `on delete set null`) y `20261105100100_storefront_product_counts.sql`
+(`storefront_product_counts(store)`: productos publicados por categoría —con subcategorías— y por colección en una sola
+consulta, `security invoker`); suite `11_home_v2_isolation` (12). `content.ts` con los 13 tipos, `eyebrow` común (se guarda
+en `settings`), `BENEFIT_ICONS`, `offer_countdown` exige `endsAt` y `DEFAULT_HOME_SECTIONS`. `fetchHome` nuevo (la barra de
+anuncio va en el shell: `shell.announcement`, encima de la cabecera en web y app, en todas las páginas). `HomeSections`
+con los 12 tipos del flujo: hero partido con antetítulo, botones, controles `01 / 03` y tarjeta flotante del producto;
+beneficios; categorías y colecciones con nº de productos (oculto si es 0); carruseles con cabecera y flechas
+(`Carousel`, `SectionHeader`, `scroll-padding` del margen); mosaico (foto + bloque secundario o 2 fotos); oferta con
+`Countdown` (reloj único, «–» en el servidor) y `UntilEnd` que oculta la sección al llegar a 0; `FeaturedProduct` con las
+piezas de la ficha (sin estrellas, «Recíbelo en…» del método más rápido); marcas; opiniones (estrellas `text-warning`:
+el secundario de minimal es casi blanco); texto con enlace. D10: la caché de la portada ya se relee cada pocos minutos
+(`cacheLife("minutes")`) y el cliente oculta al cruzar 0. Admin: `SectionsEditor` con los formularios de los 13 tipos (y
+los errores de campo visibles), `BannersEditor` con antetítulo y producto, foto en categorías y colecciones y logo en
+marcas (`ImageField`, WebP 1600/480; la API exige que la imagen sea de la tienda — antes, editar borraba la imagen
+porque el formulario no la enviaba). Tienda nueva: las 6 secciones por defecto, **ocultas** (sin «Cambios en 7 días»:
+la política de cambios es de cada tienda). `demo:seed` arma la portada de 13 secciones con lo que tiene la Demo (fotos,
+categorías, 3 colecciones automáticas, 4 marcas con 6 productos cada una) y reinicia la cuenta atrás si vence.
+Evidencia `.titan/qa/rediseno-v2/R5/`: portada 30/30 en web y 30/30 en la app (1280 y 390, CLS 0, sin scroll horizontal),
+capturas de los 6 presets a 1280 y 390, admin y cuenta atrás 9/9 (13 tipos en el editor, oferta sin fin rechazada, editar
+invalida la portada, la sección desaparece a los 25 s). RLS 580/580, tests 66+2, `e2e:catalog` 46/46, `e2e:favorites`
+12/12, `qa:discounts` 9/9, `qa:orders` 14/14 y `qa:apps` 28/28 (ver aprendizajes), typecheck, lint y build en verde.
 
 ### Fase R6: Admin
 **Objetivo**: `group` en `AdminModule` y el registro; `AdminShell` con barra lateral agrupada, selector de tienda,
@@ -383,6 +405,13 @@ del estudio de precios), CTA final y pie con «Acceso Fullkod»; CTAs según D8.
   momento: no era la invalidación (`revalidateTag(..., { expire: 0 })` funciona). **Si algo «no se actualiza» en dev
   después de tocar paquetes compartidos, reiniciar `pnpm dev` antes de investigar.** La app de tienda ahora pasa el tema
   por `resolveTheme` al leerlo (una APK puede tener en el teléfono la tienda guardada por una versión anterior).
+- **R5 — Recuentos en paralelo y el límite de 3 s de anon**: contar los productos de cada tile con
+  `storefrontSearchProducts { totalCount }` (0,5–1,4 s cada uno) hacía que, con la portada en frío, otras lecturas
+  anónimas pasaran de 3 s (`57014`). Una función SQL con todos los recuentos (~1 s) lo resuelve. Con carga alta (los qa en
+  marcha) el shell y la tienda aún pueden tardar 3–5 s: `qa:orders` y `qa:apps` fallaron una vez cada uno y pasaron al
+  repetir. `qa:apps` contaba las imágenes de la portada sin conexión antes de que se leyera del dispositivo: ahora espera.
+- **R5 — Los slugs de subcategoría llevan el del padre** (`mujer-blusas`): el seed busca también por el último tramo.
+- **Windows: `TaskStop` no mata el `next dev`** (el hijo de node sigue en el puerto 3000): cerrarlo por PID.
 - **Aviso de Next en dev ajeno al rediseño**: «Could not validate that a segment in your UI has instant navigation» en
   `/admin` (`admin/page.tsx`) y `/admin/themes` (`themes/layout.tsx`). No rompe nada; revisar en R6 (admin).
 

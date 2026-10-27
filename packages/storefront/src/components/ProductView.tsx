@@ -16,6 +16,7 @@ import {
   Plus,
   Share2,
   ShoppingBag,
+  Trophy,
   Truck,
   Wallet,
 } from "@kshop/ui";
@@ -596,7 +597,7 @@ export function RelatedProducts({ products }: { products: ProductCardData[] }) {
           También te puede gustar
         </h2>
       </div>
-      <ul className="sf-scroller -mx-[clamp(16px,4.4cqw,56px)] grid auto-cols-[clamp(164px,calc((100cqw-172px)/4),300px)] grid-flow-col gap-[clamp(12px,1.6cqw,20px)] overflow-x-auto px-[clamp(16px,4.4cqw,56px)] pb-1">
+      <ul className="sf-scroller -mx-[clamp(16px,4.4cqw,56px)] grid scroll-px-[clamp(16px,4.4cqw,56px)] auto-cols-[clamp(164px,calc((100cqw-172px)/4),300px)] grid-flow-col gap-[clamp(12px,1.6cqw,20px)] overflow-x-auto px-[clamp(16px,4.4cqw,56px)] pb-1">
         {products.map((p) => (
           <li key={p.id}>
             <ProductCard product={p} />
@@ -621,6 +622,141 @@ export function ProductSkeleton() {
           <div className="h-[46px] w-1/2 animate-pulse rounded-sf-btn bg-surface" />
           <div className="h-[54px] animate-pulse rounded-sf-btn bg-surface" />
         </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Home `featured_product`: the product page's pieces in one section — square photo with its badge and 3 thumbnails,
+ * then eyebrow, brand, name, price, short description, variants, stepper, «Añadir al carrito», «Pedir por WhatsApp»
+ * and the fastest delivery time of the store (no ratings, PRP-R answer 3).
+ */
+export function FeaturedProduct({
+  product,
+  eyebrow,
+  badge,
+  delivery,
+}: {
+  product: StorefrontProduct;
+  eyebrow: string | null;
+  badge: string | null;
+  delivery?: Delivery;
+}) {
+  const selection = useVariantSelection(product.variants);
+  const { variant } = selection;
+  const [quantity, setQuantity] = useState(1);
+  const [status, setStatus] = useState<AddStatus>("idle");
+  const [index, setIndex] = useState(0);
+  const media = product.media.slice(0, 3);
+  const image = media[Math.min(index, media.length - 1)];
+  const amount = variant?.price ?? product.minPrice;
+  const discount = variant?.compareAtPrice ? percentOff(variant.compareAtPrice, variant.price) : null;
+  const fastest = delivery?.delivery.methods
+    .filter((m) => m.type === "delivery" && m.maxDays != null)
+    .sort((a, b) => (a.maxDays ?? 0) - (b.maxDays ?? 0))[0];
+  const href = `/product/${product.slug}`;
+  return (
+    <div className="flex flex-wrap items-center gap-[clamp(24px,4.4cqw,64px)]">
+      <div className="flex min-w-0 flex-[1_1_340px] flex-col gap-3">
+        <Link
+          href={href}
+          className="sf-placeholder relative block aspect-square overflow-hidden rounded-sf-lg shadow-sf"
+        >
+          {image && (
+            <img
+              src={image.url}
+              srcSet={imageSrcSet(image.url)}
+              sizes="(min-width: 720px) 50vw, 100vw"
+              alt={image.alt ?? product.name}
+              loading="lazy"
+              className="h-full w-full object-cover"
+            />
+          )}
+          {badge && (
+            <Badge variant="secondary" shape="tag" className="absolute top-3.5 left-3.5">
+              {/más vendid/i.test(badge) && <Trophy size={13} aria-hidden />}
+              {badge}
+            </Badge>
+          )}
+        </Link>
+        {media.length > 1 && (
+          <div className="flex gap-2.5">
+            {media.map((m, i) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setIndex(i)}
+                aria-label={`Ver imagen ${i + 1}`}
+                aria-current={m === image}
+                className={`size-16 overflow-hidden rounded-sf-sm ${m === image ? "ring-2 ring-primary" : "ring-1 ring-border"}`}
+              >
+                <img src={m.thumbUrl ?? m.url} alt="" loading="lazy" className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="flex min-w-0 flex-[1_1_340px] flex-col gap-4">
+        {eyebrow && (
+          <span className="text-xs font-bold tracking-[.1em] text-primary uppercase">{eyebrow}</span>
+        )}
+        <div className="flex flex-col gap-1.5">
+          {product.brand && (
+            <span className="text-xs font-medium tracking-[.08em] text-muted-foreground uppercase">
+              {product.brand.name}
+            </span>
+          )}
+          <h2 className="sf-heading text-[clamp(28px,3.2cqw,44px)] leading-[1.05] font-extrabold text-balance">
+            <Link href={href}>{product.name}</Link>
+          </h2>
+        </div>
+        <p className="flex flex-wrap items-center gap-2.5">
+          <Price
+            amount={amount}
+            overrides={variant?.overrides}
+            className="sf-heading text-[clamp(26px,2.6cqw,32px)] leading-none font-extrabold"
+          />
+          {variant?.compareAtPrice != null && discount && (
+            <Price
+              amount={variant.compareAtPrice}
+              overrides={variant.compareAtOverrides}
+              className="text-[15px] text-muted-foreground line-through"
+            />
+          )}
+          {discount && (
+            <Badge variant="sale" shape="tag">
+              -{discount}%
+            </Badge>
+          )}
+        </p>
+        {product.description && (
+          <p className="line-clamp-3 max-w-[460px] text-pretty text-muted-foreground">
+            {product.description}
+          </p>
+        )}
+        <VariantPicker selection={selection} />
+        <div className="mt-1 flex flex-wrap gap-2.5">
+          <QuantityStepper value={quantity} onChange={setQuantity} />
+          <AddButton
+            product={product}
+            variant={variant}
+            quantity={quantity}
+            onStatus={setStatus}
+            className="h-[54px] flex-[1_1_200px] shadow-sf"
+          >
+            <ShoppingBag size={18} aria-hidden />
+            {!variant ? "No disponible" : variant.available ? "Añadir al carrito" : "Agotado"}
+          </AddButton>
+          <WhatsappOrder product={product} variant={variant} quantity={quantity} />
+        </div>
+        <AddedStatus status={status} />
+        {fastest && (
+          <span className="-mt-2 flex items-center gap-2 text-[13px] text-muted-foreground">
+            <Truck size={16} aria-hidden className="text-success" />
+            Recíbelo en {days(fastest)}
+          </span>
+        )}
       </div>
     </div>
   );

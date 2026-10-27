@@ -95,12 +95,19 @@ export function defaultHome(newest: ProductCardData[], shell: StorefrontShell): 
       id: "default-new",
       type: "product_carousel",
       title: "Novedades",
+      eyebrow: "Recién llegados",
       href: "/products",
       products: newest,
     });
   }
   if (categories.length) {
-    sections.push({ id: "default-categories", type: "category_grid", title: "Categorías", categories });
+    sections.push({
+      id: "default-categories",
+      type: "category_grid",
+      title: "Categorías",
+      eyebrow: null,
+      categories: categories.map((c) => ({ ...c, count: null })),
+    });
   }
   return sections;
 }

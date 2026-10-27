@@ -75,6 +75,18 @@ export const StorefrontShellQuery = graphql(`
           id
           name
           slug
+          imageUrl
+        }
+      }
+    }
+    announcement: homeSectionsCollection(
+      filter: { storeId: { eq: $storeId }, type: { eq: announcement_bar } }
+      orderBy: [{ sortOrder: AscNullsLast }]
+      first: 1
+    ) {
+      edges {
+        node {
+          settings
         }
       }
     }
@@ -127,14 +139,17 @@ export const StorefrontHomeQuery = graphql(`
           sourceCategoryId
           sourceBrandId
           settings
+          endsAt
           homeSectionBannersCollection(orderBy: [{ sortOrder: AscNullsLast }], first: 8) {
             edges {
               node {
                 banners {
                   id
+                  eyebrow
                   title
                   subtitle
                   ctaLabel
+                  productId
                   imageUrl
                   imageMobileUrl
                   alt
@@ -151,7 +166,13 @@ export const StorefrontHomeQuery = graphql(`
   }
 `);
 
-/** Product card fields, shared by listings, carousels and related products. */
+/** Number of published products of a category or a collection (home category grid and collection cards). */
+export const StorefrontProductCountsQuery = graphql(`
+  query StorefrontProductCounts($storeId: UUID!) {
+    storefrontProductCounts(pStoreId: $storeId)
+  }
+`);
+
 /** Fields of a product card (listings, carousels, favorites). */
 export const StorefrontProductCardFragment = graphql(`
   fragment StorefrontProductCard on Products {

@@ -94,12 +94,14 @@ const resources = {
       assertStoreImage(storeId, i.imageUrl);
       assertStoreImage(storeId, i.imageMobileUrl);
       return {
+        eyebrow: i.eyebrow ?? null,
         title: i.title ?? null,
         subtitle: i.subtitle ?? null,
         cta_label: i.ctaLabel ?? null,
         image_url: i.imageUrl,
         image_mobile_url: i.imageMobileUrl ?? null,
         alt: i.alt ?? null,
+        product_id: i.productId ?? null,
         ...linkColumns(i.link),
         ...schedule(i),
       };
@@ -110,11 +112,12 @@ const resources = {
     entity: "La sección",
     schema: homeSectionInputSchema,
     toRow: (i) => {
-      const source = i.type === "product_carousel" ? i.source : null;
+      const source = i.type === "product_carousel" || i.type === "offer_countdown" ? i.source : null;
       return {
         type: i.type,
         title: i.title ?? null,
-        settings: i.settings,
+        // The eyebrow of every type is kept with the settings (no column of its own).
+        settings: { ...i.settings, eyebrow: i.eyebrow ?? null },
         source_collection_id: source?.kind === "collection" ? source.id : null,
         source_category_id: source?.kind === "category" ? source.id : null,
         source_brand_id: source?.kind === "brand" ? source.id : null,

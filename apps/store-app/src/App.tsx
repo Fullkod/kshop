@@ -11,6 +11,7 @@ import {
   headerLinks,
   NavigationProvider,
   StoreFooter,
+  StoreAnnouncement,
   StoreHeader,
   StoreProvider,
   themeStyle,
@@ -193,6 +194,8 @@ function StoreApp() {
                 <FavoritesProvider>
                   <CartProvider>
                     <CartUiProvider freeShipping={shell.data.freeShipping}>
+                      {/* A shell cached by an older app version has no announcement. */}
+                      <StoreAnnouncement announcement={shell.data.announcement ?? null} />
                       <StoreHeader
                         store={s}
                         links={headerLinks(shell.data)}

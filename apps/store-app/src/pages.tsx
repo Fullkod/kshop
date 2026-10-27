@@ -68,7 +68,7 @@ export function HomePage() {
   return (
     <>
       <h1 className="sr-only">{store.name}</h1>
-      <HomeSections sections={home.data} />
+      <HomeSections sections={home.data} delivery={shell} />
     </>
   );
 }

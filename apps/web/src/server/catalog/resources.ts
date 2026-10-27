@@ -17,7 +17,10 @@ import {
   type StoreRole,
 } from "@kshop/core";
 import type { ZodType } from "zod";
+import { publicEnv } from "@/env";
 import { mapDbError } from "../db-errors";
+import { HttpError } from "../http";
+import { storeMediaPrefix } from "./products";
 import { getServiceClient } from "../supabase";
 
 /**
@@ -31,12 +34,21 @@ export type CatalogResource<TInput> = {
   entity: string;
   minRole: StoreRole;
   schema: ZodType<TInput>;
-  toRow: (input: TInput) => Record<string, unknown>;
+  toRow: (input: TInput, storeId: string) => Record<string, unknown>;
   /** Child rows that belong to the entity (attribute values, type attributes). */
   saveChildren?: (storeId: string, id: string, input: TInput) => Promise<void>;
 };
 
 const slugOf = (input: { name: string; slug?: string }) => input.slug ?? catalogSlug(input.name);
+
+/** Category/collection photos and brand logos must be files of this store in store-media (uploaded by the admin). */
+function storeImage(storeId: string, url: string | undefined): string | null {
+  if (!url) return null;
+  if (!url.startsWith(storeMediaPrefix(publicEnv.supabaseUrl, storeId))) {
+    throw new HttpError(400, "invalid_media", "La imagen no pertenece a esta tienda.");
+  }
+  return url;
+}
 
 async function saveAttributeValues(storeId: string, attributeId: string, input: AttributeInput) {
   const db = getServiceClient();
@@ -129,12 +141,12 @@ const resources = {
     entity: "La categoría",
     minRole: "admin",
     schema: categoryInputSchema,
-    toRow: (i) => ({
+    toRow: (i, storeId) => ({
       name: i.name,
       slug: slugOf(i),
       parent_id: i.parentId ?? null,
       description: i.description ?? null,
-      image_url: i.imageUrl ?? null,
+      image_url: storeImage(storeId, i.imageUrl),
     }),
   } satisfies CatalogResource<CategoryInput>,
   brands: {
@@ -142,11 +154,11 @@ const resources = {
     entity: "La marca",
     minRole: "admin",
     schema: brandInputSchema,
-    toRow: (i) => ({
+    toRow: (i, storeId) => ({
       name: i.name,
       slug: slugOf(i),
       description: i.description ?? null,
-      logo_url: i.logoUrl ?? null,
+      logo_url: storeImage(storeId, i.logoUrl),
       is_published: i.isPublished,
     }),
   } satisfies CatalogResource<BrandInput>,
@@ -155,11 +167,11 @@ const resources = {
     entity: "La colección",
     minRole: "admin",
     schema: collectionInputSchema,
-    toRow: (i) => ({
+    toRow: (i, storeId) => ({
       name: i.name,
       slug: slugOf(i),
       description: i.description ?? null,
-      image_url: i.imageUrl ?? null,
+      image_url: storeImage(storeId, i.imageUrl),
       is_published: i.isPublished,
       // Omitted keeps the current rules; null makes it manual.
       ...(i.rules !== undefined && { rules: i.rules }),

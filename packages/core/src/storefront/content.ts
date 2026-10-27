@@ -51,6 +51,10 @@ export const bannerInputSchema = z
     imageMobileUrl: z.url().nullable().optional(),
     alt: optionalText(200),
     link: linkSchema.nullable().optional(),
+    /** Pill above the title in the split hero («Nueva temporada»). */
+    eyebrow: optionalText(40),
+    /** Product shown in the hero's floating mini card. */
+    productId: uuid.nullable().optional(),
     ...schedule,
   })
   .refine(scheduleCheck, scheduleMessage);
@@ -64,43 +68,127 @@ export const PRODUCT_SORTS = ["newest", "price-asc", "price-desc", "name"] as co
 export type ProductSort = (typeof PRODUCT_SORTS)[number];
 
 export const HOME_SECTION_TYPES = [
+  "announcement_bar",
   "hero_slider",
-  "banner",
-  "product_carousel",
+  "benefits",
   "category_grid",
+  "product_carousel",
+  "banner",
+  "banner_mosaic",
+  "offer_countdown",
+  "featured_product",
+  "collection_cards",
   "brand_strip",
+  "testimonials",
   "rich_text",
 ] as const;
 export type HomeSectionType = (typeof HOME_SECTION_TYPES)[number];
 
 export const HOME_SECTION_LABELS: Record<HomeSectionType, string> = {
+  announcement_bar: "Barra de anuncio",
   hero_slider: "Carrusel de portada",
-  banner: "Banner",
-  product_carousel: "Productos",
+  benefits: "Beneficios",
   category_grid: "Categorías",
+  product_carousel: "Productos",
+  banner: "Banner",
+  banner_mosaic: "Banner doble",
+  offer_countdown: "Oferta con cuenta atrás",
+  featured_product: "Producto destacado",
+  collection_cards: "Colecciones",
   brand_strip: "Marcas",
+  testimonials: "Opiniones",
   rich_text: "Texto",
 };
 
+/** Icons the owner can pick for benefits and the announcement bar (lucide names, mapped in @kshop/storefront). */
+export const BENEFIT_ICONS = [
+  "truck",
+  "banknote",
+  "message-circle",
+  "refresh-ccw",
+  "shield-check",
+  "clock",
+  "gift",
+  "store",
+] as const;
+export type BenefitIcon = (typeof BENEFIT_ICONS)[number];
+
 export const RICH_TEXT_MAX = 20_000;
 
-const sectionBase = { title: optionalText(120), ...schedule };
+// The eyebrow (small uppercase line above the title) is common to every section; the API keeps it in settings.
+const sectionBase = { title: optionalText(120), eyebrow: optionalText(40), ...schedule };
+
+const benefitSchema = z.object({
+  icon: z.enum(BENEFIT_ICONS),
+  title: z.string().trim().min(1).max(40),
+  text: optionalText(60),
+});
+
+const testimonialSchema = z.object({
+  quote: z.string().trim().min(1).max(280),
+  name: z.string().trim().min(1).max(60),
+  place: optionalText(40),
+  product: optionalText(60),
+  rating: z.int().min(1).max(5).default(5),
+});
 
 export const homeSectionInputSchema = z
   .discriminatedUnion("type", [
+    z.object({
+      type: z.literal("announcement_bar"),
+      ...sectionBase,
+      settings: z.object({
+        text: z.string().trim().min(1).max(120),
+        secondaryText: optionalText(80),
+        linkLabel: optionalText(40),
+        link: linkSchema.nullable().optional(),
+        icon: z.enum(BENEFIT_ICONS).default("truck"),
+      }),
+    }),
     z.object({
       type: z.literal("hero_slider"),
       ...sectionBase,
       bannerIds: z.array(uuid).min(1, "Elige al menos un banner.").max(8),
       settings: z
-        .object({ autoplaySeconds: z.int().min(0).max(30).default(6) })
-        .default({ autoplaySeconds: 6 }),
+        .object({
+          autoplaySeconds: z.int().min(0).max(30).default(6),
+          /** Second button «Pedir por WhatsApp» on the text panel. */
+          whatsapp: z.boolean().default(false),
+        })
+        .default({ autoplaySeconds: 6, whatsapp: false }),
+    }),
+    z.object({
+      type: z.literal("benefits"),
+      ...sectionBase,
+      settings: z.object({ items: z.array(benefitSchema).min(2, "Añade al menos dos.").max(4) }),
     }),
     z.object({
       type: z.literal("banner"),
       ...sectionBase,
       bannerIds: z.array(uuid).length(1, "Elige un banner."),
       settings: z.object({}).default({}),
+    }),
+    z.object({
+      type: z.literal("banner_mosaic"),
+      ...sectionBase,
+      // Piece A is a banner with a photo; piece B is a second banner or a block in the secondary color.
+      bannerIds: z.array(uuid).min(1, "Elige al menos un banner.").max(2),
+      settings: z
+        .object({
+          block: z
+            .object({
+              eyebrow: optionalText(40),
+              title: z.string().trim().min(1).max(80),
+              text: optionalText(160),
+              ctaLabel: optionalText(30),
+              link: linkSchema.nullable().optional(),
+              /** Big decorative text in the background, e.g. «30%». */
+              bigText: optionalText(6),
+            })
+            .nullable()
+            .default(null),
+        })
+        .default({ block: null }),
     }),
     z.object({
       type: z.literal("product_carousel"),
@@ -116,9 +204,31 @@ export const homeSectionInputSchema = z
         .default({ limit: 8, sort: "newest" }),
     }),
     z.object({
+      type: z.literal("offer_countdown"),
+      ...sectionBase,
+      // endsAt is required (checked below): the section hides itself when the countdown reaches 0.
+      source: z.discriminatedUnion("kind", [
+        z.object({ kind: z.literal("collection"), id: uuid }),
+        z.object({ kind: z.literal("on_sale") }),
+      ]),
+      settings: z
+        .object({ text: optionalText(160), limit: z.int().min(2).max(6).default(3) })
+        .default({ limit: 3 }),
+    }),
+    z.object({
+      type: z.literal("featured_product"),
+      ...sectionBase,
+      settings: z.object({ productId: uuid, badge: optionalText(24) }),
+    }),
+    z.object({
       type: z.literal("category_grid"),
       ...sectionBase,
       settings: z.object({ categoryIds: z.array(uuid).max(12).default([]) }).default({ categoryIds: [] }),
+    }),
+    z.object({
+      type: z.literal("collection_cards"),
+      ...sectionBase,
+      settings: z.object({ collectionIds: z.array(uuid).min(2, "Elige al menos dos colecciones.").max(6) }),
     }),
     z.object({
       type: z.literal("brand_strip"),
@@ -126,13 +236,69 @@ export const homeSectionInputSchema = z
       settings: z.object({}).default({}),
     }),
     z.object({
+      type: z.literal("testimonials"),
+      ...sectionBase,
+      settings: z.object({
+        items: z.array(testimonialSchema).min(1, "Añade al menos una opinión.").max(9),
+        /** Summary under the title («4,9 de 5 · 312 opiniones»), written by the owner. */
+        summary: z
+          .object({ rating: z.number().min(1).max(5), count: z.int().min(0) })
+          .nullable()
+          .default(null),
+      }),
+    }),
+    z.object({
       type: z.literal("rich_text"),
       ...sectionBase,
-      settings: z.object({ markdown: z.string().max(RICH_TEXT_MAX) }),
+      settings: z.object({
+        markdown: z.string().max(RICH_TEXT_MAX),
+        linkLabel: optionalText(40),
+        link: linkSchema.nullable().optional(),
+      }),
     }),
   ])
-  .refine(scheduleCheck, scheduleMessage);
+  .refine(scheduleCheck, scheduleMessage)
+  .refine((v) => v.type !== "offer_countdown" || !!v.endsAt, {
+    message: "La oferta necesita una fecha de fin.",
+    path: ["endsAt"],
+  });
 export type HomeSectionInput = z.infer<typeof homeSectionInputSchema>;
+
+/**
+ * Sections of a new store (PRP-R D11, answer 4): created hidden, for the owner to fill in and turn on. Written as
+ * rows (the hero and the mosaic still need banners, so they are not valid inputs until the owner picks them). No
+ * «Cambios en 7 días»: a return policy is the store's to promise.
+ */
+export const DEFAULT_HOME_SECTIONS: {
+  type: HomeSectionType;
+  title: string | null;
+  settings: Record<string, unknown>;
+}[] = [
+  { type: "hero_slider", title: null, settings: { autoplaySeconds: 6, whatsapp: true } },
+  {
+    type: "benefits",
+    title: null,
+    settings: {
+      items: [
+        { icon: "truck", title: "Envío a domicilio", text: "Te lo llevamos a casa" },
+        { icon: "banknote", title: "Paga al recibir", text: "En efectivo o transferencia" },
+        { icon: "message-circle", title: "Pide por WhatsApp", text: "Te atendemos al momento" },
+      ],
+    },
+  },
+  { type: "category_grid", title: "Compra por categoría", settings: { eyebrow: "Explora", categoryIds: [] } },
+  {
+    type: "product_carousel",
+    title: "Novedades",
+    settings: { eyebrow: "Recién llegados", limit: 8, sort: "newest" },
+  },
+  { type: "banner_mosaic", title: null, settings: { block: null } },
+  {
+    type: "rich_text",
+    title: "Sobre nosotros",
+    settings: { markdown: "Cuéntales a tus clientes quiénes sois y cómo trabajáis." },
+  },
+];
 
 // ---------------------------------------------------------------------------
 // Menus and pages

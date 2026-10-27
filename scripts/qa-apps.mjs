@@ -268,6 +268,12 @@ try {
   await phone.context().setOffline(true);
   await phone.getByRole("link", { name: "Inicio" }).first().click();
   await phone.getByTestId("offline").waitFor({ timeout: 15000 });
+  // The notice can show before the home is read back from the device.
+  await phone
+    .locator("main img")
+    .first()
+    .waitFor({ state: "attached", timeout: 15000 })
+    .catch(() => {});
   const imagesOffline = await phone.locator("main img").count();
   check("offline: «Sin conexión» and the home kept on the device", imagesOffline > 0, imagesOffline);
   await shot(phone, "07-app-sin-conexion-390");

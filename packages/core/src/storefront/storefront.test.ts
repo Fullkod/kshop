@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { collectionRulesSchema, homeSectionInputSchema, linkHref, linkSchema } from "./content";
+import {
+  collectionRulesSchema,
+  DEFAULT_HOME_SECTIONS,
+  HOME_SECTION_LABELS,
+  HOME_SECTION_TYPES,
+  homeSectionInputSchema,
+  linkHref,
+  linkSchema,
+} from "./content";
 import { listingFilterIds, listingQuery, parseListingParams, sortOrderBy } from "./filters";
 import {
   contrastRatio,
@@ -173,6 +181,64 @@ describe("content schemas", () => {
         endsAt: "2026-11-01T00:00:00Z",
       }).success,
     ).toBe(false);
+  });
+
+  it("redesign sections: countdown needs an end, lists have bounds, the eyebrow is common", () => {
+    const endsAt = "2026-12-01T00:00:00Z";
+    expect(
+      homeSectionInputSchema.safeParse({ type: "offer_countdown", source: { kind: "on_sale" } }).success,
+    ).toBe(false);
+    const offer = homeSectionInputSchema.parse({
+      type: "offer_countdown",
+      source: { kind: "on_sale" },
+      endsAt,
+    });
+    expect(offer.type === "offer_countdown" && offer.settings.limit).toBe(3);
+    const benefit = { icon: "truck", title: "Envío" };
+    expect(
+      homeSectionInputSchema.safeParse({ type: "benefits", settings: { items: [benefit] } }).success,
+    ).toBe(false);
+    expect(
+      homeSectionInputSchema.safeParse({ type: "benefits", settings: { items: [benefit, benefit] } }).success,
+    ).toBe(true);
+    expect(
+      homeSectionInputSchema.safeParse({ type: "collection_cards", settings: { collectionIds: [id] } })
+        .success,
+    ).toBe(false);
+    const mosaic = homeSectionInputSchema.parse({
+      type: "banner_mosaic",
+      bannerIds: [id],
+      eyebrow: "Colección",
+    });
+    expect(mosaic.eyebrow).toBe("Colección");
+    expect(mosaic.type === "banner_mosaic" && mosaic.settings.block).toBeNull();
+    const quotes = { items: [{ quote: "Muy bien", name: "Ana" }] };
+    const testimonials = homeSectionInputSchema.parse({ type: "testimonials", settings: quotes });
+    expect(testimonials.type === "testimonials" && testimonials.settings.items[0]!.rating).toBe(5);
+  });
+
+  it("every section type has a label and the defaults are known types", () => {
+    expect(Object.keys(HOME_SECTION_LABELS).sort()).toEqual([...HOME_SECTION_TYPES].sort());
+    expect(HOME_SECTION_TYPES).toHaveLength(13);
+    expect(DEFAULT_HOME_SECTIONS.map((s) => s.type)).toEqual([
+      "hero_slider",
+      "benefits",
+      "category_grid",
+      "product_carousel",
+      "banner_mosaic",
+      "rich_text",
+    ]);
+    // The defaults without banners are valid once the owner picks them.
+    for (const s of DEFAULT_HOME_SECTIONS) {
+      const input = {
+        type: s.type,
+        title: s.title,
+        settings: s.settings,
+        bannerIds: [id],
+        source: { kind: "all" },
+      };
+      expect(homeSectionInputSchema.safeParse(input).success, s.type).toBe(true);
+    }
   });
 
   it("collection rules need at least one rule", () => {
