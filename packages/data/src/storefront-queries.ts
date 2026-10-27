@@ -166,10 +166,48 @@ export const StorefrontHomeQuery = graphql(`
   }
 `);
 
-/** Number of published products of a category or a collection (home category grid and collection cards). */
+/** Number of published products of the categories and collections shown (home category grid and collection cards);
+ *  ids as comma-separated text (R9: only the tiles shown are counted). */
 export const StorefrontProductCountsQuery = graphql(`
-  query StorefrontProductCounts($storeId: UUID!) {
-    storefrontProductCounts(pStoreId: $storeId)
+  query StorefrontProductCounts($storeId: UUID!, $categoryIds: String, $collectionIds: String) {
+    storefrontProductCounts(pStoreId: $storeId, pCategoryIds: $categoryIds, pCollectionIds: $collectionIds)
+  }
+`);
+
+/** Home carousel («todo», category, brand, on sale): a filter pg_graphql turns into an indexed read with the limit,
+ *  instead of the search function computing every id of the catalog twice (R9). */
+export const StorefrontCarouselQuery = graphql(`
+  query StorefrontCarousel($filter: ProductsFilter!, $orderBy: [ProductsOrderBy!], $first: Int!) {
+    productsCollection(filter: $filter, orderBy: $orderBy, first: $first) {
+      edges {
+        node {
+          ...StorefrontProductCard
+        }
+      }
+    }
+  }
+`);
+
+/** Home carousel of a collection (manual or by rules): the search function, without the totalCount that runs it again. */
+export const StorefrontCollectionCarouselQuery = graphql(`
+  query StorefrontCollectionCarousel(
+    $storeId: UUID!
+    $collectionId: UUID!
+    $orderBy: [ProductsOrderBy!]
+    $first: Int!
+  ) {
+    storefrontSearchProducts(
+      pStoreId: $storeId
+      pCollectionId: $collectionId
+      orderBy: $orderBy
+      first: $first
+    ) {
+      edges {
+        node {
+          ...StorefrontProductCard
+        }
+      }
+    }
   }
 `);
 
@@ -308,11 +346,9 @@ export const StorefrontFacetsQuery = graphql(`
 `);
 
 /** Product page. */
-export const StorefrontProductQuery = graphql(`
-  query StorefrontProduct($storeId: UUID!, $slug: String!) {
-    productsCollection(filter: { storeId: { eq: $storeId }, slug: { eq: $slug } }, first: 1) {
-      edges {
-        node {
+/** Everything the product page shows (also the featured product of the home, read by id). */
+export const StorefrontProductFullFragment = graphql(`
+  fragment StorefrontProductFull on Products {
           id
           slug
           name
@@ -418,6 +454,27 @@ export const StorefrontProductQuery = graphql(`
               }
             }
           }
+  }
+`);
+
+export const StorefrontProductQuery = graphql(`
+  query StorefrontProduct($storeId: UUID!, $slug: String!) {
+    productsCollection(filter: { storeId: { eq: $storeId }, slug: { eq: $slug } }, first: 1) {
+      edges {
+        node {
+          ...StorefrontProductFull
+        }
+      }
+    }
+  }
+`);
+
+export const StorefrontProductByIdQuery = graphql(`
+  query StorefrontProductById($storeId: UUID!, $id: UUID!) {
+    productsCollection(filter: { storeId: { eq: $storeId }, id: { eq: $id } }, first: 1) {
+      edges {
+        node {
+          ...StorefrontProductFull
         }
       }
     }

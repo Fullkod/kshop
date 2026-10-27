@@ -1,18 +1,20 @@
 import "server-only";
 import type { ProductSort } from "@kshop/core";
 import {
+  fetchCarousel,
   fetchFacets,
   fetchHome,
   fetchPage,
   fetchProduct,
   fetchProductCards,
   fetchProducts,
+  type CarouselSource,
   type Facets,
   type HomeSection,
   type ProductCardData,
   type ProductFilters,
 } from "@kshop/data";
-import { anonGraphql, storefrontCache } from "./data";
+import { anonGraphql, getStorefrontShell, storefrontCache } from "./data";
 
 // Cached public reads of the catalog and content of one store (keys = arguments, tags = the store). The queries and
 // their mapping live in @kshop/data, shared with the store app.
@@ -36,6 +38,19 @@ export async function getProducts(
   "use cache";
   storefrontCache(storeId);
   return fetchProducts(anonGraphql, storeId, filters, sort, page, perPage);
+}
+
+/** Products of a carousel (fallback home, related products): indexed reads instead of the search function (R9). */
+export async function getCarousel(
+  storeId: string,
+  source: CarouselSource,
+  sort: ProductSort,
+  limit: number,
+): Promise<ProductCardData[]> {
+  "use cache";
+  storefrontCache(storeId);
+  const categories = source.kind === "category" ? (await getStorefrontShell(storeId)).categories : [];
+  return fetchCarousel(anonGraphql, storeId, source, sort, limit, categories);
 }
 
 /** Product cards by id (favorites): cached per set of ids, like the listings. */

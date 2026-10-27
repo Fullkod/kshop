@@ -4,6 +4,15 @@
  * radius. It targets the classes the pages already use (`h1.text-2xl`, `h2.text-lg`, `thead`, `.rounded-xl.border`),
  * so screens designed in v2 (Inicio, Tema) keep their own sizes.
  */
+/**
+ * The scrolling middle of the night sidebars (admin and superadmin): the store switcher or brand above and the user
+ * card below stay in place, only the sections scroll, with a thin scrollbar.
+ */
+export const SIDEBAR_NAV_CLASS = [
+  "-mx-1 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-1",
+  "[scrollbar-width:thin] [scrollbar-color:rgb(255_255_255/.22)_transparent]",
+].join(" ");
+
 export const ADMIN_CONTENT_CLASS = [
   "[&_h1.text-2xl]:font-display [&_h1.text-2xl]:text-[26px] [&_h1.text-2xl]:leading-tight [&_h1.text-2xl]:font-bold",
   "[&_h1.text-2xl]:tracking-[-0.01em]",

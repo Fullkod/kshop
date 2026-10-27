@@ -6,7 +6,7 @@ import {
   orderTransitionSchema,
 } from "@kshop/core";
 import { NextResponse } from "next/server";
-import { invalidateCatalog, requireCatalogAccess } from "@/server/catalog/access";
+import { refreshCatalog, requireCatalogAccess } from "@/server/catalog/access";
 import { mapDbError } from "@/server/db-errors";
 import { apiHandler, notFound, readJson, uuidParam } from "@/server/http";
 import { getServiceClient } from "@/server/supabase";
@@ -76,7 +76,7 @@ export const POST = apiHandler(
           p_user_id: user.id,
         });
         if (error) mapDbError(error, "El pedido");
-        if ((data as { flipped_product_ids: string[] }).flipped_product_ids.length) invalidateCatalog(storeId);
+        if ((data as { flipped_product_ids: string[] }).flipped_product_ids.length) refreshCatalog(storeId);
         break;
       }
       case "notes": {

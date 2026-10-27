@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { categoryTrail, ProductView, RelatedProducts } from "@kshop/storefront";
-import { getProduct, getProducts } from "@/server/storefront/catalog";
+import { getCarousel, getProduct, getProducts } from "@/server/storefront/catalog";
 import { getStorefrontShell } from "@/server/storefront/data";
 import { requireStore, staticSlugs, storeMetadata } from "@/server/storefront/page-helpers";
 
@@ -37,7 +37,7 @@ export default async function ProductPage({ params }: Props) {
 
   const crumbs = categoryTrail(shell, product.category?.id);
   const related = product.category
-    ? (await getProducts(store.id, { categoryId: product.category.id }, "newest", 1, 9)).products
+    ? (await getCarousel(store.id, { kind: "category", id: product.category.id }, "newest", 9))
         .filter((p) => p.id !== product.id)
         .slice(0, 8)
     : [];

@@ -44984,6 +44984,26 @@
                   },
                   "description": null,
                   "defaultValue": null
+                },
+                {
+                  "name": "pCategoryIds",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  },
+                  "description": null,
+                  "defaultValue": null
+                },
+                {
+                  "name": "pCollectionIds",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  },
+                  "description": null,
+                  "defaultValue": null
                 }
               ],
               "name": "storefrontProductCounts",

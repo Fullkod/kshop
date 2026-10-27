@@ -21,7 +21,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { Brand } from "@/components/Brand";
-import { ADMIN_CONTENT_CLASS } from "@/components/admin-content";
+import { ADMIN_CONTENT_CLASS, SIDEBAR_NAV_CLASS } from "@/components/admin-content";
 import { useSession } from "@/lib/session";
 
 const LOGIN_PATH = "/superadmin/login";
@@ -80,7 +80,7 @@ export function SuperadminShell({ children }: { children: ReactNode }) {
         <Brand reversed className="h-7" />
         <span className="rounded-full bg-gold px-2 py-0.5 text-[11px] font-bold text-night">Superadmin</span>
       </Link>
-      <nav className="flex flex-col gap-0.5" aria-label="Secciones">
+      <nav className={SIDEBAR_NAV_CLASS} aria-label="Secciones">
         {GROUPS.map((g) => (
           <div key={g.label} className="flex flex-col gap-0.5">
             <p className="px-2.5 pt-3 pb-1 text-[10.5px] font-bold tracking-[.1em] text-[#9C93B8] uppercase">
@@ -132,7 +132,7 @@ export function SuperadminShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-dvh bg-surface">
-      <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col gap-1.5 overflow-y-auto bg-night px-3 py-4 text-white md:flex dark:bg-ink">
+      <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col gap-1.5 overflow-hidden bg-night px-3 py-4 text-white md:flex dark:bg-ink">
         {sidebar}
       </aside>
       {menuOpen && (
@@ -145,7 +145,7 @@ export function SuperadminShell({ children }: { children: ReactNode }) {
           />
           <aside
             onClick={(e) => (e.target as HTMLElement).closest("a") && setMenuOpen(false)}
-            className="relative flex h-full w-[280px] flex-col gap-1.5 overflow-y-auto bg-night px-3 py-4 text-white"
+            className="relative flex h-full w-[280px] flex-col gap-1.5 overflow-hidden bg-night px-3 py-4 text-white"
           >
             {sidebar}
           </aside>

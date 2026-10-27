@@ -12,7 +12,7 @@ import {
 } from "@kshop/core";
 import type { CheckoutOptions, CheckoutResponse, OrderDiscount, PublicOrder } from "@kshop/data";
 import { hasModule } from "../auth";
-import { invalidateCatalog } from "../catalog/access";
+import { refreshCatalog } from "../catalog/access";
 import { mapDbError } from "../db-errors";
 import { HttpError, notFound } from "../http";
 import { storeUrl } from "../storefront/page-helpers";
@@ -286,7 +286,7 @@ export async function placeOrder(storeId: string, params: PlaceOrderParams): Pro
   });
   if (error) mapDbError(error, "El pedido");
   const result = data as { order_id: string; public_token: string; created: boolean; flipped_product_ids: string[] };
-  if (result.flipped_product_ids.length) invalidateCatalog(storeId);
+  if (result.flipped_product_ids.length) refreshCatalog(storeId);
   return { orderId: result.order_id, order: await getPublicOrder(storeId, result.public_token), created: result.created };
 }
 

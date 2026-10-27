@@ -31,6 +31,7 @@
 - [2026-10-27-fase-7-apps.md](project/2026-10-27-fase-7-apps.md) — Fase 7 hecha: apps Capacitor (tienda por slug + Kshop Admin), GitHub Actions, claves de firma, `/app`, pendientes
 - [2026-10-27-rediseno-v2.md](project/2026-10-27-rediseno-v2.md) — Rediseño v2 hecho (R0–R7): decisiones de Roberto, tienda sin hex, landing con datos de planes, dónde está cada pieza, pendientes
 - [pendiente-realtime.md](project/pendiente-realtime.md) — Realtime con señales sin datos (hecho 2026-10-27): temas, dónde está y cómo añadir una pantalla
+- [lecturas-tienda-r9.md](project/lecturas-tienda-r9.md) — Por qué la Nano se hundía (demasiadas consultas en serie, recorridos del catálogo, tienda en frío tras cada pedido), qué se cambió en R9 y qué queda
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
 
 ## feedback/ — Correcciones y preferencias
@@ -56,3 +57,4 @@
 - `prp-fase-7-apps.md` — Fase 7: app de tienda y Kshop Admin con Capacitor (HECHA; cómo generar un APK en `docs/APPS.md`)
 - `prp-rediseno-v2.md` — Rediseño v2 (R0–R7: tokens, tienda, ficha, portada, admin, Kshop Admin, landing) (HECHO 2026-10-27)
 - `prp-r8-superadmin-y-realtime.md` — R8: panel del superadmin v2, Realtime y arreglo del build de Vercel (HECHO 2026-10-27)
+- `prp-r9-lecturas-tienda.md` — R9: lecturas de la tienda sin recorrer el catálogo (portada en 2 tandas, carruseles por índice, conteos de lo mostrado, refresco en segundo plano tras un pedido) (HECHO 2026-10-27)

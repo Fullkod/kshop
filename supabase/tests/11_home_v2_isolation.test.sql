@@ -105,11 +105,14 @@ update public.products set category_id = (select id from public.categories where
 
 select tests.login_anon();
 select tests.eq('anon: counts the published products of a category of B, not its drafts',
-  (public.storefront_product_counts(tests.fx('store_b'))
+  (public.storefront_product_counts(tests.fx('store_b'), (select id::text from public.categories where slug = 'cat-b'))
     -> 'categories' ->> (select id::text from public.categories where slug = 'cat-b'))::int, 1);
-select tests.eq('anon: the counts of A do not include categories of B',
-  (public.storefront_product_counts(tests.fx('store_a')) -> 'categories')
-    ? (select id::text from public.categories where slug = 'cat-b'), false);
+select tests.eq('anon: asking A for a category of B counts nothing',
+  public.storefront_product_counts(tests.fx('store_a'), (select id::text from public.categories where slug = 'cat-b'))
+    -> 'categories', '{}'::jsonb);
+select tests.eq('anon: without ids nothing is counted (R9: only the tiles shown)',
+  public.storefront_product_counts(tests.fx('store_b')),
+  '{"categories": {}, "collections": {}}'::jsonb);
 select tests.logout();
 
 -- ---------------------------------------------------------------------------

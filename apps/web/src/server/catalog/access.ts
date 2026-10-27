@@ -26,3 +26,12 @@ export const catalogCacheTag = (storeId: string) => `store:${storeId}:catalog`;
 export function invalidateCatalog(storeId: string): void {
   revalidateTag(catalogCacheTag(storeId), { expire: 0 });
 }
+
+/**
+ * A sale that empties or refills a variant (R9): the cached pages keep being served and are refreshed in the
+ * background, instead of the next visitor paying the whole store cold after every order. The checkout prices and
+ * reserves stock in SQL anyway; the admin's own edits still expire at once.
+ */
+export function refreshCatalog(storeId: string): void {
+  revalidateTag(catalogCacheTag(storeId), "max");
+}

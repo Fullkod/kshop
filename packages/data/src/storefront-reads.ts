@@ -11,16 +11,20 @@ import {
   type LinkType,
   type ProductSort,
 } from "@kshop/core";
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import type { ResultOf, VariablesOf } from "@graphql-typed-document-node/core";
 import type { Client } from "@urql/core";
 import {
   ProductSlugsQuery,
+  StorefrontCarouselQuery,
+  StorefrontCollectionCarouselQuery,
   StorefrontFacetsQuery,
   StorefrontHomeQuery,
   StorefrontPageQuery,
+  StorefrontProductByIdQuery,
   StorefrontProductCardFragment,
   StorefrontProductCountsQuery,
   StorefrontProductCardsQuery,
+  StorefrontProductFullFragment,
   StorefrontProductQuery,
   StorefrontProductsQuery,
   StorefrontShellQuery,
@@ -402,6 +406,55 @@ function toProductCard(p: ResultOf<typeof StorefrontProductCardFragment>): Produ
 
 const HEX = /^#[0-9a-f]{6}$/i;
 
+export type CarouselSource =
+  | { kind: "all" }
+  | { kind: "category"; id: string }
+  | { kind: "brand"; id: string }
+  | { kind: "collection"; id: string }
+  | { kind: "on_sale" };
+
+/** A category and its descendants, from the shell's categories (the ltree subtree, without a query). */
+function categorySubtree(categories: { id: string; parentId: string | null }[], rootId: string): string[] {
+  const ids = [rootId];
+  for (let i = 0; i < ids.length; i++) {
+    for (const c of categories) if (c.parentId === ids[i] && !ids.includes(c.id)) ids.push(c.id);
+  }
+  return ids;
+}
+
+/**
+ * Products of a carousel (home sections, related products of a product). «Todo», category, brand and on sale are a
+ * filter pg_graphql turns into an indexed read with the limit (R9); a collection (manual or by rules) still needs
+ * the search function, without the totalCount that would run it a second time.
+ */
+export async function fetchCarousel(
+  gql: Client,
+  storeId: string,
+  source: CarouselSource,
+  sort: ProductSort,
+  limit: number,
+  categories: { id: string; parentId: string | null }[],
+): Promise<ProductCardData[]> {
+  const orderBy = sortOrderBy(sort);
+  if (source.kind === "collection") {
+    const result = await gql
+      .query(StorefrontCollectionCarouselQuery, { storeId, collectionId: source.id, orderBy, first: limit })
+      .toPromise();
+    if (result.error) throw result.error;
+    return nodes(result.data?.storefrontSearchProducts).map(toProductCard);
+  }
+  const filter: VariablesOf<typeof StorefrontCarouselQuery>["filter"] = {
+    storeId: { eq: storeId },
+    status: { eq: "published" },
+    ...(source.kind === "category" && { categoryId: { in: categorySubtree(categories, source.id) } }),
+    ...(source.kind === "brand" && { brandId: { eq: source.id } }),
+    ...(source.kind === "on_sale" && { onSale: { eq: true } }),
+  };
+  const result = await gql.query(StorefrontCarouselQuery, { filter, orderBy, first: limit }).toPromise();
+  if (result.error) throw result.error;
+  return nodes(result.data?.productsCollection).map(toProductCard);
+}
+
 /** Published product cards by id, in the order given (favorites); unknown or unpublished ids are left out. */
 export async function fetchProductCards(
   gql: Client,
@@ -451,7 +504,18 @@ export async function fetchProduct(gql: Client, storeId: string, slug: string) {
   const result = await gql.query(StorefrontProductQuery, { storeId, slug }).toPromise();
   if (result.error) throw result.error;
   const p = nodes(result.data?.productsCollection)[0];
-  if (!p) return null;
+  return p ? toStorefrontProduct(p) : null;
+}
+
+/** The same by id (featured product of the home); null when it is not published. */
+export async function fetchProductById(gql: Client, storeId: string, id: string) {
+  const result = await gql.query(StorefrontProductByIdQuery, { storeId, id }).toPromise();
+  if (result.error) throw result.error;
+  const p = nodes(result.data?.productsCollection)[0];
+  return p ? toStorefrontProduct(p) : null;
+}
+
+function toStorefrontProduct(p: ResultOf<typeof StorefrontProductFullFragment>) {
   return {
     id: p.id,
     slug: p.slug,
@@ -528,7 +592,7 @@ export async function fetchProduct(gql: Client, storeId: string, slug: string) {
     })),
   };
 }
-export type StorefrontProduct = NonNullable<Awaited<ReturnType<typeof fetchProduct>>>;
+export type StorefrontProduct = ReturnType<typeof toStorefrontProduct>;
 
 export async function fetchPage(gql: Client, storeId: string, slug: string) {
   const result = await gql.query(StorefrontPageQuery, { storeId, slug }).toPromise();
@@ -615,10 +679,22 @@ export type HomeSection = SectionHead &
 
 type ProductCounts = { categories: Record<string, number>; collections: Record<string, number> };
 
-/** Published products per category (subcategories included) and per collection, in one query. Empty if it fails:
- *  the tiles just omit the number. */
-async function fetchProductCounts(gql: Client, storeId: string): Promise<ProductCounts> {
-  const result = await gql.query(StorefrontProductCountsQuery, { storeId }).toPromise();
+/** Published products of the categories (subcategories included) and collections shown, in one query. Empty if it
+ *  fails: the tiles just omit the number. */
+async function fetchProductCounts(
+  gql: Client,
+  storeId: string,
+  categoryIds: string[],
+  collectionIds: string[],
+): Promise<ProductCounts> {
+  if (!categoryIds.length && !collectionIds.length) return { categories: {}, collections: {} };
+  const result = await gql
+    .query(StorefrontProductCountsQuery, {
+      storeId,
+      categoryIds: categoryIds.join(",") || null,
+      collectionIds: collectionIds.join(",") || null,
+    })
+    .toPromise();
   const raw = result.error ? null : result.data?.storefrontProductCounts;
   // pg_graphql returns jsonb as a JSON string.
   return raw ? (JSON.parse(raw) as ProductCounts) : { categories: {}, collections: {} };
@@ -666,18 +742,74 @@ export async function fetchHome(gql: Client, storeId: string): Promise<HomeSecti
         ? [input.settings.link]
         : [],
   );
-  const [productSlugs, heroProducts] = await Promise.all([
+  // Stage 2 (R9): everything the sections need, at once: slugs of the linked products, the hero cards, the counts of
+  // the tiles shown, the products of every carousel (indexed reads) and the featured product by id.
+  const shownCategoryIds = parsedRows.flatMap(({ input }) =>
+    input?.type !== "category_grid"
+      ? []
+      : input.settings.categoryIds.length
+        ? input.settings.categoryIds
+        : shell.categories.filter((c) => !c.parentId).map((c) => c.id),
+  );
+  const shownCollectionIds = parsedRows.flatMap(({ input }) =>
+    input?.type === "collection_cards" ? input.settings.collectionIds : [],
+  );
+  const carouselSource = (row: (typeof rows)[number]): CarouselSource =>
+    row.sourceCollectionId
+      ? { kind: "collection", id: row.sourceCollectionId }
+      : row.sourceCategoryId
+        ? { kind: "category", id: row.sourceCategoryId }
+        : row.sourceBrandId
+          ? { kind: "brand", id: row.sourceBrandId }
+          : { kind: "all" };
+  const [productSlugs, heroProducts, counts, fetched] = await Promise.all([
     fetchProductSlugs(gql, storeId, [
       ...banners.flatMap((b) => (b.linkType === "product" && b.linkTargetId ? [b.linkTargetId] : [])),
       ...productLinkIds(settingLinks),
-      ...parsedRows.flatMap(({ input }) =>
-        input?.type === "featured_product" ? [input.settings.productId] : [],
-      ),
     ]),
     fetchProductCards(
       gql,
       storeId,
       banners.flatMap((b) => (b.productId ? [b.productId] : [])),
+    ),
+    fetchProductCounts(gql, storeId, shownCategoryIds, shownCollectionIds),
+    Promise.all(
+      parsedRows.map(
+        async ({
+          row,
+          input,
+        }): Promise<{ cards?: ProductCardData[]; product?: StorefrontProduct | null }> => {
+          switch (input?.type) {
+            case "product_carousel": {
+              const { limit, sort } = input.settings;
+              return {
+                cards: await fetchCarousel(gql, storeId, carouselSource(row), sort, limit, shell.categories),
+              };
+            }
+            case "offer_countdown": {
+              if (!input.endsAt) return {};
+              const source: CarouselSource =
+                input.source.kind === "collection"
+                  ? { kind: "collection", id: input.source.id }
+                  : { kind: "on_sale" };
+              return {
+                cards: await fetchCarousel(
+                  gql,
+                  storeId,
+                  source,
+                  "newest",
+                  input.settings.limit,
+                  shell.categories,
+                ),
+              };
+            }
+            case "featured_product":
+              return { product: await fetchProductById(gql, storeId, input.settings.productId) };
+            default:
+              return {};
+          }
+        },
+      ),
     ),
   ]);
   const slugs = { ...shell.slugs, ...productSlugs };
@@ -697,147 +829,131 @@ export async function fetchHome(gql: Client, storeId: string): Promise<HomeSecti
   });
   const sectionBanners = (row: (typeof rows)[number]) =>
     nodes(row.homeSectionBannersCollection).flatMap((b) => (b.banners ? [toBanner(b.banners)] : []));
-  // Counted once, only when a section shows them.
-  const counts = parsedRows.some(
-    ({ input }) => input?.type === "category_grid" || input?.type === "collection_cards",
-  )
-    ? await fetchProductCounts(gql, storeId)
-    : { categories: {}, collections: {} };
   const sourceHref = (kind: "collection" | "category" | "brand", id: string | null | undefined) =>
     id && slugs[id] ? `/${kind}/${slugs[id]}` : "/products";
 
-  const sections = await Promise.all(
-    parsedRows.map(async ({ row, input }): Promise<HomeSection | null> => {
-      if (!input) return null;
-      const head: SectionHead = { id: row.id, title: row.title ?? null, eyebrow: input.eyebrow ?? null };
-      switch (input.type) {
-        case "hero_slider": {
-          const list = sectionBanners(row);
-          if (!list.length) return null;
-          const { autoplaySeconds, whatsapp } = input.settings;
-          return { ...head, type: "hero_slider", banners: list, autoplaySeconds, whatsapp };
-        }
-        case "banner": {
-          const list = sectionBanners(row);
-          return list.length ? { ...head, type: "banner", banners: list } : null;
-        }
-        case "benefits":
-          return {
-            ...head,
-            type: "benefits",
-            items: input.settings.items.map((i) => ({ icon: i.icon, title: i.title, text: i.text ?? null })),
-          };
-        case "banner_mosaic": {
-          const list = sectionBanners(row);
-          if (!list.length) return null;
-          const block = input.settings.block;
-          return {
-            ...head,
-            type: "banner_mosaic",
-            banners: list,
-            block: block && {
-              eyebrow: block.eyebrow ?? null,
-              title: block.title,
-              text: block.text ?? null,
-              ctaLabel: block.ctaLabel ?? null,
-              href: linkPath(block.link, slugs),
-              bigText: block.bigText ?? null,
-            },
-          };
-        }
-        case "product_carousel": {
-          const { limit, sort } = input.settings;
-          const filters: ProductFilters = {
-            collectionId: row.sourceCollectionId ?? null,
-            categoryId: row.sourceCategoryId ?? null,
-            brandIds: row.sourceBrandId ?? null,
-          };
-          const { products } = await fetchProducts(gql, storeId, filters, sort, 1, limit);
-          if (!products.length) return null;
-          const href = row.sourceCollectionId
-            ? sourceHref("collection", row.sourceCollectionId)
-            : row.sourceCategoryId
-              ? sourceHref("category", row.sourceCategoryId)
-              : sourceHref("brand", row.sourceBrandId);
-          return { ...head, type: "product_carousel", href, products };
-        }
-        case "offer_countdown": {
-          if (!input.endsAt) return null;
-          const collectionId = input.source.kind === "collection" ? input.source.id : null;
-          const filters: ProductFilters = collectionId ? { collectionId } : { onSale: true };
-          const { products } = await fetchProducts(gql, storeId, filters, "newest", 1, input.settings.limit);
-          if (!products.length) return null;
-          return {
-            ...head,
-            type: "offer_countdown",
-            endsAt: input.endsAt,
-            text: input.settings.text ?? null,
-            href: collectionId ? sourceHref("collection", collectionId) : "/products?sale=1",
-            products,
-          };
-        }
-        case "featured_product": {
-          const slug = slugs[input.settings.productId];
-          const product = slug ? await fetchProduct(gql, storeId, slug) : null;
-          return product
-            ? { ...head, type: "featured_product", badge: input.settings.badge ?? null, product }
-            : null;
-        }
-        case "category_grid": {
-          const ids = input.settings.categoryIds;
-          const list = ids.length
-            ? ids.flatMap((id) => shell.categories.find((c) => c.id === id) ?? [])
-            : shell.categories.filter((c) => !c.parentId);
-          if (!list.length) return null;
-          const categories = list.map((c) => ({
-            name: c.name,
-            slug: c.slug,
-            imageUrl: c.imageUrl,
-            count: counts.categories[c.id] ?? null,
-          }));
-          return { ...head, type: "category_grid", categories };
-        }
-        case "collection_cards": {
-          const list = input.settings.collectionIds.flatMap(
-            (id) => shell.collections.find((c) => c.id === id) ?? [],
-          );
-          if (!list.length) return null;
-          const collections = list.map((c) => ({
-            name: c.name,
-            slug: c.slug,
-            imageUrl: c.imageUrl,
-            count: counts.collections[c.id] ?? null,
-          }));
-          return { ...head, type: "collection_cards", collections };
-        }
-        case "brand_strip":
-          return shell.brands.length ? { ...head, type: "brand_strip", brands: shell.brands } : null;
-        case "testimonials":
-          return {
-            ...head,
-            type: "testimonials",
-            items: input.settings.items.map((t) => ({
-              quote: t.quote,
-              name: t.name,
-              place: t.place ?? null,
-              product: t.product ?? null,
-              rating: t.rating,
-            })),
-            summary: input.settings.summary,
-          };
-        case "rich_text": {
-          const href = linkPath(input.settings.link, slugs);
-          return {
-            ...head,
-            type: "rich_text",
-            markdown: input.settings.markdown,
-            link: href && input.settings.linkLabel ? { href, label: input.settings.linkLabel } : null,
-          };
-        }
-        default:
-          return null;
+  const sections = parsedRows.map(({ row, input }, i): HomeSection | null => {
+    if (!input) return null;
+    const head: SectionHead = { id: row.id, title: row.title ?? null, eyebrow: input.eyebrow ?? null };
+    switch (input.type) {
+      case "hero_slider": {
+        const list = sectionBanners(row);
+        if (!list.length) return null;
+        const { autoplaySeconds, whatsapp } = input.settings;
+        return { ...head, type: "hero_slider", banners: list, autoplaySeconds, whatsapp };
       }
-    }),
-  );
+      case "banner": {
+        const list = sectionBanners(row);
+        return list.length ? { ...head, type: "banner", banners: list } : null;
+      }
+      case "benefits":
+        return {
+          ...head,
+          type: "benefits",
+          items: input.settings.items.map((i) => ({ icon: i.icon, title: i.title, text: i.text ?? null })),
+        };
+      case "banner_mosaic": {
+        const list = sectionBanners(row);
+        if (!list.length) return null;
+        const block = input.settings.block;
+        return {
+          ...head,
+          type: "banner_mosaic",
+          banners: list,
+          block: block && {
+            eyebrow: block.eyebrow ?? null,
+            title: block.title,
+            text: block.text ?? null,
+            ctaLabel: block.ctaLabel ?? null,
+            href: linkPath(block.link, slugs),
+            bigText: block.bigText ?? null,
+          },
+        };
+      }
+      case "product_carousel": {
+        const products = fetched[i]?.cards ?? [];
+        if (!products.length) return null;
+        const href = row.sourceCollectionId
+          ? sourceHref("collection", row.sourceCollectionId)
+          : row.sourceCategoryId
+            ? sourceHref("category", row.sourceCategoryId)
+            : sourceHref("brand", row.sourceBrandId);
+        return { ...head, type: "product_carousel", href, products };
+      }
+      case "offer_countdown": {
+        if (!input.endsAt) return null;
+        const collectionId = input.source.kind === "collection" ? input.source.id : null;
+        const products = fetched[i]?.cards ?? [];
+        if (!products.length) return null;
+        return {
+          ...head,
+          type: "offer_countdown",
+          endsAt: input.endsAt,
+          text: input.settings.text ?? null,
+          href: collectionId ? sourceHref("collection", collectionId) : "/products?sale=1",
+          products,
+        };
+      }
+      case "featured_product": {
+        const product = fetched[i]?.product ?? null;
+        return product
+          ? { ...head, type: "featured_product", badge: input.settings.badge ?? null, product }
+          : null;
+      }
+      case "category_grid": {
+        const ids = input.settings.categoryIds;
+        const list = ids.length
+          ? ids.flatMap((id) => shell.categories.find((c) => c.id === id) ?? [])
+          : shell.categories.filter((c) => !c.parentId);
+        if (!list.length) return null;
+        const categories = list.map((c) => ({
+          name: c.name,
+          slug: c.slug,
+          imageUrl: c.imageUrl,
+          count: counts.categories[c.id] ?? null,
+        }));
+        return { ...head, type: "category_grid", categories };
+      }
+      case "collection_cards": {
+        const list = input.settings.collectionIds.flatMap(
+          (id) => shell.collections.find((c) => c.id === id) ?? [],
+        );
+        if (!list.length) return null;
+        const collections = list.map((c) => ({
+          name: c.name,
+          slug: c.slug,
+          imageUrl: c.imageUrl,
+          count: counts.collections[c.id] ?? null,
+        }));
+        return { ...head, type: "collection_cards", collections };
+      }
+      case "brand_strip":
+        return shell.brands.length ? { ...head, type: "brand_strip", brands: shell.brands } : null;
+      case "testimonials":
+        return {
+          ...head,
+          type: "testimonials",
+          items: input.settings.items.map((t) => ({
+            quote: t.quote,
+            name: t.name,
+            place: t.place ?? null,
+            product: t.product ?? null,
+            rating: t.rating,
+          })),
+          summary: input.settings.summary,
+        };
+      case "rich_text": {
+        const href = linkPath(input.settings.link, slugs);
+        return {
+          ...head,
+          type: "rich_text",
+          markdown: input.settings.markdown,
+          link: href && input.settings.linkLabel ? { href, label: input.settings.linkLabel } : null,
+        };
+      }
+      default:
+        return null;
+    }
+  });
   return sections.filter((s): s is HomeSection => s !== null);
 }

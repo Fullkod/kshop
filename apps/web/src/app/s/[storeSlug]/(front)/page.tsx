@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { defaultHome, HomeSections } from "@kshop/storefront";
-import { getHome, getProducts, type HomeSection } from "@/server/storefront/catalog";
+import { getCarousel, getHome, type HomeSection } from "@/server/storefront/catalog";
 import { getStorefrontShell } from "@/server/storefront/data";
 import { requireStore, storeMetadata } from "@/server/storefront/page-helpers";
 
@@ -21,8 +21,8 @@ export default async function StoreHomePage({ params }: PageProps<"/s/[storeSlug
 }
 
 async function fallbackHome(storeId: string): Promise<HomeSection[]> {
-  const [{ products }, shell] = await Promise.all([
-    getProducts(storeId, {}, "newest", 1, 8),
+  const [products, shell] = await Promise.all([
+    getCarousel(storeId, { kind: "all" }, "newest", 8),
     getStorefrontShell(storeId),
   ]);
   return defaultHome(products, shell);
