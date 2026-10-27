@@ -76,9 +76,13 @@ Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desa
 | 5. Suscripciones y módulos | Hecha; **pendiente** poner a cero el contador de facturas antes de la primera real y configurar el WhatsApp de soporte | `prp-fase-5-suscripciones-y-modulos.md` | ver PRP |
 | 6. Pro | Hecha (almacenes, monedas, finanzas, dominio propio). **Pendiente**: token de elTOQUE, probar Vercel con un dominio real (con permiso) y Vercel Pro antes de vender dominios | `prp-fase-6-pro.md` | ver PRP |
 | 7. Apps | Hecha: app de tienda por slug y Kshop Admin (Capacitor), APK firmados en GitHub Actions, `/app` de la tienda, Admin › App móvil, Superadmin › Apps. **Pendiente**: Roberto publica las versiones probadas; Google Play e iOS más adelante | `prp-fase-7-apps.md`, `docs/APPS.md` | ver PRP |
+| v2. Rediseño (R0–R7) | Hecha. **Pendiente**: recompilar las APK (con permiso) y probar en móvil real realtime y favoritos tras «sin conexión»; Lighthouse móvil de la landing 87 (objetivo 90, limitación de todo el sitio) | `prp-rediseno-v2.md`, `project/2026-10-27-rediseno-v2.md` | `0c71388`, `f6aa223` |
+| R8. Superadmin v2 + Realtime | Hecha, pendiente de la revisión de Roberto | `prp-r8-superadmin-y-realtime.md`, `project/pendiente-realtime.md` | `da1a97d`, `eecd58f` |
+| R9. Lecturas de la tienda | Hecha, pendiente de la revisión de Roberto: portada en 2 tandas, carruseles por índice, conteos de lo mostrado, refresco en segundo plano tras un pedido; sidebars con arriba y abajo fijos | `prp-r9-lecturas-tienda.md`, `project/lecturas-tienda-r9.md` | `8be1278` |
+| 8. Migrar klauShop | **Sin empezar.** Antes: decidir la instancia de Supabase (la Nano se estrangula con ráfagas) | — | — |
 
-El remoto `origin` (`Fullkod/kshop`) está al día hasta la Fase 2 (Roberto subió los commits); lo de la Fase 3
-sigue en commits locales hasta que Roberto autorice el push.
+El remoto `origin` (`Fullkod/kshop`) lo sube Roberto. Al 2026-10-27 está al día hasta `f6aa223`; `8be1278` (R9) y
+este cierre de documentación quedan en local hasta su push.
 
 ## Fases (cada una se detalla en su PRP)
 | Fase | Alcance | Verificación |

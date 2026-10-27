@@ -29,7 +29,7 @@
 - [2026-10-25-fase-5-suscripciones-y-modulos.md](project/2026-10-25-fase-5-suscripciones-y-modulos.md) — Fase 5 hecha: precios USD, cupones y apariencia fuera del Base, dónde está cada pieza, pendientes
 - [2026-10-26-fase-6-pro.md](project/2026-10-26-fase-6-pro.md) — Fase 6 hecha: decisiones de Roberto, dónde está cada pieza, pendientes de Roberto (elTOQUE, Vercel real)
 - [2026-10-27-fase-7-apps.md](project/2026-10-27-fase-7-apps.md) — Fase 7 hecha: apps Capacitor (tienda por slug + Kshop Admin), GitHub Actions, claves de firma, `/app`, pendientes
-- [2026-10-27-rediseno-v2.md](project/2026-10-27-rediseno-v2.md) — Rediseño v2 hecho (R0–R7): decisiones de Roberto, tienda sin hex, landing con datos de planes, dónde está cada pieza, pendientes
+- [2026-10-27-rediseno-v2.md](project/2026-10-27-rediseno-v2.md) — Rediseño v2 hecho (R0–R9): decisiones de Roberto, tienda sin hex, landing con datos de planes, dónde está cada pieza, pendientes y **dónde quedamos** (pausa 2026-10-27)
 - [pendiente-realtime.md](project/pendiente-realtime.md) — Realtime con señales sin datos (hecho 2026-10-27): temas, dónde está y cómo añadir una pantalla
 - [lecturas-tienda-r9.md](project/lecturas-tienda-r9.md) — Por qué la Nano se hundía (demasiadas consultas en serie, recorridos del catálogo, tienda en frío tras cada pedido), qué se cambió en R9 y qué queda
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
