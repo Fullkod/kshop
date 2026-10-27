@@ -64,7 +64,7 @@ pg_graphql), urql + graphql-codegen para lecturas, Drizzle o SQL para esquema y 
 Tailwind + shadcn/ui, Vercel. Apps Capacitor (`apps/store-app`, `apps/admin-app`) se añaden en su fase.
 Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desarrollo separado de producción.
 
-## Estado (actualizado 2026-10-26)
+## Estado (actualizado 2026-10-27)
 | Fase | Estado | PRP / memoria | Último commit |
 |------|--------|---------------|---------------|
 | 0a. Fábrica | Hecha | `project/2026-10-24-dual-agent-tooling.md` | — |
@@ -75,7 +75,7 @@ Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desa
 | 4. Avisos y descuentos | Hecha; **pendiente** probar con la instancia OpenWA real (hoy en modo simulado) | `prp-fase-4-avisos-y-descuentos.md` | ver PRP |
 | 5. Suscripciones y módulos | Hecha; **pendiente** poner a cero el contador de facturas antes de la primera real y configurar el WhatsApp de soporte | `prp-fase-5-suscripciones-y-modulos.md` | ver PRP |
 | 6. Pro | Hecha (almacenes, monedas, finanzas, dominio propio). **Pendiente**: token de elTOQUE, probar Vercel con un dominio real (con permiso) y Vercel Pro antes de vender dominios | `prp-fase-6-pro.md` | ver PRP |
-| 7. Apps | PRP aprobado; en curso | `prp-fase-7-apps.md` | — |
+| 7. Apps | Hecha: app de tienda por slug y Kshop Admin (Capacitor), APK firmados en GitHub Actions, `/app` de la tienda, Admin › App móvil, Superadmin › Apps. **Pendiente**: Roberto publica las versiones probadas; Google Play e iOS más adelante | `prp-fase-7-apps.md`, `docs/APPS.md` | ver PRP |
 
 El remoto `origin` (`Fullkod/kshop`) está al día hasta la Fase 2 (Roberto subió los commits); lo de la Fase 3
 sigue en commits locales hasta que Roberto autorice el push.
