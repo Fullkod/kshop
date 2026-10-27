@@ -23,6 +23,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import { ADMIN_CONTENT_CLASS } from "@/components/admin-content";
 import { platformProtocol, publicEnv } from "@/env";
 import { ADMIN_MODULES } from "@/features/registry";
 import { ADMIN_GROUPS, type AdminGroup } from "@/features/types";
@@ -221,7 +222,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         )}
       </nav>
       <div className="mt-auto flex items-center gap-2.5 rounded-xl bg-white/6 px-2.5 py-3">
-        <span className="font-display flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold">
+        <span className="font-display flex size-8 shrink-0 items-center justify-center rounded-full bg-[#5B21B6] text-sm font-bold">
           {(email[0] ?? "?").toUpperCase()}
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
@@ -317,7 +318,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
               )}
             </div>
           </header>
-          <main className="min-w-0 flex-1 px-4 py-6 md:px-7">
+          <main className={cn("min-w-0 flex-1 px-4 py-6 md:px-7", ADMIN_CONTENT_CLASS)}>
             <AccountBanner admin={admin} />
             {children}
           </main>
@@ -337,7 +338,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
       aria-current={active ? "page" : undefined}
       className={cn(
         "flex h-9 items-center gap-2.5 rounded-[9px] px-2.5 text-[13.5px] whitespace-nowrap transition-colors",
-        active ? "bg-primary font-semibold text-white" : "text-[#D9D3EA] hover:bg-white/8 hover:text-white",
+        active ? "bg-[#5B21B6] font-semibold text-white" : "text-[#D9D3EA] hover:bg-white/8 hover:text-white",
         item.locked && "text-[#9C93B8]",
       )}
     >

@@ -19,9 +19,17 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@kshop/admin", "@kshop/core", "@kshop/data", "@kshop/ui", "@kshop/storefront"],
   // Decision D1 (phase 2): `use cache` + cacheTag per store; static shells streamed with Partial Prerendering.
   cacheComponents: true,
-  // Build-time prerendering queries pg_graphql as anon (statement_timeout 3s): the default concurrency (8 pages
-  // per worker, one worker per CPU) saturates the small Supabase instance on Vercel and pages time out.
-  experimental: { staticGenerationMaxConcurrency: 2, staticGenerationRetryCount: 3 },
+  // Build-time prerendering queries pg_graphql as anon: the default concurrency (8 pages per worker, one worker per
+  // CPU) saturates the small Supabase instance and pages time out (57014; the Vercel build of 2026-10-27 failed on
+  // /s/demo even with the anon limit at 8 s). One worker with 2 pages at a time keeps
+  // the load the same whatever the number of CPUs of the builder (`staticGenerationMinPagesPerWorker` alone still
+  // started 7 workers).
+  experimental: {
+    cpus: 1,
+    staticGenerationMaxConcurrency: 2,
+    staticGenerationMinPagesPerWorker: 1000,
+    staticGenerationRetryCount: 3,
+  },
   // Inline the public configuration in the browser bundle.
   env: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",

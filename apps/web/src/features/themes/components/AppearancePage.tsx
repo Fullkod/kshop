@@ -38,18 +38,15 @@ export function AppearancePage({ tab }: { tab: AppearanceTab }) {
           Ver la tienda ↗
         </a>
       </div>
-      <nav
-        className="-mx-1 mb-6 flex gap-1 overflow-x-auto border-b pb-2"
-        aria-label="Secciones de apariencia"
-      >
+      <nav className="mb-6 flex gap-5 overflow-x-auto border-b" aria-label="Secciones de apariencia">
         {APPEARANCE_TABS.map((t) => (
           <Link
             key={t.key}
             href={t.href}
             aria-current={t.key === tab ? "page" : undefined}
             className={cn(
-              "rounded-md px-3 py-1.5 text-sm whitespace-nowrap hover:bg-surface",
-              t.key === tab && "bg-accent-soft font-medium text-primary",
+              "-mb-px border-b-2 border-transparent pt-1 pb-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground hover:text-foreground",
+              t.key === tab && "border-primary font-bold text-primary",
             )}
           >
             {t.label}

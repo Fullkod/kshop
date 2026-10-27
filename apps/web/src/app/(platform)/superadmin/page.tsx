@@ -1,8 +1,19 @@
 "use client";
 
-import type { StoreStatus } from "@kshop/core";
-import { ApiError, type PlatformStore } from "@kshop/data";
-import { Alert, Badge, Button, buttonVariants, Card } from "@kshop/ui";
+import { formatUsd, type StoreStatus } from "@kshop/core";
+import { useRealtimeVersion } from "@kshop/admin";
+import { ApiError, type PlatformInvoice, type PlatformStore } from "@kshop/data";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  CircleCheck,
+  Clock,
+  type LucideIcon,
+  CirclePause,
+  Receipt,
+} from "@kshop/ui";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatDate, STORE_STATUS_LABELS, storeUrl, SUBSCRIPTION_STATUS_LABELS } from "@/lib/format";
@@ -13,6 +24,9 @@ export default function SuperadminStoresPage() {
   const [stores, setStores] = useState<PlatformStore[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [owed, setOwed] = useState<PlatformInvoice[] | null>(null);
+  // New stores, status changes and payments show on their own (Realtime).
+  const live = useRealtimeVersion("platform");
 
   useEffect(() => {
     let cancelled = false;
@@ -22,10 +36,14 @@ export default function SuperadminStoresPage() {
       .catch((e: unknown) => {
         if (!cancelled) setError(e instanceof ApiError ? e.message : "No se pudieron cargar las tiendas.");
       });
+    api.platform.invoices("open").then(
+      (r) => !cancelled && setOwed(r.invoices),
+      () => {},
+    );
     return () => {
       cancelled = true;
     };
-  }, [api]);
+  }, [api, live]);
 
   async function setStatus(store: PlatformStore, status: StoreStatus) {
     setBusyId(store.id);
@@ -49,12 +67,38 @@ export default function SuperadminStoresPage() {
             Alta, plan y estado de cada tienda de la plataforma.
           </p>
         </div>
-        <Link href="/superadmin/stores/new" className={buttonVariants()}>
-          Nueva tienda
-        </Link>
       </div>
 
       {error && <Alert variant="destructive">{error}</Alert>}
+
+      {stores && stores.length > 0 && (
+        <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4" data-testid="superadmin-kpis">
+          <Kpi
+            icon={CircleCheck}
+            label="Activas"
+            value={stores.filter((s) => s.status === "active").length}
+            filled
+          />
+          <Kpi
+            icon={Clock}
+            label="En prueba"
+            value={stores.filter((s) => s.subscriptionStatus === "trialing").length}
+          />
+          <Kpi
+            icon={CirclePause}
+            label="Suspendidas"
+            value={stores.filter((s) => s.status === "suspended").length}
+          />
+          <Kpi
+            icon={Receipt}
+            label="Por cobrar"
+            value={
+              owed === null ? "…" : formatUsd(owed.reduce((sum, i) => sum + (i.total - i.amountPaid), 0))
+            }
+            hint={owed?.length ? `${owed.length} ${owed.length === 1 ? "factura" : "facturas"}` : undefined}
+          />
+        </div>
+      )}
 
       {stores === null && !error && <p className="text-muted-foreground">Cargando…</p>}
 
@@ -79,16 +123,26 @@ export default function SuperadminStoresPage() {
               {stores.map((store) => (
                 <tr key={store.id} className="border-b last:border-0" data-testid={`store-row-${store.slug}`}>
                   <td className="px-4 py-3">
-                    <Link href={`/superadmin/stores/${store.id}`} className="font-medium hover:underline">
-                      {store.name}
-                    </Link>
-                    <a
-                      href={storeUrl(store.slug)}
-                      className="text-xs text-primary hover:underline"
-                      target="_blank"
-                    >
-                      {store.primaryDomain ?? store.slug}
-                    </a>
+                    <div className="flex items-center gap-3">
+                      <span className="font-display flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-accent-soft font-extrabold text-primary">
+                        {store.name[0]?.toUpperCase()}
+                      </span>
+                      <span className="flex min-w-0 flex-col">
+                        <Link
+                          href={`/superadmin/stores/${store.id}`}
+                          className="font-semibold hover:underline"
+                        >
+                          {store.name}
+                        </Link>
+                        <a
+                          href={storeUrl(store.slug)}
+                          className="text-xs text-primary hover:underline"
+                          target="_blank"
+                        >
+                          {store.primaryDomain ?? store.slug}
+                        </a>
+                      </span>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{store.owner?.email ?? "—"}</td>
                   <td className="px-4 py-3">
@@ -132,5 +186,36 @@ export default function SuperadminStoresPage() {
         </Card>
       )}
     </div>
+  );
+}
+
+function Kpi({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  filled = false,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: number | string;
+  hint?: string;
+  filled?: boolean;
+}) {
+  return (
+    <Card
+      className={`flex flex-col gap-2.5 rounded-[14px] p-[18px] ${filled ? "border-primary bg-primary text-primary-foreground" : ""}`}
+    >
+      <span
+        className={`flex items-center justify-between text-[13px] ${filled ? "" : "text-muted-foreground"}`}
+      >
+        {label}
+        <Icon size={17} aria-hidden />
+      </span>
+      <span className="font-display text-[28px] leading-none font-extrabold">{value}</span>
+      {hint && (
+        <span className={`text-[12.5px] font-semibold ${filled ? "" : "text-muted-foreground"}`}>{hint}</span>
+      )}
+    </Card>
   );
 }

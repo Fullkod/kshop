@@ -13,6 +13,7 @@ export {
   ClipboardList,
   Check,
   CircleCheck,
+  CirclePause,
   Clock,
   Coins,
   CreditCard,

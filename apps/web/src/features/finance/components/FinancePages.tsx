@@ -188,14 +188,14 @@ export function FinanceShell({ children }: { children: ReactNode }) {
           {exporting ? "Preparando…" : "Exportar a Excel"}
         </Button>
       </div>
-      <nav className="-mx-1 flex gap-1 overflow-x-auto border-b pb-2" aria-label="Secciones de finanzas">
+      <nav className="flex gap-5 overflow-x-auto border-b" aria-label="Secciones de finanzas">
         {SECTIONS.map((s) => (
           <Link
             key={s.href}
             href={`${s.href}?${search}`}
             className={cn(
-              "rounded-md px-3 py-1.5 text-sm whitespace-nowrap hover:bg-surface",
-              pathname === s.href && "bg-accent-soft font-medium text-primary",
+              "-mb-px border-b-2 border-transparent pt-1 pb-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground hover:text-foreground",
+              pathname === s.href && "border-primary font-bold text-primary",
             )}
           >
             {s.label}
