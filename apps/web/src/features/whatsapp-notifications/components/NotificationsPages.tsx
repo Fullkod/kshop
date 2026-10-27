@@ -541,7 +541,14 @@ function LogList({ rows, reload, showOrder }: { rows: LogRow[]; reload: () => vo
               <summary className="cursor-pointer text-xs text-muted-foreground">Ver mensaje</summary>
               <pre className="mt-1 whitespace-pre-wrap rounded-md bg-surface p-2 text-xs">{n.message}</pre>
             </details>
-            {n.error && <span className="text-xs text-destructive">{n.error}</span>}
+            {n.error && (
+              // A sent notice can carry a note (OpenWA answers 500 and delivers): only failures are red.
+              <span
+                className={`text-xs ${n.status === "sent" ? "text-muted-foreground" : "text-destructive"}`}
+              >
+                {n.error}
+              </span>
+            )}
             <div className="flex flex-wrap gap-3 text-xs">
               {n.message && (
                 <a

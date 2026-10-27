@@ -136,6 +136,19 @@ select tests.check('preview renders with a real order', public.notification_prev
   'Hola {{cliente}} {{numero}}', 'customer', tests.fx('o1')) like e'*Notif Test A*\nHola Invitada NA-%');
 select tests.check('dispatcher in dry_run sends nothing and does not fail', not tests.throws('select private.dispatch_notifications()'));
 
+-- OpenWA answers (2026-10-27): never retried; a 5xx counts as sent because OpenWA delivers anyway.
+insert into net._http_response (id, status_code, content, timed_out, created) values
+  (990000001, 201, '{}', false, now()), (990000002, 500, '{"statusCode":500}', false, now()),
+  (990000003, 401, '{}', false, now()), (990000004, null, null, true, now());
+insert into public.notification_log (store_id, audience, event, recipient, message, status, attempts, request_id)
+select tests.fx('store_a'), 'store', 'dispatch_test_' || n, '+5350000000', 'x', 'sending', 1, 990000000 + n
+from generate_series(1, 4) n;
+select private.dispatch_notifications();
+select tests.eq('dispatcher: 2xx and 5xx sent, 4xx and timeout failed, nothing queued again', (
+  select string_agg(event || ':' || status, ' ' order by event) from public.notification_log
+  where event like 'dispatch_test_%'),
+  'dispatch_test_1:sent dispatch_test_2:sent dispatch_test_3:failed dispatch_test_4:failed');
+
 -- ---------------------------------------------------------------------------
 -- Isolation
 -- ---------------------------------------------------------------------------

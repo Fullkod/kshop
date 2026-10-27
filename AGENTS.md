@@ -124,6 +124,10 @@
 | `pnpm qa:apps` | QA en navegador de la app de tienda, Kshop Admin y la distribución (`/app`, Admin › App móvil, Superadmin › Apps), con `pnpm dev` y los Vite de las apps (5173, 5174) corriendo; capturas en `.titan/qa/fase-7/` |
 | `pnpm demo:seed` | Crea/repara la tienda de pruebas permanente «Tienda Demo» (`demo.kshop.localhost:3000`) |
 
+**WhatsApp en modo real** (Superadmin › WhatsApp, desde 2026-10-27): los `e2e:*` y `qa:*` crean pedidos y tiendas con
+teléfonos de relleno que recibirían mensajes de verdad. Antes de correrlos, poner el modo en «Simulado» (`dry_run`) y
+volver a «Real» al terminar. Para probar envíos reales solo los números de prueba de Roberto: +5352564206 y +5353077035.
+
 Tras cada migración que toque tablas o funciones públicas: `pnpm test:rls`, `pnpm db:graphql-schema && pnpm codegen`.
 Después de `prettier --write` también `pnpm codegen` (reformatea el GraphQL embebido). Verifica por código de salida, no con `grep`.
 

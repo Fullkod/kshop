@@ -85,7 +85,7 @@ if (!store) {
       p_owner_id: ownerId,
       p_base_currency: "CUP",
       p_order_prefix: "DEMO",
-      p_whatsapp_phone: "+5350000000",
+      p_whatsapp_phone: "+5352564206",
       p_plan_code: "pro",
       p_trial_days: 0,
       p_platform_domain: env.PLATFORM_CANONICAL_DOMAIN ?? "kshop.fullkod.com",
@@ -259,7 +259,7 @@ const { error: contactError } = await service.from("store_notification_contacts"
   {
     store_id: store.id,
     name: "Tienda Demo",
-    phone: "+5350000000",
+    phone: "+5353077035",
     notify_new_order: true,
     show_to_customer: true,
   },

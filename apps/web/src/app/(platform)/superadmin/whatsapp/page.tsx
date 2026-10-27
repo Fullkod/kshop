@@ -33,6 +33,19 @@ export default function SuperadminWhatsappPage() {
     };
   }, [api]);
 
+  // Notices leave within a minute (pg_cron): the counters are read again while the page is open, without touching
+  // the form.
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      api.platform
+        .whatsapp()
+        .then((d) => setData((current) => (current ? { ...current, queue: d.queue } : d)))
+        .catch(() => {});
+    }, 15_000);
+    return () => clearInterval(timer);
+  }, [api]);
+
   async function run(action: () => Promise<void>) {
     setPending(true);
     setError(null);
