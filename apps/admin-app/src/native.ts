@@ -2,6 +2,7 @@ import { App } from "@capacitor/app";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
+import { SplashScreen } from "@capacitor/splash-screen";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import type { AuthStorage } from "@kshop/data";
 import { useEffect } from "react";
@@ -9,6 +10,19 @@ import { useEffect } from "react";
 // Native pieces of the admin app (PRP-7 D8). In the browser (dev and QA) they fall back to the web.
 
 export const isNative = Capacitor.isNativePlatform();
+
+/** The native splash stays until the first real screen is ready (launchAutoHide: false), at most 8 s. */
+export function hideSplash() {
+  if (isNative) void SplashScreen.hide().catch(() => {});
+}
+if (isNative) setTimeout(hideSplash, 8000);
+
+/** Hides the splash once `ready` (by default, when the calling screen mounts). */
+export function useHideSplash(ready = true) {
+  useEffect(() => {
+    if (ready) hideSplash();
+  }, [ready]);
+}
 
 /** Staff session in native storage (survives the WebView clearing its localStorage), PRP-7 D6. */
 export const preferencesStorage: AuthStorage = {

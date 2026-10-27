@@ -27,6 +27,9 @@ type BuildRow = {
   created_at: string;
 };
 
+/** Only the /app page and the Android banner: publishing a build does not expire the whole store card. */
+const storeAppCacheTag = (slug: string) => `${storeCacheTag(slug)}:app`;
+
 export const apkUrl = (path: string) => `${supabaseConfig.url}/storage/v1/object/public/store-apps/${path}`;
 
 const toBuild = (row: BuildRow): AppBuild => ({
@@ -77,7 +80,7 @@ export async function requestMobileApp(storeId: string, userId: string): Promise
 /** The store's /app page (public): the latest published build while the app is available (D15). */
 export async function getPublicStoreApp(storeId: string, slug: string): Promise<AppBuild | null> {
   "use cache";
-  cacheTag(storeCacheTag(slug));
+  cacheTag(storeAppCacheTag(slug));
   cacheLife("minutes");
   const { data, error } = await getServiceClient().rpc("app_info", { p_store_id: storeId });
   if (error) throw error;
@@ -135,6 +138,8 @@ export async function setAppBuildPublished(id: string, published: boolean): Prom
         .eq("store_id", data.store_id);
       if (requestError) throw requestError;
     }
-    revalidateTag(storeCacheTag(data.stores.slug), { expire: 0 });
+    // Stale-while-revalidate: the next visit refreshes it; publishing an app does not need to be instant, and an
+    // expired entry would block the storefront render.
+    revalidateTag(storeAppCacheTag(data.stores.slug), "max");
   }
 }

@@ -163,6 +163,16 @@ const fakeAppInfo = (page, body) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }),
   );
 
+/** Reloads a storefront page until `testId` shows: publishing an app refreshes /app stale-while-revalidate. */
+async function waitForFresh(page, url, testId) {
+  for (let i = 0; i < 10; i++) {
+    await page.goto(url);
+    if (await page.getByTestId(testId).isVisible()) return;
+    await page.waitForTimeout(1000);
+  }
+  await page.getByTestId(testId).waitFor({ timeout: 1000 });
+}
+
 /** Admin app signed in as a staff member of the Tienda Demo (picks it when the account has several stores). */
 async function signIn(email, password, screenshot, setup) {
   const page = await newPhone();
@@ -467,9 +477,8 @@ try {
   check("superadmin: publishing answers the request", !request);
   await superadmin.screenshot({ path: join(OUT, "qa-18-superadmin-apps-1280.png"), fullPage: true });
 
-  await android.goto(`${WEB_STORE}/app`);
+  await waitForFresh(android, `${WEB_STORE}/app`, "app-download");
   const download = android.getByTestId("app-download");
-  await download.waitFor({ timeout: 30000 });
   check(
     "/app: offers the published APK with its version",
     (await download.getAttribute("href"))?.endsWith(registered.apk_path) &&
@@ -491,8 +500,7 @@ try {
 
   await row.getByRole("button", { name: "Ocultar" }).click();
   await row.getByRole("button", { name: "Publicar" }).waitFor({ timeout: 20000 });
-  await android.goto(`${WEB_STORE}/app`);
-  await android.getByTestId("app-unavailable").waitFor({ timeout: 30000 });
+  await waitForFresh(android, `${WEB_STORE}/app`, "app-unavailable");
   check("/app: hidden again, no download", true);
 
   if (errors.length) writeFileSync(join(OUT, "console-errors.txt"), errors.join("\n\n"));

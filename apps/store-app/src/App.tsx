@@ -17,7 +17,14 @@ import { BrowserRouter, Link as RouterLink, Route, Routes, useLocation, useNavig
 import { useCached } from "./cache";
 import { appConfig, storeWebUrl } from "./config";
 import { apkUrl, loadAppInfo, loadShell, loadStore, type AppInfo } from "./data";
-import { isNative, paintStatusBar, preferencesStorage, useBackButton, useOnline } from "./native";
+import {
+  isNative,
+  paintStatusBar,
+  preferencesStorage,
+  useBackButton,
+  useHideSplash,
+  useOnline,
+} from "./native";
 import {
   AccountPage,
   CartPage,
@@ -123,6 +130,8 @@ function StoreApp() {
   const store = useCached("store", loadStore);
   const info = useCached("app-info", loadAppInfo);
   const shell = useCached("shell", loadShell);
+  const unavailable = !!info.data && !info.data.available;
+  useHideSplash(unavailable || (!!store.data && !!shell.data) || !(store.loading || shell.loading));
 
   useEffect(() => {
     if (store.data) {
@@ -131,7 +140,7 @@ function StoreApp() {
     }
   }, [store.data]);
 
-  if (info.data && !info.data.available) return <Unavailable store={store.data} info={info.data} />;
+  if (unavailable && info.data) return <Unavailable store={store.data} info={info.data} />;
   if (!store.data || !shell.data) {
     return (
       <Notice>

@@ -122,7 +122,8 @@ writeFileSync(
       webDir: "dist",
       android: { allowMixedContent: false },
       plugins: {
-        SplashScreen: { launchShowDuration: 800, backgroundColor: app.splashBackground, showSpinner: false },
+        // The app hides it when its first screen is ready (useHideSplash), not after a fixed time.
+        SplashScreen: { launchAutoHide: false, backgroundColor: app.splashBackground, showSpinner: false },
       },
     },
     null,

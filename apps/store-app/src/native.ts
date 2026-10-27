@@ -2,6 +2,7 @@ import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 import { Network } from "@capacitor/network";
 import { Preferences } from "@capacitor/preferences";
+import { SplashScreen } from "@capacitor/splash-screen";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import type { AuthStorage } from "@kshop/data";
 import { useEffect, useState } from "react";
@@ -10,6 +11,19 @@ import { useEffect, useState } from "react";
 // back to the web APIs.
 
 export const isNative = Capacitor.isNativePlatform();
+
+/** The native splash stays until the first real screen is ready (launchAutoHide: false), at most 8 s. */
+export function hideSplash() {
+  if (isNative) void SplashScreen.hide().catch(() => {});
+}
+if (isNative) setTimeout(hideSplash, 8000);
+
+/** Hides the splash once `ready` (by default, when the calling screen mounts). */
+export function useHideSplash(ready = true) {
+  useEffect(() => {
+    if (ready) hideSplash();
+  }, [ready]);
+}
 
 /** Customer session in native storage (survives the WebView clearing its localStorage), PRP-7 D6. */
 export const preferencesStorage: AuthStorage = {

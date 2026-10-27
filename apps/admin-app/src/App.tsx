@@ -35,7 +35,14 @@ import {
   useParams,
 } from "react-router";
 import { appConfig, webAdminUrl } from "./config";
-import { isNative, paintStatusBar, preferencesStorage, takePhoto, useBackButton } from "./native";
+import {
+  isNative,
+  paintStatusBar,
+  preferencesStorage,
+  takePhoto,
+  useBackButton,
+  useHideSplash,
+} from "./native";
 
 // Kshop Admin (PRP-7 D2): the essentials of the store admin on the phone — today's sales, orders and products —
 // with the same screens as the web (@kshop/admin) and «Abrir el panel completo» for everything else.
@@ -121,6 +128,7 @@ function Brand() {
 }
 
 function LoginScreen() {
+  useHideSplash();
   const navigate = useNavigate();
   return (
     <Notice>
@@ -142,6 +150,7 @@ function useSignOut() {
 type MyStore = MeResponse["stores"][number];
 
 function StorePicker({ stores, onPick }: { stores: MyStore[]; onPick: (id: string) => void }) {
+  useHideSplash();
   const signOut = useSignOut();
   return (
     <Notice>
@@ -249,9 +258,7 @@ async function loadStore(
   graphql: ReturnType<typeof useSession>["graphql"],
 ): Promise<PublicStore> {
   try {
-    const res = await fetch(
-      `${appConfig.apiBaseUrl}/api/v1/stores/${myStore.id}/storefront?view=store`,
-    );
+    const res = await fetch(`${appConfig.apiBaseUrl}/api/v1/stores/${myStore.id}/storefront?view=store`);
     if (res.ok) return (await res.json()) as PublicStore;
   } catch {
     // Read below.
@@ -272,7 +279,11 @@ async function loadStore(
   };
 }
 
-type Loaded = { kind: "loading" } | { kind: "forbidden" } | { kind: "error" } | { kind: "ready"; admin: AdminState; store: PublicStore };
+type Loaded =
+  | { kind: "loading" }
+  | { kind: "forbidden" }
+  | { kind: "error" }
+  | { kind: "ready"; admin: AdminState; store: PublicStore };
 
 function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => void }) {
   const { api, graphql } = useSession();
@@ -339,6 +350,7 @@ function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => 
 }
 
 function Shell({ onSwitch }: { onSwitch?: () => void }) {
+  useHideSplash();
   const store = useStore();
   const admin = useAdmin();
   const { pathname } = useLocation();
@@ -453,8 +465,12 @@ function WebOnly() {
   return (
     <div className="flex flex-col items-start gap-3 py-8">
       <h1 className="text-xl font-semibold">Esto está en el panel completo</h1>
-      <p className="text-muted-foreground">La app tiene lo del día a día: ventas de hoy, pedidos y productos.</p>
-      <PanelLink path={pathname.startsWith("/admin") ? pathname : "/admin"}>Abrir el panel completo</PanelLink>
+      <p className="text-muted-foreground">
+        La app tiene lo del día a día: ventas de hoy, pedidos y productos.
+      </p>
+      <PanelLink path={pathname.startsWith("/admin") ? pathname : "/admin"}>
+        Abrir el panel completo
+      </PanelLink>
     </div>
   );
 }
