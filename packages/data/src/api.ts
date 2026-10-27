@@ -328,6 +328,13 @@ export type CheckoutResponse = {
 };
 
 /** Admin: «Ventas de hoy» (day in America/Havana). */
+/** Admin home (redesign R6): what to do, and with the sales_today module the week and what is owed (base currency). */
+export type HomeSummary = {
+  todo: { toConfirm: number; toDeliver: number; lowStock: number };
+  week: { day: string; orders: number; amount: number }[] | null;
+  toCollect: number | null;
+};
+
 export type SalesToday = {
   dayStart: string;
   orders: { currency: string; orders: number; amount: number }[];
@@ -940,6 +947,7 @@ export function createApiClient(options: ApiClientOptions) {
         cancel: (orderId: string, reason?: string) => act(orderId, "cancel", { reason }),
         addNote: (orderId: string, text: string) => act(orderId, "notes", { text }),
         salesToday: () => request<SalesToday>("GET", `${base}/sales-today`),
+        summary: () => request<HomeSummary>("GET", `${base}/summary`),
       };
     },
     /** Admin: promotions and vouchers (module discounts, admin+). */

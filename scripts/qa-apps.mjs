@@ -278,6 +278,8 @@ try {
   check("offline: «Sin conexión» and the home kept on the device", imagesOffline > 0, imagesOffline);
   await shot(phone, "07-app-sin-conexion-390");
   await phone.context().setOffline(false);
+  // Done with this phone: closed so its reconnection (session refresh, favorites) does not run into the next steps.
+  await phone.close();
   // The offline reads are expected failures.
   errors.length = 0;
 
@@ -514,7 +516,7 @@ try {
 } catch (error) {
   check("flow", false, error);
   if (errors.length) console.log(errors.map((e) => e.slice(0, 300)).join("\n"));
-  await shot(phone, "error-app");
+  if (!phone.isClosed()) await shot(phone, "error-app");
 } finally {
   await browser.close();
   const { data: open } = await service

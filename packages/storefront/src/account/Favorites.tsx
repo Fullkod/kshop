@@ -145,3 +145,12 @@ function Empty({ text, action }: { text: string; action: { href: string; label: 
     </div>
   );
 }
+
+/** No favorites and no requests, for previews outside the store. */
+export function PreviewFavoritesProvider({ children }: { children: ReactNode }) {
+  return (
+    <FavoritesContext.Provider value={{ products: [], isFavorite: () => false, toggle: async () => {} }}>
+      {children}
+    </FavoritesContext.Provider>
+  );
+}

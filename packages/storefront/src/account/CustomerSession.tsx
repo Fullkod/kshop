@@ -130,3 +130,17 @@ export function useCustomerSession(): CustomerSessionValue {
   if (!value) throw new Error("useCustomerSession must be used inside <CustomerSessionProvider>");
   return value;
 }
+
+/** A guest that never signs in, for previews outside the store (its API client is never called). */
+export function PreviewCustomerSessionProvider({ api, children }: { api: ApiClient; children: ReactNode }) {
+  const value: CustomerSessionValue = {
+    ready: true,
+    session: null,
+    customer: null,
+    api,
+    signIn: async () => {},
+    signOut: async () => {},
+    setCustomer: () => {},
+  };
+  return <CustomerSessionContext.Provider value={value}>{children}</CustomerSessionContext.Provider>;
+}

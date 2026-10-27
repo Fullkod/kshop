@@ -5,15 +5,25 @@ import {
   OrderList,
   ProductEditor,
   ProductList,
+  dayChange,
   SalesTodayCard,
   SessionProvider,
   StaffLoginForm,
   useAdmin,
+  useAdminHome,
   useSession,
   type AdminConfig,
+  type AdminHome,
   type AdminState,
 } from "@kshop/admin";
-import { resolveTheme, ROLE_LABELS, type CurrencyCode, type StoreStatus } from "@kshop/core";
+import {
+  formatMoney,
+  resolveTheme,
+  ROLE_LABELS,
+  type CurrencyCode,
+  type ModuleCode,
+  type StoreStatus,
+} from "@kshop/core";
 import { CheckoutSettingsQuery, type MeResponse } from "@kshop/data";
 import {
   NavigationProvider,
@@ -22,7 +32,38 @@ import {
   type LinkProps,
   type PublicStore,
 } from "@kshop/storefront";
-import { Alert, Button, Card, cn } from "@kshop/ui";
+import {
+  Alert,
+  Bell,
+  Button,
+  Card,
+  ChevronRight,
+  ClipboardList,
+  cn,
+  Coins,
+  CreditCard,
+  ExternalLink,
+  Globe,
+  House,
+  LayoutGrid,
+  Lock,
+  LogOut,
+  type LucideIcon,
+  MessageCircle,
+  Package,
+  Palette,
+  Plus,
+  Share2,
+  ShoppingBag,
+  Smartphone,
+  Tag,
+  Ticket,
+  TrendingUp,
+  Truck,
+  UserRound,
+  Users,
+  Wallet,
+} from "@kshop/ui";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   BrowserRouter,
@@ -353,87 +394,156 @@ function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => 
   );
 }
 
+type Tab = { href: string; label: string; icon: LucideIcon; show: boolean; badge?: number };
+
+/** Kshop Admin (redesign R6, D9): bottom tabs in the brand colors — Inicio · Pedidos · Productos · Ventas · Más. */
 function Shell({ onSwitch }: { onSwitch?: () => void }) {
   useHideSplash();
   const store = useStore();
   const admin = useAdmin();
   const { pathname } = useLocation();
   const has = (code: Parameters<typeof admin.enabledModules.has>[0]) => admin.enabledModules.has(code);
-  const tabs = [
-    { href: "/admin", label: "Inicio", show: true },
-    { href: "/admin/orders", label: "Pedidos", show: has("orders") },
-    { href: "/admin/catalog", label: "Productos", show: has("catalog") },
+  const home = useAdminHome({ salesToday: has("sales_today"), recent: 0 });
+  const toConfirm = home.summary?.todo.toConfirm ?? 0;
+  const tabs: Tab[] = [
+    { href: "/admin", label: "Inicio", icon: House, show: true },
+    { href: "/admin/orders", label: "Pedidos", icon: ShoppingBag, show: has("orders"), badge: toConfirm },
+    { href: "/admin/catalog", label: "Productos", icon: Package, show: has("catalog") },
+    { href: "/admin/sales", label: "Ventas", icon: TrendingUp, show: has("sales_today") },
+    { href: "/admin/more", label: "Más", icon: LayoutGrid, show: true },
   ].filter((t) => t.show);
   const active = (href: string) =>
     href === "/admin" ? pathname === "/admin" : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <div className="app-root flex min-h-dvh flex-col">
-      <header className="flex items-center justify-between gap-2 bg-[#24104F] px-4 py-3 text-white">
-        <div className="min-w-0">
-          <div className="truncate font-display text-lg font-semibold" data-testid="admin-store-name">
-            {store.name}
-          </div>
-          <div className="text-xs opacity-80">{admin.role ? ROLE_LABELS[admin.role] : "Superadmin"}</div>
-        </div>
-        {onSwitch && (
-          <button type="button" onClick={onSwitch} className="text-sm underline" data-testid="switch-store">
-            Cambiar
-          </button>
-        )}
-      </header>
+    <div className="app-root flex min-h-dvh flex-col bg-surface">
       {store.status !== "active" && (
         <Alert variant="destructive" className="rounded-none">
           La tienda está suspendida: los clientes no pueden comprar.
         </Alert>
       )}
       <ScrollToTop />
-      <main className="min-w-0 flex-1 px-4 pt-5 pb-24">
+      <main className="min-w-0 flex-1 pb-28">
         <Routes>
-          <Route path="/admin" element={<HomeScreen onSwitch={onSwitch} />} />
+          <Route path="/admin" element={<HomeScreen home={home} />} />
           {has("orders") && (
             <>
-              <Route path="/admin/orders" element={<OrderList refreshEvery={ORDERS_REFRESH_MS} />} />
-              <Route path="/admin/orders/:orderId" element={<OrderRoute />} />
+              <Route
+                path="/admin/orders"
+                element={
+                  <Screen title="Pedidos">
+                    <OrderList refreshEvery={ORDERS_REFRESH_MS} />
+                    <a
+                      href={webAdminUrl(store.slug, "/admin/orders/new")}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label="Nuevo pedido (en el panel)"
+                      className="fixed right-[18px] bottom-[92px] z-20 flex size-[58px] items-center justify-center rounded-[18px] bg-primary text-primary-foreground shadow-lg"
+                    >
+                      <Plus size={24} aria-hidden />
+                    </a>
+                  </Screen>
+                }
+              />
+              <Route
+                path="/admin/orders/:orderId"
+                element={
+                  <Screen>
+                    <OrderRoute />
+                  </Screen>
+                }
+              />
             </>
           )}
           {has("catalog") && (
             <>
-              <Route path="/admin/catalog" element={<ProductList />} />
-              <Route path="/admin/catalog/products/new" element={<ProductEditor />} />
-              <Route path="/admin/catalog/products/:productId" element={<ProductRoute />} />
+              <Route
+                path="/admin/catalog"
+                element={
+                  <Screen title="Productos">
+                    <ProductList />
+                  </Screen>
+                }
+              />
+              <Route
+                path="/admin/catalog/products/new"
+                element={
+                  <Screen>
+                    <ProductEditor />
+                  </Screen>
+                }
+              />
+              <Route
+                path="/admin/catalog/products/:productId"
+                element={
+                  <Screen>
+                    <ProductRoute />
+                  </Screen>
+                }
+              />
             </>
           )}
+          {has("sales_today") && <Route path="/admin/sales" element={<SalesScreen home={home} />} />}
+          <Route path="/admin/more" element={<MoreScreen onSwitch={onSwitch} />} />
           <Route path="/" element={<Navigate to="/admin" replace />} />
-          <Route path="*" element={<WebOnly />} />
+          <Route
+            path="*"
+            element={
+              <Screen>
+                <WebOnly />
+              </Screen>
+            }
+          />
         </Routes>
       </main>
       <nav
         aria-label="Secciones"
-        className="app-tabs fixed inset-x-0 bottom-0 z-10 flex border-t bg-background"
+        className="app-tabs fixed inset-x-0 bottom-0 z-10 flex gap-1 border-t bg-background px-2 pt-1.5"
       >
-        {tabs.map((t) => (
-          <RouterLink
-            key={t.href}
-            to={t.href}
-            className={cn(
-              "flex-1 py-3 text-center text-sm",
-              active(t.href) ? "font-semibold text-primary" : "text-muted-foreground",
-            )}
-          >
-            {t.label}
-          </RouterLink>
-        ))}
-        <a
-          href={webAdminUrl(store.slug)}
-          target="_blank"
-          rel="noreferrer"
-          className="flex-1 py-3 text-center text-sm text-muted-foreground"
-          data-testid="tab-panel"
-        >
-          Panel
-        </a>
+        {tabs.map((t) => {
+          const on = active(t.href);
+          return (
+            <RouterLink
+              key={t.href}
+              to={t.href}
+              aria-current={on ? "page" : undefined}
+              className={cn(
+                "flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px]",
+                on ? "font-semibold text-primary" : "text-muted-foreground",
+              )}
+            >
+              <span
+                className={cn(
+                  "relative flex h-7 w-14 items-center justify-center rounded-full",
+                  on && "bg-accent-soft",
+                )}
+              >
+                <t.icon size={20} aria-hidden />
+                {!!t.badge && (
+                  <span className="absolute -top-1 right-1.5 min-w-4 rounded-full bg-destructive px-1 text-center text-[10px] leading-4 font-bold text-white">
+                    {t.badge}
+                  </span>
+                )}
+              </span>
+              {t.label}
+            </RouterLink>
+          );
+        })}
       </nav>
+    </div>
+  );
+}
+
+/** White header with the screen title, over the content of the list screens. */
+function Screen({ title, children }: { title?: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col">
+      {title && (
+        <header className="bg-background px-4 pt-5 pb-3">
+          <h1 className="font-display text-2xl font-bold">{title}</h1>
+        </header>
+      )}
+      <div className="px-4 pt-4">{children}</div>
     </div>
   );
 }
@@ -479,52 +589,349 @@ function WebOnly() {
   );
 }
 
-function HomeScreen({ onSwitch }: { onSwitch?: () => void }) {
+function HomeScreen({ home }: { home: AdminHome }) {
   const store = useStore();
+  const admin = useAdmin();
+  const [now] = useState(() => new Date());
+  const { summary, today } = home;
+  const base = store.baseCurrency as CurrencyCode;
+  const day = summary?.week?.[summary.week.length - 1];
+  const change = dayChange(summary?.week ?? null, (d) => d.amount);
+  const sales = admin.enabledModules.has("sales_today");
+
+  const share = async () => {
+    const url = store.customDomain ? `https://${store.customDomain}` : webAdminUrl(store.slug, "/");
+    if (navigator.share) await navigator.share({ title: store.name, url }).catch(() => {});
+    else await navigator.clipboard?.writeText(url);
+  };
+
+  return (
+    <div className="flex flex-col">
+      <header className="bg-night px-[18px] pt-[18px] pb-16 text-white">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate font-display text-lg font-bold" data-testid="admin-store-name">
+              {store.name}
+            </p>
+            <p className="text-xs text-[#C8C0DA] first-letter:uppercase">
+              {now.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" })}
+            </p>
+          </div>
+          <RouterLink
+            to="/admin/orders"
+            aria-label="Pedidos por confirmar"
+            className="relative flex size-11 items-center justify-center rounded-xl bg-white/8"
+          >
+            <Bell size={20} aria-hidden />
+            {!!summary?.todo.toConfirm && (
+              <span className="absolute top-2.5 right-2.5 size-2 rounded-full bg-destructive ring-2 ring-night" />
+            )}
+          </RouterLink>
+        </div>
+        {sales && (
+          <div className="mt-5 flex flex-col gap-1">
+            <span className="text-sm text-[#C8C0DA]">Vendido hoy</span>
+            <span className="font-display text-[34px] leading-none font-extrabold">
+              {day ? formatMoney(day.amount, base) : "…"}
+            </span>
+            {change != null && (
+              <span className="text-[13px] font-semibold text-[#6FD39C]">
+                {change >= 0 ? "+" : ""}
+                {change}% vs ayer · {day?.orders ?? 0} pedidos
+              </span>
+            )}
+          </div>
+        )}
+      </header>
+      <div className="-mt-12 flex flex-col gap-5 px-4">
+        {sales && (
+          <div className="grid grid-cols-2 gap-3" data-testid="sales-today">
+            <MiniCard
+              label="Cobrado"
+              value={
+                !today
+                  ? "…"
+                  : today.received.length
+                    ? today.received.map((r) => formatMoney(r.amount, r.currency as CurrencyCode)).join(" · ")
+                    : formatMoney(0, base)
+              }
+            />
+            <MiniCard
+              label="Por cobrar"
+              value={summary?.toCollect != null ? formatMoney(summary.toCollect, base) : "…"}
+              tone="text-warning"
+            />
+          </div>
+        )}
+        <section className="flex flex-col gap-2">
+          <h2 className="font-display text-lg font-bold">Por hacer</h2>
+          {!summary ? (
+            <p className="text-sm text-muted-foreground">Cargando…</p>
+          ) : (
+            <>
+              <TodoRow
+                to="/admin/orders"
+                icon={ClipboardList}
+                tone="bg-warning-soft text-warning"
+                count={summary.todo.toConfirm}
+                label={["pedido por confirmar", "pedidos por confirmar"]}
+              />
+              <TodoRow
+                to="/admin/orders"
+                icon={Truck}
+                tone="bg-accent-soft text-primary"
+                count={summary.todo.toDeliver}
+                label={["pedido por entregar", "pedidos por entregar"]}
+              />
+              <TodoRow
+                to="/admin/catalog"
+                icon={Package}
+                tone="bg-destructive-soft text-destructive"
+                count={summary.todo.lowStock}
+                label={["producto con poco stock", "productos con poco stock"]}
+              />
+              {summary.todo.toConfirm + summary.todo.toDeliver + summary.todo.lowStock === 0 && (
+                <p className="text-sm text-muted-foreground">Todo al día.</p>
+              )}
+            </>
+          )}
+        </section>
+        <section className="flex flex-col gap-2">
+          <h2 className="font-display text-lg font-bold">Accesos rápidos</h2>
+          <div className="grid grid-cols-4 gap-2 text-center text-xs font-medium">
+            <QuickLink
+              href={webAdminUrl(store.slug, "/admin/orders/new")}
+              icon={ShoppingBag}
+              label="Pedido"
+              external
+            />
+            <QuickLink href="/admin/catalog/products/new" icon={Package} label="Producto" />
+            <QuickLink
+              href={webAdminUrl(store.slug, "/admin/discounts/vouchers")}
+              icon={Ticket}
+              label="Cupón"
+              external
+            />
+            <button
+              type="button"
+              onClick={share}
+              className="flex flex-col items-center gap-1.5 rounded-[14px] border bg-background py-3"
+            >
+              <Share2 size={20} aria-hidden className="text-primary" />
+              Compartir tienda
+            </button>
+          </div>
+        </section>
+        <p className="text-sm text-muted-foreground">
+          Clientes, descuentos, envíos, apariencia y el resto: <PanelLink>Abrir el panel completo</PanelLink>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function MiniCard({ label, value, tone }: { label: string; value: string; tone?: string }) {
+  return (
+    <div className="flex flex-col gap-1 rounded-[14px] bg-background p-4 shadow-lg">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className={cn("font-display text-lg leading-tight font-extrabold", tone)}>{value}</span>
+    </div>
+  );
+}
+
+function TodoRow({
+  to,
+  icon: Icon,
+  tone,
+  count,
+  label,
+}: {
+  to: string;
+  icon: LucideIcon;
+  tone: string;
+  count: number;
+  label: [string, string];
+}) {
+  if (!count) return null;
+  return (
+    <RouterLink to={to} className={cn("flex h-14 items-center gap-3 rounded-xl px-3", tone)}>
+      <span className="flex size-9 items-center justify-center rounded-lg bg-background">
+        <Icon size={18} aria-hidden />
+      </span>
+      <span className="flex-1 text-sm font-semibold">
+        {count} {count === 1 ? label[0] : label[1]}
+      </span>
+      <ChevronRight size={16} aria-hidden />
+    </RouterLink>
+  );
+}
+
+function QuickLink({
+  href,
+  icon: Icon,
+  label,
+  external = false,
+}: {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  external?: boolean;
+}) {
+  const className = "flex flex-col items-center gap-1.5 rounded-[14px] border bg-background py-3";
+  const content = (
+    <>
+      <Icon size={20} aria-hidden className="text-primary" />
+      {label}
+    </>
+  );
+  return external ? (
+    <a href={href} target="_blank" rel="noreferrer" className={className}>
+      {content}
+    </a>
+  ) : (
+    <RouterLink to={href} className={className}>
+      {content}
+    </RouterLink>
+  );
+}
+
+/** Ventas: today and the week (Finanzas, Ofertas, Cupones and Monedas open in the panel). */
+function SalesScreen({ home }: { home: AdminHome }) {
+  const store = useStore();
+  const base = store.baseCurrency as CurrencyCode;
+  const week = home.summary?.week ?? null;
+  const max = Math.max(...(week ?? []).map((d) => d.amount), 1);
+  return (
+    <Screen title="Ventas">
+      <div className="flex flex-col gap-4">
+        <SalesTodayCard />
+        {week && (
+          <Card className="flex flex-col gap-3 rounded-[14px]">
+            <h2 className="font-display font-bold">Últimos 7 días</h2>
+            <ol className="flex h-36 items-end gap-2" aria-label="Ventas de los últimos 7 días">
+              {week.map((d, i) => (
+                <li key={d.day} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
+                  <span
+                    className={cn(
+                      "w-full rounded-[6px_6px_3px_3px]",
+                      i === week.length - 1 ? "bg-primary" : "bg-accent-soft",
+                    )}
+                    style={{ height: `${Math.max(4, (d.amount / max) * 110)}px` }}
+                    title={formatMoney(d.amount, base)}
+                  />
+                  <span className="text-[11px] text-muted-foreground">
+                    {i === week.length - 1
+                      ? "Hoy"
+                      : new Date(d.day).toLocaleDateString("es", { weekday: "short" }).replace(".", "")}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </Card>
+        )}
+        <MoreList
+          items={[
+            { code: "finance", label: "Finanzas", icon: Wallet, path: "/admin/finance" },
+            { code: "discounts", label: "Ofertas", icon: Tag, path: "/admin/discounts" },
+            { code: "vouchers", label: "Cupones", icon: Ticket, path: "/admin/discounts/vouchers" },
+            { code: "multi_currency", label: "Monedas", icon: Coins, path: "/admin/multi-currency" },
+          ]}
+        />
+      </div>
+    </Screen>
+  );
+}
+
+type MoreItem = { code: ModuleCode | null; label: string; icon: LucideIcon; path: string };
+
+/** Modules of the web panel with their icon; locked ones show PRO. They open in the browser. */
+function MoreList({ items }: { items: MoreItem[] }) {
+  const store = useStore();
+  const admin = useAdmin();
+  return (
+    <ul className="divide-y overflow-hidden rounded-[14px] border bg-background">
+      {items.map((item) => {
+        const locked = item.code !== null && !admin.enabledModules.has(item.code);
+        return (
+          <li key={item.path}>
+            <a
+              href={webAdminUrl(store.slug, locked ? "/admin/billing" : item.path)}
+              target="_blank"
+              rel="noreferrer"
+              className="flex h-14 items-center gap-3 px-4"
+            >
+              <item.icon
+                size={19}
+                aria-hidden
+                className={locked ? "text-muted-foreground" : "text-primary"}
+              />
+              <span className={cn("flex-1 text-sm font-medium", locked && "text-muted-foreground")}>
+                {item.label}
+              </span>
+              {locked ? (
+                <span className="flex items-center gap-1 rounded-md bg-gold/16 px-1.5 py-0.5 text-[10px] font-bold text-[#8A5A00]">
+                  <Lock size={10} aria-hidden />
+                  PRO
+                </span>
+              ) : (
+                <ExternalLink size={15} aria-hidden className="text-muted-foreground" />
+              )}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function MoreScreen({ onSwitch }: { onSwitch?: () => void }) {
   const admin = useAdmin();
   const { session } = useSession();
   const signOut = useSignOut();
+  const manager = admin.role === "owner" || admin.role === "admin" || admin.isSuperadmin;
   return (
-    <div className="flex flex-col gap-5">
-      <h1 className="text-2xl font-semibold">Hola, {store.name}</h1>
-      {admin.enabledModules.has("sales_today") && <SalesTodayCard />}
-      <div className="grid grid-cols-2 gap-3">
-        {admin.enabledModules.has("orders") && (
-          <RouterLink to="/admin/orders" className="rounded-lg border bg-background p-4 font-medium">
-            Pedidos
-            <span className="block text-sm font-normal text-muted-foreground">Estados, pagos y avisos</span>
-          </RouterLink>
-        )}
-        {admin.enabledModules.has("catalog") && (
-          <RouterLink to="/admin/catalog" className="rounded-lg border bg-background p-4 font-medium">
-            Productos
-            <span className="block text-sm font-normal text-muted-foreground">Stock, precio y fotos</span>
-          </RouterLink>
-        )}
-      </div>
-      <Card className="flex flex-col gap-2">
-        <p className="text-sm text-muted-foreground">
-          Clientes, descuentos, envíos, apariencia, equipo y el resto de la tienda:
-        </p>
-        <PanelLink>Abrir el panel completo</PanelLink>
-      </Card>
-      <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-        <span>Sesión: {session?.user.email}</span>
-        <span>
-          {appConfig.name} {appConfig.versionName}
-        </span>
-      </div>
-      <div className="flex gap-2">
-        {onSwitch && (
-          <Button variant="outline" onClick={onSwitch}>
-            Cambiar de tienda
+    <Screen title="Más">
+      <div className="flex flex-col gap-4">
+        <MoreList
+          items={[
+            { code: "themes", label: "Apariencia", icon: Palette, path: "/admin/themes" },
+            {
+              code: "whatsapp_notifications",
+              label: "Avisos WhatsApp",
+              icon: MessageCircle,
+              path: "/admin/whatsapp-notifications",
+            },
+            { code: "mobile_app", label: "App móvil", icon: Smartphone, path: "/admin/mobile-app" },
+            { code: "custom_domain", label: "Dominio propio", icon: Globe, path: "/admin/custom-domain" },
+            { code: "shipping", label: "Entregas", icon: Truck, path: "/admin/shipping" },
+            { code: "orders", label: "Clientes", icon: UserRound, path: "/admin/orders/customers" },
+            ...(manager
+              ? [
+                  { code: null, label: "Equipo", icon: Users, path: "/admin/team" },
+                  { code: null, label: "Plan y facturación", icon: CreditCard, path: "/admin/billing" },
+                ]
+              : []),
+          ]}
+        />
+        <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+          <span>Sesión: {session?.user.email}</span>
+          <span>
+            {appConfig.name} {appConfig.versionName}
+          </span>
+        </div>
+        <div className="flex gap-2">
+          {onSwitch && (
+            <Button variant="outline" onClick={onSwitch} data-testid="switch-store">
+              Cambiar de tienda
+            </Button>
+          )}
+          <Button variant="ghost" onClick={signOut} data-testid="sign-out">
+            <LogOut size={16} aria-hidden />
+            Cerrar sesión
           </Button>
-        )}
-        <Button variant="ghost" onClick={signOut} data-testid="sign-out">
-          Cerrar sesión
-        </Button>
+        </div>
       </div>
-    </div>
+    </Screen>
   );
 }
 

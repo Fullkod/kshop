@@ -11,4 +11,5 @@ export * from "./orders/use-orders";
 export * from "./orders/OrderList";
 export * from "./orders/OrderDetail";
 export * from "./SalesTodayCard";
+export * from "./home";
 export * from "./StaffLoginForm";

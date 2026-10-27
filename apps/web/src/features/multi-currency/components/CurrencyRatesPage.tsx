@@ -49,14 +49,14 @@ export function CurrencyRatesPage() {
       <div>
         <h1 className="text-2xl font-semibold">Monedas</h1>
         <p className="text-sm text-muted-foreground">
-          Los precios se guardan en {data.baseCurrency}. En las demás monedas la tienda los convierte con tu tasa
-          (y el redondeo), salvo los productos con precio fijo en esa moneda. Cambiar una tasa no toca los pedidos ya
-          hechos.
+          Los precios se guardan en {data.baseCurrency}. En las demás monedas la tienda los convierte con tu
+          tasa (y el redondeo), salvo los productos con precio fijo en esa moneda. Cambiar una tasa no toca
+          los pedidos ya hechos.
         </p>
         {data.reference && (
           <p className="mt-1 text-xs text-muted-foreground">
-            Tasa de referencia: mercado informal según elTOQUE ({formatDate(data.reference.date)}). Es solo una
-            sugerencia.
+            Tasa de referencia: mercado informal según elTOQUE ({formatDate(data.reference.date)}). Es solo
+            una sugerencia.
           </p>
         )}
       </div>

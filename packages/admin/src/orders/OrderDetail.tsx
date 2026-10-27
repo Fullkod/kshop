@@ -29,7 +29,13 @@ import { STATUS_VARIANT } from "./OrderList";
 // Payment evidence is private (staff of the store only): it is opened through a signed URL valid for 1 h.
 const EVIDENCE_BUCKET = "store-private";
 
-function EvidenceLink({ path, signedUrl }: { path: string; signedUrl: (path: string) => Promise<string | null> }) {
+function EvidenceLink({
+  path,
+  signedUrl,
+}: {
+  path: string;
+  signedUrl: (path: string) => Promise<string | null>;
+}) {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -49,9 +55,14 @@ function EvidenceLink({ path, signedUrl }: { path: string; signedUrl: (path: str
 type OrderNode = NonNullable<ResultOf<typeof AdminOrderQuery>["ordersCollection"]>["edges"][number]["node"];
 
 const json = <T,>(v: unknown): T => (typeof v === "string" ? (JSON.parse(v) as T) : (v as T));
-const nodes = <T,>(c: { edges: { node: T }[] } | null | undefined): T[] => (c?.edges ?? []).map((e) => e.node);
+const nodes = <T,>(c: { edges: { node: T }[] } | null | undefined): T[] =>
+  (c?.edges ?? []).map((e) => e.node);
 const dateTime = (iso: string) =>
-  new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Havana" }).format(new Date(iso));
+  new Intl.DateTimeFormat("es", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "America/Havana",
+  }).format(new Date(iso));
 
 const EVENT_LABELS: Record<string, string> = {
   created: "Pedido creado",
@@ -63,7 +74,13 @@ const EVENT_LABELS: Record<string, string> = {
 };
 
 /** `notices` renders below the payments (the web passes the WhatsApp notices log of the order). */
-export function OrderDetail({ orderId, notices }: { orderId: string; notices?: (orderId: string) => ReactNode }) {
+export function OrderDetail({
+  orderId,
+  notices,
+}: {
+  orderId: string;
+  notices?: (orderId: string) => ReactNode;
+}) {
   const store = useStore();
   const { graphql, api, supabase, config } = useSession();
   const { data: settings } = useCheckoutSettings();
@@ -72,7 +89,8 @@ export function OrderDetail({ orderId, notices }: { orderId: string; notices?: (
   const [missing, setMissing] = useState(false);
   const [version, setVersion] = useState(0);
   const signedEvidenceUrl = useCallback(
-    async (path: string) => (await supabase.storage.from(EVIDENCE_BUCKET).createSignedUrl(path, 60 * 60)).data?.signedUrl ?? null,
+    async (path: string) =>
+      (await supabase.storage.from(EVIDENCE_BUCKET).createSignedUrl(path, 60 * 60)).data?.signedUrl ?? null,
     [supabase],
   );
 
@@ -111,7 +129,9 @@ export function OrderDetail({ orderId, notices }: { orderId: string; notices?: (
   const shippingTotal = order.shippingTotal == null ? null : Number(order.shippingTotal);
   const total = order.total == null ? null : Number(order.total);
   const paid = Number(order.paidTotal);
-  const shipping = json<Record<string, unknown> & { pickup_point?: { name: string; address: string | null } }>(order.shippingSnapshot);
+  const shipping = json<
+    Record<string, unknown> & { pickup_point?: { name: string; address: string | null } }
+  >(order.shippingSnapshot);
   const payment = json<{ name?: string; instructions?: string | null }>(order.paymentSnapshot);
   const lines = nodes(order.orderLinesCollection);
   const events = nodes(order.orderEventsCollection);
@@ -135,7 +155,8 @@ export function OrderDetail({ orderId, notices }: { orderId: string; notices?: (
             <Badge variant="muted">{PAYMENT_STATUS_LABELS[paymentStatus]}</Badge>
           </h2>
           <p className="text-sm text-muted-foreground">
-            {dateTime(order.createdAt)} · {order.channel === "admin" ? "Creado desde el admin" : "Tienda online"}
+            {dateTime(order.createdAt)} ·{" "}
+            {order.channel === "admin" ? "Creado desde el admin" : "Tienda online"}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -144,7 +165,9 @@ export function OrderDetail({ orderId, notices }: { orderId: string; notices?: (
               key={to}
               disabled={action.pending || needsShippingCost(to, shippingTotal)}
               title={needsShippingCost(to, shippingTotal) ? "Fija antes el costo de envío" : undefined}
-              onClick={() => run(() => api.orders(store.id).transition(order.id, to as Exclude<OrderStatus, "cancelled">))}
+              onClick={() =>
+                run(() => api.orders(store.id).transition(order.id, to as Exclude<OrderStatus, "cancelled">))
+              }
             >
               {ORDER_ACTION_LABELS[to] ?? ORDER_STATUS_LABELS[to]}
             </Button>
@@ -177,21 +200,31 @@ export function OrderDetail({ orderId, notices }: { orderId: string; notices?: (
                 const cost = l.orderLineCosts;
                 const costCurrency = cost ? String(cost.costCurrency) : null;
                 const sameCurrency = cost && costCurrency === currency;
-                const margin = sameCurrency && Number(l.unitPrice) > 0
-                  ? Math.round(((Number(l.unitPrice) - Number(cost.unitCost)) / Number(l.unitPrice)) * 1000) / 10
-                  : null;
+                const margin =
+                  sameCurrency && Number(l.unitPrice) > 0
+                    ? Math.round(
+                        ((Number(l.unitPrice) - Number(cost.unitCost)) / Number(l.unitPrice)) * 1000,
+                      ) / 10
+                    : null;
                 const attributes = json<{ name: string; value: string }[]>(l.attributes);
                 return (
                   <li key={l.id} className="flex gap-3 py-3 text-sm">
                     <div className="h-14 w-12 shrink-0 overflow-hidden rounded bg-surface">
                       {l.imageUrl && (
-                        <img src={l.imageUrl} alt="" width={48} height={56} className="h-full w-full object-cover" />
+                        <img
+                          src={l.imageUrl}
+                          alt=""
+                          width={48}
+                          height={56}
+                          className="h-full w-full object-cover"
+                        />
                       )}
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col">
                       <span className="font-medium">{l.productName}</span>
                       <span className="text-muted-foreground">
-                        {attributes.map((a) => `${a.name}: ${a.value}`).join(" · ") || l.variantName} · SKU {l.sku}
+                        {attributes.map((a) => `${a.name}: ${a.value}`).join(" · ") || l.variantName} · SKU{" "}
+                        {l.sku}
                       </span>
                       {cost && (
                         <span className="text-muted-foreground">
@@ -220,9 +253,19 @@ export function OrderDetail({ orderId, notices }: { orderId: string; notices?: (
                 <dd>{money(order.subtotal)}</dd>
               </div>
               {nodes(order.orderDiscountsCollection).map((d) => (
-                <div key={d.id} className={cn("flex justify-between", d.kind === "promotion" ? "text-xs text-muted-foreground" : "text-primary")}>
+                <div
+                  key={d.id}
+                  className={cn(
+                    "flex justify-between",
+                    d.kind === "promotion" ? "text-xs text-muted-foreground" : "text-primary",
+                  )}
+                >
                   <dt>
-                    {d.kind === "promotion" ? `Oferta «${d.name}» (ya en los precios)` : d.kind === "voucher" ? `Cupón ${d.code}` : d.name}
+                    {d.kind === "promotion"
+                      ? `Oferta «${d.name}» (ya en los precios)`
+                      : d.kind === "voucher"
+                        ? `Cupón ${d.code}`
+                        : d.name}
                     {d.reason && ` · ${d.reason}`}
                   </dt>
                   <dd>−{money(d.amount)}</dd>
@@ -255,7 +298,9 @@ export function OrderDetail({ orderId, notices }: { orderId: string; notices?: (
             upload={async (file) => {
               const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
               const path = `stores/${store.id}/payments/${order.id}/${crypto.randomUUID()}.${ext}`;
-              const { error } = await supabase.storage.from(EVIDENCE_BUCKET).upload(path, file, { contentType: file.type });
+              const { error } = await supabase.storage
+                .from(EVIDENCE_BUCKET)
+                .upload(path, file, { contentType: file.type });
               if (error) throw error;
               return path;
             }}
@@ -271,7 +316,8 @@ export function OrderDetail({ orderId, notices }: { orderId: string; notices?: (
                 const payload = json<Record<string, unknown>>(e.payload);
                 const detail =
                   e.type === "status_changed"
-                    ? ORDER_STATUS_LABELS[payload.to as OrderStatus] + (payload.reason ? ` (${String(payload.reason)})` : "")
+                    ? ORDER_STATUS_LABELS[payload.to as OrderStatus] +
+                      (payload.reason ? ` (${String(payload.reason)})` : "")
                     : e.type === "note"
                       ? String(payload.text ?? "")
                       : payload.amount !== undefined
@@ -309,11 +355,17 @@ export function OrderDetail({ orderId, notices }: { orderId: string; notices?: (
 
           <Card className="text-sm">
             <h3 className="mb-2 font-semibold">Entrega</h3>
-            <p>{String(shipping.method ?? SHIPPING_TYPE_LABELS[(order.shippingType ?? "to_agree") as ShippingType])}</p>
+            <p>
+              {String(
+                shipping.method ?? SHIPPING_TYPE_LABELS[(order.shippingType ?? "to_agree") as ShippingType],
+              )}
+            </p>
             {typeof shipping.zone === "string" && <p className="text-muted-foreground">{shipping.zone}</p>}
             {shipping.pickup_point && <p>Recoge en {shipping.pickup_point.name}</p>}
             {typeof shipping.address === "string" && <p>{shipping.address}</p>}
-            {typeof shipping.reference === "string" && <p className="text-muted-foreground">{shipping.reference}</p>}
+            {typeof shipping.reference === "string" && (
+              <p className="text-muted-foreground">{shipping.reference}</p>
+            )}
             {typeof shipping.recipient === "string" && <p>Recibe: {shipping.recipient}</p>}
             {!["shipped", "delivered", "cancelled"].includes(status) && (
               <ShippingForm
@@ -330,7 +382,10 @@ export function OrderDetail({ orderId, notices }: { orderId: string; notices?: (
           </Card>
 
           {CANCELLABLE_STATUSES.includes(status) && (
-            <CancelForm paid={paid > 0 ? money(paid) : null} onCancel={(reason) => run(() => api.orders(store.id).cancel(order.id, reason))} />
+            <CancelForm
+              paid={paid > 0 ? money(paid) : null}
+              onCancel={(reason) => run(() => api.orders(store.id).cancel(order.id, reason))}
+            />
           )}
         </div>
       </div>
@@ -338,7 +393,15 @@ export function OrderDetail({ orderId, notices }: { orderId: string; notices?: (
   );
 }
 
-function ShippingForm({ current, currency, onSave }: { current: number | null; currency: string; onSave: (amount: number) => Promise<boolean> }) {
+function ShippingForm({
+  current,
+  currency,
+  onSave,
+}: {
+  current: number | null;
+  currency: string;
+  onSave: (amount: number) => Promise<boolean>;
+}) {
   const [value, setValue] = useState(current === null ? "" : String(current));
   return (
     <form
@@ -350,7 +413,12 @@ function ShippingForm({ current, currency, onSave }: { current: number | null; c
     >
       <div className="flex flex-1 flex-col gap-1">
         <Label htmlFor="shipping-cost">Costo de envío ({currency})</Label>
-        <Input id="shipping-cost" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} />
+        <Input
+          id="shipping-cost"
+          inputMode="decimal"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+        />
       </div>
       <Button type="submit" size="sm" variant="outline">
         {current === null ? "Fijar" : "Cambiar"}
@@ -374,11 +442,23 @@ function PaymentsCard({
   orderId: string;
   currency: string;
   remaining: number | null;
-  payments: { id: string; amount: string; currency: string; reference?: string | null; evidencePath?: string | null; createdAt: string }[];
+  payments: {
+    id: string;
+    amount: string;
+    currency: string;
+    reference?: string | null;
+    evidencePath?: string | null;
+    createdAt: string;
+  }[];
   refunds: { id: string; amount: string; currency: string; reason?: string | null; createdAt: string }[];
   methods: { id: string; name: string; isActive: boolean }[];
   disabled: boolean;
-  onRecord: (input: { amount: number; paymentMethodId?: string; reference?: string; evidencePath?: string }) => Promise<boolean>;
+  onRecord: (input: {
+    amount: number;
+    paymentMethodId?: string;
+    reference?: string;
+    evidencePath?: string;
+  }) => Promise<boolean>;
   upload: (file: File) => Promise<string>;
   signedUrl: (path: string) => Promise<string | null>;
 }) {
@@ -414,16 +494,16 @@ function PaymentsCard({
           </Button>
         )}
       </div>
-      {payments.length === 0 && refunds.length === 0 && <p className="text-sm text-muted-foreground">Sin pagos todavía.</p>}
+      {payments.length === 0 && refunds.length === 0 && (
+        <p className="text-sm text-muted-foreground">Sin pagos todavía.</p>
+      )}
       <ul className="flex flex-col gap-1 text-sm">
         {payments.map((p) => (
           <li key={p.id} className="flex justify-between gap-2">
             <span>
               {formatMoney(Number(p.amount), p.currency)}
               {p.reference && <span className="text-muted-foreground"> · {p.reference}</span>}
-              {p.evidencePath && (
-                <EvidenceLink path={p.evidencePath} signedUrl={signedUrl} />
-              )}
+              {p.evidencePath && <EvidenceLink path={p.evidencePath} signedUrl={signedUrl} />}
             </span>
             <span className="text-muted-foreground">{dateTime(p.createdAt)}</span>
           </li>
@@ -442,7 +522,13 @@ function PaymentsCard({
         <form key={orderId} onSubmit={onSubmit} className="mt-4 grid gap-3 border-t pt-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
             <Label htmlFor="pay-amount">Monto ({currency})</Label>
-            <Input id="pay-amount" name="amount" inputMode="decimal" defaultValue={remaining ?? ""} required />
+            <Input
+              id="pay-amount"
+              name="amount"
+              inputMode="decimal"
+              defaultValue={remaining ?? ""}
+              required
+            />
           </div>
           <div className="flex flex-col gap-1">
             <Label htmlFor="pay-method">Método</Label>
@@ -463,7 +549,11 @@ function PaymentsCard({
             <Label htmlFor="pay-evidence">Comprobante (opcional)</Label>
             <Input id="pay-evidence" name="evidence" type="file" accept="image/jpeg,image/png,image/webp" />
           </div>
-          {error && <Alert variant="destructive" className="sm:col-span-2">{error}</Alert>}
+          {error && (
+            <Alert variant="destructive" className="sm:col-span-2">
+              {error}
+            </Alert>
+          )}
           <div className="flex gap-2 sm:col-span-2">
             <Button type="submit">Guardar pago</Button>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
@@ -499,7 +589,13 @@ function NoteForm({ onAdd }: { onAdd: (text: string) => Promise<boolean> }) {
   );
 }
 
-function CancelForm({ paid, onCancel }: { paid: string | null; onCancel: (reason?: string) => Promise<boolean> }) {
+function CancelForm({
+  paid,
+  onCancel,
+}: {
+  paid: string | null;
+  onCancel: (reason?: string) => Promise<boolean>;
+}) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   if (!open) {
@@ -515,7 +611,12 @@ function CancelForm({ paid, onCancel }: { paid: string | null; onCancel: (reason
       <p className="text-muted-foreground">
         Las unidades vuelven al stock.{paid && ` Se registrará el reembolso de ${paid}.`}
       </p>
-      <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Motivo (opcional)" aria-label="Motivo" />
+      <Input
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder="Motivo (opcional)"
+        aria-label="Motivo"
+      />
       <div className="flex gap-2">
         <Button variant="destructive" onClick={() => onCancel(reason.trim() || undefined)}>
           Confirmar cancelación

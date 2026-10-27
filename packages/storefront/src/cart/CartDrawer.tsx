@@ -175,3 +175,12 @@ export function CartLink() {
     </Link>
   );
 }
+
+/** Inert cart drawer and toast for previews outside the store. */
+export function PreviewCartUiProvider({ children }: { children: ReactNode }) {
+  return (
+    <CartUiContext.Provider value={{ openCart: () => {}, added: () => {} }}>
+      {children}
+    </CartUiContext.Provider>
+  );
+}

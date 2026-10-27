@@ -202,8 +202,9 @@ try {
       (await admin.getByTestId("available-multi_currency").innerText()).includes("3 USD/mes"),
   );
   check(
-    "owner: locked menu items show Pro and the price",
-    (await admin.getByTestId("nav-locked-multi_currency").innerText()).includes("3 USD"),
+    "owner: locked menu items show PRO, with the price in the title",
+    (await admin.getByTestId("nav-locked-multi_currency").innerText()).includes("PRO") &&
+      ((await admin.getByTestId("nav-locked-multi_currency").getAttribute("title")) ?? "").includes("3 USD"),
   );
   await shot(admin, "06-admin-plan-facturacion-1280");
   check("Base: «Apariencia» is locked in the menu", await admin.getByTestId("nav-locked-themes").isVisible());

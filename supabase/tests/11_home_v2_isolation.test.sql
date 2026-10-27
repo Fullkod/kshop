@@ -111,3 +111,22 @@ select tests.eq('anon: the counts of A do not include categories of B',
   (public.storefront_product_counts(tests.fx('store_a')) -> 'categories')
     ? (select id::text from public.categories where slug = 'cat-b'), false);
 select tests.logout();
+
+-- ---------------------------------------------------------------------------
+-- Admin home summary (R6): only the API (service_role) runs it, and it counts one store
+-- ---------------------------------------------------------------------------
+
+select tests.login('owner_a');
+select tests.check('owner A: cannot run admin_home_summary directly',
+  tests.throws(format('select public.admin_home_summary(%L)', tests.fx('store_a'))));
+select tests.logout();
+select tests.login_anon();
+select tests.check('anon: cannot run admin_home_summary',
+  tests.throws(format('select public.admin_home_summary(%L)', tests.fx('store_a'))));
+select tests.logout();
+
+select tests.eq('summary: seven days, oldest first',
+  jsonb_array_length(public.admin_home_summary(tests.fx('store_a')) -> 'week'), 7);
+select tests.eq('summary: a new store has nothing to do',
+  (public.admin_home_summary(tests.fx('store_a')) -> 'todo')::text,
+  '{"low_stock": 0, "to_confirm": 0, "to_deliver": 0}');

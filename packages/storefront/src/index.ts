@@ -18,6 +18,7 @@ export * from "./components/ProductView";
 export * from "./components/VariantPicker";
 export * from "./components/StoreFooter";
 export * from "./components/StoreHeader";
+export * from "./components/StorefrontPreview";
 export * from "./components/whatsapp";
 export * from "./cart/cart-token";
 export * from "./cart/CartProvider";

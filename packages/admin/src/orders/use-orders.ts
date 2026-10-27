@@ -33,7 +33,13 @@ export type CheckoutSettings = {
   zones: ShippingZone[];
   methods: ShippingMethod[];
   paymentMethods: PaymentMethod[];
-  warehouses: { id: string; name: string; address: string | null; isPickupPoint: boolean; isActive: boolean }[];
+  warehouses: {
+    id: string;
+    name: string;
+    address: string | null;
+    isPickupPoint: boolean;
+    isActive: boolean;
+  }[];
 };
 
 const nodes = <T>(c: { edges: { node: T }[] } | null | undefined): T[] => (c?.edges ?? []).map((e) => e.node);

@@ -146,3 +146,20 @@ export function CountBadge({ count, className = "" }: { count: number; className
     </span>
   );
 }
+
+const noop = async () => {};
+
+/** Inert cart for previews outside the store (Appearance in the admin): empty, nothing is sent. */
+export function PreviewCartProvider({ children }: { children: ReactNode }) {
+  const value: CartValue = {
+    cart: null,
+    count: 2,
+    pending: false,
+    add: noop,
+    setQuantity: noop,
+    setVoucher: noop,
+    refresh: noop,
+    reset: () => {},
+  };
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+}

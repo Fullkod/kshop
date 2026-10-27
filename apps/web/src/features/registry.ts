@@ -15,22 +15,22 @@ import { whatsappNotificationsModule } from "./whatsapp-notifications/module";
 import { customDomainModule } from "./custom-domain/module";
 import type { AdminModule } from "./types";
 
-/** Central module registry: the admin menu and module pages are built from it. Order = menu order. */
+/** Central module registry: the admin menu and module pages are built from it. Order = menu order inside each group. */
 export const ADMIN_MODULES: readonly AdminModule[] = [
-  catalogModule,
   ordersModule,
   shippingModule,
   discountsModule,
   vouchersModule,
-  themesModule,
+  whatsappNotificationsModule,
+  catalogModule,
   excelImportModule,
+  multiWarehouseModule,
+  multiCurrencyModule,
+  themesModule,
+  customDomainModule,
   mobileAppModule,
   salesTodayModule,
   financeModule,
-  multiWarehouseModule,
-  multiCurrencyModule,
-  whatsappNotificationsModule,
-  customDomainModule,
 ];
 
 export function getAdminModule(code: ModuleCode): AdminModule | undefined {

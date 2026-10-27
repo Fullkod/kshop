@@ -15,7 +15,7 @@ import {
   type PaymentStatus,
 } from "@kshop/core";
 import { AdminOrdersQuery, type VariablesOf } from "@kshop/data";
-import { Alert, Badge, Button, Card, Input, cn } from "@kshop/ui";
+import { Alert, Badge, Button, Card, Input, MessageCircle, cn } from "@kshop/ui";
 import { useEffect, useState } from "react";
 import { useApiAction } from "../catalog/use-catalog";
 import { useSession } from "../session";
@@ -39,6 +39,13 @@ type Row = {
 };
 
 const PAGE_SIZE = 30;
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
 export const STATUS_VARIANT: Record<OrderStatus, "default" | "muted" | "success" | "destructive" | "gold"> = {
   pending_confirmation: "gold",
   pending_payment: "gold",
@@ -48,6 +55,31 @@ export const STATUS_VARIANT: Record<OrderStatus, "default" | "muted" | "success"
   delivered: "muted",
   cancelled: "destructive",
 };
+
+const PILL: Record<OrderStatus, string> = {
+  pending_confirmation: "bg-warning-soft text-warning",
+  pending_payment: "bg-warning-soft text-warning",
+  paid: "bg-accent-soft text-primary",
+  processing: "bg-accent-soft text-primary",
+  shipped: "bg-accent-soft text-primary",
+  delivered: "bg-success-soft text-success",
+  cancelled: "bg-destructive-soft text-destructive",
+};
+
+/** Order state as a pill with a dot (redesign R6: home table and order cards). */
+export function StatusPill({ status }: { status: OrderStatus }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap",
+        PILL[status],
+      )}
+    >
+      <span aria-hidden className="size-1.5 rounded-full bg-current" />
+      {ORDER_STATUS_LABELS[status]}
+    </span>
+  );
+}
 
 /** `refreshEvery` (ms): reloads the list while it is open (admin app, PRP-7 D9: no push notifications). */
 export function OrderList({ refreshEvery }: { refreshEvery?: number } = {}) {
@@ -69,7 +101,13 @@ export function OrderList({ refreshEvery }: { refreshEvery?: number } = {}) {
     const base: Filter = { storeId: { eq: store.id }, status: { in: statuses } };
     if (!q) return base;
     if (/^\d{1,9}$/.test(q) && Number(q) >= 1000) return { ...base, number: { eq: Number(q) } };
-    return { ...base, or: [{ customerName: { ilike: `%${q}%` } }, { customerPhone: { ilike: `%${q.replace(/\D/g, "") || q}%` } }] };
+    return {
+      ...base,
+      or: [
+        { customerName: { ilike: `%${q}%` } },
+        { customerPhone: { ilike: `%${q.replace(/\D/g, "") || q}%` } },
+      ],
+    };
   };
 
   useEffect(() => {
@@ -79,7 +117,9 @@ export function OrderList({ refreshEvery }: { refreshEvery?: number } = {}) {
   }, [refreshEvery]);
 
   async function load(after: string | null) {
-    const result = await graphql.query(AdminOrdersQuery, { filter: filter(), first: PAGE_SIZE, after }).toPromise();
+    const result = await graphql
+      .query(AdminOrdersQuery, { filter: filter(), first: PAGE_SIZE, after })
+      .toPromise();
     if (result.error) {
       setLoadError("No se pudieron cargar los pedidos.");
       return null;
@@ -126,7 +166,11 @@ export function OrderList({ refreshEvery }: { refreshEvery?: number } = {}) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
-        <div role="tablist" aria-label="Estado" className="flex flex-wrap gap-1">
+        <div
+          role="tablist"
+          aria-label="Estado"
+          className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]"
+        >
           {ORDER_TABS.map((t) => (
             <button
               key={t.key}
@@ -134,8 +178,10 @@ export function OrderList({ refreshEvery }: { refreshEvery?: number } = {}) {
               aria-selected={tab === t.key}
               onClick={() => setTab(t.key)}
               className={cn(
-                "rounded-full border px-3 py-1 text-sm",
-                tab === t.key ? "border-primary bg-accent-soft font-medium text-primary" : "hover:bg-surface",
+                "h-[34px] rounded-full border px-3.5 text-sm whitespace-nowrap",
+                tab === t.key
+                  ? "border-night bg-night font-semibold text-white"
+                  : "bg-background hover:bg-surface",
               )}
             >
               {t.label}
@@ -147,7 +193,7 @@ export function OrderList({ refreshEvery }: { refreshEvery?: number } = {}) {
           placeholder="Buscar por número, nombre o teléfono"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="ml-auto max-w-xs"
+          className="h-11 w-full sm:ml-auto sm:max-w-xs"
           aria-label="Buscar pedidos"
         />
       </div>
@@ -159,40 +205,68 @@ export function OrderList({ refreshEvery }: { refreshEvery?: number } = {}) {
       ) : rows.length === 0 ? (
         <Card className="text-muted-foreground">No hay pedidos aquí.</Card>
       ) : (
-        <Card className="p-0">
-          <ul className="divide-y" data-testid="orders-list">
-            {rows.map((row) => {
-              const next = ORDER_TRANSITIONS[row.status][0];
-              const stale = isStalePending(row.status, new Date(row.createdAt));
-              return (
-                <li key={row.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-                  <Link href={`/admin/orders/${row.id}`} className="flex min-w-0 flex-1 flex-col">
-                    <span className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold">{code(row.number)}</span>
-                      <Badge variant={STATUS_VARIANT[row.status]}>{ORDER_STATUS_LABELS[row.status]}</Badge>
-                      <Badge variant="muted">{PAYMENT_STATUS_LABELS[row.paymentStatus]}</Badge>
-                      {stale && <Badge variant="destructive">Más de 48 h</Badge>}
-                      {row.channel === "admin" && <Badge variant="muted">Admin</Badge>}
+        <ul className="flex flex-col gap-2.5" data-testid="orders-list">
+          {rows.map((row) => {
+            const next = ORDER_TRANSITIONS[row.status][0];
+            const stale = isStalePending(row.status, new Date(row.createdAt));
+            return (
+              <li key={row.id} className="flex flex-col gap-2.5 rounded-[14px] border bg-background p-3.5">
+                <div className="flex items-start gap-3">
+                  <Link href={`/admin/orders/${row.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-bold text-primary">
+                      {initials(row.customerName)}
                     </span>
-                    <span className="truncate text-sm text-muted-foreground">
-                      {row.customerName} · {formatPhone(row.customerPhone)} · {row.items}{" "}
-                      {row.items === 1 ? "producto" : "productos"} ·{" "}
-                      {new Date(row.createdAt).toLocaleString("es", { dateStyle: "short", timeStyle: "short" })}
+                    <span className="flex min-w-0 flex-col">
+                      <span className="truncate font-semibold">{row.customerName}</span>
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {code(row.number)} ·{" "}
+                        {new Date(row.createdAt).toLocaleString("es", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </span>
                     </span>
                   </Link>
-                  <span className="text-sm font-medium">
-                    {row.total === null ? `${formatMoney(row.subtotal, row.currency)} + envío` : formatMoney(row.total, row.currency)}
+                  <span className="font-display text-base font-bold whitespace-nowrap">
+                    {row.total === null
+                      ? `${formatMoney(row.subtotal, row.currency)} + envío`
+                      : formatMoney(row.total, row.currency)}
                   </span>
-                  {next && (
-                    <Button size="sm" variant="outline" disabled={action.pending} onClick={() => quick(row, next as Exclude<OrderStatus, "cancelled">)}>
-                      {ORDER_ACTION_LABELS[next]}
-                    </Button>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </Card>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusPill status={row.status} />
+                  <Badge variant="muted">{PAYMENT_STATUS_LABELS[row.paymentStatus]}</Badge>
+                  {stale && <Badge variant="destructive">Más de 48 h</Badge>}
+                  {row.channel === "admin" && <Badge variant="muted">Admin</Badge>}
+                  <span className="text-xs text-muted-foreground">
+                    {row.items} {row.items === 1 ? "producto" : "productos"}
+                  </span>
+                  <span className="ml-auto flex items-center gap-2">
+                    <a
+                      href={`https://wa.me/${row.customerPhone.replace(/\D/g, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`WhatsApp de ${row.customerName} (${formatPhone(row.customerPhone)})`}
+                      className="flex size-9 items-center justify-center rounded-[10px] border border-success-soft text-whatsapp"
+                    >
+                      <MessageCircle size={17} aria-hidden />
+                    </a>
+                    {next && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={action.pending}
+                        onClick={() => quick(row, next as Exclude<OrderStatus, "cancelled">)}
+                      >
+                        {ORDER_ACTION_LABELS[next]}
+                      </Button>
+                    )}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
       {rows && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">

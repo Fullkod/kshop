@@ -16,35 +16,50 @@ import {
   type ThemePresetKey,
   type ThemeRadius,
 } from "@kshop/core";
-import { Alert, Button, Card, Label } from "@kshop/ui";
-import { useState } from "react";
+import { Alert, Button, Card, CircleCheck, Label, Segmented, TriangleAlert } from "@kshop/ui";
+import { useState, type ReactNode } from "react";
 import { useApiAction } from "@/features/catalog/use-catalog";
-import { themeStyle, useStore } from "@kshop/storefront";
 import type { AdminContent } from "../use-content";
+import { ThemePreview } from "./ThemePreview";
 
-const COLOR_FIELDS = THEME_COLOR_FIELDS.flatMap((g) => g.keys);
 const SHAPE_OPTIONS: {
   key: "buttonShape" | "elevation" | "headingCase";
   label: string;
-  options: Record<string, string>;
+  options: { value: string; label: string }[];
 }[] = [
   {
     key: "buttonShape",
     label: "Botones",
-    options: { auto: "Como las esquinas", pill: "Píldora" } satisfies Record<ThemeButtonShape, string>,
+    options: [
+      { value: "auto", label: "Como esquinas" },
+      { value: "pill", label: "Píldora" },
+    ] satisfies { value: ThemeButtonShape; label: string }[],
   },
   {
     key: "elevation",
     label: "Sombras",
-    options: { flat: "Planas", soft: "Suaves", lifted: "Marcadas" } satisfies Record<ThemeElevation, string>,
+    options: [
+      { value: "flat", label: "Planas" },
+      { value: "soft", label: "Suaves" },
+      { value: "lifted", label: "Marcadas" },
+    ] satisfies { value: ThemeElevation; label: string }[],
   },
   {
     key: "headingCase",
-    label: "Mayúsculas",
-    options: { normal: "Normal", uppercase: "MAYÚSCULAS" } satisfies Record<ThemeHeadingCase, string>,
+    label: "Títulos",
+    options: [
+      { value: "normal", label: "Normal" },
+      { value: "uppercase", label: "MAYÚSCULAS" },
+    ] satisfies { value: ThemeHeadingCase; label: string }[],
   },
 ];
 
+const sectionTitle = "font-display text-base font-bold";
+
+/**
+ * Appearance › Tema (redesign R6): preset cards, the 12 colors by group, letters and shape, and a live preview of the
+ * real storefront. Changing the preset drops the overrides. Contrast warns, it never blocks.
+ */
 export function ThemeEditor({
   content,
   save,
@@ -52,9 +67,9 @@ export function ThemeEditor({
   content: AdminContent;
   save: (theme: Theme) => Promise<unknown>;
 }) {
-  const store = useStore();
   const action = useApiAction();
-  const [theme, setTheme] = useState<Theme>(() => resolveTheme(content.theme));
+  const [initial] = useState<Theme>(() => resolveTheme(content.theme));
+  const [theme, setTheme] = useState<Theme>(initial);
   const [saved, setSaved] = useState(false);
   const issues = themeContrastIssues(theme.colors);
 
@@ -68,146 +83,181 @@ export function ThemeEditor({
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
-      <div className="flex flex-col gap-4">
-        <Card className="flex flex-col gap-3">
-          <h2 className="font-semibold">Estilo de partida</h2>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {(Object.keys(THEME_PRESETS) as ThemePresetKey[]).map((key) => {
-              const p = THEME_PRESETS[key];
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => applyPreset(key)}
-                  aria-pressed={theme.preset === key}
-                  className={`flex flex-col gap-2 rounded-md border p-2 text-left text-sm ${theme.preset === key ? "border-primary ring-2 ring-primary" : "hover:bg-surface"}`}
-                >
-                  <span className="flex gap-1" aria-hidden>
-                    {[p.colors.accent, p.colors.background, p.colors.foreground, p.colors.surface].map(
-                      (c, i) => (
-                        <span key={i} className="h-5 w-5 rounded-full border" style={{ background: c }} />
-                      ),
-                    )}
-                  </span>
-                  {p.label}
-                </button>
-              );
-            })}
-          </div>
-        </Card>
-
-        <Card className="grid gap-3 sm:grid-cols-2">
-          <h2 className="font-semibold sm:col-span-2">Colores</h2>
-          {COLOR_FIELDS.map(({ key, label }) => (
-            <label key={key} className="flex items-center gap-3 text-sm">
-              <input
-                type="color"
-                value={theme.colors[key]}
-                onChange={(e) => update({ colors: { ...theme.colors, [key]: e.target.value.toUpperCase() } })}
-                className="h-9 w-12 cursor-pointer rounded border"
-              />
-              {label}
-            </label>
-          ))}
-          {issues.length > 0 && (
-            <Alert variant="destructive" className="sm:col-span-2">
-              Poco contraste (se lee mal): {issues.map((i) => `${i.pair} (${i.ratio}:1)`).join(", ")}. Se
-              recomienda al menos 4,5:1.
-            </Alert>
-          )}
-        </Card>
-
-        <Card className="grid gap-3 sm:grid-cols-3">
-          <h2 className="font-semibold sm:col-span-3">Letra y forma</h2>
-          {(["headingFont", "bodyFont"] as const).map((key) => (
-            <div key={key} className="flex flex-col gap-1">
-              <Label htmlFor={key}>{key === "headingFont" ? "Títulos" : "Texto"}</Label>
-              <select
-                id={key}
-                value={theme[key]}
-                onChange={(e) => update({ [key]: e.target.value as ThemeFont })}
-                className="h-10 rounded-md border bg-background px-2 text-sm"
-              >
-                {Object.entries(THEME_FONTS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+    <div className="flex flex-col gap-5">
+      <div className="grid gap-5 xl:grid-cols-[440px_1fr]">
+        <div className="flex flex-col gap-4">
+          <Card className="flex flex-col gap-3 rounded-[14px]">
+            <h2 className={sectionTitle}>Estilo de partida</h2>
+            <div className="grid grid-cols-3 gap-2.5">
+              {(Object.keys(THEME_PRESETS) as ThemePresetKey[]).map((key) => {
+                const p = THEME_PRESETS[key];
+                const selected = theme.preset === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => applyPreset(key)}
+                    aria-pressed={selected}
+                    className={`overflow-hidden rounded-[10px] border text-left ${selected ? "ring-2 ring-primary ring-offset-1" : "hover:border-primary"}`}
+                  >
+                    <span
+                      className="flex h-[38px] items-end gap-1 p-2"
+                      style={{ background: p.colors.accent }}
+                      aria-hidden
+                    >
+                      {[p.colors.secondary, p.colors.ink].map((c, i) => (
+                        <span
+                          key={i}
+                          className="size-3 rounded-full ring-1 ring-white/60"
+                          style={{ background: c }}
+                        />
+                      ))}
+                    </span>
+                    <span className="block px-2 py-1.5 text-[12.5px] font-semibold">{p.label}</span>
+                  </button>
+                );
+              })}
             </div>
-          ))}
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="radius">Esquinas</Label>
-            <select
-              id="radius"
-              value={theme.radius}
-              onChange={(e) => update({ radius: e.target.value as ThemeRadius })}
-              className="h-10 rounded-md border bg-background px-2 text-sm"
-            >
-              {(Object.keys(THEME_RADII) as ThemeRadius[]).map((r) => (
-                <option key={r} value={r}>
-                  {THEME_RADIUS_LABELS[r]}
-                </option>
+          </Card>
+
+          <Card className="flex flex-col gap-4 rounded-[14px]">
+            <div className="flex items-center justify-between">
+              <h2 className={sectionTitle}>Colores</h2>
+              <Button variant="ghost" size="sm" onClick={() => applyPreset(theme.preset)}>
+                Restablecer
+              </Button>
+            </div>
+            {THEME_COLOR_FIELDS.map((group) => (
+              <fieldset key={group.group} className="flex flex-col gap-2">
+                <legend className="mb-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">
+                  {group.group}
+                </legend>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {group.keys.map(({ key, label, help }) => (
+                    <label key={key} className="flex items-center gap-2.5" title={help}>
+                      <input
+                        type="color"
+                        value={theme.colors[key]}
+                        onChange={(e) =>
+                          update({ colors: { ...theme.colors, [key]: e.target.value.toUpperCase() } })
+                        }
+                        className="size-[30px] shrink-0 cursor-pointer rounded-md border"
+                      />
+                      <span className="flex min-w-0 flex-col">
+                        <span className="truncate text-[12.5px] font-semibold">{label}</span>
+                        <span className="font-mono text-[10.5px] text-muted-foreground">
+                          {theme.colors[key]}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            ))}
+          </Card>
+
+          <Card className="flex flex-col gap-4 rounded-[14px]">
+            <h2 className={sectionTitle}>Letra y forma</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {(["headingFont", "bodyFont"] as const).map((key) => (
+                <div key={key} className="flex flex-col gap-1">
+                  <Label htmlFor={key}>{key === "headingFont" ? "Títulos" : "Texto"}</Label>
+                  <select
+                    id={key}
+                    value={theme[key]}
+                    onChange={(e) => update({ [key]: e.target.value as ThemeFont })}
+                    className="h-10 rounded-[9px] border bg-background px-2 text-sm"
+                  >
+                    {Object.entries(THEME_FONTS).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               ))}
-            </select>
-          </div>
-          {SHAPE_OPTIONS.map(({ key, label, options }) => (
-            <div key={key} className="flex flex-col gap-1">
-              <Label htmlFor={key}>{label}</Label>
-              <select
-                id={key}
-                value={theme[key]}
-                onChange={(e) => update({ [key]: e.target.value })}
-                className="h-10 rounded-md border bg-background px-2 text-sm"
-              >
-                {Object.entries(options).map(([value, text]) => (
-                  <option key={value} value={value}>
-                    {text}
-                  </option>
-                ))}
-              </select>
             </div>
-          ))}
-        </Card>
+            <ShapeRow label="Esquinas">
+              <Segmented
+                label="Esquinas"
+                value={theme.radius}
+                onSelect={(radius) => update({ radius })}
+                options={(Object.keys(THEME_RADII) as ThemeRadius[]).map((r) => ({
+                  value: r,
+                  label: THEME_RADIUS_LABELS[r],
+                }))}
+                className="flex-wrap"
+              />
+            </ShapeRow>
+            {SHAPE_OPTIONS.map(({ key, label, options }) => (
+              <ShapeRow key={key} label={label}>
+                <Segmented
+                  label={label}
+                  value={theme[key]}
+                  onSelect={(v) => update({ [key]: v })}
+                  options={options}
+                />
+              </ShapeRow>
+            ))}
+          </Card>
+        </div>
 
-        {action.error && <Alert variant="destructive">{action.error}</Alert>}
-        {saved && <Alert variant="success">Tema guardado. La tienda ya lo muestra.</Alert>}
-        <div>
-          <Button
-            disabled={action.pending}
-            onClick={async () => {
-              const ok = await action.run(() => save(theme));
-              if (ok) setSaved(true);
-            }}
+        <ThemePreview theme={theme} />
+      </div>
+
+      <Card className="sticky bottom-0 z-10 flex flex-wrap items-center gap-3 rounded-[14px]">
+        {issues.length === 0 ? (
+          <span
+            className="flex flex-1 items-center gap-2 text-sm font-medium text-success"
+            data-testid="contrast-ok"
           >
-            {action.pending ? "Guardando…" : "Guardar tema"}
-          </Button>
-        </div>
-      </div>
-
-      <div className="lg:sticky lg:top-4 lg:self-start">
-        <p className="mb-2 text-sm font-medium">Vista previa</p>
-        <div
-          className="sf-root overflow-hidden rounded-md border"
-          style={themeStyle(theme)}
-          data-testid="theme-preview"
+            <CircleCheck size={17} aria-hidden />
+            Contraste correcto en todas las parejas
+          </span>
+        ) : (
+          <span
+            className="flex flex-1 items-start gap-2 text-sm text-destructive"
+            data-testid="contrast-issues"
+          >
+            <TriangleAlert size={17} aria-hidden className="mt-0.5 shrink-0" />
+            Poco contraste (se lee mal): {issues.map((i) => `${i.pair} (${i.ratio}:1)`).join(", ")}. Se
+            recomienda al menos 4,5:1.
+          </span>
+        )}
+        {saved && <span className="text-sm text-success">Tema guardado. La tienda ya lo muestra.</span>}
+        <Button
+          variant="ghost"
+          onClick={() => {
+            setTheme(initial);
+            setSaved(false);
+          }}
         >
-          <div className="flex items-center justify-between border-b bg-surface px-4 py-3">
-            <span className="sf-heading font-semibold">{store.name}</span>
-            <span className="text-xs text-muted-foreground">Buscar</span>
-          </div>
-          <div className="flex flex-col gap-3 p-4">
-            <h3 className="text-xl font-semibold">Vestido de verano</h3>
-            <p className="text-sm text-muted-foreground">Algodón, tallas S a L.</p>
-            <p className="font-semibold">1500 CUP</p>
-            <span className="rounded-sf-btn bg-primary px-4 py-2 text-center text-sm font-semibold text-primary-foreground">
-              Pedir por WhatsApp
-            </span>
-            <span className="rounded-sf-btn border px-4 py-2 text-center text-sm">Ver más</span>
-          </div>
-        </div>
-      </div>
+          Descartar
+        </Button>
+        <Button
+          disabled={action.pending}
+          onClick={async () => {
+            const ok = await action.run(() => save(theme));
+            if (ok) setSaved(true);
+          }}
+        >
+          {action.pending ? "Guardando…" : "Guardar tema"}
+        </Button>
+        {action.error && (
+          <Alert variant="destructive" className="w-full">
+            {action.error}
+          </Alert>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function ShapeRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-sm font-medium">{label}</span>
+      {children}
     </div>
   );
 }

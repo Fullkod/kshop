@@ -52,7 +52,9 @@ const addDays = (day: string, n: number) => {
   return d.toISOString().slice(0, 10);
 };
 const dayLabel = (day: string) =>
-  new Intl.DateTimeFormat("es", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${day}T12:00:00Z`));
+  new Intl.DateTimeFormat("es", { day: "numeric", month: "short", timeZone: "UTC" }).format(
+    new Date(`${day}T12:00:00Z`),
+  );
 const errorText = (e: unknown, fallback: string) => (e instanceof ApiError ? e.message : fallback);
 const moneyList = (list: MoneyByCurrency[]) =>
   list.length === 0 ? "—" : list.map((m) => formatMoney(m.amount, m.currency)).join(" · ");
@@ -92,7 +94,9 @@ function useStoreCurrencies(): CurrencyCode[] {
         if (!data?.length) return;
         setCurrencies(
           [...data]
-            .sort((a, b) => Number(b.is_base) - Number(a.is_base) || String(a.currency).localeCompare(b.currency))
+            .sort(
+              (a, b) => Number(b.is_base) - Number(a.is_base) || String(a.currency).localeCompare(b.currency),
+            )
             .map((c) => c.currency as CurrencyCode),
         );
       });
@@ -234,7 +238,11 @@ export function FinanceShell({ children }: { children: ReactNode }) {
               className="h-9"
             />
           </div>
-          <CurrencyPicker value={filters.currency} options={currencies} onChange={(currency) => filters.set({ currency })} />
+          <CurrencyPicker
+            value={filters.currency}
+            options={currencies}
+            onChange={(currency) => filters.set({ currency })}
+          />
         </Card>
       )}
       {children}
@@ -309,15 +317,22 @@ export function FinanceSummaryPage() {
   const { api } = useSession();
   const f = useFinanceFilters();
   const period = { from: f.from, to: f.to, currency: f.currency };
-  const summary = useReport<FinanceSummary>(() => api.finance(store.id).summary(period), [f.from, f.to, f.currency]);
-  const daily = useReport<{ days: FinanceDay[] }>(() => api.finance(store.id).daily(period), [f.from, f.to, f.currency]);
+  const summary = useReport<FinanceSummary>(
+    () => api.finance(store.id).summary(period),
+    [f.from, f.to, f.currency],
+  );
+  const daily = useReport<{ days: FinanceDay[] }>(
+    () => api.finance(store.id).daily(period),
+    [f.from, f.to, f.currency],
+  );
 
   if (summary.error) return <Alert variant="destructive">{summary.error}</Alert>;
   if (!summary.data) return <p className="text-muted-foreground">Cargando…</p>;
   const s = summary.data;
   const t = s.totals;
   const money = (v: number) => formatMoney(v, s.currency);
-  const change = s.previous.sold > 0 ? Math.round(((t.sold - s.previous.sold) / s.previous.sold) * 100) : null;
+  const change =
+    s.previous.sold > 0 ? Math.round(((t.sold - s.previous.sold) / s.previous.sold) * 100) : null;
 
   return (
     <Busy loading={summary.loading || daily.loading} testId="finance-summary">
@@ -338,11 +353,18 @@ export function FinanceSummaryPage() {
             </>
           }
         />
-        <Kpi label="Cobrado" value={money(t.collected)} detail={moneyList(s.collected)} testId="kpi-collected" />
+        <Kpi
+          label="Cobrado"
+          value={money(t.collected)}
+          detail={moneyList(s.collected)}
+          testId="kpi-collected"
+        />
         <Kpi
           label="Pendiente de cobro"
           value={money(t.pending)}
-          detail={moneyList(s.sold.filter((x) => x.pending > 0).map((x) => ({ currency: x.currency, amount: x.pending })))}
+          detail={moneyList(
+            s.sold.filter((x) => x.pending > 0).map((x) => ({ currency: x.currency, amount: x.pending })),
+          )}
           testId="kpi-pending"
         />
         <Kpi
@@ -413,20 +435,22 @@ export function FinanceSummaryPage() {
                     </td>
                   </tr>
                 ))}
-              {daily.data && !daily.data.days.some((d) => d.orders || d.collected.length || d.expenses.length) && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
-                    No hubo ventas, cobros ni gastos en este periodo.
-                  </td>
-                </tr>
-              )}
+              {daily.data &&
+                !daily.data.days.some((d) => d.orders || d.collected.length || d.expenses.length) && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                      No hubo ventas, cobros ni gastos en este periodo.
+                    </td>
+                  </tr>
+                )}
             </tbody>
           </table>
         </Card>
       </section>
       <p className="text-xs text-muted-foreground">
-        «Vendido» cuenta los pedidos no cancelados (como «Ventas de hoy»); «Cobrado», los pagos menos las devoluciones.
-        Lo convertido a {s.currency} usa la tasa de cada pedido, así que cambiar la tasa hoy no cambia el pasado.
+        «Vendido» cuenta los pedidos no cancelados (como «Ventas de hoy»); «Cobrado», los pagos menos las
+        devoluciones. Lo convertido a {s.currency} usa la tasa de cada pedido, así que cambiar la tasa hoy no
+        cambia el pasado.
       </p>
     </Busy>
   );
@@ -449,12 +473,19 @@ export function FinanceMarginPage() {
   if (!report.data) return <p className="text-muted-foreground">Cargando…</p>;
   const m = report.data;
   const money = (v: number) => formatMoney(v, m.currency);
-  const pct = m.totals.revenueWithCost > 0 ? Math.round((m.totals.margin / m.totals.revenueWithCost) * 1000) / 10 : null;
+  const pct =
+    m.totals.revenueWithCost > 0
+      ? Math.round((m.totals.margin / m.totals.revenueWithCost) * 1000) / 10
+      : null;
 
   return (
     <Busy loading={report.loading} testId="finance-margin">
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi label="Ingresos de productos" value={money(m.totals.revenue)} detail={`${m.totals.units} unidades`} />
+        <Kpi
+          label="Ingresos de productos"
+          value={money(m.totals.revenue)}
+          detail={`${m.totals.units} unidades`}
+        />
         <Kpi label="Costo de lo vendido" value={money(m.totals.cost)} />
         <Kpi
           label="Margen bruto"
@@ -470,9 +501,9 @@ export function FinanceMarginPage() {
       </section>
       {m.totals.linesWithoutCost > 0 && (
         <Alert>
-          Hay {m.totals.linesWithoutCost} {m.totals.linesWithoutCost === 1 ? "línea vendida" : "líneas vendidas"} de
-          productos sin costo: el margen está incompleto. Pon el costo en el producto para que cuente en los próximos
-          pedidos.
+          Hay {m.totals.linesWithoutCost}{" "}
+          {m.totals.linesWithoutCost === 1 ? "línea vendida" : "líneas vendidas"} de productos sin costo: el
+          margen está incompleto. Pon el costo en el producto para que cuente en los próximos pedidos.
         </Alert>
       )}
       <div className="flex items-end gap-2">
@@ -517,7 +548,9 @@ export function FinanceMarginPage() {
                 <td className="px-4 py-2">
                   {r.name}
                   {r.linesWithoutCost > 0 && (
-                    <span className="ml-2 text-xs text-muted-foreground">({r.linesWithoutCost} sin costo)</span>
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      ({r.linesWithoutCost} sin costo)
+                    </span>
                   )}
                 </td>
                 <td className="px-4 py-2 text-right tabular-nums">{r.units}</td>
@@ -538,8 +571,8 @@ export function FinanceMarginPage() {
         </table>
       </Card>
       <p className="text-xs text-muted-foreground">
-        El descuento de cada pedido se reparte entre sus productos; el envío no cuenta como ingreso de producto. El
-        costo usa la tasa del día de la venta.
+        El descuento de cada pedido se reparte entre sus productos; el envío no cuenta como ingreso de
+        producto. El costo usa la tasa del día de la venta.
       </p>
     </Busy>
   );
@@ -571,7 +604,14 @@ export function FinanceInventoryPage() {
     return () => clearTimeout(timer);
   }, [query]);
   useEffect(() => {
-    if (multiWarehouse) api.warehouses(store.id).overview().then((o) => setWarehouses(o.warehouses), () => undefined);
+    if (multiWarehouse)
+      api
+        .warehouses(store.id)
+        .overview()
+        .then(
+          (o) => setWarehouses(o.warehouses),
+          () => undefined,
+        );
   }, [api, store.id, multiWarehouse]);
 
   const report = useReport<FinanceInventory>(
@@ -587,7 +627,10 @@ export function FinanceInventoryPage() {
   );
   const money = (v: number) => formatMoney(v, f.currency);
   const pages = report.data ? Math.max(1, Math.ceil(report.data.total / report.data.pageSize)) : 1;
-  const dateFmt = useMemo(() => new Intl.DateTimeFormat("es", { day: "numeric", month: "short", year: "numeric" }), []);
+  const dateFmt = useMemo(
+    () => new Intl.DateTimeFormat("es", { day: "numeric", month: "short", year: "numeric" }),
+    [],
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -662,13 +705,20 @@ export function FinanceInventoryPage() {
             className="h-9 w-48"
           />
         </div>
-        <CurrencyPicker value={f.currency} options={currencies} onChange={(currency) => f.set({ currency })} />
+        <CurrencyPicker
+          value={f.currency}
+          options={currencies}
+          onChange={(currency) => f.set({ currency })}
+        />
       </Card>
       {report.error && <Alert variant="destructive">{report.error}</Alert>}
       {!report.data ? (
         <p className="text-muted-foreground">Cargando…</p>
       ) : (
-        <Card className={cn("overflow-x-auto p-0 transition-opacity", report.loading && "opacity-50")} aria-busy={report.loading}>
+        <Card
+          className={cn("overflow-x-auto p-0 transition-opacity", report.loading && "opacity-50")}
+          aria-busy={report.loading}
+        >
           <table className="w-full text-left text-sm" data-testid="inventory-rows">
             <thead className="border-b bg-surface text-muted-foreground">
               <tr>
@@ -693,7 +743,8 @@ export function FinanceInventoryPage() {
                 <tr key={r.variantId} className="border-b last:border-0">
                   <td className="px-4 py-2">
                     {r.productName}
-                    {r.variantName && ` · ${r.variantName}`} <span className="text-muted-foreground">({r.sku})</span>
+                    {r.variantName && ` · ${r.variantName}`}{" "}
+                    <span className="text-muted-foreground">({r.sku})</span>
                   </td>
                   <td className="px-4 py-2 text-right tabular-nums">{r.quantity}</td>
                   <td className="px-4 py-2 text-right tabular-nums">{r.allocated}</td>
@@ -706,7 +757,11 @@ export function FinanceInventoryPage() {
                     {r.available}
                   </td>
                   <td className="px-4 py-2 text-right tabular-nums">
-                    {r.costValue === null ? <span className="text-muted-foreground">Sin costo</span> : money(r.costValue)}
+                    {r.costValue === null ? (
+                      <span className="text-muted-foreground">Sin costo</span>
+                    ) : (
+                      money(r.costValue)
+                    )}
                   </td>
                   <td className="px-4 py-2 text-right tabular-nums">{money(r.saleValue)}</td>
                   <td className="px-4 py-2 whitespace-nowrap text-muted-foreground">
@@ -747,7 +802,15 @@ export function FinanceInventoryPage() {
 // Desglose
 // ---------------------------------------------------------------------------
 
-function BreakdownTable({ title, rows, money }: { title: string; rows: FinanceBreakdownRow[]; money: (v: number) => string }) {
+function BreakdownTable({
+  title,
+  rows,
+  money,
+}: {
+  title: string;
+  rows: FinanceBreakdownRow[];
+  money: (v: number) => string;
+}) {
   const max = Math.max(1, ...rows.map((r) => r.amount));
   return (
     <Card className="flex flex-col gap-3">
@@ -765,7 +828,10 @@ function BreakdownTable({ title, rows, money }: { title: string; rows: FinanceBr
                 <span className="font-medium tabular-nums">{money(r.amount)}</span>
               </div>
               <div className="h-1.5 rounded-full bg-surface">
-                <div className="h-1.5 rounded-full bg-primary" style={{ width: `${(r.amount / max) * 100}%` }} />
+                <div
+                  className="h-1.5 rounded-full bg-primary"
+                  style={{ width: `${(r.amount / max) * 100}%` }}
+                />
               </div>
             </li>
           ))}
@@ -861,7 +927,11 @@ export function FinanceExpensesPage() {
   }
 
   async function remove(expense: Expense) {
-    if (!window.confirm(`¿Borrar el gasto «${expense.category}» de ${formatMoney(expense.amount, expense.currency)}?`))
+    if (
+      !window.confirm(
+        `¿Borrar el gasto «${expense.category}» de ${formatMoney(expense.amount, expense.currency)}?`,
+      )
+    )
       return;
     try {
       await api.finance(store.id).deleteExpense(expense.id);
@@ -886,7 +956,13 @@ export function FinanceExpensesPage() {
         >
           <div className="flex flex-col gap-1">
             <Label htmlFor="expense-date">Fecha</Label>
-            <Input id="expense-date" name="spentOn" type="date" defaultValue={editing?.spentOn ?? havanaToday()} required />
+            <Input
+              id="expense-date"
+              name="spentOn"
+              type="date"
+              defaultValue={editing?.spentOn ?? havanaToday()}
+              required
+            />
             <FieldError>{fields.spentOn}</FieldError>
           </div>
           <div className="flex flex-col gap-1">
@@ -919,7 +995,11 @@ export function FinanceExpensesPage() {
           </div>
           <div className="flex flex-col gap-1">
             <Label htmlFor="expense-currency">Moneda</Label>
-            <Select id="expense-currency" name="currency" defaultValue={editing?.currency ?? store.baseCurrency}>
+            <Select
+              id="expense-currency"
+              name="currency"
+              defaultValue={editing?.currency ?? store.baseCurrency}
+            >
               {currencies.map((c) => (
                 <option key={c} value={c}>
                   {c}

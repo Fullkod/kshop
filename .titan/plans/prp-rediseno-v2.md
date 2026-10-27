@@ -323,6 +323,35 @@ PRO con candado, tarjeta de usuario y topbar (D7); Inicio con KPIs, ventas de la
 vista previa real Web/Móvil (envuelta en `div.sf-root`) y estado de contraste; Kshop Admin según D9.
 **Validación**: `qa:apps`, `qa:orders` y `qa:pro` en verde; módulos bloqueados con PRO; el empleado ve solo lo suyo y
 no ve costos (como en la Fase 7); capturas de admin web 1280 y Kshop Admin 390.
+**Hecha (2026-10-27)**: `AdminModule` gana `group` (Ventas, Catálogo, Tienda, Negocio) e `icon`; el registro va en el
+orden de los grupos y «Catálogo» se llama «Productos». `AdminShell` nuevo, siempre con la marca Kshop: barra lateral
+`night` de 248 px con la inicial dorada y el selector de tienda (lista las otras tiendas del usuario, cada una en su
+host), grupos, «Clientes» bajo Ventas, contador dorado de pedidos por confirmar en «Pedidos», módulos bloqueados con
+**PRO** y candado (el precio suelto va en el `title`), tarjeta de usuario con cerrar sesión; en < 768 un menú lateral.
+Topbar (D7): «Ver tienda», campana con punto si hay pedidos por confirmar (lleva a Pedidos) y botón principal según la
+pantalla («Nuevo pedido» en Inicio y Pedidos, «Nuevo producto» en Catálogo). **Fuera de v2 (D7)**: búsqueda global y
+segmentado Hoy · 7 días · Mes. **«vs ayer» sí**: sale de la semana que ya se lee. Inicio: saludo con la fecha, 4 KPIs
+(Vendido hoy relleno, Cobrado, Por cobrar, Pedidos hoy; en moneda base), «Ventas de la semana» en barras, «Por hacer»
+(por confirmar, por entregar, poco stock ≤ 3 como el filtro del catálogo) y «Últimos pedidos» (tabla en web, filas
+apiladas en móvil, píldora de estado `StatusPill`). Datos: migración `20261105100200_admin_home_summary.sql`
+(`admin_home_summary`, solo `service_role`, semana y deuda con la tasa congelada del pedido) + `GET
+/api/v1/stores/{id}/orders/summary` (staff+, módulo `orders`; semana y «por cobrar» solo con `sales_today`) + hook
+compartido `useAdminHome` en `@kshop/admin`; tests en `11_home_v2_isolation` (16). «Tu plan incluye» sale de Inicio
+(Plan y facturación ya lista los módulos). Apariencia › Tema: tarjetas de preset (franja del acento con puntos secundario
+e ink), 12 colores en 3 grupos con su hex, «Restablecer», letra y forma con segmentados, pie fijo con el estado de
+contraste, «Descartar» y «Guardar tema»; **vista previa con la tienda de verdad**: el `shell` y la portada públicos
+pintados por `StoreAnnouncement`, `StoreHeader`, `HomeSections` (hero y primer carrusel) y `StoreFooter` dentro de un
+`.sf-root` con el tema editado, Web (1180 px escalado) y Móvil (360 px), `inert`; `StorefrontPreviewProviders` da
+carrito, favoritos y sesión de cliente inertes (no lee ni toca los del comprador). Kshop Admin (D9): pestañas Inicio ·
+Pedidos (badge) · Productos · Ventas · Más con píldora activa; Inicio con cabecera night, «Vendido hoy» + «vs ayer», 2
+tarjetas flotantes, «Por hacer» y accesos rápidos (Pedido y Cupón abren el panel; Producto en la app; Compartir tienda);
+Ventas con la semana y enlaces al panel; Más con los módulos del panel (PRO con candado), cambiar de tienda y cerrar
+sesión. `OrderList` (web y app) en tarjetas: avatar, nombre, código y hora en mono, total, estado, pago, WhatsApp y
+acción rápida; chips activos en night; FAB «+» en la app. Aviso «instant navigation» resuelto: `export const instant =
+false` en los layouts de admin y superadmin (son apps cliente con la sesión del navegador; bloquean a propósito).
+Evidencia `.titan/qa/rediseno-v2/R6/` (admin web 1280 y 390 como dueño y empleado, Apariencia con la vista previa,
+Kshop Admin 390: Inicio, Pedidos, Ventas y Más, 8/8). `qa:pro` 18/18, `qa:orders` 14/14, `qa:billing` 16/16 (ahora mira
+«PRO» y el precio en el `title`), `qa:apps` 28/28, RLS 584/584, tests 66+2, typecheck, lint y build en verde.
 
 ### Fase R7: Landing
 **Objetivo**: `(platform)/page.tsx` según `05-LANDING.md`: hero con teléfono, funciones (sin MLC), temas con la portada
@@ -412,8 +441,17 @@ del estudio de precios), CTA final y pie con «Acceso Fullkod»; CTAs según D8.
   repetir. `qa:apps` contaba las imágenes de la portada sin conexión antes de que se leyera del dispositivo: ahora espera.
 - **R5 — Los slugs de subcategoría llevan el del padre** (`mujer-blusas`): el seed busca también por el último tramo.
 - **Windows: `TaskStop` no mata el `next dev`** (el hijo de node sigue en el puerto 3000): cerrarlo por PID.
+- **R6 — Pendiente (de R2, no de R6): favoritos con 401 tras volver de «sin conexión» en la app de tienda.** En
+  `qa:apps` la página que pasó por sin conexión seguía abierta y, al reconectar, pedía `customer/favorites` sin token (dos
+  401, StrictMode). La sesión de Supabase parece caerse y volver mientras está offline. La QA ahora cierra esa página;
+  falta reproducirlo en la APK (con mala conexión pasará a menudo) y, si se confirma, pedir favoritos solo con token y
+  reintentar al volver la sesión.
+- **R6 — Build**: con la portada nueva, el prerender de alguna ficha (`/s/demo/product/...`) da un `57014` en el primer
+  intento y pasa en el reintento (`staticGenerationRetryCount: 3`); el build termina en verde. Las consultas sueltas
+  tardan 0,4–1,5 s.
 - **Aviso de Next en dev ajeno al rediseño**: «Could not validate that a segment in your UI has instant navigation» en
-  `/admin` (`admin/page.tsx`) y `/admin/themes` (`themes/layout.tsx`). No rompe nada; revisar en R6 (admin).
+  `/admin` (`admin/page.tsx`) y `/admin/themes` (`themes/layout.tsx`). No rompe nada. **Resuelto en R6** con
+  `instant = false` en los layouts de admin y superadmin.
 
 ---
 
