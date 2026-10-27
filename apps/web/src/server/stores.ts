@@ -43,6 +43,7 @@ async function fetchStoreBySlug(slug: string): Promise<PublicStore | null> {
     baseCurrency: currencyCodeSchema.parse(node.baseCurrency),
     whatsappPhone: node.whatsappPhone ?? null,
     logoUrl: node.logoUrl ?? null,
+    description: node.description ?? null,
     // pg_graphql returns jsonb as a JSON string.
     theme: resolveTheme(node.theme ? JSON.parse(node.theme) : null),
     customDomain,

@@ -13,6 +13,8 @@ export type PublicStore = {
   baseCurrency: CurrencyCode;
   whatsappPhone: string | null;
   logoUrl: string | null;
+  /** Short text of the footer (Appearance), or null. */
+  description: string | null;
   theme: Theme;
   /** Live custom domain (verified, module on, store active) or null: the store is served on its subdomain. */
   customDomain: string | null;

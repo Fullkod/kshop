@@ -36,7 +36,11 @@ export const AdminPromotionsQuery = graphql(`
 
 export const AdminVouchersQuery = graphql(`
   query AdminVouchers($storeId: UUID!) {
-    vouchersCollection(filter: { storeId: { eq: $storeId } }, orderBy: [{ createdAt: DescNullsLast }], first: 200) {
+    vouchersCollection(
+      filter: { storeId: { eq: $storeId } }
+      orderBy: [{ createdAt: DescNullsLast }]
+      first: 200
+    ) {
       edges {
         node {
           id
@@ -87,7 +91,11 @@ export const AdminVouchersQuery = graphql(`
 /** Names for the target pickers: every category, collection and brand, and the products already chosen. */
 export const DiscountTargetsQuery = graphql(`
   query DiscountTargets($storeId: UUID!, $productIds: [UUID!]!) {
-    categoriesCollection(filter: { storeId: { eq: $storeId } }, orderBy: [{ path: AscNullsLast }], first: 500) {
+    categoriesCollection(
+      filter: { storeId: { eq: $storeId } }
+      orderBy: [{ path: AscNullsLast }]
+      first: 500
+    ) {
       edges {
         node {
           id
@@ -96,7 +104,11 @@ export const DiscountTargetsQuery = graphql(`
         }
       }
     }
-    collectionsCollection(filter: { storeId: { eq: $storeId } }, orderBy: [{ name: AscNullsLast }], first: 200) {
+    collectionsCollection(
+      filter: { storeId: { eq: $storeId } }
+      orderBy: [{ name: AscNullsLast }]
+      first: 200
+    ) {
       edges {
         node {
           id

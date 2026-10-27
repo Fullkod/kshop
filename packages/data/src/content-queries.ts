@@ -8,6 +8,7 @@ export const AdminContentQuery = graphql(`
       edges {
         node {
           theme
+          description
         }
       }
     }

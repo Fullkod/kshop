@@ -44,6 +44,8 @@ export type AdminPage = {
 };
 export type AdminContent = {
   theme: unknown;
+  /** Footer text of the store. */
+  description: string | null;
   banners: AdminBanner[];
   sections: AdminSection[];
   menus: Record<MenuLocation, AdminMenuItem[]>;
@@ -109,6 +111,7 @@ export function useContent() {
         };
         setData({
           theme: json(nodes(d.storesCollection)[0]?.theme),
+          description: nodes(d.storesCollection)[0]?.description ?? null,
           banners: nodes(d.bannersCollection).map((b) => ({
             id: b.id,
             title: b.title ?? null,

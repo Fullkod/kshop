@@ -333,6 +333,16 @@ del estudio de precios), CTA final y pie con «Acceso Fullkod»; CTAs según D8.
 6. El rediseño va **antes** de la Fase 8.
 7. `docs/design-v2/` se versiona junto con este PRP.
 
+### Respuestas de Roberto (2026-10-27, segunda tanda)
+8. **Descripción del pie**: campo nuevo `stores.description` (≤ 300), editable en Apariencia; vacío = no se muestra.
+9. **Año del «©»**: el año actual, pintado en el navegador.
+10. **D6 — talla/color agotado en la ficha**: solo informativo (tachado, discontinuo, sin acción).
+11. **Beneficios y «Envío y entrega» de la ficha**: derivados de datos reales (métodos de envío con sus plazos y
+    métodos de pago activos); sin «cambios» ni «compra segura» porque no hay dato.
+    **Hechas 8 y 9 (2026-10-27)**: `20261104100100_store_description.sql` (`stores.description` ≤ 300, en la tarjeta
+    pública de la tienda), `PUT /api/v1/stores/{id}/content/description`, tarjeta «Pie de la tienda» en Apariencia ›
+    Tema y texto en el pie; el año del «©» lo pinta `CurrentYear` en el navegador. Tienda Demo con su descripción.
+
 ---
 
 ## 🧠 Aprendizajes (Self-Annealing)
@@ -351,6 +361,10 @@ del estudio de precios), CTA final y pie con «Acceso Fullkod»; CTAs según D8.
   aplastaba a 12 px. `buttonVariants` pasa ahora por `cn()` (tailwind-merge) y la base lleva `[&_svg]:shrink-0`.
 - **R3 — Valores exportados desde un módulo `"use client"`** (funciones, constantes) llegan como referencias al servidor:
   `imageSrcSet` se movió a `components/images.ts`.
+- **Caché en dev tras guardar en Apariencia**: con `revalidateTag(storeCacheTag(slug), { expire: 0 })` la portada
+  sigue sirviendo el valor anterior en las 2–3 visitas siguientes (medido con la descripción y con el tema, que ya
+  existía: no lo introduce el rediseño). La documentación de Next dice que `{ expire: 0 }` no sirve contenido viejo:
+  **comprobar en un build de producción** (puerto 3200) antes de cerrar el rediseño; si se repite, investigar.
 - **Aviso de Next en dev ajeno al rediseño**: «Could not validate that a segment in your UI has instant navigation» en
   `/admin` (`admin/page.tsx`) y `/admin/themes` (`themes/layout.tsx`). No rompe nada; revisar en R6 (admin).
 

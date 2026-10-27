@@ -14,6 +14,7 @@ import type {
   MenuInput,
   MenuLocation,
   PageInput,
+  StoreDescriptionInput,
   ThemeInput,
   ImportPreview,
   ImportProgress,
@@ -844,6 +845,8 @@ export function createApiClient(options: ApiClientOptions) {
         reorder: (table: "banners" | "sections", ids: string[]) =>
           request<null>("POST", `${base}/reorder`, { table, ids }),
         saveTheme: (input: ThemeInput) => request<{ theme: ThemeInput }>("PUT", `${base}/theme`, input),
+        saveDescription: (input: StoreDescriptionInput) =>
+          request<{ description: string | null }>("PUT", `${base}/description`, input),
         saveMenu: (location: MenuLocation, input: MenuInput) =>
           request<null>("PUT", `${base}/menus/${location}`, input),
       };

@@ -14,6 +14,7 @@ export const StoreBySlugQuery = graphql(`
           whatsappPhone
           logoUrl
           theme
+          description
         }
       }
     }

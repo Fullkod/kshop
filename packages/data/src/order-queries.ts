@@ -160,7 +160,12 @@ export const AdminOrderQuery = graphql(`
 
 export const AdminCustomersQuery = graphql(`
   query AdminCustomers($filter: CustomersFilter!, $first: Int!, $after: Cursor) {
-    customersCollection(filter: $filter, orderBy: [{ createdAt: DescNullsLast }], first: $first, after: $after) {
+    customersCollection(
+      filter: $filter
+      orderBy: [{ createdAt: DescNullsLast }]
+      first: $first
+      after: $after
+    ) {
       totalCount
       pageInfo {
         hasNextPage

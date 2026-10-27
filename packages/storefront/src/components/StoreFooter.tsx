@@ -2,6 +2,7 @@ import type { NavLink, StoreCurrency } from "@kshop/data";
 import { buttonVariants, MessageCircle } from "@kshop/ui";
 import { Link } from "../navigation";
 import type { PublicStore } from "../store-context";
+import { CurrentYear } from "./CurrentYear";
 import { StoreLogo } from "./StoreHeader";
 import { whatsappUrl } from "./whatsapp";
 
@@ -32,6 +33,7 @@ export function StoreFooter({
       <div className="flex flex-wrap justify-between gap-10">
         <div className="flex max-w-[360px] flex-[1_1_260px] flex-col items-start gap-3.5">
           <StoreLogo store={store} inverse />
+          {store.description && <p className="text-sm leading-relaxed text-ink-muted">{store.description}</p>}
           {store.whatsappPhone && (
             <a
               href={whatsappUrl(store.whatsappPhone)}
@@ -65,7 +67,8 @@ export function StoreFooter({
       </div>
       <div className="mt-10 flex flex-wrap justify-between gap-2.5 border-t border-[color-mix(in_srgb,var(--ink-fg)_14%,transparent)] py-[18px] text-[12.5px] text-ink-muted">
         <span>
-          © {store.name} · Precios en {listFormat.format(codes)}
+          © <CurrentYear />
+          {store.name} · Precios en {listFormat.format(codes)}
         </span>
         <span>
           Tienda creada con{" "}

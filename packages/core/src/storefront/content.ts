@@ -145,6 +145,17 @@ export type MenuItemInput = { label: string; link: Link; children?: MenuItemInpu
 const menuLeafSchema = z.object({ label: z.string().trim().min(1).max(60), link: linkSchema });
 
 /** The whole menu is saved at once (two levels). */
+/** Footer text of the store (Appearance); empty clears it. */
+export const storeDescriptionSchema = z.object({
+  description: z
+    .string()
+    .trim()
+    .max(300)
+    .transform((v) => v || null)
+    .nullable(),
+});
+export type StoreDescriptionInput = z.input<typeof storeDescriptionSchema>;
+
 export const menuInputSchema = z.object({
   items: z.array(menuLeafSchema.extend({ children: z.array(menuLeafSchema).max(20).default([]) })).max(20),
 });

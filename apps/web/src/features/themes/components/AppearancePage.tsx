@@ -8,6 +8,7 @@ import { BannersEditor } from "./BannersEditor";
 import { MenusEditor } from "./MenusEditor";
 import { PagesEditor } from "./PagesEditor";
 import { SectionsEditor } from "./SectionsEditor";
+import { StoreDescriptionCard } from "./StoreDescriptionCard";
 import { ThemeEditor } from "./ThemeEditor";
 
 export const APPEARANCE_TABS = [
@@ -61,7 +62,13 @@ export function AppearancePage({ tab }: { tab: AppearanceTab }) {
       ) : !content || !structure ? (
         <p className="text-muted-foreground">Cargando…</p>
       ) : tab === "theme" ? (
-        <ThemeEditor content={content} save={(theme) => api.saveTheme(theme)} />
+        <div className="flex flex-col gap-6">
+          <ThemeEditor content={content} save={(theme) => api.saveTheme(theme)} />
+          <StoreDescriptionCard
+            initial={content.description}
+            save={(description) => api.saveDescription({ description })}
+          />
+        </div>
       ) : tab === "home" ? (
         <SectionsEditor content={content} structure={structure} api={api} reload={reload} />
       ) : tab === "banners" ? (

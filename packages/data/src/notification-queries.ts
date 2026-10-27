@@ -38,7 +38,12 @@ export const NotificationSettingsQuery = graphql(`
 
 export const NotificationLogQuery = graphql(`
   query NotificationLog($filter: NotificationLogFilter, $first: Int!, $after: Cursor) {
-    notificationLogCollection(filter: $filter, orderBy: [{ createdAt: DescNullsLast }], first: $first, after: $after) {
+    notificationLogCollection(
+      filter: $filter
+      orderBy: [{ createdAt: DescNullsLast }]
+      first: $first
+      after: $after
+    ) {
       totalCount
       pageInfo {
         hasNextPage

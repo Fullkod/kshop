@@ -54600,6 +54600,18 @@
             },
             {
               "args": [],
+              "name": "description",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
               "name": "subscriptions",
               "type": {
                 "kind": "OBJECT",
@@ -57558,6 +57570,16 @@
               "defaultValue": null
             },
             {
+              "name": "description",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "StringFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
               "name": "nodeId",
               "type": {
                 "kind": "INPUT_OBJECT",
@@ -57706,6 +57728,16 @@
             },
             {
               "name": "createdAt",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "description",
               "type": {
                 "kind": "ENUM",
                 "name": "OrderByDirection",

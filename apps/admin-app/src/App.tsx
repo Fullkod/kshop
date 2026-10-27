@@ -277,6 +277,7 @@ async function loadStore(
     baseCurrency: row.baseCurrency as CurrencyCode,
     whatsappPhone: row.whatsappPhone ?? null,
     logoUrl: null,
+    description: null,
     theme: resolveTheme(null),
     customDomain: null,
   };
