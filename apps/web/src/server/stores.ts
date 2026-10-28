@@ -50,9 +50,23 @@ async function fetchStoreBySlug(slug: string): Promise<PublicStore | null> {
   };
 }
 
+/**
+ * Placeholder store slug of generateStaticParams (Cache Components needs a non-empty list). It is not a valid slug,
+ * so it is answered without touching the database.
+ */
+export const PLACEHOLDER_STORE_SLUG = "_";
+
+/**
+ * `next build` does not prerender the store pages: on the Nano instance hundreds of build-time reads (every store ×
+ * every route × up to 20 slugs) queued on its CPU, one of them passed the 8 s anon timeout (57014) and the whole
+ * deploy failed. Each store page is rendered on its first visit and then served from the cache, like a new store.
+ */
+const isBuild = () => process.env.NEXT_PHASE === "phase-production-build";
+
 /** Store lookup by slug, cached per store (invalidated with revalidateTag(storeCacheTag(slug))). */
 export async function getStoreBySlug(slug: string): Promise<PublicStore | null> {
   "use cache";
+  if (slug === PLACEHOLDER_STORE_SLUG) return null;
   cacheTag(storeCacheTag(slug));
   // Minutes, not hours: the daily billing job suspends stores in the database, where Next cannot expire this tag
   // (phase 5); a suspended store must show its notice within about a minute, not an empty storefront for an hour.
@@ -64,6 +78,7 @@ export async function getStoreBySlug(slug: string): Promise<PublicStore | null> 
 export async function listStoreSlugs(): Promise<string[]> {
   "use cache";
   cacheLife("hours");
+  if (isBuild()) return [];
   const result = await graphql.query(StoreSlugsQuery, {}).toPromise();
   return (result.data?.storesCollection?.edges ?? []).map((e) => e.node.slug);
 }

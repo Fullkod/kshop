@@ -3,13 +3,13 @@ import { notFound } from "next/navigation";
 import { StoreProvider } from "@kshop/storefront";
 import { supabaseConfig } from "@/env";
 import { NextNavigationProvider } from "@/lib/navigation";
-import { getStoreBySlug, listStoreSlugs } from "@/server/stores";
+import { getStoreBySlug, listStoreSlugs, PLACEHOLDER_STORE_SLUG } from "@/server/stores";
 
-// Known stores are prerendered; a new store is rendered on its first visit and then served from the cache.
-// With Cache Components the list cannot be empty.
+// Store pages render on their first visit and are then served from the cache (nothing is prerendered at build time,
+// see listStoreSlugs). With Cache Components the list cannot be empty.
 export async function generateStaticParams() {
   const slugs = await listStoreSlugs();
-  return (slugs.length ? slugs : ["_"]).map((storeSlug) => ({ storeSlug }));
+  return (slugs.length ? slugs : [PLACEHOLDER_STORE_SLUG]).map((storeSlug) => ({ storeSlug }));
 }
 
 export async function generateMetadata({ params }: LayoutProps<"/s/[storeSlug]">): Promise<Metadata> {
