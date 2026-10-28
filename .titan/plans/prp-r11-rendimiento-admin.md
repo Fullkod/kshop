@@ -354,6 +354,10 @@ WhatsApp queda en «Simulado» mientras dure R11 (decisión de Roberto, 2026-10-
   proyectos.
 - El aviso de Next en desarrollo «Could not validate that a segment… instant navigation» sale en todas las vistas desde
   antes de R11: no es de este cambio.
+- **Producción tras el deploy** (`perf-prod-todo-rpc.json`): mediana 4,4 s (antes de R11) → 2,0 (R11) → 2,3 (fase 5) →
+  **1,45 s**; 0 peticiones a pg_graphql, 0 errores; 31 de 37 vistas por debajo de 2 s. Pico de 18,8 s en themes/home:
+  en ese momento `/api/v1/me` tardó 11,6 s y las RPC 4–7 s, es decir, la Nano estrangulada (el día tuvo varias pasadas
+  de `test:rls`, comparaciones y mediciones), no una lectura lenta.
 
 ---
 
