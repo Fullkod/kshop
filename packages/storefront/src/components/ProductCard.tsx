@@ -65,14 +65,15 @@ export function ProductCard({
         <Link
           href={href}
           aria-label={product.name}
-          className="sf-placeholder relative block aspect-[4/5] overflow-hidden rounded-sf shadow-sf"
+          className={`relative block aspect-[4/5] overflow-hidden rounded-sf shadow-sf ${product.imageUrl ? "bg-surface" : "sf-placeholder"}`}
         >
+          {/* Sold out is told by the «Agotado» tag; the photo stays opaque (a faded photo showed the placeholder). */}
           {product.imageUrl && (
             <ProductImage
               product={product}
               priority={priority}
               sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-              className={`transition duration-300 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100 ${product.inStock ? "" : "opacity-45"}`}
+              className="transition duration-300 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
             />
           )}
         </Link>

@@ -59,3 +59,4 @@
 - `prp-r8-superadmin-y-realtime.md` — R8: panel del superadmin v2, Realtime y arreglo del build de Vercel (HECHO 2026-10-27)
 - `prp-r9-lecturas-tienda.md` — R9: lecturas de la tienda sin recorrer el catálogo (portada en 2 tandas, carruseles por índice, conteos de lo mostrado, refresco en segundo plano tras un pedido) (HECHO 2026-10-27)
 - `prp-r10-deuda-lecturas.md` — R10: deuda medida en R9 (RLS sin función por fila, facetas en una pasada, `hasModule` cacheado) (HECHO 2026-10-27, aprobado por Roberto)
+- `prp-fase-8-klaushop.md` — Fase 8: migrar klauShop como tienda `klaushop` (export read-only → snapshot → import por lotes reanudable → verify → corte), en la Nano; decisiones D1–D12 y 6 preguntas abiertas (PENDIENTE, 2026-10-27)

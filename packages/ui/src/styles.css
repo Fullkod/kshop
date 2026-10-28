@@ -128,6 +128,30 @@
   }
 }
 
+/*
+ * Every single-choice <select> of the site (storefront, admin, apps) draws the same chevron with room on the right.
+ * The native arrow sat against the border wherever a select had a small padding (px-2). Unlayered on purpose: it
+ * wins over each select's own px-* utility. The chevron uses currentColor (no fixed hex: it follows the theme).
+ */
+select:not([multiple]):not([size]) {
+  appearance: none;
+  padding-inline-end: 2.25rem;
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.15rem) 50%,
+    calc(100% - 0.85rem) 50%;
+  background-size: 0.3rem 0.3rem;
+  background-repeat: no-repeat;
+}
+
+@media (forced-colors: active) {
+  select:not([multiple]):not([size]) {
+    appearance: auto;
+    background-image: none;
+  }
+}
+
 @layer base {
   * {
     border-color: var(--color-border);

@@ -42,7 +42,10 @@
     "e2e:notifications": "node scripts/e2e-notifications.mjs",
     "qa:orders": "node scripts/qa-orders.mjs",
     "qa:discounts": "node scripts/qa-discounts.mjs",
-    "qa:notifications": "node scripts/qa-notifications.mjs"
+    "qa:notifications": "node scripts/qa-notifications.mjs",
+    "klaushop:export": "node scripts/klaushop/export.mjs",
+    "klaushop:import": "node scripts/klaushop/import.mjs",
+    "klaushop:verify": "node scripts/klaushop/verify.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

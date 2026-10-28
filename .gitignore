@@ -47,3 +47,6 @@ CLAUDE.local.md
 
 # Playwright MCP session files (snapshots, console logs)
 .playwright-mcp/
+
+# Phase 8: klauShop snapshot (personal data, never versioned)
+.klaushop-snapshot/
