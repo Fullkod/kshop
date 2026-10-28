@@ -89,6 +89,10 @@ síntesis, 10 revisores que intentaron refutar cada causa: ninguna cayó). Infor
   Medición sin pg_graphql: admin mediana **1,05 s**, p95 2,2 s, 0 errores; tienda 1,2–1,9 s por página.
 - `scripts/copy-demo-to-test.mjs` copia la Demo de producción al proyecto de prueba (sin clientes), por tablas y en
   trozos (la Management API rechaza cuerpos grandes: 413).
+- Proyecto de prueba (visto 2026-10-28): solo tiene las 2 cuentas de la Demo; `pnpm e2e:setup` creó allí
+  `superadmin@e2e.kshop.test`. La suscripción de la Demo copiada **no tiene plan** y Superadmin › Tienda se rompe en
+  `data.plan.name` (en producción sí hay plan). Sus redirecciones de Auth solo admiten `*.kshop.localhost:3000`: en otro
+  puerto los enlaces de acceso caen en el `site_url`.
 
 ## Estado al cerrar R11 (2026-10-28, último commit `634a742`, todo en `main`)
 - Código, migraciones (prueba y producción) y `AGENTS.md` al día; PRP en HECHO salvo la Fase 7.

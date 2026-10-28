@@ -420,6 +420,7 @@ WhatsApp queda en «Simulado» mientras dure R11 (decisión de Roberto, 2026-10-
 |-----|-------|--------|
 | Fase 7: 24 h de logs de Supabase (57014) y de `/api/v1` (500 pasajeros vistos tras el primer deploy) | Claude | Desde el 2026-10-29, con uso normal |
 | Revisar juntos admin y tienda (Demo y klau) y dar feedback menor | Roberto + Claude | Próxima sesión |
+| Revisar el panel del superadmin (Roberto lo ve «pobre»); p. ej. «Enviar acceso» visible desde la lista de tiendas | Roberto + Claude | Cuando Roberto diga |
 | Volver WhatsApp a «Real» (sigue en «Simulado» por decisión de Roberto) | Roberto | Cuando lo decida |
 | Borrar `KSHOP_CUSTOM_DOMAIN_REDIRECT` en Vercel y redesplegar | Roberto (guiado) | Antes del primer dominio propio activo |
 | Compactar `C:\Users\rober\AppData\Local\Docker\wsl\data\ext4.vhdx` (91,9 GB): `wsl --shutdown` + `diskpart` como administrador | Roberto | Cuando pueda |

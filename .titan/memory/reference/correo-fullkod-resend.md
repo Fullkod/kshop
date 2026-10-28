@@ -22,7 +22,10 @@ y Vercel; remitente `Kshop <noreply@fullkod.com>` (`EMAIL_FROM` opcional). Solo 
 (`apps/web/src/server/email.ts`, `staff-access.ts`): «¿Olvidaste tu contraseña?» en `/admin/login` (solo a personal de
 esa tienda, misma respuesta exista o no la cuenta, 3/h por email y 10/h por IP) y Superadmin › Tienda › «Enviar acceso
 al dueño» (correo + copiar/WhatsApp). Nunca a clientes: su email es sintético y rebotaría. Para probar el envío sin
-gastar reputación usar `delivered@resend.dev`; las cuentas `@*.kshop.test` no existen.
+gastar reputación usar `delivered@resend.dev`; las cuentas `@*.kshop.test` no existen. **Probado por Roberto en
+producción el 2026-10-28** (commit `6e64bdb`, clave ya en Vercel): las dos vías funcionan. El botón está en la **ficha**
+de la tienda (clic en el nombre en Superadmin › Tiendas), bajo «Dueño:»; desde la lista no se ve: pendiente para la
+revisión del superadmin (Roberto lo ve «pobre»).
 
 **Cómo aplicarlo en este proyecto:** si tiene (o va a tener) un formulario de contacto o cualquier mensaje que deba
 leer el equipo, **el proyecto tiene que buscar su propia forma de avisar** (notificación en la app, alerta por
