@@ -32,6 +32,7 @@
 - [2026-10-27-rediseno-v2.md](project/2026-10-27-rediseno-v2.md) — Rediseño v2 hecho (R0–R9): decisiones de Roberto, tienda sin hex, landing con datos de planes, dónde está cada pieza, pendientes y **dónde quedamos** (pausa 2026-10-27)
 - [pendiente-realtime.md](project/pendiente-realtime.md) — Realtime con señales sin datos (hecho 2026-10-27): temas, dónde está y cómo añadir una pantalla
 - [lecturas-tienda-r9.md](project/lecturas-tienda-r9.md) — Por qué la Nano se hundía (demasiadas consultas en serie, recorridos del catálogo, tienda en frío tras cada pedido), qué se cambió en R9 y la deuda resuelta en R10 (RLS con subplan hash, facetas en una pasada, entitlements cacheados)
+- [2026-10-28-diagnostico-rendimiento.md](project/2026-10-28-diagnostico-rendimiento.md) — Auditoría del admin lento y los 57014: no es volumen; peaje de esquema de pg_graphql por conexión + ráfagas del desarrollo + admin frágil + bug login/set-password; reglas operativas (nada de e2e/qa/imports/build con la web en uso), decisiones D1–D5 cerradas, WhatsApp en «Simulado» durante R11
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
 
 ## feedback/ — Correcciones y preferencias
@@ -42,6 +43,7 @@
 
 - [trucos-entorno-y-next.md](reference/trucos-entorno-y-next.md) — Cache Components, pg_graphql y trucos del entorno de Roberto (puertos, *.localhost, Playwright, Lighthouse)
 - [fuentes.md](reference/fuentes.md) — Rutas de materiales, klauShop, dcabellos, apululu y Saleor, y para qué sirve cada uno
+- [Correo de Fullkod](reference/correo-fullkod-resend.md) — @fullkod.com va por Resend (contact@, support@), sin reenvío; cada proyecto decide cómo avisar de sus formularios
 
 ## Planes (`.titan/plans/`)
 
@@ -60,3 +62,4 @@
 - `prp-r9-lecturas-tienda.md` — R9: lecturas de la tienda sin recorrer el catálogo (portada en 2 tandas, carruseles por índice, conteos de lo mostrado, refresco en segundo plano tras un pedido) (HECHO 2026-10-27)
 - `prp-r10-deuda-lecturas.md` — R10: deuda medida en R9 (RLS sin función por fila, facetas en una pasada, `hasModule` cacheado) (HECHO 2026-10-27, aprobado por Roberto)
 - `prp-fase-8-klaushop.md` — Fase 8: migrar klauShop como tienda `klaushop` (export read-only → snapshot → import por lotes reanudable → verify → corte), en la Nano; decisiones D1–D12 y 6 preguntas abiertas (PENDIENTE, 2026-10-27)
+- `prp-r11-rendimiento-admin.md` — R11: admin lento y 57014 según el informe de diagnóstico (`.titan/qa/r11-rendimiento-admin/`): bug login/set-password, sesión estable + timeouts/reintento único, arranque plano por `/api/v1/me?storeId=` (`admin_bootstrap`), `getClaims` + `api_guard`, proxy sin RPC de dominio, G10/cron/tests condicionales; D1–D5 cerradas: Docker local para dev/test (Fase 0b), cron solo promociones, getClaims sí, G13+G14 dentro, pagar tras medir (APROBADO 2026-10-28, en curso)
