@@ -53,7 +53,10 @@ síntesis, 10 revisores que intentaron refutar cada causa: ninguna cayó). Infor
 - ~~Desarrollo y tests en Supabase local (Docker)~~ **retirado el 2026-10-28** a petición de Roberto: las imágenes
   llenaron el disco C:. Se quitaron `scripts/db-env.mjs`, `docs/LOCAL_DB.md`, `supabase/config.toml` y los
   `db:local:*`; todo vuelve a la base online. D1 queda abierta: la alternativa es un **2º proyecto Supabase Free**
-  de pruebas (la organización tiene 1 de 2), pendiente de que Roberto lo cree o lo autorice.
+  de pruebas (la organización tiene 1 de 2), **hecho el 2026-10-28**: «KShop Test» (`peyfwvjwmuokllmqeexh`, Free,
+  us-east-1), 59 migraciones, RLS 644/644, Tienda Demo sembrada; `scripts/db-env.mjs` manda dev/e2e/qa/test:rls/codegen
+  ahí por defecto (`KSHOP_DB_TARGET=prod` para producción). Ver `docs/TEST_DB.md`. Sin clave de OpenWA: nunca envía
+  WhatsApp reales. Un proyecto nuevo no tiene particiones de `realtime.messages` hasta su primer cliente Realtime.
 - **Desplegado 2026-10-28** (`92ebd31` + `b161a32`). Producción después (`perf-prod-despues*.json`): mediana 4,4 s →
   1,8–2,0 s, máximo 33,8 s → 16–24 s, peticiones 168 → 90–100, GraphQL 66 → 26. Quedan picos de pg_graphql en frío
   (lote de 9,7 s con 500 en themes/menus) y en la 1ª ronda, justo tras el deploy, 500 rápidos pasajeros en `/api/v1`
