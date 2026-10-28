@@ -39,5 +39,19 @@ de subir la instancia. Diagnóstico y decisiones en `.titan/plans/prp-r9-lectura
   (así lo hace ya `e2e-catalog.mjs`), no por `set_store_module_grant` a mano.
 - `storefront_features`: medida en 2,7 ms (no 10–13) y va en el shell cacheado; se deja.
 
+## Admin: 57014 en todo el panel (2026-10-28)
+- Roberto vio 57014 en muchas lecturas del admin de `klau` (Apariencia, ficha de producto). Medido: dentro de la base las
+  mismas consultas van en 15–40 ms en caliente, pero la **primera consulta pg_graphql de cada conexión** reconstruye el
+  esquema (hasta 2,4 s en la Nano), y PostgREST reparte las peticiones entre conexiones. Una pantalla lanzaba 2–6
+  lecturas separadas: con la Nano estrangulada (créditos de CPU agotados tras tests + import + benchmarks) llegaron a
+  17 s y 5 de 6 cayeron por 57014. El contador de esquema de pg_graphql (`graphql.seq_schema_version`) no se movía:
+  no es DDL, es CPU.
+- **Fix en código**: `packages/data/src/graphql-batch.ts` (`batch: true` en la sesión del admin y Kshop Admin): las
+  consultas que una pantalla lanza en el mismo momento (ventana de 8 ms) salen como UNA operación GraphQL (alias,
+  variables y fragmentos con prefijo `b{i}_`) y la respuesta se reparte; errores GraphQL → se reenvían una a una;
+  idénticas → una vez. Probado con las 6 lecturas reales: resultado idéntico 6/6; una fusionada 1,3–3 s frente a
+  2,6–6,9 s separadas (Nano estrangulada).
+- La causa de fondo sigue siendo la instancia: el proyecto **no tiene add-on de cómputo** (Nano). Roberto decide subir.
+
 ## Pendiente
 - Subir la instancia cuando entren tiendas reales (klauShop): la Nano se estrangula con cualquier ráfaga.

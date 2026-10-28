@@ -1,4 +1,5 @@
 import { cacheExchange, Client, fetchExchange } from "@urql/core";
+import { createBatchingFetch } from "./graphql-batch";
 import type { SupabaseConfig } from "./supabase";
 
 export type GraphqlClientOptions = SupabaseConfig & {
@@ -8,11 +9,14 @@ export type GraphqlClientOptions = SupabaseConfig & {
   fetch?: typeof fetch;
   /** Skip urql's in-memory cache (server side, where caching is done by the framework). */
   noCache?: boolean;
+  /** Merge the queries a screen starts at the same moment into one request (admin; see graphql-batch.ts). */
+  batch?: boolean;
 };
 
 /** urql client for pg_graphql. Works in the browser, the server and the Capacitor apps. */
 export function createGraphqlClient(options: GraphqlClientOptions): Client {
-  const baseFetch = options.fetch ?? fetch;
+  const rawFetch = options.fetch ?? ((input: RequestInfo | URL, init?: RequestInit) => fetch(input, init));
+  const baseFetch = options.batch ? createBatchingFetch(rawFetch) : rawFetch;
   return new Client({
     url: `${options.url}/graphql/v1`,
     exchanges: options.noCache ? [fetchExchange] : [cacheExchange, fetchExchange],

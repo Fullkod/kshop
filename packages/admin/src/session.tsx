@@ -74,7 +74,7 @@ export function SessionProvider({ config, children }: { config: AdminConfig; chi
       session,
       ready,
       api: createApiClient({ baseUrl: config.apiBaseUrl, getAccessToken }),
-      graphql: createGraphqlClient({ ...config.supabase, getAccessToken, noCache: true }),
+      graphql: createGraphqlClient({ ...config.supabase, getAccessToken, noCache: true, batch: true }),
       config,
     };
   }, [supabase, session, ready, config]);
