@@ -53,5 +53,13 @@ de subir la instancia. Diagnóstico y decisiones en `.titan/plans/prp-r9-lectura
   2,6–6,9 s separadas (Nano estrangulada).
 - La causa de fondo sigue siendo la instancia: el proyecto **no tiene add-on de cómputo** (Nano). Roberto decide subir.
 
+## Build de Vercel sin lecturas de tienda (2026-10-28, `8bc17e7`)
+- El deploy falló en `/s/[storeSlug]/brand/[slug]`: con la Nano estrangulada, las lecturas anon del build (shell,
+  productos, portada de cada tienda × cada ruta × hasta 20 slugs) pasaban de 8 s (57014). Ahora `listStoreSlugs()`
+  devuelve `[]` durante `next build` y el slug comodín `_` se responde sin consultar: **ninguna página de tienda se
+  prerenderiza**; se renderiza en su primera visita y queda en caché. Build local: 139 páginas en 9 s.
+- Coste: la primera visita a cada página tras un deploy paga la lectura en frío (medido con la Nano estrangulada:
+  portada de klau 500 a los 14,5 s la primera vez, 5,6 s la segunda). Se arregla con la instancia, no con el build.
+
 ## Pendiente
 - Subir la instancia cuando entren tiendas reales (klauShop): la Nano se estrangula con cualquier ráfaga.
