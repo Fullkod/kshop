@@ -83,8 +83,13 @@ síntesis, 10 revisores que intentaron refutar cada causa: ninguna cayó). Infor
   (`kshop.admin.*`, se borra al cerrar sesión) y se pinta al instante; Equipo lee `store_team` (antes listaba todas
   las cuentas de Auth). Las RPC de Finanzas/Inicio cuestan 1–34 ms calientes: su segundo de más es Vercel en frío y
   la Nano, no el código.
-- **Pendiente:** quitar la extensión pg_graphql cuando los logs no muestren peticiones a `/graphql/v1` (APK de Kshop
-  Admin antiguos la usaban) y rehacer los 10 checks de RLS que usan `graphql.resolve` (tests 02, 03, 04).
+- **pg_graphql quitado de producción (2026-10-28, 17:28 UTC):** 0 llamadas a `/graphql/v1` tras el deploy; ninguna APK
+  publicada (todas `published = false`; la app de tienda nunca lo usó). `drop extension pg_graphql` solo en producción
+  (se vuelve con `create extension pg_graphql`); el proyecto de prueba lo conserva para los comparadores y
+  `db:graphql-schema`. Los 10 checks de RLS con `graphql.resolve` (tests 02–04) se rehicieron con SQL y `sf_*`/`admin_*`.
+  Medición sin pg_graphql: admin mediana **1,05 s**, p95 2,2 s, 0 errores; tienda 1,2–1,9 s por página.
+- `scripts/copy-demo-to-test.mjs` copia la Demo de producción al proyecto de prueba (sin clientes), por tablas y en
+  trozos (la Management API rechaza cuerpos grandes: 413).
 - (Antes) Falta: desplegar el código (permiso de Roberto) y medir en producción con `qa:admin-perf` (línea base
   `.titan/qa/r11-rendimiento-admin/perf-prod-antes.json`: mediana 4,4 s, p95 20,9 s).
 

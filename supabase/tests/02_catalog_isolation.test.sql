@@ -234,15 +234,15 @@ select tests.check('anon: cannot call admin_search_products',
   tests.throws(format('select * from public.admin_search_products(%L)', tests.fx('store_a'))));
 select tests.check('anon: cannot call save_product', tests.throws(format(
   $$select public.save_product(%L, '{}'::jsonb, null)$$, tests.fx('store_a'))));
-select tests.check('anon: GraphQL has no cost field on variants', (
-  select graphql.resolve(query := '{ productVariantsCollection(first: 1) { edges { node { sku variantCosts { costPrice } } } } }')
-    ? 'errors'));
-select tests.check('anon: GraphQL has no variantCostsCollection', (
-  select graphql.resolve(query := '{ variantCostsCollection(first: 1) { edges { node { costPrice } } } }') ? 'errors'));
-select tests.check('anon: GraphQL lists published products with price', (
-  select (graphql.resolve(query := format(
-    '{ productsCollection(filter: {storeId: {eq: "%s"}}) { edges { node { name minPrice productVariantsCollection { edges { node { sku price stockAvailable } } } } } } }',
-    tests.fx('store_a'))) -> 'data' -> 'productsCollection' -> 'edges' -> 0 -> 'node' ->> 'minPrice') = '1500.00'));
+select tests.check('anon: no cost field in the storefront listing', (
+  select public.sf_storefront_products(jsonb_build_object('storeId', tests.fx('store_a'), 'first', 50))::text
+    !~* 'cost'));
+select tests.check('anon: cannot read variant_costs', tests.throws('select * from public.variant_costs'));
+select tests.check('anon: the storefront lists published products with price', (
+  select exists (
+    select 1 from jsonb_array_elements(public.sf_storefront_products(jsonb_build_object('storeId', tests.fx('store_a'),
+      'first', 50)) -> 'storefrontSearchProducts' -> 'edges') e
+    where e -> 'node' ->> 'minPrice' = '1500.00')));
 select tests.logout();
 
 update public.stores set status = 'suspended' where id = tests.fx('store_b');
@@ -277,10 +277,13 @@ select tests.eq('owner A: cannot change stock directly', tests.affected(format(
   $$update public.stocks set quantity = 99 where store_id = %L$$, tests.fx('store_a'))), -1);
 select tests.check('owner A: cannot call save_product', tests.throws(format(
   $$select public.save_product(%L, '{}'::jsonb, null)$$, tests.fx('store_a'))));
-select tests.check('owner A: GraphQL reads own costs through the variant', (
-  select graphql.resolve(query := format(
-    '{ productVariantsCollection(filter: {storeId: {eq: "%s"}}, first: 1) { edges { node { variantCosts { costPrice costCurrency } } } } }',
-    tests.fx('store_a'))) -> 'data' -> 'productVariantsCollection' -> 'edges' -> 0 -> 'node' -> 'variantCosts' ->> 'costPrice' is not null));
+select tests.check('owner A: reads own costs through the variant (admin_product)', (
+  select exists (
+    select 1 from jsonb_array_elements(public.admin_product((
+      select v.product_id from public.product_variants v join public.variant_costs k on k.variant_id = v.id
+      where v.store_id = tests.fx('store_a') limit 1
+    )) -> 'productsCollection' -> 'edges' -> 0 -> 'node' -> 'productVariantsCollection' -> 'edges') e
+    where e -> 'node' -> 'variantCosts' ->> 'costPrice' is not null)));
 select tests.logout();
 
 select tests.login('staff_a');

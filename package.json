@@ -21,7 +21,7 @@
     "db:test:query": "node scripts/db-env.mjs --target=test node scripts/db.mjs query",
     "db:test:auth-config": "node scripts/db-env.mjs --target=test node scripts/db.mjs auth-config",
     "db:auth-config": "node scripts/db.mjs auth-config",
-    "db:graphql-schema": "node scripts/db.mjs graphql-schema",
+    "db:graphql-schema": "node scripts/db-env.mjs --target=test node scripts/db.mjs graphql-schema",
     "test:rls": "node scripts/db-env.mjs node scripts/db.mjs test",
     "superadmin:create": "node scripts/db-env.mjs node scripts/create-superadmin.mjs",
     "e2e:setup": "node scripts/db-env.mjs node scripts/e2e.mjs setup",

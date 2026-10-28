@@ -1,7 +1,9 @@
 // R11: the storefront's RPC reads (supabase/migrations/20261108100700_storefront_reads.sql) must return exactly what
 // the pg_graphql queries of packages/data return. Runs both as anon (a visitor) on the Tienda Demo inside a read-only
 // transaction and compares them (only endCursor differs: the RPCs use offset cursors).
-//   node scripts/db-env.mjs node scripts/compare-storefront-reads.mjs     (KSHOP_DB_TARGET=prod for real data)
+//   node scripts/db-env.mjs node scripts/compare-storefront-reads.mjs
+// pg_graphql only exists in the test project (removed from production on 2026-10-28): run this there, after
+// `pnpm db:test:migrate` (the default target of scripts/db-env.mjs).
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";

@@ -1,8 +1,7 @@
 # PRP: R11 · Rendimiento del admin y errores 57014
 
-> **Estado**: APROBADO (2026-10-28) con D1–D5 cerradas (ver «Decisiones de Roberto»). Fases 0–4, 6 y 6b hechas y
-> verificadas en local; migraciones aplicadas en producción (644/644 RLS). 6c medida y descartada. **Falta**: desplegar
-> el código (push a Vercel, con permiso de Roberto), la medición «después» en producción (Fase 5/7) y 24 h de logs.
+> **Estado**: HECHO (2026-10-28). Todo el admin y la tienda leen por funciones SQL; pg_graphql quitado de producción.
+> **Falta**: Fase 7, revisar 24 h de logs con uso normal (57014 y errores 500 de `/api/v1`).
 > **Fecha**: 2026-10-28
 > **Proyecto**: Kshop
 > **Sigue a**: `prp-r9-lecturas-tienda.md`, `prp-r10-deuda-lecturas.md`. Memoria: `project/lecturas-tienda-r9.md`
@@ -358,6 +357,27 @@ WhatsApp queda en «Simulado» mientras dure R11 (decisión de Roberto, 2026-10-
   **1,45 s**; 0 peticiones a pg_graphql, 0 errores; 31 de 37 vistas por debajo de 2 s. Pico de 18,8 s en themes/home:
   en ese momento `/api/v1/me` tardó 11,6 s y las RPC 4–7 s, es decir, la Nano estrangulada (el día tuvo varias pasadas
   de `test:rls`, comparaciones y mediciones), no una lectura lenta.
+
+### 2026-10-28: Tienda pública fuera de pg_graphql y extensión quitada (Roberto: «quitaría el graphql»)
+- **T9**: `KSHOP_CUSTOM_DOMAIN_REDIRECT=off` en Vercel (la puso Roberto, guiado: Claude no tiene acceso a Vercel). Quitarla
+  antes del primer dominio propio activo (`AGENTS.md`).
+- **Arranque del admin guardado** (web y app): el último `/me` por usuario y tienda, 24 h, en localStorage
+  (`kshop.admin.*`, se borra al cerrar sesión); el panel se pinta al instante y `/me` lo reemplaza.
+- **Equipo**: `store_team` (miembros con su email en una consulta) en vez de listar todas las cuentas de Auth.
+- **Pantallas de 1–2 s que no eran pg_graphql**: las RPC de Finanzas, Inicio, ventas de hoy, almacenes cuestan 1–34 ms
+  calientes (368 ms la primera de Finanzas por conexión); el resto es Vercel en frío y la Nano. Sin cambio de código.
+- **Tienda**: 16 funciones `sf_<operación>(p_vars jsonb)` con la forma exacta de cada documento de
+  `storefront-queries.ts`/`queries.ts` (36/36 con `scripts/compare-storefront-reads.mjs`, como anon); `createGraphqlClient`
+  manda cada operación a su función, así que `storefront-reads.ts` (precios, promociones, stock) no cambió. Órdenes y
+  filtros dinámicos con lista cerrada (`private.sf_order_key`). Páginas de producción (pg_graphql) y local (RPC) con el
+  mismo texto y el mismo sitemap (271 URLs); producción fallaba en `/products?page=3&sort=price-desc` y local no.
+- **pg_graphql quitado de producción** tras ver 0 llamadas a `/graphql/v1` después del deploy y ninguna APK publicada.
+  Se conserva en el proyecto de prueba (comparadores, `db:graphql-schema`). Tests 02–04 rehechos sin `graphql.resolve`.
+- **Medición final en producción** (`perf-prod-sin-graphql.json`): admin mediana **1,05 s**, p95 2,2 s, máx. 8,0 s,
+  0 errores (al empezar: 4,4 s, 20,9 s y 33,8 s); tienda 1,2–1,9 s por página.
+- **Errores**: el cuerpo de una sola petición a la Management API con toda la Demo da 413 (copiar por tablas y en
+  trozos); pasar a una función de tipo fila una fila con una columna de más (`rn`) no es ese tipo (pasar la fila
+  entera: `select p as prod, row_number()…`).
 
 ---
 

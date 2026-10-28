@@ -1,0 +1,1667 @@
+{
+ "summary": {
+  "label": "prod-sin-graphql",
+  "base": "https://demo.kshop.fullkod.com",
+  "at": "2026-10-28T17:30:35.417Z",
+  "views": 37,
+  "medianMs": 1045,
+  "p95Ms": 2225,
+  "maxMs": 8022,
+  "viewsWithErrors": 0,
+  "requests": 104,
+  "graphqlRequests": 0
+ },
+ "results": [
+  {
+   "view": "home",
+   "settledMs": 8022,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 5,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/sales-today",
+     "ms": 1712,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_orders",
+     "ms": 832,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_checkout_settings",
+     "ms": 817,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     5488,
+     772,
+     "/api/v1/me"
+    ],
+    [
+     6310,
+     631,
+     "/orders/summary"
+    ],
+    [
+     6310,
+     817,
+     "/rest/v1/rpc/admin_checkout_settings"
+    ],
+    [
+     6310,
+     832,
+     "/rest/v1/rpc/admin_orders"
+    ],
+    [
+     6310,
+     1712,
+     "/orders/sales-today"
+    ]
+   ]
+  },
+  {
+   "view": "orders",
+   "settledMs": 829,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 427,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_checkout_settings",
+     "ms": 328,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_orders",
+     "ms": 256,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     401,
+     328,
+     "/rest/v1/rpc/admin_checkout_settings"
+    ],
+    [
+     402,
+     256,
+     "/rest/v1/rpc/admin_orders"
+    ],
+    [
+     402,
+     427,
+     "/api/v1/me"
+    ]
+   ]
+  },
+  {
+   "view": "orders/579fa21e-a499-441a-8f96-120802e703d4",
+   "settledMs": 1538,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/rest/v1/rpc/admin_notification_log",
+     "ms": 530,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_order",
+     "ms": 456,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 364,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     537,
+     306,
+     "/rest/v1/rpc/admin_checkout_settings"
+    ],
+    [
+     538,
+     364,
+     "/api/v1/me"
+    ],
+    [
+     538,
+     456,
+     "/rest/v1/rpc/admin_order"
+    ],
+    [
+     1008,
+     530,
+     "/rest/v1/rpc/admin_notification_log"
+    ]
+   ]
+  },
+  {
+   "view": "orders/customers",
+   "settledMs": 1057,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/rest/v1/rpc/admin_customers",
+     "ms": 440,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 376,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     360,
+     376,
+     "/api/v1/me"
+    ],
+    [
+     617,
+     440,
+     "/rest/v1/rpc/admin_customers"
+    ]
+   ]
+  },
+  {
+   "view": "orders/payment-methods",
+   "settledMs": 745,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 495,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_checkout_settings",
+     "ms": 334,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     251,
+     334,
+     "/rest/v1/rpc/admin_checkout_settings"
+    ],
+    [
+     251,
+     495,
+     "/api/v1/me"
+    ]
+   ]
+  },
+  {
+   "view": "sales-today",
+   "settledMs": 1323,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/sales-today",
+     "ms": 1048,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 431,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     275,
+     431,
+     "/api/v1/me"
+    ],
+    [
+     275,
+     1048,
+     "/orders/sales-today"
+    ]
+   ]
+  },
+  {
+   "view": "catalog",
+   "settledMs": 971,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/rest/v1/rpc/admin_catalog_structure",
+     "ms": 696,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_products",
+     "ms": 562,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 381,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     275,
+     381,
+     "/api/v1/me"
+    ],
+    [
+     275,
+     562,
+     "/rest/v1/rpc/admin_products"
+    ],
+    [
+     275,
+     696,
+     "/rest/v1/rpc/admin_catalog_structure"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/products/9cd3a82e-e293-445f-8054-c77a2af2b373",
+   "settledMs": 1509,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/rest/v1/rpc/admin_product",
+     "ms": 578,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 447,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_catalog_structure",
+     "ms": 319,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     931,
+     319,
+     "/rest/v1/rpc/admin_catalog_structure"
+    ],
+    [
+     931,
+     447,
+     "/api/v1/me"
+    ],
+    [
+     931,
+     578,
+     "/rest/v1/rpc/admin_product"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/categories",
+   "settledMs": 1093,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 518,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_catalog_structure",
+     "ms": 290,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     575,
+     290,
+     "/rest/v1/rpc/admin_catalog_structure"
+    ],
+    [
+     575,
+     518,
+     "/api/v1/me"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/attributes",
+   "settledMs": 905,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 395,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_catalog_structure",
+     "ms": 327,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     510,
+     327,
+     "/rest/v1/rpc/admin_catalog_structure"
+    ],
+    [
+     510,
+     395,
+     "/api/v1/me"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/brands",
+   "settledMs": 1212,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 413,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_catalog_structure",
+     "ms": 315,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     799,
+     315,
+     "/rest/v1/rpc/admin_catalog_structure"
+    ],
+    [
+     799,
+     413,
+     "/api/v1/me"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/collections",
+   "settledMs": 1257,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/rest/v1/rpc/admin_catalog_structure",
+     "ms": 559,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 454,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     698,
+     454,
+     "/api/v1/me"
+    ],
+    [
+     698,
+     559,
+     "/rest/v1/rpc/admin_catalog_structure"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/warehouses",
+   "settledMs": 1014,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 434,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_catalog_structure",
+     "ms": 366,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     580,
+     366,
+     "/rest/v1/rpc/admin_catalog_structure"
+    ],
+    [
+     580,
+     434,
+     "/api/v1/me"
+    ]
+   ]
+  },
+  {
+   "view": "finance",
+   "settledMs": 1815,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 1502,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/daily",
+     "ms": 807,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/summary",
+     "ms": 672,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     313,
+     570,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     313,
+     672,
+     "/finance/summary"
+    ],
+    [
+     313,
+     807,
+     "/finance/daily"
+    ],
+    [
+     313,
+     1502,
+     "/api/v1/me"
+    ]
+   ]
+  },
+  {
+   "view": "finance/breakdown",
+   "settledMs": 976,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/breakdown",
+     "ms": 637,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 426,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/store_currencies",
+     "ms": 324,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     339,
+     324,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     339,
+     637,
+     "/finance/breakdown"
+    ],
+    [
+     340,
+     426,
+     "/api/v1/me"
+    ]
+   ]
+  },
+  {
+   "view": "finance/expenses",
+   "settledMs": 998,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/expenses",
+     "ms": 671,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/store_currencies",
+     "ms": 649,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 435,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     327,
+     325,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     327,
+     435,
+     "/api/v1/me"
+    ],
+    [
+     327,
+     649,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     327,
+     671,
+     "/finance/expenses"
+    ]
+   ]
+  },
+  {
+   "view": "finance/inventory",
+   "settledMs": 938,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 5,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 620,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/store_currencies",
+     "ms": 599,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/inventory",
+     "ms": 578,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     318,
+     312,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     318,
+     417,
+     "/api/v1/me"
+    ],
+    [
+     318,
+     578,
+     "/finance/inventory"
+    ],
+    [
+     318,
+     599,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     318,
+     620,
+     "/warehouses"
+    ]
+   ]
+  },
+  {
+   "view": "finance/margin",
+   "settledMs": 905,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/margin",
+     "ms": 560,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 358,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/store_currencies",
+     "ms": 321,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     345,
+     560,
+     "/finance/margin"
+    ],
+    [
+     346,
+     321,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     346,
+     358,
+     "/api/v1/me"
+    ]
+   ]
+  },
+  {
+   "view": "discounts",
+   "settledMs": 966,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/rest/v1/rpc/admin_discount_targets",
+     "ms": 594,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_promotions",
+     "ms": 585,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 392,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     372,
+     331,
+     "/rest/v1/rpc/admin_checkout_settings"
+    ],
+    [
+     372,
+     392,
+     "/api/v1/me"
+    ],
+    [
+     372,
+     585,
+     "/rest/v1/rpc/admin_promotions"
+    ],
+    [
+     372,
+     594,
+     "/rest/v1/rpc/admin_discount_targets"
+    ]
+   ]
+  },
+  {
+   "view": "discounts/vouchers",
+   "settledMs": 965,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/rest/v1/rpc/admin_vouchers",
+     "ms": 601,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 446,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_discount_targets",
+     "ms": 327,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     364,
+     306,
+     "/rest/v1/rpc/admin_checkout_settings"
+    ],
+    [
+     364,
+     327,
+     "/rest/v1/rpc/admin_discount_targets"
+    ],
+    [
+     364,
+     446,
+     "/api/v1/me"
+    ],
+    [
+     364,
+     601,
+     "/rest/v1/rpc/admin_vouchers"
+    ]
+   ]
+  },
+  {
+   "view": "shipping",
+   "settledMs": 807,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 455,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_checkout_settings",
+     "ms": 317,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     352,
+     317,
+     "/rest/v1/rpc/admin_checkout_settings"
+    ],
+    [
+     352,
+     455,
+     "/api/v1/me"
+    ]
+   ]
+  },
+  {
+   "view": "themes",
+   "settledMs": 2225,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 5,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/storefront",
+     "ms": 1248,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_content",
+     "ms": 592,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_catalog_structure",
+     "ms": 566,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     368,
+     469,
+     "/api/v1/me"
+    ],
+    [
+     368,
+     566,
+     "/rest/v1/rpc/admin_catalog_structure"
+    ],
+    [
+     368,
+     592,
+     "/rest/v1/rpc/admin_content"
+    ],
+    [
+     977,
+     485,
+     "/storefront"
+    ],
+    [
+     977,
+     1248,
+     "/storefront"
+    ]
+   ]
+  },
+  {
+   "view": "themes/home",
+   "settledMs": 1028,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 414,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_content",
+     "ms": 346,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_catalog_structure",
+     "ms": 305,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     614,
+     305,
+     "/rest/v1/rpc/admin_catalog_structure"
+    ],
+    [
+     614,
+     346,
+     "/rest/v1/rpc/admin_content"
+    ],
+    [
+     614,
+     414,
+     "/api/v1/me"
+    ]
+   ]
+  },
+  {
+   "view": "themes/banners",
+   "settledMs": 1698,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/rest/v1/rpc/admin_content",
+     "ms": 1067,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_catalog_structure",
+     "ms": 1040,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 410,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     631,
+     410,
+     "/api/v1/me"
+    ],
+    [
+     631,
+     1040,
+     "/rest/v1/rpc/admin_catalog_structure"
+    ],
+    [
+     631,
+     1067,
+     "/rest/v1/rpc/admin_content"
+    ]
+   ]
+  },
+  {
+   "view": "themes/menus",
+   "settledMs": 1291,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/rest/v1/rpc/admin_content",
+     "ms": 704,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 462,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_catalog_structure",
+     "ms": 461,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     587,
+     461,
+     "/rest/v1/rpc/admin_catalog_structure"
+    ],
+    [
+     587,
+     462,
+     "/api/v1/me"
+    ],
+    [
+     587,
+     704,
+     "/rest/v1/rpc/admin_content"
+    ]
+   ]
+  },
+  {
+   "view": "themes/pages",
+   "settledMs": 1045,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/rest/v1/rpc/admin_catalog_structure",
+     "ms": 438,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 424,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_content",
+     "ms": 398,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     607,
+     398,
+     "/rest/v1/rpc/admin_content"
+    ],
+    [
+     607,
+     424,
+     "/api/v1/me"
+    ],
+    [
+     607,
+     438,
+     "/rest/v1/rpc/admin_catalog_structure"
+    ]
+   ]
+  },
+  {
+   "view": "team",
+   "settledMs": 1359,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/team",
+     "ms": 513,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 373,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     846,
+     373,
+     "/api/v1/me"
+    ],
+    [
+     846,
+     513,
+     "/team"
+    ]
+   ]
+  },
+  {
+   "view": "whatsapp-notifications",
+   "settledMs": 915,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/rest/v1/rpc/admin_notification_settings",
+     "ms": 541,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 364,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     374,
+     364,
+     "/api/v1/me"
+    ],
+    [
+     374,
+     541,
+     "/rest/v1/rpc/admin_notification_settings"
+    ]
+   ]
+  },
+  {
+   "view": "whatsapp-notifications/log",
+   "settledMs": 1027,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 383,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_checkout_settings",
+     "ms": 349,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_notification_log",
+     "ms": 332,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     321,
+     332,
+     "/rest/v1/rpc/admin_notification_log"
+    ],
+    [
+     321,
+     383,
+     "/api/v1/me"
+    ],
+    [
+     678,
+     349,
+     "/rest/v1/rpc/admin_checkout_settings"
+    ]
+   ]
+  },
+  {
+   "view": "whatsapp-notifications/templates",
+   "settledMs": 795,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 461,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_notification_settings",
+     "ms": 303,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     334,
+     303,
+     "/rest/v1/rpc/admin_notification_settings"
+    ],
+    [
+     334,
+     461,
+     "/api/v1/me"
+    ]
+   ]
+  },
+  {
+   "view": "billing",
+   "settledMs": 1127,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/billing",
+     "ms": 764,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 549,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     363,
+     549,
+     "/api/v1/me"
+    ],
+    [
+     363,
+     764,
+     "/billing"
+    ]
+   ]
+  },
+  {
+   "view": "multi-warehouse",
+   "settledMs": 1290,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 841,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 426,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     449,
+     841,
+     "/warehouses"
+    ],
+    [
+     450,
+     426,
+     "/api/v1/me"
+    ]
+   ]
+  },
+  {
+   "view": "multi-warehouse/movements",
+   "settledMs": 1639,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses/movements",
+     "ms": 1175,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 677,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 448,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     464,
+     448,
+     "/api/v1/me"
+    ],
+    [
+     464,
+     677,
+     "/warehouses"
+    ],
+    [
+     464,
+     1175,
+     "/warehouses/movements"
+    ]
+   ]
+  },
+  {
+   "view": "multi-warehouse/transfer",
+   "settledMs": 990,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 668,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 373,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     322,
+     373,
+     "/api/v1/me"
+    ],
+    [
+     322,
+     668,
+     "/warehouses"
+    ]
+   ]
+  },
+  {
+   "view": "multi-currency",
+   "settledMs": 1334,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/currencies/rates",
+     "ms": 996,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 510,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     338,
+     510,
+     "/api/v1/me"
+    ],
+    [
+     338,
+     996,
+     "/currencies/rates"
+    ]
+   ]
+  },
+  {
+   "view": "mobile-app",
+   "settledMs": 1208,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/mobile-app",
+     "ms": 630,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 408,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     578,
+     630,
+     "/mobile-app"
+    ],
+    [
+     579,
+     408,
+     "/api/v1/me"
+    ]
+   ]
+  },
+  {
+   "view": "custom-domain",
+   "settledMs": 947,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/custom-domain",
+     "ms": 568,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 411,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     379,
+     411,
+     "/api/v1/me"
+    ],
+    [
+     379,
+     568,
+     "/custom-domain"
+    ]
+   ]
+  }
+ ]
+}

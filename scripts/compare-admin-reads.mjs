@@ -1,7 +1,9 @@
 // R11: the admin's RPC reads (supabase/migrations/20261108100400_admin_reads.sql, 20261108100500_admin_reads_all.sql)
 // must return exactly what the pg_graphql queries they replace return. Runs both as the Tienda Demo owner inside a
 // read-only transaction and compares them (only endCursor differs: the RPCs use offset cursors).
-//   node scripts/compare-admin-reads.mjs        (through scripts/db-env.mjs: test project by default)
+//   node scripts/db-env.mjs node scripts/compare-admin-reads.mjs
+// pg_graphql only exists in the test project (removed from production on 2026-10-28): run this there, after
+// `pnpm db:test:migrate` (the default target of scripts/db-env.mjs).
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -200,8 +202,15 @@ const claims = JSON.stringify({ sub: ownerId, role: "authenticated" });
 const asOwner = (select) =>
   sql(`begin read only; set local role authenticated;
     select set_config('request.jwt.claims', '${claims}', true); ${select}; commit;`);
+// A store without orders or customers (a fresh test project) has no sample for some cases: they are skipped, and said.
+const runnable = cases.filter(([, , call]) => !call.includes("undefined"));
+if (runnable.length < cases.length) {
+  console.log(
+    `# ${cases.length - runnable.length} cases skipped: the Demo of this project has no data for them`,
+  );
+}
 let failed = 0;
-for (const [name, given, call] of cases) {
+for (const [name, given, call] of runnable) {
   let vars = given;
   if (vars.after === "$cursor") {
     const [first] = await asOwner(
@@ -222,5 +231,7 @@ for (const [name, given, call] of cases) {
   );
   if (diff) failed++;
 }
-console.log(failed ? `${failed} of ${cases.length} differ` : `${cases.length}/${cases.length} identical`);
+console.log(
+  failed ? `${failed} of ${runnable.length} differ` : `${runnable.length}/${runnable.length} identical`,
+);
 process.exit(failed ? 1 : 0);

@@ -108,10 +108,9 @@ select tests.eq('anon: only published pages',
   (select string_agg(slug, ',') from public.pages where store_id = tests.fx('store_a')), 'envios');
 select tests.check('anon: cannot insert banners', tests.throws(format(
   $$insert into public.banners (store_id, image_url) values (%L, 'https://x.test/z.webp')$$, tests.fx('store_a'))));
-select tests.check('anon: GraphQL lists the banners of A', (
-  select (graphql.resolve(query := format(
-    '{ bannersCollection(filter: {storeId: {eq: "%s"}}) { edges { node { title imageUrl } } } }',
-    tests.fx('store_a'))) -> 'data' -> 'bannersCollection' -> 'edges' -> 0 -> 'node' ->> 'title') = 'Visible'));
+select tests.check('anon: the home of A shows its visible banner', (
+  select public.sf_storefront_home(jsonb_build_object('storeId', tests.fx('store_a')))::text
+    like '%"title": "Visible"%'));
 select tests.logout();
 
 update public.stores set status = 'suspended' where id = tests.fx('store_b');
@@ -270,15 +269,14 @@ select tests.eq('facets: brands counted without the brand filter',
     p_brand_ids => tests.fx('a_brand')::text) f), '1');
 select tests.eq('facets: total follows the filters',
   (select (f ->> 'total')::int from public.storefront_product_facets(tests.fx('store_a'), p_in_stock => true) f), 1);
-select tests.check('GraphQL: anon lists the search ordered by price with totalCount', (
-  select (r -> 'data' -> 'storefrontSearchProducts' ->> 'totalCount') = '2'
-     and (r -> 'data' -> 'storefrontSearchProducts' -> 'edges' -> 0 -> 'node' ->> 'name') = 'Blusa Lino'
-  from graphql.resolve(query := format(
-    '{ storefrontSearchProducts(pStoreId: "%s", orderBy: [{minPrice: AscNullsLast}], first: 1, offset: 0) { totalCount edges { node { name minPrice } } } }',
-    tests.fx('store_a'))) r));
-select tests.check('GraphQL: anon facets', (
-  select ((graphql.resolve(query := format('{ storefrontProductFacets(pStoreId: "%s") }', tests.fx('store_a')))
-    -> 'data' ->> 'storefrontProductFacets')::jsonb ->> 'total') = '2'));
+select tests.check('sf_storefront_products: anon lists the search ordered by price with totalCount', (
+  select (r -> 'storefrontSearchProducts' ->> 'totalCount') = '2'
+     and (r -> 'storefrontSearchProducts' -> 'edges' -> 0 -> 'node' ->> 'name') = 'Blusa Lino'
+  from public.sf_storefront_products(jsonb_build_object('storeId', tests.fx('store_a'),
+    'orderBy', '[{"minPrice": "AscNullsLast"}]'::jsonb, 'first', 1, 'offset', 0)) r));
+select tests.check('sf_storefront_facets: anon facets', (
+  select ((public.sf_storefront_facets(jsonb_build_object('storeId', tests.fx('store_a')))
+    ->> 'storefrontProductFacets')::jsonb ->> 'total') = '2'));
 select tests.logout();
 
 update public.stores set status = 'suspended' where id = tests.fx('store_b');

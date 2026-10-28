@@ -149,8 +149,9 @@ select tests.check('anon: cannot read order_lines', tests.throws('select * from 
 select tests.check('anon: cannot read carts', tests.throws('select * from public.carts'));
 select tests.check('anon: cannot read payments', tests.throws('select * from public.payments'));
 select tests.check('anon: cannot read the OTP table', tests.throws('select * from private.customer_otps'));
-select tests.check('anon: GraphQL has no ordersCollection', (
-  select graphql.resolve(query := '{ ordersCollection(first: 1) { edges { node { id } } } }') ? 'errors'));
+select tests.check('anon: cannot read orders nor call admin_orders',
+  tests.throws('select * from public.orders')
+  and tests.throws(format('select public.admin_orders(%L, 1)', tests.fx('store_a'))));
 select tests.logout();
 
 update public.stores set status = 'suspended' where id = tests.fx('store_b');
@@ -190,12 +191,11 @@ select tests.eq('customer A: cannot insert orders', tests.affected(format(
     values (%L, 5000, 'CUP', 1, 'X', '+5353000001', %L)$$, tests.fx('store_a'), tests.fx('wh_a'))), -1);
 select tests.eq('customer A: cannot update its profile directly', tests.affected(format(
   $$update public.customers set is_blocked = false where id = %L$$, tests.fx('c_a'))), -1);
-select tests.check('customer A: GraphQL lists its order without cost fields', (
-  select graphql.resolve(query := '{ ordersCollection { edges { node { number orderLinesCollection { edges { node { sku } } } } } } }')
-    -> 'data' -> 'ordersCollection' -> 'edges' -> 0 -> 'node' ->> 'number' = '1001'));
-select tests.check('customer A: GraphQL cannot reach line costs', (
-  select coalesce(jsonb_array_length(graphql.resolve(query := '{ orderLineCostsCollection { edges { node { unitCost } } } }')
-    -> 'data' -> 'orderLineCostsCollection' -> 'edges'), 0) = 0));
+select tests.check('customer A: lists its order and its lines', (
+  select (select number from public.orders order by number limit 1) = 1001
+     and exists (select 1 from public.order_lines)));
+select tests.check('customer A: cannot reach line costs', (
+  select count(*) = 0 from public.order_line_costs));
 select tests.logout();
 
 -- A customer token whose store_id claim does not match the customer row sees nothing.

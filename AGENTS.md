@@ -109,12 +109,13 @@
 |---------|----------|
 | `pnpm dev` | Web en `http://kshop.localhost:3000` (plataforma) y `http://{slug}.kshop.localhost:3000` (tiendas) |
 | `pnpm typecheck` · `pnpm lint` · `pnpm test` · `pnpm build` | Calidad (Turborepo). El lint prohíbe `next/*` en `packages/*`, `"use server"` y `any` |
-| `pnpm db:test:status` · `db:test:migrate` · `db:test:query` · `db:test:auth-config` | R11: proyecto Supabase de prueba «KShop Test» (`SUPABASE_TEST_PROJECT_REF`). `pnpm dev`, `demo:seed`, `superadmin:create`, `e2e:*`, `qa:*`, `test:rls` van a **prueba** por defecto (`scripts/db-env.mjs`; `KSHOP_DB_TARGET=prod` para producción); `db:graphql-schema` siempre se vuelca de producción. Migración nueva: primero prueba, luego producción. Ver `docs/TEST_DB.md` |
+| `pnpm db:test:status` · `db:test:migrate` · `db:test:query` · `db:test:auth-config` | R11: proyecto Supabase de prueba «KShop Test» (`SUPABASE_TEST_PROJECT_REF`). `pnpm dev`, `demo:seed`, `superadmin:create`, `e2e:*`, `qa:*`, `test:rls` van a **prueba** por defecto (`scripts/db-env.mjs`; `KSHOP_DB_TARGET=prod` para producción). `node scripts/copy-demo-to-test.mjs` copia la Tienda Demo de producción a prueba (sin clientes). Migración nueva: primero prueba, luego producción. Ver `docs/TEST_DB.md` |
 | `pnpm db:status` · `pnpm db:migrate` | Estado / aplicar `supabase/migrations/*.sql` en el Supabase online (Management API, con historial) |
 | `pnpm test:rls` | Tests de aislamiento entre tiendas (`supabase/tests/*.test.sql`), en una transacción con rollback |
 | `pnpm db:query "<sql>"` | SQL ad hoc contra el proyecto |
 | `pnpm db:auth-config` | Aplica `supabase/auth-config.json` (site URL, redirects `*.kshop.localhost`, signup cerrado) |
-| `pnpm db:graphql-schema` → `pnpm codegen` | Vuelca el esquema de pg_graphql (introspección solo en transacción) y regenera `packages/data/src/gql` |
+| `pnpm db:graphql-schema` → `pnpm codegen` | Vuelca el esquema de pg_graphql **del proyecto de prueba** (producción ya no tiene la extensión) y regenera los tipos de `packages/data/src/gql` |
+| `node scripts/db-env.mjs node scripts/compare-admin-reads.mjs` · `… compare-storefront-reads.mjs` | Comparan cada función `admin_*` / `sf_*` con su documento GraphQL en el proyecto de prueba (único con pg_graphql); obligatorio al crear o cambiar una |
 | `pnpm superadmin:create <email>` | Crea o promueve un superadmin |
 | `pnpm e2e:setup` · `pnpm e2e:api` · `pnpm e2e:cleanup` | Cuentas `@e2e.kshop.test`, checks de API y limpieza (con `pnpm dev` corriendo) |
 | `pnpm e2e:catalog` · `pnpm e2e:excel` · `pnpm e2e:excel-load` | API del catálogo (tiendas temporales), Excel e imágenes por URL (Tienda Demo) y carga de 1 000 filas (Tienda Demo, borra lo creado), con `pnpm dev` corriendo |
@@ -139,7 +140,11 @@ subdominio no redirige al dominio. El dominio propio en sí se resuelve siempre.
 teléfonos de relleno que recibirían mensajes de verdad. Antes de correrlos, poner el modo en «Simulado» (`dry_run`) y
 volver a «Real» al terminar. Para probar envíos reales solo los números de prueba de Roberto: +5352564206 y +5353077035.
 
-Tras cada migración que toque tablas o funciones públicas: `pnpm test:rls`, `pnpm db:graphql-schema && pnpm codegen`.
+**pg_graphql no existe en producción** (quitado el 2026-10-28; `create extension pg_graphql` lo devolvería): toda lectura es una
+función SQL. Sigue en el proyecto de prueba solo para comparar formas y volcar tipos.
+
+Tras cada migración que toque tablas o funciones públicas: `pnpm test:rls` (prueba y una vez en producción) y, si cambia
+un documento GraphQL o una función de lectura, el comparador correspondiente y `pnpm db:graphql-schema && pnpm codegen`.
 Después de `prettier --write` también `pnpm codegen` (reformatea el GraphQL embebido). Verifica por código de salida, no con `grep`.
 
 ## Auto-blindaje
