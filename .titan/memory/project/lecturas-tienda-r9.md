@@ -52,6 +52,8 @@ de subir la instancia. Diagnóstico y decisiones en `.titan/plans/prp-r9-lectura
   idénticas → una vez. Probado con las 6 lecturas reales: resultado idéntico 6/6; una fusionada 1,3–3 s frente a
   2,6–6,9 s separadas (Nano estrangulada).
 - La causa de fondo sigue siendo la instancia: el proyecto **no tiene add-on de cómputo** (Nano). Roberto decide subir.
+- **Superado en R11 (2026-10-28)**: `graphql-batch.ts` se borró; admin y tienda leen por funciones SQL (`admin_*`,
+  `sf_*`) y pg_graphql ya no existe en producción. Ver `2026-10-28-diagnostico-rendimiento.md`.
 
 ## Build de Vercel sin lecturas de tienda (2026-10-28, `8bc17e7`)
 - El deploy falló en `/s/[storeSlug]/brand/[slug]`: con la Nano estrangulada, las lecturas anon del build (shell,

@@ -51,9 +51,8 @@ síntesis, 10 revisores que intentaron refutar cada causa: ninguna cayó). Infor
   `admin_bootstrap`), campana con `admin_to_confirm`, señales Realtime con tabla, `getClaims` + `api_guard`, cron de
   promociones cada 5 min, RLS del personal sin función por fila. G14 medido y descartado (−6/−19 %). Detalle en el PRP.
 - ~~Desarrollo y tests en Supabase local (Docker)~~ **retirado el 2026-10-28** a petición de Roberto: las imágenes
-  llenaron el disco C:. Se quitaron `scripts/db-env.mjs`, `docs/LOCAL_DB.md`, `supabase/config.toml` y los
-  `db:local:*`; todo vuelve a la base online. D1 queda abierta: la alternativa es un **2º proyecto Supabase Free**
-  de pruebas (la organización tiene 1 de 2), **hecho el 2026-10-28**: «KShop Test» (`peyfwvjwmuokllmqeexh`, Free,
+  llenaron el disco C:. Se quitaron `docs/LOCAL_DB.md`, `supabase/config.toml` y los `db:local:*`. D1 se cerró con
+  un **2º proyecto Supabase Free** de pruebas (la organización tiene 1 de 2), **hecho el 2026-10-28**: «KShop Test» (`peyfwvjwmuokllmqeexh`, Free,
   us-east-1), 59 migraciones, RLS 644/644, Tienda Demo sembrada; `scripts/db-env.mjs` manda dev/e2e/qa/test:rls/codegen
   ahí por defecto (`KSHOP_DB_TARGET=prod` para producción). Ver `docs/TEST_DB.md`. Sin clave de OpenWA: nunca envía
   WhatsApp reales. Un proyecto nuevo no tiene particiones de `realtime.messages` hasta su primer cliente Realtime.
@@ -90,12 +89,13 @@ síntesis, 10 revisores que intentaron refutar cada causa: ninguna cayó). Infor
   Medición sin pg_graphql: admin mediana **1,05 s**, p95 2,2 s, 0 errores; tienda 1,2–1,9 s por página.
 - `scripts/copy-demo-to-test.mjs` copia la Demo de producción al proyecto de prueba (sin clientes), por tablas y en
   trozos (la Management API rechaza cuerpos grandes: 413).
-- (Antes) Falta: desplegar el código (permiso de Roberto) y medir en producción con `qa:admin-perf` (línea base
-  `.titan/qa/r11-rendimiento-admin/perf-prod-antes.json`: mediana 4,4 s, p95 20,9 s).
 
-## Estado al cerrar la sesión
-- WhatsApp en **«Simulado»** (`dry_run`) mientras dure R11, por decisión de Roberto.
-- Nada de código ni datos tocado. Única huella: `graphql.seq_schema_version` 15 756 → 15 757 por una tabla temporal
-  de prueba.
+## Estado al cerrar R11 (2026-10-28, último commit `634a742`, todo en `main`)
+- Código, migraciones (prueba y producción) y `AGENTS.md` al día; PRP en HECHO salvo la Fase 7.
+- **Pendiente**: revisar 24 h de logs con uso normal desde el 2026-10-29 (57014 y 500 de `/api/v1`); revisar con
+  Roberto admin y tienda y recoger feedback menor; tabla completa en «Pendiente tras R11» del PRP.
+- WhatsApp en **«Simulado»** (`dry_run`) hasta que Roberto diga otra cosa.
+- Disco C: lleno hasta que Roberto compacte el `ext4.vhdx` de Docker (91,9 GB) como administrador.
+- Si con uso normal siguen picos de varios segundos, es la Nano sin créditos de CPU: entonces sí toca D4 (Pro + Small).
 - No se pudo medir: mínimo real de CPU de la Nano (ver Dashboard › Observability), logs/región de Vercel (el MCP
   estaba en otra cuenta, `lgiavedonis-projects`), experiencia desde Cuba.

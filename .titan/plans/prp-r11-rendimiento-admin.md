@@ -1,7 +1,8 @@
 # PRP: R11 · Rendimiento del admin y errores 57014
 
 > **Estado**: HECHO (2026-10-28). Todo el admin y la tienda leen por funciones SQL; pg_graphql quitado de producción.
-> **Falta**: Fase 7, revisar 24 h de logs con uso normal (57014 y errores 500 de `/api/v1`).
+> **Falta**: Fase 7, revisar 24 h de logs con uso normal (57014 y errores 500 de `/api/v1`), a partir del
+> 2026-10-29. Resto pendiente (fuera del código) en «Pendiente tras R11» al final.
 > **Fecha**: 2026-10-28
 > **Proyecto**: Kshop
 > **Sigue a**: `prp-r9-lecturas-tienda.md`, `prp-r10-deuda-lecturas.md`. Memoria: `project/lecturas-tienda-r9.md`
@@ -37,15 +38,16 @@ mientras no haya ingresos que justifiquen pagar. Pagar la instancia (P1/P2) no a
 ## Qué
 
 ### Criterios de Éxito
-- [ ] `/admin/login` y `/admin/set-password` abiertos directamente en `next build && next start` muestran el formulario y **responde** (login real y cambio de contraseña desde un enlace de invitación).
-- [ ] El marco del admin se pinta tras **una** llamada a `/api/v1/me?storeId=` (0 consultas pg_graphql antes de montar la página); la vista pide sus datos a la vez que el marco, no después.
-- [ ] Volver a la pestaña o renovar el token no relanza el arranque ni las lecturas de la página, y nunca pasa un panel de «listo» a «error».
-- [ ] Ninguna vista queda en «Cargando…» infinito ni muestra «Pedido no encontrado» por un error de red: toda carga fallida muestra el error real con «Reintentar» (ficha de producto, pedido, KPIs de Inicio, listas).
-- [ ] Un 57014 en un lote GraphQL se reintenta **una** vez (lote entero) y no se parte en N peticiones.
-- [ ] GET de `/api/v1` con sesión: sin llamada a GoTrue en la ruta caliente (`getClaims`), rol + estado de tienda en un viaje.
-- [ ] Medido con `pnpm qa:admin-perf` (36 vistas, Tienda Demo, hora tranquila, Nano): mediana < 2 s y p95 < 4 s (hoy mediana ~3,6 s, máximo 16,5 s).
+- [x] `/admin/login` y `/admin/set-password` abiertos directamente en `next build && next start` muestran el formulario y **responde** (login real y cambio de contraseña desde un enlace de invitación).
+- [x] El marco del admin se pinta tras **una** llamada a `/api/v1/me?storeId=` (0 consultas pg_graphql antes de montar la página); la vista pide sus datos a la vez que el marco, no después.
+- [x] Volver a la pestaña o renovar el token no relanza el arranque ni las lecturas de la página, y nunca pasa un panel de «listo» a «error».
+- [x] Ninguna vista queda en «Cargando…» infinito ni muestra «Pedido no encontrado» por un error de red: toda carga fallida muestra el error real con «Reintentar» (ficha de producto, pedido, KPIs de Inicio, listas).
+- [x] Un 57014 en un lote GraphQL se reintenta **una** vez (lote entero) y no se parte en N peticiones. *(Superado: ya
+  no hay lotes GraphQL; cada lectura RPC lleva timeout y un reintento en `resilient-fetch.ts`.)*
+- [x] GET de `/api/v1` con sesión: sin llamada a GoTrue en la ruta caliente (`getClaims`), rol + estado de tienda en un viaje.
+- [x] Medido con `pnpm qa:admin-perf` (36 vistas, Tienda Demo, hora tranquila, Nano): mediana < 2 s y p95 < 4 s (hoy mediana ~3,6 s, máximo 16,5 s). *(Producción 2026-10-28: mediana 1,05 s, p95 2,2 s, 0 errores.)*
 - [ ] 24 h de logs de Supabase fuera de horas de trabajo: **0** errores 57014 (hoy 378–388/24 h).
-- [ ] `pnpm typecheck`, `lint`, `test`, `test:rls` (≥ 598) y los `e2e:*` afectados en verde; `db:graphql-schema && codegen` sin diff inesperado.
+- [x] `pnpm typecheck`, `lint`, `test`, `test:rls` (≥ 598) y los `e2e:*` afectados en verde; `db:graphql-schema && codegen` sin diff inesperado. *(RLS 670/670 en prueba y producción.)*
 
 ### Comportamiento Esperado
 1. El dueño abre `tienda.kshop.fullkod.com/admin` (o el enlace de invitación a `/admin/set-password`). La página
@@ -153,7 +155,9 @@ errores; cuenta los 57014 de las últimas 24 h con `query_logs`. Evidencia «ant
 
 ### Fase 0b: Supabase local con Docker para desarrollo y tests (G3, D1) — RETIRADA 2026-10-28
 > Se hizo y se usó para las fases 1–6b, pero las imágenes llenaron el disco C: y Roberto pidió quitarla: los scripts
-> vuelven a la base online. Alternativa pendiente: 2º proyecto Supabase Free de pruebas.
+> vuelven a la base online. **Sustituida el mismo día** por el proyecto Supabase Free «KShop Test»
+> (`peyfwvjwmuokllmqeexh`): `scripts/db-env.mjs` manda ahí dev, e2e, qa, `test:rls` y `db:graphql-schema` por defecto;
+> `docs/TEST_DB.md`.
 
 **Objetivo**: `supabase start` (Docker Desktop) con las mismas migraciones, `auth-config`, buckets (`store-media`,
 `store-private`, `store-apps`), seed de la Tienda Demo y cuentas e2e. Los scripts (`db.mjs`, `e2e-*`, `qa-*`,
@@ -218,6 +222,8 @@ de la tienda (objetivo ~5–7× menos en las del personal, anon sin empeorar); `
 salir en ninguna lectura pública.
 
 ### Fase 6c: Reducir lo que ve pg_graphql (G14, D5)
+> **Descartada** (medida: −6/−19 %, ver Aprendizajes) y **superada**: pg_graphql ya no existe en producción.
+
 **Objetivo**: sacar de `public` las tablas internas que la app no lee por GraphQL (inventario: 46 de 72 colecciones
 usadas; las 34 llamadas `.from()` se migran a RPC o al esquema nuevo), y quitar `extensions` del `search_path` de los
 roles de la API (139 funciones que pg_graphql recorre). Medir la reconstrucción (`{__typename}` en conexión fría,
@@ -230,10 +236,10 @@ de Supabase**: se aplica en producción solo tras avisar a Roberto con la medici
 ### Fase 7: Validación final y memoria
 **Objetivo**: sistema medido de punta a punta.
 **Validación**:
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build` (local) en verde; `pnpm test:rls` ≥ 598.
-- [ ] `pnpm qa:admin-perf` «después»: mediana < 2 s, p95 < 4 s, 0 vistas con error; capturas en `.titan/qa/r11-rendimiento-admin/`.
-- [ ] 24 h de logs fuera de horas de trabajo: 0 × 57014.
-- [ ] Criterios de éxito cumplidos; memoria actualizada (`project/lecturas-tienda-r9.md` → sección R11, `MEMORY.md`), aprendizajes en este PRP.
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build` (local) en verde; `pnpm test:rls` ≥ 598 (670).
+- [x] `pnpm qa:admin-perf` «después»: mediana < 2 s, p95 < 4 s, 0 vistas con error; capturas en `.titan/qa/r11-rendimiento-admin/` (`perf-prod-sin-graphql.json`).
+- [ ] 24 h de logs fuera de horas de trabajo: 0 × 57014. **Pendiente** (desde el 2026-10-29, con uso normal y sin `e2e`/`qa` en producción).
+- [x] Criterios de éxito cumplidos salvo los logs; memoria actualizada (`project/2026-10-28-diagnostico-rendimiento.md`, `project/lecturas-tienda-r9.md`, `MEMORY.md`), aprendizajes en este PRP.
 
 ---
 
@@ -241,11 +247,12 @@ de Supabase**: se aplica en producción solo tras avisar a Roberto con la medici
 
 | # | Decisión | Respuesta | Efecto en el plan |
 |---|----------|-----------|-------------------|
-| D1 | Separar dev/test de producción | **Docker local** (`supabase start`), **dentro de R11** | Fase 0b; las fases siguientes se desarrollan y testean en local |
+| D1 | Separar dev/test de producción | ~~**Docker local** (`supabase start`), **dentro de R11**~~ → **2º proyecto Supabase Free «KShop Test»** (el disco C: se llenó) | Fase 0b retirada; dev, e2e, qa y `test:rls` van al proyecto de prueba por defecto |
 | D2 | ¿Promociones y avisos hasta 2–5 min tarde? | **Solo promociones** | Fase 6: promociones cada 5 min con ventana ampliada; WhatsApp sigue cada minuto |
 | D3 | `getClaims` (baneado en Auth conserva acceso ≤ 1 h) | **Sí** | Fase 4 tal cual (superadmin y cuenta siguen con `getUser`) |
 | D4 | Cuándo pagar Supabase Pro + Small / Vercel Pro | **Medir tras R11** | Fuera de R11; la Fase 7 deja los números para decidir |
-| D5 | G13 (RLS del personal) y G14 (esquema de pg_graphql) | **Ambos dentro de R11** | Fases 6b y 6c |
+| D5 | G13 (RLS del personal) y G14 (esquema de pg_graphql) | **Ambos dentro de R11** | Fases 6b (hecha) y 6c (descartada, superada) |
+| D6 | ¿Todo fuera de pg_graphql? (2026-10-28) | **Sí, y quitar la extensión** | Admin (`admin_*`) y tienda (`sf_*`) por funciones SQL; `drop extension pg_graphql` en producción |
 
 WhatsApp queda en «Simulado» mientras dure R11 (decisión de Roberto, 2026-10-28).
 
@@ -294,7 +301,8 @@ WhatsApp queda en «Simulado» mientras dure R11 (decisión de Roberto, 2026-10-
 - **G9** (tests sin DDL) descartado: dejaría `tests.create_user` y compañía instalados para siempre en producción; con
   D1 (Docker) `test:rls` solo pasa por producción una vez por migración.
 - **T9** a medias: `fetchStoreCustomDomain` con límite de 3 s y `null` si falla (la tienda ya no da 500). Saltar la RPC
-  del proxy cuando no hay dominios necesitaría una variable nueva en Vercel: pendiente de Roberto.
+  del proxy cuando no hay dominios necesitaría una variable nueva en Vercel: ~~pendiente de Roberto~~ hecho
+  (`KSHOP_CUSTOM_DOMAIN_REDIRECT=off`, ver abajo).
 - **Campana**: `admin_bootstrap` trae `toConfirm`; con cada señal Realtime de pedidos se lee
   `admin_to_confirm` (un `count`), no `admin_home_summary` entero; ya no depende del `pathname`.
 - **Heredoc + Node**: las secuencias \s y \b dentro de plantillas JS escritas en un heredoc acabaron como
@@ -386,7 +394,7 @@ WhatsApp queda en «Simulado» mientras dure R11 (decisión de Roberto, 2026-10-
 - [ ] Abortar en el cliente **no** cancela la consulta en Postgres: no reintentar tras un aborto propio, y el timeout debe ser mayor que el `statement_timeout` (8 s) para no duplicar carga.
 - [ ] **No** alargar `cacheLife("minutes")` de `stores`, `entitlements` ni `storefront/data`: la suspensión diaria desde la BD y los banners programados dependen de ese minuto.
 - [ ] `getClaims` requiere claves asimétricas (el proyecto ya firma ES256); comprobar la versión de supabase-js y que el JWKS se cachea en el proceso (Vercel: una vez por instancia).
-- [ ] `admin_bootstrap` y `api_guard` viven en `public` (PostgREST solo expone `public`): pg_graphql las verá; `revoke` de anon (y de authenticated en `api_guard`); `db:graphql-schema && codegen` después.
+- [ ] `admin_bootstrap` y `api_guard` viven en `public` (PostgREST solo expone `public`): `revoke` de anon (y de authenticated en `api_guard`). *(pg_graphql ya no existe en producción; `db:graphql-schema && codegen` solo si cambia un documento GraphQL.)*
 - [ ] Medir siempre con rondas alternadas antes/después: la Nano queda estrangulada varios minutos tras tests, imports o builds (R9/R10).
 - [ ] `pnpm dev` puede servir código viejo tras cambios en `packages/*` (memoria): reiniciar antes de dar por «imposible» un fallo de E2E.
 - [ ] `test:rls` y `e2e:*` crean carga y DDL en producción: correrlos en serie, con WhatsApp en «Simulado», y nunca mientras Roberto usa el admin (G2).
@@ -403,6 +411,19 @@ WhatsApp queda en «Simulado» mientras dure R11 (decisión de Roberto, 2026-10-
 - NO lógica en Server Actions ni `next/*` en `packages/*`; el arranque va por `/api/v1` con Bearer (apps móviles).
 - NO exponer el precio de costo en `admin_bootstrap` ni en ninguna RPC nueva de lectura.
 - NO crear abstracciones nuevas (p. ej. un «data layer» genérico) para esto: se corrigen las piezas que existen.
+
+---
+
+## Pendiente tras R11 (2026-10-28)
+
+| Qué | Quién | Cuándo |
+|-----|-------|--------|
+| Fase 7: 24 h de logs de Supabase (57014) y de `/api/v1` (500 pasajeros vistos tras el primer deploy) | Claude | Desde el 2026-10-29, con uso normal |
+| Revisar juntos admin y tienda (Demo y klau) y dar feedback menor | Roberto + Claude | Próxima sesión |
+| Volver WhatsApp a «Real» (sigue en «Simulado» por decisión de Roberto) | Roberto | Cuando lo decida |
+| Borrar `KSHOP_CUSTOM_DOMAIN_REDIRECT` en Vercel y redesplegar | Roberto (guiado) | Antes del primer dominio propio activo |
+| Compactar `C:\Users\rober\AppData\Local\Docker\wsl\data\ext4.vhdx` (91,9 GB): `wsl --shutdown` + `diskpart` como administrador | Roberto | Cuando pueda |
+| D4: pagar Supabase Pro + Small | Roberto | Si con uso normal siguen picos de varios segundos (Nano sin créditos) o cuando entren clientes reales de klau |
 
 ---
 

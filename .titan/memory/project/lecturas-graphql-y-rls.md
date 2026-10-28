@@ -3,6 +3,11 @@
 
 # Lecturas: pg_graphql vs Drizzle, y seguridad con RLS (opinión Claude, 2026-10-24)
 
+> **Superado en parte (R11, 2026-10-28):** las lecturas ya no usan pg_graphql: admin por `public.admin_*` y tienda por
+> `public.sf_<operación>(p_vars)` (funciones SQL `security invoker` por PostgREST), y la extensión se quitó de
+> producción. Los documentos GraphQL quedan solo como forma y tipos. Ver `2026-10-28-diagnostico-rendimiento.md` y
+> `AGENTS.md` (Stack › Lecturas). Las reglas de RLS de abajo siguen vigentes.
+
 ## Resumen
 De acuerdo con usar **Supabase + pg_graphql para las lecturas**. No es más lento que Drizzle; lo que
 de verdad da velocidad es otra cosa (abajo). Pero **no** lo usaría para todo:
