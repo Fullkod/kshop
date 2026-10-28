@@ -109,7 +109,6 @@
 |---------|----------|
 | `pnpm dev` | Web en `http://kshop.localhost:3000` (plataforma) y `http://{slug}.kshop.localhost:3000` (tiendas) |
 | `pnpm typecheck` · `pnpm lint` · `pnpm test` · `pnpm build` | Calidad (Turborepo). El lint prohíbe `next/*` en `packages/*`, `"use server"` y `any` |
-| `pnpm db:local:start` · `db:local:stop` · `db:local:reset` · `db:local:migrate` · `db:local:query` | R11: Supabase local en Docker para desarrollo y tests. `pnpm dev`, `demo:seed`, `superadmin:create`, `e2e:*`, `qa:*`, `test:rls` y `db:graphql-schema` van a la base **local** por defecto (`scripts/db-env.mjs`; `KSHOP_DB_TARGET=remote` para la online). Ver `docs/LOCAL_DB.md` |
 | `pnpm db:status` · `pnpm db:migrate` | Estado / aplicar `supabase/migrations/*.sql` en el Supabase online (Management API, con historial) |
 | `pnpm test:rls` | Tests de aislamiento entre tiendas (`supabase/tests/*.test.sql`), en una transacción con rollback |
 | `pnpm db:query "<sql>"` | SQL ad hoc contra el proyecto |

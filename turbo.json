@@ -1,10 +1,6 @@
 {
   "$schema": "https://turborepo.com/schema.json",
-  "globalEnv": [
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-    "NEXT_PUBLIC_PLATFORM_DOMAIN"
-  ],
+  "globalEnv": ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "NEXT_PUBLIC_PLATFORM_DOMAIN"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -20,8 +16,7 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true,
-      "passThroughEnv": ["SUPABASE_SECRET_KEY", "KSHOP_DB_TARGET", "KSHOP_LOCAL_DB_URL"]
+      "persistent": true
     }
   }
 }

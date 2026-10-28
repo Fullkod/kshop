@@ -37,7 +37,7 @@ síntesis, 10 revisores que intentaron refutar cada causa: ninguna cayó). Infor
   recomienda **por copias de seguridad y uso real**, no porque arregle los fallos; pagar no corrige ningún fallo de código.
 
 ## Decisiones de Roberto (2026-10-28, PRP R11 aprobado)
-- D1: desarrollo y tests en **Supabase local con Docker**, dentro de R11 (Fase 0b). En producción solo `db:migrate`,
+- D1: desarrollo y tests en **Supabase local con Docker**, dentro de R11 (Fase 0b) — **retirado** (ver «Avance»). En producción solo `db:migrate`,
   una pasada de `test:rls` por migración y las mediciones.
 - D2: solo las **promociones** pueden ir hasta 5 min tarde (cron cada 5 min con ventana ampliada); WhatsApp sigue cada minuto.
 - D3: `getClaims` aceptado (baneado en Auth conserva acceso ≤ 1 h; superadmin sigue con `getUser`).
@@ -50,7 +50,10 @@ síntesis, 10 revisores que intentaron refutar cada causa: ninguna cayó). Infor
   un reintento (`packages/data/src/resilient-fetch.ts`), arranque en una llamada (`/api/v1/me?storeId=` →
   `admin_bootstrap`), campana con `admin_to_confirm`, señales Realtime con tabla, `getClaims` + `api_guard`, cron de
   promociones cada 5 min, RLS del personal sin función por fila. G14 medido y descartado (−6/−19 %). Detalle en el PRP.
-- Desarrollo y tests en **Supabase local (Docker)**: `docs/LOCAL_DB.md`; `scripts/db-env.mjs` elige la base.
+- ~~Desarrollo y tests en Supabase local (Docker)~~ **retirado el 2026-10-28** a petición de Roberto: las imágenes
+  llenaron el disco C:. Se quitaron `scripts/db-env.mjs`, `docs/LOCAL_DB.md`, `supabase/config.toml` y los
+  `db:local:*`; todo vuelve a la base online. D1 queda abierta: la alternativa es un **2º proyecto Supabase Free**
+  de pruebas (la organización tiene 1 de 2), pendiente de que Roberto lo cree o lo autorice.
 - Falta: desplegar el código (permiso de Roberto) y medir en producción con `qa:admin-perf` (línea base
   `.titan/qa/r11-rendimiento-admin/perf-prod-antes.json`: mediana 4,4 s, p95 20,9 s).
 

@@ -15,17 +15,6 @@ for (const file of [".env.local", ".env"]) {
   }
 }
 
-// scripts/db-env.mjs (R11) points dev at the local Supabase: never mix its URL with the online keys or vice versa.
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-if (
-  process.env.KSHOP_DB_TARGET === "local" &&
-  !["http://127.0.0.1:", "http://localhost:"].some((prefix) => supabaseUrl.startsWith(prefix))
-) {
-  throw new Error(
-    "KSHOP_DB_TARGET=local but NEXT_PUBLIC_SUPABASE_URL is not the local Supabase (use scripts/db-env.mjs)",
-  );
-}
-
 const nextConfig: NextConfig = {
   transpilePackages: ["@kshop/admin", "@kshop/core", "@kshop/data", "@kshop/ui", "@kshop/storefront"],
   // Decision D1 (phase 2): `use cache` + cacheTag per store; static shells streamed with Partial Prerendering.

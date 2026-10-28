@@ -152,7 +152,10 @@ errores; cuenta los 57014 de las últimas 24 h con `query_logs`. Evidencia «ant
 `test:rls` mientras se usa la web ni justo antes de un deploy; en serie, nunca a la vez).
 **Validación**: el script corre con `pnpm dev` y contra producción; informe «antes» guardado; regla en `AGENTS.md`.
 
-### Fase 0b: Supabase local con Docker para desarrollo y tests (G3, D1)
+### Fase 0b: Supabase local con Docker para desarrollo y tests (G3, D1) — RETIRADA 2026-10-28
+> Se hizo y se usó para las fases 1–6b, pero las imágenes llenaron el disco C: y Roberto pidió quitarla: los scripts
+> vuelven a la base online. Alternativa pendiente: 2º proyecto Supabase Free de pruebas.
+
 **Objetivo**: `supabase start` (Docker Desktop) con las mismas migraciones, `auth-config`, buckets (`store-media`,
 `store-private`, `store-apps`), seed de la Tienda Demo y cuentas e2e. Los scripts (`db.mjs`, `e2e-*`, `qa-*`,
 `seed-demo-store.mjs`, codegen) eligen destino por variable (`KSHOP_DB_TARGET=local|remote`, por defecto **local** para

@@ -36,9 +36,10 @@ Detalle de cada error en la sección «Aprendizajes» de los PRP de las fases 1 
   un segmento dinámico (`/s/[storeSlug]/…`) eso acabó en 404 en Vercel aunque `next start` local funcionaba. Usar
   `await connection()` en el handler. Comprobar en la salida del build que salen como `ƒ`.
 - Los puertos **3000 y 3001** también los usan otras apps de Roberto (2026-10-28): Kshop en dev local en 3003 con
-  `NEXT_PUBLIC_PLATFORM_DOMAIN=kshop.localhost:3003` (ver `docs/LOCAL_DB.md`).
+  `NEXT_PUBLIC_PLATFORM_DOMAIN=kshop.localhost:3003`.
 - Docker guarda todo en `%LOCALAPPDATA%/Docker/wsl/disk/ext4.vhdx`, que no encoge al borrar imágenes: el disco C: se
-  llenó con las imágenes de Supabase local (2026-10-28). Compactar con `wsl --shutdown` + diskpart (administrador).
+  llenó con las imágenes de Supabase local (2026-10-28). Compactar con `wsl --shutdown` + diskpart (administrador). Supabase local en Docker se retiró por eso: no
+  volver a proponerlo en esta máquina.
 - El puerto 3100 lo usa otra app de Roberto: para `next start` de prueba usar otro (p. ej. 3217).
 - Turbo corre en *strict env mode*: una variable del proyecto de Vercel que no esté en `turbo.json`
   (`globalEnv` o `tasks.build.env`) **no llega al build**. `next build` importa los route handlers al
