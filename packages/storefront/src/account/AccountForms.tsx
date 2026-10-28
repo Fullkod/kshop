@@ -2,7 +2,7 @@
 
 import { formatPhone, normalizePhone, whatsappLink } from "@kshop/core";
 import { ApiError } from "@kshop/data";
-import { Alert, Button, FieldError, Input, Label } from "@kshop/ui";
+import { Alert, Button, FieldError, Input, Label, PasswordInput } from "@kshop/ui";
 import { Link } from "../navigation";
 import { useRouter } from "../navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
@@ -99,7 +99,7 @@ export function CustomerLoginForm() {
         <PhoneInput invalid={!!form.fields.phone} />
       </Field>
       <Field id="password" label="Contraseña" error={form.fields.password}>
-        <Input id="password" name="password" type="password" autoComplete="current-password" required />
+        <PasswordInput id="password" name="password" autoComplete="current-password" required />
       </Field>
       {form.error && <Alert variant="destructive">{form.error}</Alert>}
       <Button type="submit" disabled={form.pending}>
@@ -155,14 +155,7 @@ export function CustomerRegisterForm() {
         <PhoneInput invalid={!!form.fields.phone} />
       </Field>
       <Field id="password" label="Contraseña (mínimo 8 caracteres)" error={form.fields.password}>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          minLength={8}
-          required
-        />
+        <PasswordInput id="password" name="password" autoComplete="new-password" minLength={8} required />
       </Field>
       <label className="flex items-start gap-2 text-sm">
         <input type="checkbox" name="acceptsMarketing" className="mt-1" />
@@ -251,14 +244,7 @@ export function CustomerRecoverForm() {
         />
       </Field>
       <Field id="password" label="Nueva contraseña (mínimo 8 caracteres)" error={form.fields.password}>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          minLength={8}
-          required
-        />
+        <PasswordInput id="password" name="password" autoComplete="new-password" minLength={8} required />
       </Field>
       {form.error && <Alert variant="destructive">{form.error}</Alert>}
       <Button type="submit" disabled={form.pending}>

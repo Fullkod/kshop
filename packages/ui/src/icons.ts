@@ -18,6 +18,8 @@ export {
   Coins,
   CreditCard,
   ExternalLink,
+  Eye,
+  EyeOff,
   FileSpreadsheet,
   Flame,
   Gift,

@@ -2,7 +2,7 @@
 
 import { convertFromBase, formatMoney, formatPhone, SHIPPING_TYPE_LABELS } from "@kshop/core";
 import { ApiError, type CheckoutOptions } from "@kshop/data";
-import { Alert, Button, FieldError, Input, Label, Select } from "@kshop/ui";
+import { Alert, Button, FieldError, Input, Label, PasswordInput, Select } from "@kshop/ui";
 import { Link } from "../navigation";
 import { useRouter } from "../navigation";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
@@ -321,13 +321,7 @@ export function CheckoutView() {
             {createAccount && (
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="password">Contraseña (mínimo 8 caracteres)</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  minLength={8}
-                />
+                <PasswordInput id="password" name="password" autoComplete="new-password" minLength={8} />
                 <FieldError>{fieldError("password") ?? fieldError("createAccountPassword")}</FieldError>
               </div>
             )}

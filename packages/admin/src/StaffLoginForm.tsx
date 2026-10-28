@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Input, Label } from "@kshop/ui";
+import { Alert, Button, Input, Label, PasswordInput } from "@kshop/ui";
 import { useState, type FormEvent } from "react";
 import { useSession } from "./session";
 
@@ -35,7 +35,7 @@ export function StaffLoginForm({ onSignedIn }: { onSignedIn: () => void }) {
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="password">Contraseña</Label>
-        <Input id="password" name="password" type="password" autoComplete="current-password" required />
+        <PasswordInput id="password" name="password" autoComplete="current-password" required />
       </div>
       {error && <Alert variant="destructive">{error}</Alert>}
       <Button type="submit" disabled={pending}>

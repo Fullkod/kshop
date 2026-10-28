@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Card, FieldError, Input, Label } from "@kshop/ui";
+import { Alert, Button, Card, FieldError, Label, PasswordInput } from "@kshop/ui";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useSession } from "@/lib/session";
@@ -57,11 +57,11 @@ export default function SetPasswordPage() {
             <p className="text-sm text-muted-foreground">Cuenta: {session.user.email}</p>
             <div className="flex flex-col gap-2">
               <Label htmlFor="password">Contraseña nueva</Label>
-              <Input id="password" name="password" type="password" autoComplete="new-password" required />
+              <PasswordInput id="password" name="password" autoComplete="new-password" required />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="confirm">Repite la contraseña</Label>
-              <Input id="confirm" name="confirm" type="password" autoComplete="new-password" required />
+              <PasswordInput id="confirm" name="confirm" autoComplete="new-password" required />
             </div>
             <FieldError>{error}</FieldError>
             <Button type="submit" disabled={pending}>
