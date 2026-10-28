@@ -12,18 +12,11 @@ import { getServiceClient } from "./supabase";
 // staff, nobody touches the owner) and max_staff with the subscription locked. Invitations are a one-time access
 // link the owner sends by WhatsApp (no email provider), like the owner's own sign-up.
 
-type MemberRow = { user_id: string; role: StoreRole; created_at: string };
+type MemberRow = { user_id: string; email: string | null; role: StoreRole; created_at: string };
 
-async function emails(): Promise<Map<string, string | null>> {
-  // Few staff accounts at this stage; paginate when the platform grows.
-  const { data, error } = await getServiceClient().auth.admin.listUsers({ perPage: 1000 });
-  if (error) throw error;
-  return new Map(data.users.map((u) => [u.id, u.email ?? null]));
-}
-
-const toMember = (row: MemberRow, byId: Map<string, string | null>, meId: string): TeamMember => ({
+const toMember = (row: MemberRow, meId: string): TeamMember => ({
   userId: row.user_id,
-  email: byId.get(row.user_id) ?? null,
+  email: row.email,
   role: row.role,
   createdAt: row.created_at,
   isMe: row.user_id === meId,
@@ -45,22 +38,18 @@ async function actorId(storeId: string, user: ApiUser): Promise<string> {
 
 export async function listTeam(storeId: string, user: ApiUser): Promise<TeamResponse> {
   const service = getServiceClient();
-  const [members, usage, byId] = await Promise.all([
-    service
-      .from("store_members")
-      .select("user_id, role, created_at")
-      .eq("store_id", storeId)
-      .returns<MemberRow[]>(),
+  // The members with their e-mail in one query (R11: it listed every account of the platform from Auth).
+  const [members, usage] = await Promise.all([
+    service.rpc("store_team", { p_store_id: storeId }),
     service.rpc("store_usage", { p_store_id: storeId }),
-    emails(),
   ]);
   if (members.error) throw members.error;
   if (usage.error) throw usage.error;
   const order: Record<StoreRole, number> = { owner: 0, admin: 1, staff: 2 };
   return {
-    members: members.data
+    members: ((members.data ?? []) as MemberRow[])
       .sort((a, b) => order[a.role] - order[b.role] || a.created_at.localeCompare(b.created_at))
-      .map((m) => toMember(m, byId, user.id)),
+      .map((m) => toMember(m, user.id)),
     usage: { limit: usage.data.max_staff.limit, used: Number(usage.data.max_staff.used) },
   };
 }

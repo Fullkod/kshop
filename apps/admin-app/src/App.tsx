@@ -1,6 +1,9 @@
 import {
   AdminContext,
+  clearCachedAdminStates,
   loadAdminState,
+  readCachedAdminState,
+  saveCachedAdminState,
   OrderDetail,
   OrderList,
   ProductEditor,
@@ -185,6 +188,7 @@ function useSignOut() {
   const { supabase } = useSession();
   return async () => {
     saveSelectedStore(null);
+    clearCachedAdminStates();
     await supabase.auth.signOut();
   };
 }
@@ -322,6 +326,24 @@ async function loadStore(
   };
 }
 
+// The store card of the last boot, next to the cached admin state (same prefix: sign out clears both; R11).
+const storeCacheKey = (storeId: string) => `kshop.admin.store.${storeId}`;
+function readCachedStore(storeId: string): PublicStore | null {
+  try {
+    const raw = window.localStorage.getItem(storeCacheKey(storeId));
+    return raw ? (JSON.parse(raw) as PublicStore) : null;
+  } catch {
+    return null;
+  }
+}
+function saveCachedStore(store: PublicStore) {
+  try {
+    window.localStorage.setItem(storeCacheKey(store.id), JSON.stringify(store));
+  } catch {
+    // The app boots from the network as before.
+  }
+}
+
 type Loaded =
   | { kind: "loading" }
   | { kind: "forbidden" }
@@ -329,9 +351,18 @@ type Loaded =
   | { kind: "ready"; admin: AdminState; store: PublicStore };
 
 function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => void }) {
-  const { api, reads } = useSession();
+  const { api, reads, session } = useSession();
   const signOut = useSignOut();
-  const [state, setState] = useState<Loaded>({ kind: "loading" });
+  const [loaded, setState] = useState<Loaded>({ kind: "loading" });
+  const userId = session?.user.id;
+  // The last boot draws the admin at once while the network catches up; a failed refresh keeps it (R11).
+  const cached = useMemo(() => {
+    const admin = userId ? readCachedAdminState(userId, myStore.id) : null;
+    const store = admin ? readCachedStore(myStore.id) : null;
+    return admin && store ? { admin, store } : null;
+  }, [userId, myStore.id]);
+  const state: Loaded =
+    cached && (loaded.kind === "loading" || loaded.kind === "error") ? { kind: "ready", ...cached } : loaded;
 
   useEffect(() => {
     let cancelled = false;
@@ -346,11 +377,13 @@ function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => 
         );
         storeCard.catch(() => {}); // awaited below only when the admin state allows it
         const admin = await adminState;
+        if (userId) saveCachedAdminState(userId, myStore.id, admin);
         if (!admin) {
           if (!cancelled) setState({ kind: "forbidden" });
           return;
         }
         const store = await storeCard;
+        saveCachedStore(store);
         if (!cancelled) setState({ kind: "ready", admin, store });
       } catch {
         if (!cancelled) setState({ kind: "error" });
@@ -359,7 +392,7 @@ function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => 
     return () => {
       cancelled = true;
     };
-  }, [api, reads, myStore]);
+  }, [api, reads, myStore, userId]);
 
   if (state.kind === "loading") return <Loading />;
   if (state.kind !== "ready") {

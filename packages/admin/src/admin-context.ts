@@ -58,3 +58,51 @@ export async function loadAdminState(api: ApiClient, storeId: string): Promise<A
     toConfirm: boot.toConfirm,
   };
 }
+
+// The last boot of each user and store, so a page load draws the admin at once while /me runs behind it (R11). Only
+// what the menu and banners need; every write is still checked by the API, so a stale copy grants nothing. A day at
+// most; removed on sign out and when the store says «no access».
+const CACHE_PREFIX = "kshop.admin.";
+const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+type CachedAdminState = Omit<AdminState, "enabledModules"> & {
+  enabledModules: ModuleCode[];
+  savedAt: number;
+};
+
+export function readCachedAdminState(userId: string, storeId: string): AdminState | null {
+  try {
+    const raw = window.localStorage.getItem(`${CACHE_PREFIX}${userId}.${storeId}`);
+    if (!raw) return null;
+    const cached = JSON.parse(raw) as CachedAdminState;
+    if (Date.now() - cached.savedAt > CACHE_MAX_AGE_MS) return null;
+    const { savedAt: _savedAt, ...state } = cached;
+    return { ...state, enabledModules: new Set(state.enabledModules.filter(isModuleCode)) };
+  } catch {
+    return null;
+  }
+}
+
+export function saveCachedAdminState(userId: string, storeId: string, state: AdminState | null): void {
+  try {
+    const key = `${CACHE_PREFIX}${userId}.${storeId}`;
+    if (!state) return window.localStorage.removeItem(key);
+    const cached: CachedAdminState = {
+      ...state,
+      enabledModules: [...state.enabledModules],
+      savedAt: Date.now(),
+    };
+    window.localStorage.setItem(key, JSON.stringify(cached));
+  } catch {
+    // Private mode or full storage: the admin boots from /me as before.
+  }
+}
+
+export function clearCachedAdminStates(): void {
+  try {
+    for (const key of Object.keys(window.localStorage)) {
+      if (key.startsWith(CACHE_PREFIX)) window.localStorage.removeItem(key);
+    }
+  } catch {
+    // Nothing stored.
+  }
+}

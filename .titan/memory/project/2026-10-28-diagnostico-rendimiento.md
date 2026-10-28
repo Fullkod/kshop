@@ -75,6 +75,16 @@ síntesis, 10 revisores que intentaron refutar cada causa: ninguna cayó). Infor
   `authenticated`: nada de `select *` sobre ellas.
 - **T9 hecho (2026-10-28):** `KSHOP_CUSTOM_DOMAIN_REDIRECT=off` en Vercel (la puso Roberto; Claude no tiene acceso a
   Vercel: guiarle paso a paso). Quitarla antes del primer dominio propio activo (regla en `AGENTS.md`).
+- **Tienda pública fuera de pg_graphql (2026-10-28):** 16 funciones `sf_*` (migración 20261108100700) con la forma
+  exacta de cada documento (36/36 en `scripts/compare-storefront-reads.mjs`); `createGraphqlClient` ya no llama a
+  `/graphql/v1`: manda cada operación a `sf_<operación>`. Test 17. Páginas de producción (pg_graphql) y local (RPC)
+  con el mismo texto; producción daba error de servidor en `/products?page=3&sort=price-desc` (anon 57014) y local no.
+- **Otros (2026-10-28):** el arranque del admin (web y app) se guarda 24 h por usuario y tienda en localStorage
+  (`kshop.admin.*`, se borra al cerrar sesión) y se pinta al instante; Equipo lee `store_team` (antes listaba todas
+  las cuentas de Auth). Las RPC de Finanzas/Inicio cuestan 1–34 ms calientes: su segundo de más es Vercel en frío y
+  la Nano, no el código.
+- **Pendiente:** quitar la extensión pg_graphql cuando los logs no muestren peticiones a `/graphql/v1` (APK de Kshop
+  Admin antiguos la usaban) y rehacer los 10 checks de RLS que usan `graphql.resolve` (tests 02, 03, 04).
 - (Antes) Falta: desplegar el código (permiso de Roberto) y medir en producción con `qa:admin-perf` (línea base
   `.titan/qa/r11-rendimiento-admin/perf-prod-antes.json`: mediana 4,4 s, p95 20,9 s).
 

@@ -9,8 +9,8 @@ export type { PublicStore } from "@kshop/storefront";
 
 export const storeCacheTag = (slug: string) => `store:${slug}`;
 
-// Anonymous pg_graphql read: only the public store card is visible to anon.
-const graphql = createGraphqlClient({ ...supabaseConfig, noCache: true });
+// Anonymous read (sf_* RPCs): only the public store card is visible to anon.
+const graphql = createGraphqlClient(supabaseConfig);
 
 /**
  * Live custom domain of a store (anon RPC, the domain is public once live), or null. A failed or slow lookup counts
@@ -57,7 +57,7 @@ async function fetchStoreBySlug(slug: string): Promise<PublicStore | null> {
     whatsappPhone: node.whatsappPhone ?? null,
     logoUrl: node.logoUrl ?? null,
     description: node.description ?? null,
-    // pg_graphql returns jsonb as a JSON string.
+    // jsonb comes as a JSON string (the pg_graphql shape, kept by sf_store_by_slug).
     theme: resolveTheme(node.theme ? JSON.parse(node.theme) : null),
     customDomain,
   };

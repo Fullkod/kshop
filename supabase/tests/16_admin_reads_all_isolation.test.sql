@@ -100,3 +100,13 @@ select tests.check('owner B on store A: no code nor cost anywhere',
   (select not (concat(public.admin_vouchers(tests.fx('store_a')), public.admin_product(tests.fx('product_a')),
      public.admin_variant_search(tests.fx('store_a'), 'Borrador'))::text ~* '(SECRETO10|costPrice|Borrador Secreto)')));
 select tests.logout();
+
+-- store_team (Admin › Equipo through the API): service role only, the members of that store and nothing else.
+select tests.login('owner_a');
+select tests.check('authenticated: cannot call store_team (e-mails of the staff)',
+  tests.throws(format('select * from public.store_team(%L)', tests.fx('store_a'))));
+select tests.logout();
+select tests.eq('store_team: the owner and the staff of store A, with their e-mail',
+  (select string_agg(role::text || ':' || (email is not null)::text, ',' order by role::text)
+   from public.store_team(tests.fx('store_a'))),
+  'owner:true,staff:true');

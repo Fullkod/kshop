@@ -22,7 +22,7 @@ import {
 } from "@kshop/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ADMIN_CONTENT_CLASS, SIDEBAR_NAV_CLASS } from "@/components/admin-content";
 import { platformProtocol, publicEnv } from "@/env";
 import { ADMIN_MODULES } from "@/features/registry";
@@ -31,7 +31,14 @@ import { useStorePathname } from "@/lib/navigation";
 import { useSession } from "@/lib/session";
 import { ORDER_TABLES, useStoreVersion } from "@kshop/admin";
 import { useStore } from "@kshop/storefront";
-import { AdminContext, loadAdminState, type AdminState } from "./admin-context";
+import {
+  AdminContext,
+  clearCachedAdminStates,
+  loadAdminState,
+  readCachedAdminState,
+  saveCachedAdminState,
+  type AdminState,
+} from "./admin-context";
 import { AccountBanner } from "./AccountBanner";
 import { AdminSearch } from "./AdminSearch";
 
@@ -71,12 +78,22 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = useStorePathname();
   const router = useRouter();
   const isPublic = PUBLIC_PATHS.includes(pathname);
-  const [state, setState] = useState<LoadState>({ kind: "loading" });
+  const [loaded, setState] = useState<LoadState>({ kind: "loading" });
   const [liveToConfirm, setLiveToConfirm] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const live = useStoreVersion(isPublic ? null : store.id, ORDER_TABLES);
   const userId = session?.user.id;
+  // The last boot draws the admin at once while /me runs (R11); /me then replaces it. A failed /me keeps it on screen
+  // (each page shows its own read errors).
+  const cached = useMemo(
+    () => (userId && !isPublic ? readCachedAdminState(userId, store.id) : null),
+    [userId, isPublic, store.id],
+  );
+  const state: LoadState =
+    cached && (loaded.kind === "loading" || loaded.kind === "error")
+      ? { kind: "ready", admin: cached }
+      : loaded;
 
   useEffect(() => {
     if (ready && !session && !isPublic) router.replace("/admin/login");
@@ -90,6 +107,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       for (let i = 0; i < 2 && !cancelled; i++) {
         try {
           const admin = await loadAdminState(api, store.id);
+          saveCachedAdminState(userId, store.id, admin);
           if (!cancelled) setState(admin ? { kind: "ready", admin } : { kind: "forbidden" });
           return;
         } catch {
@@ -125,6 +143,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
+    clearCachedAdminStates();
     await supabase.auth.signOut();
     router.replace("/admin/login");
   };

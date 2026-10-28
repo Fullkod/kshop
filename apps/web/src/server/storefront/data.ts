@@ -9,7 +9,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { supabaseConfig } from "@/env";
 import { catalogCacheTag } from "../catalog/access";
 
-// Public storefront reads (anon pg_graphql, shared with the store app in @kshop/data), cached per store. Catalog
+// Public storefront reads (anon sf_* RPCs, shared with the store app in @kshop/data), cached per store. Catalog
 // writes expire catalogCacheTag and content writes (Appearance) expire contentCacheTag, so the next visit reads
 // fresh data.
 
@@ -17,7 +17,7 @@ export type { NavLink, StoreCurrency, StorefrontShell } from "@kshop/data";
 
 export const contentCacheTag = (storeId: string) => `store:${storeId}:content`;
 
-export const anonGraphql = createGraphqlClient({ ...supabaseConfig, noCache: true });
+export const anonGraphql = createGraphqlClient(supabaseConfig);
 
 /** Tags and lifetime of every storefront read of a store. */
 export function storefrontCache(storeId: string) {
