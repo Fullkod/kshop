@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert, Button, Card, FieldError, Label, PasswordInput } from "@kshop/ui";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useSession } from "@/lib/session";
@@ -50,7 +51,11 @@ export default function SetPasswordPage() {
           <p className="text-muted-foreground">Comprobando el enlace…</p>
         ) : !session ? (
           <Alert variant="destructive">
-            El enlace no es válido o ya se usó. Pide a Fullkod un enlace nuevo.
+            El enlace no es válido, caducó o ya se usó.{" "}
+            <Link href="/admin/forgot-password" className="underline">
+              Pide un enlace nuevo
+            </Link>
+            .
           </Alert>
         ) : (
           <form method="post" onSubmit={onSubmit} className="flex flex-col gap-4">

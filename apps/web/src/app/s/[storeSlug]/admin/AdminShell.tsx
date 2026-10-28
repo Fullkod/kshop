@@ -43,7 +43,7 @@ import { AccountBanner } from "./AccountBanner";
 import { AdminSearch } from "./AdminSearch";
 
 // Pages that work without a store session.
-const PUBLIC_PATHS = ["/admin/login", "/admin/set-password"];
+const PUBLIC_PATHS = ["/admin/login", "/admin/set-password", "/admin/forgot-password"];
 
 type LoadState =
   { kind: "loading" } | { kind: "forbidden" } | { kind: "error" } | { kind: "ready"; admin: AdminState };

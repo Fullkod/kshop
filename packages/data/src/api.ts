@@ -73,6 +73,7 @@ import type {
   SubscriptionGrantInput,
   SubscriptionUpdateInput,
   TeamInviteInput,
+  StaffPasswordResetInput,
 } from "@kshop/core";
 import type {
   Facets,
@@ -144,6 +145,9 @@ export type CreateStoreResponse = {
   ownerAccessLink: string | null;
   ownerWasCreated: boolean;
 };
+
+/** Superadmin › Tienda › «Enviar acceso»: new one-time link for the owner (emailed when Resend is set). */
+export type OwnerAccessResponse = { email: string; link: string; emailed: boolean };
 
 /** Simple catalog entities and their inputs (/api/v1/stores/{storeId}/catalog/{resource}). */
 export type CatalogResourceInputs = {
@@ -904,6 +908,11 @@ export function createApiClient(options: ApiClientOptions) {
         reset: (input: CustomerResetInput) => request<CustomerAuthResponse>("POST", `${base}/reset`, input),
       };
     },
+    /** Store admin «¿Olvidaste tu contraseña?» (no token needed). */
+    staffAuth: (storeId: string) => ({
+      passwordReset: (input: StaffPasswordResetInput) =>
+        request<null>("POST", `/stores/${storeId}/staff-auth/password-reset`, input),
+    }),
     /** Cart of a guest (token) or of the signed-in customer. */
     cart: (storeId: string) => {
       const base = `/stores/${storeId}/cart`;
@@ -1145,6 +1154,8 @@ export function createApiClient(options: ApiClientOptions) {
         request<CreateStoreResponse>("POST", "/platform/stores", input),
       updateStoreStatus: (storeId: string, status: StoreStatus) =>
         request<{ store: PlatformStore }>("PATCH", `/platform/stores/${storeId}`, { status }),
+      ownerAccess: (storeId: string) =>
+        request<OwnerAccessResponse>("POST", `/platform/stores/${storeId}/owner-access`),
       domains: () =>
         request<{ domains: PlatformDomain[]; mode: "dry_run" | "live" }>("GET", "/platform/domains"),
       checkDomain: (id: string) => request<null>("POST", `/platform/domains/${id}/check`),

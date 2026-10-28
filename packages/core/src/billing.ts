@@ -149,3 +149,9 @@ export const teamInviteSchema = z.object({
 });
 export type TeamInviteInput = z.infer<typeof teamInviteSchema>;
 export const teamRoleSchema = z.object({ role: z.enum(TEAM_ROLES) });
+
+/** «¿Olvidaste tu contraseña?» of the store admin: the access link goes by email to staff of that store only. */
+export const staffPasswordResetSchema = z.object({
+  email: z.string().trim().toLowerCase().pipe(z.email("Email no válido.")),
+});
+export type StaffPasswordResetInput = z.infer<typeof staffPasswordResetSchema>;

@@ -17,6 +17,13 @@ metadata:
   Resend: habría que añadirlo y verificarlo aparte.
 - Detalle del DNS: `memoria/reference/dominio-fullkod-dns.md` en el repo `Fullkod/hub`.
 
+**Uso en Kshop (2026-10-28):** `RESEND_API_KEY` propia de Kshop (solo envío, limitada a `fullkod.com`) en `.env.local`
+y Vercel; remitente `Kshop <noreply@fullkod.com>` (`EMAIL_FROM` opcional). Solo se envían enlaces de acceso del personal
+(`apps/web/src/server/email.ts`, `staff-access.ts`): «¿Olvidaste tu contraseña?» en `/admin/login` (solo a personal de
+esa tienda, misma respuesta exista o no la cuenta, 3/h por email y 10/h por IP) y Superadmin › Tienda › «Enviar acceso
+al dueño» (correo + copiar/WhatsApp). Nunca a clientes: su email es sintético y rebotaría. Para probar el envío sin
+gastar reputación usar `delivered@resend.dev`; las cuentas `@*.kshop.test` no existen.
+
 **Cómo aplicarlo en este proyecto:** si tiene (o va a tener) un formulario de contacto o cualquier mensaje que deba
 leer el equipo, **el proyecto tiene que buscar su propia forma de avisar** (notificación en la app, alerta por
 WhatsApp, tarea en Tasknic, correo a una dirección que alguien lea…). No dar por hecho que alguien mira los buzones de

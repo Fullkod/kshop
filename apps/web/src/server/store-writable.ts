@@ -5,10 +5,11 @@ import { getServiceClient } from "./supabase";
 
 // PRP-5 D16: a suspended store keeps its admin in read-only mode (see, export, pay); every write of its staff gets
 // 403 store_suspended. The superadmin can still write (to fix things). The public endpoints (cart, checkout,
-// customer account) are closed by the database already (store_is_public).
+// customer account) are closed by the database already (store_is_public). The staff password reset stays open: the
+// owner of a suspended store must be able to sign in to pay.
 
 const STORE_WRITE =
-  /^\/api\/v1\/stores\/([0-9a-f-]{36})\/(?!(?:cart|checkout|customer|customer-auth)(?:\/|$))/;
+  /^\/api\/v1\/stores\/([0-9a-f-]{36})\/(?!(?:cart|checkout|customer|customer-auth|staff-auth)(?:\/|$))/;
 
 export async function assertStoreWritable(request: Request): Promise<void> {
   if (request.method === "GET" || request.method === "HEAD") return;
