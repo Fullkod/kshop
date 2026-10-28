@@ -16,10 +16,11 @@ import {
   type ProductInput,
   type ProductStatus,
 } from "@kshop/core";
-import { ProductDetailQuery, type ProductMedia } from "@kshop/data";
+import { ProductDetailQuery, type ProductMedia, type ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, Card, FieldError, Input, Label, Select } from "@kshop/ui";
 import { useEffect, useMemo, useState } from "react";
 import { uploadProductImage } from "../images";
+import { LoadError } from "../LoadError";
 import { useSession } from "../session";
 import { useRouter, useStore } from "@kshop/storefront";
 import {
@@ -31,6 +32,10 @@ import {
   type CatalogStructure,
 } from "./use-catalog";
 import { STATUS_LABELS } from "./ProductList";
+
+type ProductNode = NonNullable<
+  ResultOf<typeof ProductDetailQuery>["productsCollection"]
+>["edges"][number]["node"];
 
 type VariantRow = {
   id?: string;
@@ -110,119 +115,146 @@ function blankForm(structure: CatalogStructure, currency: CurrencyCode): Form {
   };
 }
 
+/** A saved product as the editor's form and photos. */
+function productToForm(
+  p: ProductNode,
+  baseCurrency: CurrencyCode,
+  defaultWarehouseId: string | undefined,
+): { form: Form; media: ProductMedia[] } {
+  const attributes: Record<string, ProductAttrValue> = {};
+  for (const { node: a } of p.productAttributeValuesCollection?.edges ?? []) {
+    const current = attributes[a.attributeId] ?? { valueIds: [], text: "" };
+    if (a.valueId) current.valueIds.push(a.valueId);
+    current.text =
+      a.valueText ??
+      (a.valueNumeric != null
+        ? String(a.valueNumeric)
+        : a.valueBoolean != null
+          ? String(a.valueBoolean)
+          : (a.valueDate ?? current.text));
+    attributes[a.attributeId] = current;
+  }
+  const variants: VariantRow[] = (p.productVariantsCollection?.edges ?? []).map(({ node: v }) => {
+    const attributeValues = (v.variantAttributeValuesCollection?.edges ?? []).map((e) => e.node);
+    const stocks = (v.stocksCollection?.edges ?? []).map((e) => e.node);
+    const stockRow = stocks.find((st) => st.warehouseId === defaultWarehouseId);
+    const warehouseStock = Object.fromEntries(
+      stocks
+        .filter((st) => st.warehouseId !== defaultWarehouseId)
+        .map((st) => [st.warehouseId, String(st.quantity)]),
+    );
+    return {
+      id: v.id,
+      key: combinationKey(attributeValues),
+      name: v.name,
+      sku: v.sku,
+      price: String(Number(v.price)),
+      compareAtPrice: v.compareAtPrice != null ? String(Number(v.compareAtPrice)) : "",
+      cost: v.variantCosts ? String(Number(v.variantCosts.costPrice)) : "",
+      costCurrency: (v.variantCosts?.costCurrency as CurrencyCode | undefined) ?? baseCurrency,
+      stock: String(stockRow?.quantity ?? 0),
+      trackInventory: v.trackInventory,
+      attributeValues,
+      mediaId: v.variantMediaCollection?.edges[0]?.node.mediaId ?? "",
+      prices: Object.fromEntries(
+        (v.variantPricesCollection?.edges ?? []).map(({ node: vp }) => [
+          vp.currency,
+          {
+            price: String(Number(vp.price)),
+            compareAtPrice: vp.compareAtPrice != null ? String(Number(vp.compareAtPrice)) : "",
+          },
+        ]),
+      ),
+      warehouseStock,
+      savedWarehouseStock: warehouseStock,
+    };
+  });
+  const axes: Record<string, string[]> = {};
+  for (const v of variants)
+    for (const av of v.attributeValues)
+      axes[av.attributeId] = [...new Set([...(axes[av.attributeId] ?? []), av.valueId])];
+  const media: ProductMedia[] = (p.productMediaCollection?.edges ?? []).map(({ node: m }, i) => ({
+    id: m.id,
+    url: m.url,
+    thumbUrl: m.thumbUrl ?? null,
+    alt: m.alt ?? null,
+    sortOrder: i,
+  }));
+  const form: Form = {
+    productTypeId: p.productTypeId,
+    name: p.name,
+    slug: p.slug,
+    slugEdited: true,
+    description: p.descriptionPlain,
+    status: p.status,
+    categoryId: p.categoryId ?? "",
+    brandId: p.brandId ?? "",
+    collectionIds: (p.collectionProductsCollection?.edges ?? []).map((e) => e.node.collectionId),
+    tags: (p.productTagsCollection?.edges ?? []).map((e) => e.node.tag).join(", "),
+    featured: p.featured,
+    attributes,
+    axes,
+    variants,
+  };
+  return { form, media };
+}
+
 const num = (v: string) => (v.trim() === "" ? undefined : Number(v.replace(",", ".")));
 
 export function ProductEditor({ productId }: { productId?: string }) {
   const store = useStore();
   const router = useRouter();
   const { graphql, supabase, config } = useSession();
-  const { data: structure, error: structureError } = useCatalogStructure();
+  const { data: structure, error: structureError, reload: reloadStructure } = useCatalogStructure();
   const { catalog, seesCosts, canDelete, has } = useCatalogApi();
   const action = useApiAction();
   const [loadedForm, setForm] = useState<Form | null>(null);
-  const [media, setMedia] = useState<ProductMedia[]>([]);
+  const [mediaEdits, setMediaEdits] = useState<ProductMedia[] | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [fetched, setFetched] = useState<ProductNode | null>(null);
+  const [productError, setProductError] = useState<string | null>(null);
+  const [productVersion, setProductVersion] = useState(0);
 
   const baseCurrency = (structure?.currencies.find((c) => c.isBase)?.currency ??
     store.baseCurrency) as CurrencyCode;
   const defaultWarehouseId = structure?.warehouses.find((w) => w.isDefault)?.id;
 
-  // A new product starts from an empty form derived from the structure; an existing one is loaded below.
-  const form: Form | null =
-    loadedForm ?? (!productId && structure ? blankForm(structure, baseCurrency) : null);
-
+  // The product is read at the same time as the structure (R11: it used to wait for it), and turned into the form
+  // when both are in.
   useEffect(() => {
-    if (!structure || loadedForm || !productId) return;
+    if (!productId) return;
     let cancelled = false;
     graphql
       .query(ProductDetailQuery, { id: productId })
       .toPromise()
       .then((result) => {
+        if (cancelled) return;
         const p = result.data?.productsCollection?.edges[0]?.node;
-        if (cancelled || !p) return;
-        const attributes: Record<string, ProductAttrValue> = {};
-        for (const { node: a } of p.productAttributeValuesCollection?.edges ?? []) {
-          const current = attributes[a.attributeId] ?? { valueIds: [], text: "" };
-          if (a.valueId) current.valueIds.push(a.valueId);
-          current.text =
-            a.valueText ??
-            (a.valueNumeric != null
-              ? String(a.valueNumeric)
-              : a.valueBoolean != null
-                ? String(a.valueBoolean)
-                : (a.valueDate ?? current.text));
-          attributes[a.attributeId] = current;
+        if (result.error) setProductError("No se pudo cargar el producto.");
+        else if (!p) setProductError("Producto no encontrado.");
+        else {
+          setProductError(null);
+          setFetched(p);
         }
-        const variants: VariantRow[] = (p.productVariantsCollection?.edges ?? []).map(({ node: v }) => {
-          const attributeValues = (v.variantAttributeValuesCollection?.edges ?? []).map((e) => e.node);
-          const stocks = (v.stocksCollection?.edges ?? []).map((e) => e.node);
-          const stockRow = stocks.find((st) => st.warehouseId === defaultWarehouseId);
-          const warehouseStock = Object.fromEntries(
-            stocks
-              .filter((st) => st.warehouseId !== defaultWarehouseId)
-              .map((st) => [st.warehouseId, String(st.quantity)]),
-          );
-          return {
-            id: v.id,
-            key: combinationKey(attributeValues),
-            name: v.name,
-            sku: v.sku,
-            price: String(Number(v.price)),
-            compareAtPrice: v.compareAtPrice != null ? String(Number(v.compareAtPrice)) : "",
-            cost: v.variantCosts ? String(Number(v.variantCosts.costPrice)) : "",
-            costCurrency: (v.variantCosts?.costCurrency as CurrencyCode | undefined) ?? baseCurrency,
-            stock: String(stockRow?.quantity ?? 0),
-            trackInventory: v.trackInventory,
-            attributeValues,
-            mediaId: v.variantMediaCollection?.edges[0]?.node.mediaId ?? "",
-            prices: Object.fromEntries(
-              (v.variantPricesCollection?.edges ?? []).map(({ node: vp }) => [
-                vp.currency,
-                {
-                  price: String(Number(vp.price)),
-                  compareAtPrice: vp.compareAtPrice != null ? String(Number(vp.compareAtPrice)) : "",
-                },
-              ]),
-            ),
-            warehouseStock,
-            savedWarehouseStock: warehouseStock,
-          };
-        });
-        const axes: Record<string, string[]> = {};
-        for (const v of variants)
-          for (const av of v.attributeValues)
-            axes[av.attributeId] = [...new Set([...(axes[av.attributeId] ?? []), av.valueId])];
-        setMedia(
-          (p.productMediaCollection?.edges ?? []).map(({ node: m }, i) => ({
-            id: m.id,
-            url: m.url,
-            thumbUrl: m.thumbUrl ?? null,
-            alt: m.alt ?? null,
-            sortOrder: i,
-          })),
-        );
-        setForm({
-          productTypeId: p.productTypeId,
-          name: p.name,
-          slug: p.slug,
-          slugEdited: true,
-          description: p.descriptionPlain,
-          status: p.status,
-          categoryId: p.categoryId ?? "",
-          brandId: p.brandId ?? "",
-          collectionIds: (p.collectionProductsCollection?.edges ?? []).map((e) => e.node.collectionId),
-          tags: (p.productTagsCollection?.edges ?? []).map((e) => e.node.tag).join(", "),
-          featured: p.featured,
-          attributes,
-          axes,
-          variants,
-        });
       });
     return () => {
       cancelled = true;
     };
-  }, [structure, loadedForm, productId, graphql, baseCurrency, defaultWarehouseId]);
+  }, [productId, graphql, productVersion]);
+
+  // The saved product as a form, once the structure and the product are both in; edits live in loadedForm.
+  const initial = useMemo(
+    () => (structure && fetched ? productToForm(fetched, baseCurrency, defaultWarehouseId) : null),
+    [structure, fetched, baseCurrency, defaultWarehouseId],
+  );
+  const media = mediaEdits ?? initial?.media ?? [];
+  const setMedia = (update: (current: ProductMedia[]) => ProductMedia[]) =>
+    setMediaEdits((current) => update(current ?? initial?.media ?? []));
+
+  // A new product starts from an empty form derived from the structure; an existing one from the saved product.
+  const form: Form | null =
+    loadedForm ?? initial?.form ?? (!productId && structure ? blankForm(structure, baseCurrency) : null);
 
   const type = structure?.productTypes.find((t) => t.id === form?.productTypeId);
   const attrById = useMemo(() => new Map((structure?.attributes ?? []).map((a) => [a.id, a])), [structure]);
@@ -235,7 +267,9 @@ export function ProductEditor({ productId }: { productId?: string }) {
     .map((a) => attrById.get(a.attributeId)!)
     .filter(Boolean);
 
-  if (structureError) return <Alert variant="destructive">{structureError}</Alert>;
+  if (structureError) return <LoadError message={structureError} onRetry={reloadStructure} />;
+  if (productError)
+    return <LoadError message={productError} onRetry={() => setProductVersion((v) => v + 1)} />;
   if (!structure || !form) return <p className="text-muted-foreground">Cargando…</p>;
   if (structure.productTypes.length === 0) {
     return (

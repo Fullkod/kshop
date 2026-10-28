@@ -1,0 +1,1301 @@
+[
+ {
+  "view": "auth-signin",
+  "loginMs": 2811,
+  "startedAt": "2026-10-28T11:03:49.896Z"
+ },
+ {
+  "view": "(home)",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 3150,
+  "settledMs": 3150,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 0,
+  "failures": [],
+  "slowest": [],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 9
+ },
+ {
+  "view": "orders",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 1161,
+  "settledMs": 5227,
+  "stillPending": 4,
+  "spinners": 0,
+  "nData": 55,
+  "failures": [
+   {
+    "url": "/admin/orders?_rsc=8C6rryL2yR9brUfi",
+    "method": "GET",
+    "ms": 65,
+    "status": "FAILED net::ERR_ABORTED"
+   },
+   {
+    "url": "/admin/billing?_rsc=Ldb6UhvU_QlMI-7Q",
+    "method": "GET",
+    "ms": 104,
+    "status": "FAILED net::ERR_ABORTED"
+   },
+   {
+    "url": "/admin/orders/new?_rsc=Ldb6UhvU_QlMI-7Q",
+    "method": "GET",
+    "ms": 91,
+    "status": "FAILED net::ERR_ABORTED"
+   },
+   {
+    "url": "/admin/finance?_rsc=Ldb6UhvU_QlMI-7Q",
+    "method": "GET",
+    "ms": 130,
+    "status": "FAILED net::ERR_ABORTED"
+   }
+  ],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "CheckoutSettings"
+    ],
+    "ms": 3365,
+    "status": 200
+   },
+   {
+    "url": "/admin/custom-domain?_rsc=ec3imP7nhUtVHnyF",
+    "ms": 845,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 824,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 146
+ },
+ {
+  "view": "orders/579fa21e-a499-441a-8f96-120802e703d4",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 1739,
+  "settledMs": 6168,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 46,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 1398,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "Batch"
+    ],
+    "ms": 1388,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 762,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 1020
+ },
+ {
+  "view": "orders/customers",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 250,
+  "settledMs": 3581,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 40,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 2238,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "AdminCustomers"
+    ],
+    "ms": 1411,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 517,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 202
+ },
+ {
+  "view": "orders/payment-methods",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 241,
+  "settledMs": 3656,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 40,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 1863,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "CheckoutSettings"
+    ],
+    "ms": 1545,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 926,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 426
+ },
+ {
+  "view": "sales-today",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 253,
+  "settledMs": 3342,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 36,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 1016,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 790,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/sales-today",
+    "ms": 590,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 57
+ },
+ {
+  "view": "catalog",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 315,
+  "settledMs": 4478,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 68,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "CatalogStructure"
+    ],
+    "ms": 1400,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 794,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/me",
+    "ms": 604,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 1790
+ },
+ {
+  "view": "catalog/products/60aa52bf-e582-4ec8-8464-dcc4e1375718",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 235,
+  "settledMs": 3596,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 53,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "ProductDetail"
+    ],
+    "ms": 972,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "CatalogStructure"
+    ],
+    "ms": 577,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 529,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 1284
+ },
+ {
+  "view": "catalog/categories",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 208,
+  "settledMs": 3392,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 51,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 672,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "CatalogStructure"
+    ],
+    "ms": 480,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/me",
+    "ms": 308,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 297
+ },
+ {
+  "view": "catalog/attributes",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 235,
+  "settledMs": 3676,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 51,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "CatalogStructure"
+    ],
+    "ms": 1860,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 739,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 419,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 302
+ },
+ {
+  "view": "catalog/brands",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 224,
+  "settledMs": 3822,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 51,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "CatalogStructure"
+    ],
+    "ms": 813,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 728,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 603,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 288
+ },
+ {
+  "view": "catalog/collections",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 234,
+  "settledMs": 4760,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 51,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 1365,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 764,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "CatalogStructure"
+    ],
+    "ms": 611,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 402
+ },
+ {
+  "view": "catalog/warehouses",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 243,
+  "settledMs": 3554,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 51,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 874,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "CatalogStructure"
+    ],
+    "ms": 418,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/me",
+    "ms": 348,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 255
+ },
+ {
+  "view": "finance",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 301,
+  "settledMs": 3212,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 46,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 2173,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/summary?from=2026-10-01&to=2026-10-28&currency=CUP",
+    "ms": 935,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/daily?from=2026-10-01&to=2026-10-28&currency=CUP",
+    "ms": 875,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 964
+ },
+ {
+  "view": "finance/breakdown",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 258,
+  "settledMs": 3993,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 45,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 1330,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/breakdown?from=2026-10-01&to=2026-10-28&currency=CUP",
+    "ms": 804,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 472,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 429
+ },
+ {
+  "view": "finance/expenses",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 235,
+  "settledMs": 3271,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 46,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 542,
+    "status": 200
+   },
+   {
+    "url": "/admin/multi-currency?_rsc=PkklphFsSOaZ6q4I",
+    "ms": 531,
+    "status": 200
+   },
+   {
+    "url": "/admin/themes?_rsc=J9Bb7_R-nK3JhQPV",
+    "ms": 505,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 263
+ },
+ {
+  "view": "finance/inventory",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 244,
+  "settledMs": 8472,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 49,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 4002,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/inventory?currency=CUP&filter=all&page=1",
+    "ms": 1243,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+    "ms": 938,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 4704
+ },
+ {
+  "view": "finance/margin",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 277,
+  "settledMs": 3770,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 45,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 1128,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 916,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/margin?from=2026-10-01&to=2026-10-28&currency=CUP&group=prod",
+    "ms": 759,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 611
+ },
+ {
+  "view": "discounts",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 297,
+  "settledMs": 3103,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 36,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "Batch"
+    ],
+    "ms": 1573,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 766,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 556,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 273
+ },
+ {
+  "view": "discounts/vouchers",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 287,
+  "settledMs": 2694,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 36,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "Batch"
+    ],
+    "ms": 735,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 503,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/me",
+    "ms": 368,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 347
+ },
+ {
+  "view": "shipping",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 228,
+  "settledMs": 2963,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 36,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 1408,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 567,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/me",
+    "ms": 518,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 531
+ },
+ {
+  "view": "themes",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 224,
+  "settledMs": 6898,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 83,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/storefront?view=home",
+    "ms": 2396,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "Batch"
+    ],
+    "ms": 1123,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/storefront?view=shell",
+    "ms": 1009,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 2289
+ },
+ {
+  "view": "themes/home",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 242,
+  "settledMs": 5308,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 45,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "Batch"
+    ],
+    "ms": 1970,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/me",
+    "ms": 1904,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 893,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 1139
+ },
+ {
+  "view": "themes/banners",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 209,
+  "settledMs": 10852,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 50,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 5891,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "Batch"
+    ],
+    "ms": 2076,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 1611,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 422
+ },
+ {
+  "view": "themes/menus",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 203,
+  "settledMs": 3975,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 46,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "Batch"
+    ],
+    "ms": 1809,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 1050,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 946,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 249
+ },
+ {
+  "view": "themes/pages",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 217,
+  "settledMs": 3875,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 46,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "Batch"
+    ],
+    "ms": 1354,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 997,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 585,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 207
+ },
+ {
+  "view": "team",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 1313,
+  "settledMs": 4487,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 38,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 911,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 737,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/team",
+    "ms": 557,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 260
+ },
+ {
+  "view": "whatsapp-notifications",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 243,
+  "settledMs": 4326,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 40,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 1431,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 855,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/me",
+    "ms": 760,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 287
+ },
+ {
+  "view": "whatsapp-notifications/log",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 211,
+  "settledMs": 3428,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 47,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "CheckoutSettings"
+    ],
+    "ms": 844,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "NotificationLog"
+    ],
+    "ms": 748,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 669,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 5674
+ },
+ {
+  "view": "whatsapp-notifications/templates",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 228,
+  "settledMs": 2881,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 40,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "NotificationSettings"
+    ],
+    "ms": 588,
+    "status": 200
+   },
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 531,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 524,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 543
+ },
+ {
+  "view": "billing",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 296,
+  "settledMs": 5578,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 36,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 2908,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 1907,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/billing",
+    "ms": 1684,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 682
+ },
+ {
+  "view": "multi-warehouse",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 321,
+  "settledMs": 3481,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 44,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 701,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+    "ms": 652,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 576,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 689
+ },
+ {
+  "view": "multi-warehouse/movements",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 313,
+  "settledMs": 4303,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 51,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 1300,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses/movements?page=1",
+    "ms": 707,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 591,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 5757
+ },
+ {
+  "view": "multi-warehouse/transfer",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 202,
+  "settledMs": 3647,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 40,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 1282,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 791,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+    "ms": 565,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 145
+ },
+ {
+  "view": "multi-currency",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 231,
+  "settledMs": 2691,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 38,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/currencies/rates",
+    "ms": 629,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 537,
+    "status": 200
+   },
+   {
+    "url": "/admin/sales-today?_rsc=OzA5raSLQrFgco88",
+    "ms": 386,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 433
+ },
+ {
+  "view": "mobile-app",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 247,
+  "settledMs": 2981,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 36,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/admin/whatsapp-notifications?_rsc=ADE-X_zoEKab0UmX",
+    "ms": 640,
+    "status": 200
+   },
+   {
+    "url": "/admin/catalog?_rsc=ZX6ruDwAtfXZRHhW",
+    "ms": 612,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/mobile-app",
+    "ms": 522,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 426
+ },
+ {
+  "view": "custom-domain",
+  "docStatus": 200,
+  "navErr": null,
+  "dclMs": 327,
+  "settledMs": 3340,
+  "stillPending": 0,
+  "spinners": 0,
+  "nData": 36,
+  "failures": [],
+  "slowest": [
+   {
+    "url": "/graphql/v1",
+    "ops": [
+     "StoreEntitlements"
+    ],
+    "ms": 1145,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+    "ms": 651,
+    "status": 200
+   },
+   {
+    "url": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/custom-domain",
+    "ms": 432,
+    "status": 200
+   }
+  ],
+  "consoleErrs": [],
+  "errHints": [],
+  "textLen": 663
+ },
+ {
+  "endedAt": "2026-10-28T11:09:46.409Z"
+ }
+]

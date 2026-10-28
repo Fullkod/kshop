@@ -67,17 +67,22 @@ export function SessionProvider({ config, children }: { config: AdminConfig; chi
     return () => data.subscription.unsubscribe();
   }, [supabase]);
 
-  const value = useMemo<SessionContextValue>(() => {
+  // The clients read the token on every request, so they only change with the user: Supabase emits a new session
+  // object on every tab focus and token refresh (~1 h), and new clients there restarted every read of the page (R11).
+  const userId = session?.user.id;
+  const clients = useMemo(() => {
     const getAccessToken = async () => (await supabase.auth.getSession()).data.session?.access_token;
     return {
-      supabase,
-      session,
-      ready,
       api: createApiClient({ baseUrl: config.apiBaseUrl, getAccessToken }),
       graphql: createGraphqlClient({ ...config.supabase, getAccessToken, noCache: true, batch: true }),
-      config,
     };
-  }, [supabase, session, ready, config]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- userId: new clients only for another user
+  }, [supabase, config, userId]);
+
+  const value = useMemo<SessionContextValue>(
+    () => ({ supabase, session, ready, ...clients, config }),
+    [supabase, session, ready, clients, config],
+  );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

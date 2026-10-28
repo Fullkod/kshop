@@ -82,6 +82,7 @@ import type {
   StorefrontProduct,
   StorefrontShell,
 } from "./storefront-reads";
+import { createResilientFetch } from "./resilient-fetch";
 
 // Contract of /api/v1, shared by the web and the Capacitor apps.
 
@@ -93,6 +94,27 @@ export type MeResponse = {
   user: { id: string; email: string | null };
   isSuperadmin: boolean;
   stores: { id: string; slug: string; name: string; role: StoreRole }[];
+  /** With ?storeId=: everything the admin shell needs for that store, in the same call (R11). */
+  admin?: AdminBootstrap;
+};
+
+/** public.admin_bootstrap: role, modules, limits, subscription and status of a store, as RLS lets the user see them. */
+export type AdminBootstrap = {
+  role: StoreRole | null;
+  isSuperadmin: boolean;
+  modules: {
+    code: string;
+    source: "plan" | "addon" | "grant";
+    limits: Record<string, number>;
+    endsAt: string | null;
+  }[];
+  limits: Record<string, number>;
+  subscription: { status: string; trialEndsAt: string | null } | null;
+  storeStatus: string | null;
+  /** USD/month of the modules sold alone. */
+  addonPrices: Record<string, number>;
+  /** Orders waiting for confirmation (the bell). */
+  toConfirm: number;
 };
 
 export type EntitlementsResponse = {
@@ -769,10 +791,13 @@ export type ApiClientOptions = {
 };
 
 export function createApiClient(options: ApiClientOptions) {
-  const doFetch = options.fetch ?? fetch;
+  const rawFetch = options.fetch ?? ((input: RequestInfo | URL, init?: RequestInit) => fetch(input, init));
+  // Reads get a time limit and one retry (R11); writes go once and without a limit (Excel imports, photos).
+  const readFetch = createResilientFetch(rawFetch, { canRetry: () => true });
 
   async function send(method: string, path: string, body?: unknown): Promise<Response> {
     const token = await options.getAccessToken();
+    const doFetch = method === "GET" ? readFetch : rawFetch;
     const res = await doFetch(`${options.baseUrl}/api/v1${path}`, {
       method,
       headers: {
@@ -806,7 +831,8 @@ export function createApiClient(options: ApiClientOptions) {
   }
 
   return {
-    me: () => request<MeResponse>("GET", "/me"),
+    me: (storeId?: string) =>
+      request<MeResponse>("GET", storeId ? `/me?storeId=${encodeURIComponent(storeId)}` : "/me"),
     entitlements: (storeId: string) =>
       request<EntitlementsResponse>("GET", `/stores/${storeId}/entitlements`),
     catalog: (storeId: string) => {
@@ -862,7 +888,8 @@ export function createApiClient(options: ApiClientOptions) {
         saveTheme: (input: ThemeInput) => request<{ theme: ThemeInput }>("PUT", `${base}/theme`, input),
         saveDescription: (input: StoreDescriptionInput) =>
           request<{ description: string | null }>("PUT", `${base}/description`, input),
-        saveLogo: (input: StoreLogoInput) => request<{ logoUrl: string | null }>("PUT", `${base}/logo`, input),
+        saveLogo: (input: StoreLogoInput) =>
+          request<{ logoUrl: string | null }>("PUT", `${base}/logo`, input),
         saveMenu: (location: MenuLocation, input: MenuInput) =>
           request<null>("PUT", `${base}/menus/${location}`, input),
       };

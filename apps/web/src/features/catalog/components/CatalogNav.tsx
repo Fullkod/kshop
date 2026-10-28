@@ -2,7 +2,7 @@
 
 import { cn } from "@kshop/ui";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useStorePathname } from "@/lib/navigation";
 
 export const CATALOG_SECTIONS = [
   { href: "/admin/catalog", label: "Productos" },
@@ -16,7 +16,7 @@ export const CATALOG_SECTIONS = [
 ] as const;
 
 export function CatalogNav() {
-  const pathname = usePathname();
+  const pathname = useStorePathname();
   const active = (href: string) =>
     href === "/admin/catalog"
       ? pathname === href || pathname.startsWith("/admin/catalog/products")

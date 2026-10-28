@@ -24,7 +24,7 @@ import {
 } from "@kshop/data";
 import { Alert, Badge, Button, Card, cn, FieldError, Input, Label, Select } from "@kshop/ui";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useStorePathname } from "@/lib/navigation";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useApiAction } from "@/features/catalog/use-catalog";
@@ -118,7 +118,7 @@ const SECTIONS = [
 
 /** Tabs of the sections the plan includes (nothing to switch to when there is only one). */
 export function DiscountsNav() {
-  const pathname = usePathname();
+  const pathname = useStorePathname();
   const admin = useAdmin();
   const sections = SECTIONS.filter((s) => admin.enabledModules.has(s.module));
   if (sections.length < 2) return null;

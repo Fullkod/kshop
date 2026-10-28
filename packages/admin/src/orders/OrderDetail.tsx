@@ -21,7 +21,8 @@ import { AdminOrderQuery, type ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, Card, cn, Input, Label, Select } from "@kshop/ui";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useApiAction } from "../catalog/use-catalog";
-import { useStoreVersion } from "../realtime";
+import { ORDER_TABLES, useStoreVersion } from "../realtime";
+import { LoadError } from "../LoadError";
 import { useSession } from "../session";
 import { Link, useStore } from "@kshop/storefront";
 import { useCheckoutSettings } from "./use-orders";
@@ -88,9 +89,10 @@ export function OrderDetail({
   const action = useApiAction();
   const [order, setOrder] = useState<OrderNode | null>(null);
   const [missing, setMissing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [version, setVersion] = useState(0);
   // Read again when the order changes elsewhere (another device, the customer, a payment).
-  const live = useStoreVersion(store.id);
+  const live = useStoreVersion(store.id, ORDER_TABLES);
   const signedEvidenceUrl = useCallback(
     async (path: string) =>
       (await supabase.storage.from(EVIDENCE_BUCKET).createSignedUrl(path, 60 * 60)).data?.signedUrl ?? null,
@@ -104,6 +106,9 @@ export function OrderDetail({
       .toPromise()
       .then((r) => {
         if (cancelled) return;
+        // A failed read (busy database, no network) is not «no encontrado» (R11).
+        if (r.error) return setLoadError(true);
+        setLoadError(false);
         const node = nodes(r.data?.ordersCollection)[0];
         if (!node || node.storeId !== store.id) setMissing(true);
         else setOrder(node);
@@ -121,6 +126,7 @@ export function OrderDetail({
   };
 
   if (missing) return <Alert variant="destructive">Pedido no encontrado.</Alert>;
+  if (loadError && !order) return <LoadError message="No se pudo cargar el pedido." onRetry={reload} />;
   if (!order || !settings) return <p className="text-muted-foreground">Cargando…</p>;
 
   const status = order.status as OrderStatus;

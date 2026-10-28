@@ -109,6 +109,7 @@
 |---------|----------|
 | `pnpm dev` | Web en `http://kshop.localhost:3000` (plataforma) y `http://{slug}.kshop.localhost:3000` (tiendas) |
 | `pnpm typecheck` · `pnpm lint` · `pnpm test` · `pnpm build` | Calidad (Turborepo). El lint prohíbe `next/*` en `packages/*`, `"use server"` y `any` |
+| `pnpm db:local:start` · `db:local:stop` · `db:local:reset` · `db:local:migrate` · `db:local:query` | R11: Supabase local en Docker para desarrollo y tests. `pnpm dev`, `demo:seed`, `superadmin:create`, `e2e:*`, `qa:*`, `test:rls` y `db:graphql-schema` van a la base **local** por defecto (`scripts/db-env.mjs`; `KSHOP_DB_TARGET=remote` para la online). Ver `docs/LOCAL_DB.md` |
 | `pnpm db:status` · `pnpm db:migrate` | Estado / aplicar `supabase/migrations/*.sql` en el Supabase online (Management API, con historial) |
 | `pnpm test:rls` | Tests de aislamiento entre tiendas (`supabase/tests/*.test.sql`), en una transacción con rollback |
 | `pnpm db:query "<sql>"` | SQL ad hoc contra el proyecto |
@@ -123,6 +124,11 @@
 | `pnpm app:config <slug>` · `pnpm app:build <slug\|admin>` · `pnpm app:publish <slug\|admin>` · `pnpm app:keystore <slug\|admin>` | Fase 7: config de la app de tienda; proyecto Android con iconos (`--assemble` compila y firma; en la práctica lo hace el workflow «Android app» de GitHub Actions); sube el APK del artefacto a `store-apps` y lo registra oculto; crea la clave de firma fuera del repo (`--github`: secretos de Actions). Ver `docs/APPS.md` |
 | `pnpm qa:apps` | QA en navegador de la app de tienda, Kshop Admin y la distribución (`/app`, Admin › App móvil, Superadmin › Apps), con `pnpm dev` y los Vite de las apps (5173, 5174) corriendo; capturas en `.titan/qa/fase-7/` |
 | `pnpm demo:seed` | Crea/repara la tienda de pruebas permanente «Tienda Demo» (`demo.kshop.localhost:3000`) |
+| `pnpm qa:admin-perf [etiqueta]` | R11: abre las 37 vistas del admin de la Tienda Demo como dueño (solo lectura) y guarda tiempo, peticiones y fallos por vista en `.titan/qa/r11-rendimiento-admin/perf-<etiqueta>.json`; `QA_ADMIN_URL` para medir producción, `QA_VIEWS` para algunas vistas |
+
+**La base es una Nano con CPU a créditos (R11, 2026-10-28):** una ráfaga la deja estrangulada varios minutos y el admin
+cae con 57014. Nunca lanzar `e2e:*`, `qa:*`, `klaushop:*`, `test:rls`, `db:graphql-schema` ni `pnpm build` mientras
+alguien usa la web ni justo antes de un deploy; en serie, nunca a la vez. Medir siempre en rondas alternadas.
 
 **WhatsApp en modo real** (Superadmin › WhatsApp, desde 2026-10-27): los `e2e:*` y `qa:*` crean pedidos y tiendas con
 teléfonos de relleno que recibirían mensajes de verdad. Antes de correrlos, poner el modo en «Simulado» (`dry_run`) y

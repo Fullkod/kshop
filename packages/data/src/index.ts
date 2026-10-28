@@ -1,5 +1,6 @@
 export * from "./api";
 export * from "./graphql";
+export { RequestTimeoutError } from "./resilient-fetch";
 export * from "./queries";
 export * from "./supabase";
 export * from "./realtime";

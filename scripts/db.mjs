@@ -1,5 +1,8 @@
 // Database tooling for Kshop's online Supabase project, through the Supabase Management API
 // (no database password needed). Reads SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_REF from .env.local.
+// With KSHOP_DB_TARGET=local in the process environment (set by scripts/db-env.mjs, never read from .env.local) it
+// talks to the local Supabase (Docker) through KSHOP_LOCAL_DB_URL instead; auth-config is then a no-op
+// (supabase/config.toml holds the local auth settings).
 //
 //   node scripts/db.mjs status             applied vs pending migrations
 //   node scripts/db.mjs migrate            apply pending supabase/migrations/*.sql (recorded in the history)
@@ -11,6 +14,7 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import postgres from "postgres";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -22,6 +26,13 @@ function loadEnv() {
       const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
       if (match && !env[match[1]]) env[match[1]] = match[2].trim();
     }
+  }
+  if (process.env.KSHOP_DB_TARGET === "local") {
+    if (!process.env.KSHOP_LOCAL_DB_URL) {
+      console.error("db: KSHOP_DB_TARGET=local needs KSHOP_LOCAL_DB_URL (run through scripts/db-env.mjs)");
+      process.exit(1);
+    }
+    return env;
   }
   if (!env.SUPABASE_ACCESS_TOKEN || !env.SUPABASE_PROJECT_REF) {
     console.error("db: set SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_REF in .env.local");
@@ -48,7 +59,18 @@ async function call(method, path, body) {
   return data;
 }
 
-const query = (sql) => call("POST", "/database/query", { query: sql });
+const local = process.env.KSHOP_DB_TARGET === "local";
+const localSql = local ? postgres(process.env.KSHOP_LOCAL_DB_URL, { max: 1, onnotice: () => {} }) : null;
+
+// Like the Management API: the rows of the last statement that returned columns (a script may end in `rollback`).
+async function localQuery(text) {
+  const result = await localSql.unsafe(text).simple();
+  const results = Array.isArray(result[0]) || result.length === 0 ? result : [result];
+  const withRows = results.filter((r) => Array.isArray(r) && r.columns?.length);
+  return withRows.length ? [...withRows.at(-1)] : [];
+}
+
+const query = (sql) => (local ? localQuery(sql) : call("POST", "/database/query", { query: sql }));
 
 function localMigrations() {
   const dir = join(root, "supabase", "migrations");
@@ -59,7 +81,9 @@ function localMigrations() {
 }
 
 async function appliedMigrations() {
-  const rows = await call("GET", "/database/migrations");
+  const rows = local
+    ? await query("select name from supabase_migrations.schema_migrations")
+    : await call("GET", "/database/migrations");
   return new Set(rows.map((r) => r.name));
 }
 
@@ -74,6 +98,16 @@ async function migrate() {
   if (pending.length === 0) return console.log("Nothing to apply.");
   for (const m of pending) {
     process.stdout.write(`Applying ${m.file} ... `);
+    if (local) {
+      await query(
+        `begin;
+${readFileSync(m.path, "utf8")}
+;insert into supabase_migrations.schema_migrations (version, name) values ('${m.version}', '${m.name}');
+commit;`,
+      );
+      console.log("ok");
+      continue;
+    }
     await call("POST", "/database/migrations", { name: m.name, query: readFileSync(m.path, "utf8") });
     // The API stamps the current time as version; keep the file's version so the history matches the CLI.
     await query(
@@ -119,6 +153,8 @@ async function runTests(filter) {
 }
 
 async function authConfig() {
+  if (local)
+    return console.log("Local database: auth settings live in supabase/config.toml (restart the stack).");
   const config = JSON.parse(readFileSync(join(root, "supabase", "auth-config.json"), "utf8"));
   await call("PATCH", "/config/auth", config);
   console.log("Auth config applied:", Object.keys(config).join(", "));
@@ -161,4 +197,6 @@ try {
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;
+} finally {
+  await localSql?.end();
 }

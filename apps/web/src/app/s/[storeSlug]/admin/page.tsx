@@ -3,6 +3,7 @@
 import { formatMoney, formatPhone, orderCode, SHIPPING_TYPE_LABELS, type CurrencyCode } from "@kshop/core";
 import {
   greeting,
+  LoadError,
   periodChange,
   StatusPill,
   useAdminHome,
@@ -42,7 +43,7 @@ export default function AdminHomePage() {
   const store = useStore();
   const admin = useAdmin();
   const salesToday = admin.enabledModules.has("sales_today");
-  const { summary, today, recent } = useAdminHome({ salesToday });
+  const { summary, today, recent, failed, reload } = useAdminHome({ salesToday });
   const [now] = useState(() => new Date());
   const base = store.baseCurrency as CurrencyCode;
   const week = summary?.week ?? null;
@@ -70,6 +71,8 @@ export default function AdminHomePage() {
           />
         )}
       </div>
+
+      {failed && <LoadError message="No se pudieron cargar algunos datos del inicio." onRetry={reload} />}
 
       {salesToday ? (
         <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4" data-testid="sales-today">

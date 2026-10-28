@@ -63,3 +63,6 @@ de subir la instancia. Diagnóstico y decisiones en `.titan/plans/prp-r9-lectura
 
 ## Pendiente
 - Subir la instancia cuando entren tiendas reales (klauShop): la Nano se estrangula con cualquier ráfaga.
+  **Matizado el 2026-10-28** (`2026-10-28-diagnostico-rendimiento.md`): la causa dominante es el peaje de esquema de
+  pg_graphql por conexión más las ráfagas del propio desarrollo; subir la instancia se recomienda por copias de
+  seguridad y uso real, no como arreglo. Plan de código en `prp-r11-rendimiento-admin.md`.

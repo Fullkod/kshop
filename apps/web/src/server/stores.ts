@@ -12,19 +12,32 @@ export const storeCacheTag = (slug: string) => `store:${slug}`;
 // Anonymous pg_graphql read: only the public store card is visible to anon.
 const graphql = createGraphqlClient({ ...supabaseConfig, noCache: true });
 
-/** Live custom domain of a store (anon RPC, the domain is public once live), or null. */
+/**
+ * Live custom domain of a store (anon RPC, the domain is public once live), or null. A failed or slow lookup counts
+ * as «no custom domain» (R11: without a limit a busy database turned the whole store page into a 500); the proxy
+ * makes the same lookup with the same 3 s limit.
+ */
 export async function fetchStoreCustomDomain(slug: string): Promise<string | null> {
-  const res = await fetch(`${supabaseConfig.url}/rest/v1/rpc/resolve_store_custom_domain`, {
-    method: "POST",
-    headers: {
-      apikey: supabaseConfig.key,
-      Authorization: `Bearer ${supabaseConfig.key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ p_slug: slug }),
-  });
-  if (!res.ok) throw new Error(`resolve_store_custom_domain failed (${res.status})`);
-  return (await res.json()) as string | null;
+  try {
+    const res = await fetch(`${supabaseConfig.url}/rest/v1/rpc/resolve_store_custom_domain`, {
+      method: "POST",
+      headers: {
+        apikey: supabaseConfig.key,
+        Authorization: `Bearer ${supabaseConfig.key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ p_slug: slug }),
+      signal: AbortSignal.timeout(3_000),
+    });
+    if (!res.ok) throw new Error(`resolve_store_custom_domain failed (${res.status})`);
+    return (await res.json()) as string | null;
+  } catch (error) {
+    console.error("Custom domain lookup failed.", {
+      slug,
+      message: error instanceof Error ? error.message : error,
+    });
+    return null;
+  }
 }
 
 async function fetchStoreBySlug(slug: string): Promise<PublicStore | null> {

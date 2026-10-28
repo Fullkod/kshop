@@ -1,5 +1,5 @@
 import "server-only";
-import { getUserFromBearer } from "./auth";
+import { getStoreGuard, getUserFromBearer } from "./auth";
 import { HttpError } from "./http";
 import { getServiceClient } from "./supabase";
 
@@ -14,18 +14,22 @@ export async function assertStoreWritable(request: Request): Promise<void> {
   if (request.method === "GET" || request.method === "HEAD") return;
   const storeId = STORE_WRITE.exec(new URL(request.url).pathname)?.[1];
   if (!storeId) return;
-  const { data } = await getServiceClient()
-    .from("stores")
-    .select("status, suspended_reason")
-    .eq("id", storeId)
-    .maybeSingle<{ status: string; suspended_reason: string | null }>();
-  if (data?.status !== "suspended") return;
+  // With a signed-in user, the same query (and request memo) as requireStoreRole: one read for both (R11).
   const user = await getUserFromBearer(request).catch(() => null);
+  const store = user
+    ? await getStoreGuard(user, storeId).then((g) => ({ status: g.storeStatus, reason: g.suspendedReason }))
+    : await getServiceClient()
+        .from("stores")
+        .select("status, suspended_reason")
+        .eq("id", storeId)
+        .maybeSingle<{ status: string; suspended_reason: string | null }>()
+        .then(({ data }) => ({ status: data?.status ?? null, reason: data?.suspended_reason ?? null }));
+  if (store.status !== "suspended") return;
   if (user?.isSuperadmin) return;
   throw new HttpError(
     403,
     "store_suspended",
-    data.suspended_reason === "billing"
+    store.reason === "billing"
       ? "La tienda está suspendida por falta de pago: puedes consultar y exportar, pero no hacer cambios hasta pagar."
       : "La tienda está suspendida: puedes consultar y exportar, pero no hacer cambios. Escribe a soporte de Kshop.",
   );

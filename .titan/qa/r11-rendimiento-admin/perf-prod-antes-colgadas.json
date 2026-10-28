@@ -1,0 +1,96 @@
+{
+ "summary": {
+  "label": "prod-antes-colgadas",
+  "base": "https://demo.kshop.fullkod.com",
+  "at": "2026-10-28T12:10:15.717Z",
+  "views": 3,
+  "medianMs": 6002,
+  "p95Ms": 37317,
+  "maxMs": 37317,
+  "viewsWithErrors": 0,
+  "requests": 11,
+  "graphqlRequests": 5
+ },
+ "results": [
+  {
+   "view": "home",
+   "settledMs": 37317,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 6,
+   "graphql": 2,
+   "api": 4,
+   "bootRequests": 2,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+     "ms": 3580,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/sales-today",
+     "ms": 2802,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+     "ms": 2802,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": []
+  },
+  {
+   "view": "catalog/products/9cd3a82e-e293-445f-8054-c77a2af2b373",
+   "settledMs": 6002,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 5,
+   "graphql": 3,
+   "api": 2,
+   "bootRequests": 2,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "ProductDetail"
+     ],
+     "ms": 1327,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+     "ms": 1124,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 959,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": []
+  },
+  {
+   "view": "themes/menus",
+   "settledMs": 889,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 0,
+   "graphql": 0,
+   "api": 0,
+   "bootRequests": null,
+   "slowest": [],
+   "failures": [],
+   "consoleErrors": []
+  }
+ ]
+}

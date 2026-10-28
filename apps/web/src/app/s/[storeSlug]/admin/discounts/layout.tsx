@@ -1,7 +1,7 @@
 "use client";
 
 import { Alert } from "@kshop/ui";
-import { usePathname } from "next/navigation";
+import { useStorePathname } from "@/lib/navigation";
 import type { ReactNode } from "react";
 import { DiscountsNav } from "@/features/discounts/components/DiscountsPages";
 import { useAdmin } from "../admin-context";
@@ -9,7 +9,7 @@ import { useAdmin } from "../admin-context";
 // Ofertas (promotions, module discounts) and Cupones (module vouchers) share this section; each page needs its own.
 export default function DiscountsLayout({ children }: { children: ReactNode }) {
   const admin = useAdmin();
-  const pathname = usePathname();
+  const pathname = useStorePathname();
   const onVouchers = pathname.startsWith("/admin/discounts/vouchers");
   if (!admin.enabledModules.has(onVouchers ? "vouchers" : "discounts")) {
     return (

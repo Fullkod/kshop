@@ -21,14 +21,15 @@ import {
   Users,
 } from "@kshop/ui";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { ADMIN_CONTENT_CLASS, SIDEBAR_NAV_CLASS } from "@/components/admin-content";
 import { platformProtocol, publicEnv } from "@/env";
 import { ADMIN_MODULES } from "@/features/registry";
 import { ADMIN_GROUPS, type AdminGroup } from "@/features/types";
+import { useStorePathname } from "@/lib/navigation";
 import { useSession } from "@/lib/session";
-import { useStoreVersion } from "@kshop/admin";
+import { ORDER_TABLES, useStoreVersion } from "@kshop/admin";
 import { useStore } from "@kshop/storefront";
 import { AdminContext, loadAdminState, type AdminState } from "./admin-context";
 import { AccountBanner } from "./AccountBanner";
@@ -66,15 +67,15 @@ function primaryAction(pathname: string): { href: string; label: string } | null
  */
 export function AdminShell({ children }: { children: ReactNode }) {
   const store = useStore();
-  const { session, ready, api, graphql, supabase } = useSession();
-  const pathname = usePathname();
+  const { session, ready, api, supabase } = useSession();
+  const pathname = useStorePathname();
   const router = useRouter();
   const isPublic = PUBLIC_PATHS.includes(pathname);
   const [state, setState] = useState<LoadState>({ kind: "loading" });
-  const [toConfirm, setToConfirm] = useState(0);
+  const [liveToConfirm, setLiveToConfirm] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const live = useStoreVersion(isPublic ? null : store.id);
+  const live = useStoreVersion(isPublic ? null : store.id, ORDER_TABLES);
   const userId = session?.user.id;
 
   useEffect(() => {
@@ -85,10 +86,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
     if (!userId || isPublic) return;
     let cancelled = false;
     (async () => {
-      // A busy database can fail one read (57014): try three times before showing the error.
-      for (let i = 0; i < 3 && !cancelled; i++) {
+      // Each read is already retried once by @kshop/data (R11); one more round here before showing «Reintentar».
+      for (let i = 0; i < 2 && !cancelled; i++) {
         try {
-          const admin = await loadAdminState(api, graphql, store.id);
+          const admin = await loadAdminState(api, store.id);
           if (!cancelled) setState(admin ? { kind: "ready", admin } : { kind: "forbidden" });
           return;
         } catch {
@@ -100,25 +101,23 @@ export function AdminShell({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [userId, isPublic, api, graphql, store.id, attempt]);
+  }, [userId, isPublic, api, store.id, attempt]);
 
-  // Orders waiting for confirmation: the bell's dot and the counter of «Pedidos», refreshed on every page change and
-  // on every order change (Realtime).
+  // Orders waiting for confirmation: the bell's dot and the counter of «Pedidos». It starts from the boot and is read
+  // again only on an order change (Realtime) with a one-line count (R11: it ran the whole admin_home_summary on every
+  // page change).
   const ordersOn = state.kind === "ready" && state.admin.enabledModules.has("orders");
   useEffect(() => {
-    if (!ordersOn) return;
+    if (!ordersOn || live === 0) return;
     let cancelled = false;
-    api
-      .orders(store.id)
-      .summary()
-      .then(
-        (s) => !cancelled && setToConfirm(s.todo.toConfirm),
-        () => {},
-      );
+    void supabase.rpc("admin_to_confirm", { p_store_id: store.id }).then(({ data, error }) => {
+      if (!cancelled && !error && typeof data === "number") setLiveToConfirm(data);
+    });
     return () => {
       cancelled = true;
     };
-  }, [ordersOn, api, store.id, pathname, live]);
+  }, [ordersOn, supabase, store.id, live]);
+  const toConfirm = liveToConfirm ?? (state.kind === "ready" ? state.admin.toConfirm : 0);
 
   if (isPublic) return <>{children}</>;
   if (!ready || !session || state.kind === "loading") {

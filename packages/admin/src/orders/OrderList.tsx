@@ -16,9 +16,10 @@ import {
 } from "@kshop/core";
 import { AdminOrdersQuery, type VariablesOf } from "@kshop/data";
 import { Alert, Badge, Button, Card, Input, MessageCircle, cn } from "@kshop/ui";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useApiAction } from "../catalog/use-catalog";
-import { useStoreVersion } from "../realtime";
+import { LoadError } from "../LoadError";
+import { ORDER_TABLES, useStoreVersion } from "../realtime";
 import { useSession } from "../session";
 import { Link, useStore } from "@kshop/storefront";
 import { useCheckoutSettings } from "./use-orders";
@@ -97,8 +98,10 @@ export function OrderList() {
   const [total, setTotal] = useState(0);
   const [cursor, setCursor] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
-  const live = useStoreVersion(store.id);
+  const live = useStoreVersion(store.id, ORDER_TABLES);
   const [loadError, setLoadError] = useState<string | null>(null);
+  // The first page loads at once; later changes (typing in the search) wait 250 ms (R11).
+  const loadedOnce = useRef(false);
 
   const filter = (): Filter => {
     const statuses = ORDER_TABS.find((t) => t.key === tab)!.statuses as unknown as OrderStatus[];
@@ -124,6 +127,7 @@ export function OrderList() {
       setLoadError("No se pudieron cargar los pedidos.");
       return null;
     }
+    setLoadError(null);
     const page = result.data?.ordersCollection;
     setTotal(page?.totalCount ?? 0);
     setCursor(page?.pageInfo.hasNextPage ? (page.pageInfo.endCursor ?? null) : null);
@@ -145,10 +149,14 @@ export function OrderList() {
 
   useEffect(() => {
     let cancelled = false;
-    const timer = setTimeout(async () => {
-      const next = await load(null);
-      if (!cancelled && next) setRows(next);
-    }, 250);
+    const timer = setTimeout(
+      async () => {
+        loadedOnce.current = true;
+        const next = await load(null);
+        if (!cancelled && next) setRows(next);
+      },
+      loadedOnce.current ? 250 : 0,
+    );
     return () => {
       cancelled = true;
       clearTimeout(timer);
@@ -199,10 +207,13 @@ export function OrderList() {
       </div>
       {query.trim() && <p className="-mt-2 text-xs text-muted-foreground">Buscando en todos los estados.</p>}
 
-      {(loadError || action.error) && <Alert variant="destructive">{loadError ?? action.error}</Alert>}
+      {loadError && <LoadError message={loadError} onRetry={() => setVersion((v) => v + 1)} />}
+      {action.error && <Alert variant="destructive">{action.error}</Alert>}
 
       {rows === null ? (
-        <p className="text-muted-foreground">Cargando…</p>
+        loadError ? null : (
+          <p className="text-muted-foreground">Cargando…</p>
+        )
       ) : rows.length === 0 ? (
         <Card className="text-muted-foreground">No hay pedidos aquí.</Card>
       ) : (

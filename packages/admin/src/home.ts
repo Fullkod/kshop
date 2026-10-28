@@ -3,8 +3,8 @@
 import type { CurrencyCode, OrderStatus, PaymentStatus, ShippingType } from "@kshop/core";
 import { AdminOrdersQuery, type HomeSummary, type SalesToday } from "@kshop/data";
 import { useStore } from "@kshop/storefront";
-import { useEffect, useState } from "react";
-import { useStoreVersion } from "./realtime";
+import { useCallback, useEffect, useState } from "react";
+import { ORDER_TABLES, useStoreVersion } from "./realtime";
 import { useSession } from "./session";
 
 export type RecentOrder = {
@@ -27,6 +27,9 @@ export type AdminHome = {
   /** «Ventas de hoy» (module sales_today): what was received today, per currency. */
   today: SalesToday | null;
   recent: RecentOrder[] | null;
+  /** Some read failed (busy database, no network): the page says so and offers «Reintentar» (R11). */
+  failed: boolean;
+  reload: () => void;
 };
 
 /** Data of the admin home (web and Kshop Admin): to do, week, owed, received today and the latest orders. */
@@ -39,9 +42,16 @@ export function useAdminHome({
 }): AdminHome {
   const store = useStore();
   const { api, graphql } = useSession();
-  const [data, setData] = useState<AdminHome>({ summary: null, today: null, recent: null });
-  // Read again on every order or payment of the store (Realtime).
-  const version = useStoreVersion(store.id);
+  const [data, setData] = useState<Omit<AdminHome, "reload">>({
+    summary: null,
+    today: null,
+    recent: null,
+    failed: false,
+  });
+  // Read again on every order or payment of the store (Realtime), and on «Reintentar».
+  const live = useStoreVersion(store.id, ORDER_TABLES);
+  const [attempt, setAttempt] = useState(0);
+  const reload = useCallback(() => setAttempt((n) => n + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,30 +63,40 @@ export function useAdminHome({
         .query(AdminOrdersQuery, { filter: { storeId: { eq: store.id } }, first: recent })
         .toPromise()
         .then((r) =>
-          (r.data?.ordersCollection.edges ?? []).map(({ node: o }) => ({
-            id: o.id,
-            number: o.number,
-            status: o.status as OrderStatus,
-            paymentStatus: o.paymentStatus as PaymentStatus,
-            currency: String(o.currency) as CurrencyCode,
-            total: o.total == null ? null : Number(o.total),
-            subtotal: Number(o.subtotal),
-            customerName: o.customerName,
-            customerPhone: o.customerPhone,
-            shippingType: (o.shippingType as ShippingType | null) ?? null,
-            createdAt: o.createdAt,
-            items: (o.orderLinesCollection?.edges ?? []).reduce((sum, e) => sum + e.node.quantity, 0),
-          })),
+          r.error
+            ? null
+            : (r.data?.ordersCollection.edges ?? []).map(({ node: o }) => ({
+                id: o.id,
+                number: o.number,
+                status: o.status as OrderStatus,
+                paymentStatus: o.paymentStatus as PaymentStatus,
+                currency: String(o.currency) as CurrencyCode,
+                total: o.total == null ? null : Number(o.total),
+                subtotal: Number(o.subtotal),
+                customerName: o.customerName,
+                customerPhone: o.customerPhone,
+                shippingType: (o.shippingType as ShippingType | null) ?? null,
+                createdAt: o.createdAt,
+                items: (o.orderLinesCollection?.edges ?? []).reduce((sum, e) => sum + e.node.quantity, 0),
+              })),
         ),
     ]).then(([summary, today, list]) => {
-      if (!cancelled) setData({ summary, today, recent: list });
+      if (cancelled) return;
+      // A failed read keeps what was already on screen.
+      const failed = !summary || (salesToday && !today) || !list;
+      setData((current) => ({
+        summary: summary ?? current.summary,
+        today: today ?? current.today,
+        recent: list ?? current.recent,
+        failed,
+      }));
     });
     return () => {
       cancelled = true;
     };
-  }, [api, graphql, store.id, salesToday, recent, version]);
+  }, [api, graphql, store.id, salesToday, recent, live, attempt]);
 
-  return data;
+  return { ...data, reload };
 }
 
 /** Change against yesterday in whole percent (null when yesterday had nothing). */

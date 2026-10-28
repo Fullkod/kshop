@@ -1,0 +1,1881 @@
+{
+ "summary": {
+  "label": "local-despues",
+  "base": "http://demo.kshop.localhost:3003",
+  "at": "2026-10-28T13:21:19.160Z",
+  "views": 37,
+  "medianMs": 959,
+  "p95Ms": 2784,
+  "maxMs": 8624,
+  "viewsWithErrors": 0,
+  "requests": 119,
+  "graphqlRequests": 26
+ },
+ "results": [
+  {
+   "view": "home",
+   "settledMs": 2288,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 6,
+   "graphql": 1,
+   "api": 5,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/sales-today",
+     "ms": 328,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+     "ms": 297,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/sales-today",
+     "ms": 242,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/page.tsx\n\nWays to fix this:\n  "
+   ],
+   "timeline": [
+    [
+     1665,
+     151,
+     "/api/v1/me"
+    ],
+    [
+     1959,
+     190,
+     "/orders/summary"
+    ],
+    [
+     1960,
+     242,
+     "/orders/sales-today"
+    ],
+    [
+     1960,
+     297,
+     "/orders/summary"
+    ],
+    [
+     1960,
+     328,
+     "/orders/sales-today"
+    ],
+    [
+     1977,
+     82,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "orders",
+   "settledMs": 887,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 78,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 61,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/orders\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/orders/layout.tsx\n\nWays"
+   ],
+   "timeline": [
+    [
+     638,
+     61,
+     "/api/v1/me"
+    ],
+    [
+     809,
+     78,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "orders/579fa21e-a499-441a-8f96-120802e703d4",
+   "settledMs": 1414,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 3,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 218,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 127,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CheckoutSettings"
+     ],
+     "ms": 87,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/orders/[orderId]\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/orders/layout"
+   ],
+   "timeline": [
+    [
+     722,
+     218,
+     "/api/v1/me"
+    ],
+    [
+     1049,
+     127,
+     "Batch"
+    ],
+    [
+     1244,
+     40,
+     "NotificationLog"
+    ],
+    [
+     1327,
+     87,
+     "CheckoutSettings"
+    ]
+   ]
+  },
+  {
+   "view": "orders/customers",
+   "settledMs": 2143,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 230,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "AdminCustomers"
+     ],
+     "ms": 21,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/orders/customers\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/orders/layout"
+   ],
+   "timeline": [
+    [
+     1533,
+     230,
+     "/api/v1/me"
+    ],
+    [
+     2122,
+     21,
+     "AdminCustomers"
+    ]
+   ]
+  },
+  {
+   "view": "orders/payment-methods",
+   "settledMs": 1209,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 119,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CheckoutSettings"
+     ],
+     "ms": 48,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/orders/payment-methods\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/orders/"
+   ],
+   "timeline": [
+    [
+     906,
+     119,
+     "/api/v1/me"
+    ],
+    [
+     1161,
+     48,
+     "CheckoutSettings"
+    ]
+   ]
+  },
+  {
+   "view": "sales-today",
+   "settledMs": 1126,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/sales-today",
+     "ms": 224,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/sales-today",
+     "ms": 176,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 62,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/sales-today\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/sales-today/page.t"
+   ],
+   "timeline": [
+    [
+     768,
+     62,
+     "/api/v1/me"
+    ],
+    [
+     902,
+     176,
+     "/orders/sales-today"
+    ],
+    [
+     902,
+     224,
+     "/orders/sales-today"
+    ]
+   ]
+  },
+  {
+   "view": "catalog",
+   "settledMs": 956,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 81,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 81,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/catalog\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/catalog/layout.tsx\n\nWa"
+   ],
+   "timeline": [
+    [
+     711,
+     81,
+     "/api/v1/me"
+    ],
+    [
+     875,
+     81,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/products/9cd3a82e-e293-445f-8054-c77a2af2b373",
+   "settledMs": 942,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 136,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 51,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/catalog/products/[productId]\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/c"
+   ],
+   "timeline": [
+    [
+     673,
+     51,
+     "/api/v1/me"
+    ],
+    [
+     806,
+     136,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/categories",
+   "settledMs": 713,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 79,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CatalogStructure"
+     ],
+     "ms": 75,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/catalog/[section]\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/catalog/layo"
+   ],
+   "timeline": [
+    [
+     487,
+     79,
+     "/api/v1/me"
+    ],
+    [
+     638,
+     75,
+     "CatalogStructure"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/attributes",
+   "settledMs": 479,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 44,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CatalogStructure"
+     ],
+     "ms": 44,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/catalog/[section]\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/catalog/layo"
+   ],
+   "timeline": [
+    [
+     325,
+     44,
+     "/api/v1/me"
+    ],
+    [
+     435,
+     44,
+     "CatalogStructure"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/brands",
+   "settledMs": 648,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CatalogStructure"
+     ],
+     "ms": 55,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 48,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/catalog/[section]\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/catalog/layo"
+   ],
+   "timeline": [
+    [
+     481,
+     48,
+     "/api/v1/me"
+    ],
+    [
+     593,
+     55,
+     "CatalogStructure"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/collections",
+   "settledMs": 553,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 45,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CatalogStructure"
+     ],
+     "ms": 40,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/catalog/[section]\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/catalog/layo"
+   ],
+   "timeline": [
+    [
+     397,
+     45,
+     "/api/v1/me"
+    ],
+    [
+     513,
+     40,
+     "CatalogStructure"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/warehouses",
+   "settledMs": 629,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CatalogStructure"
+     ],
+     "ms": 66,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 42,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/catalog/[section]\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/catalog/layo"
+   ],
+   "timeline": [
+    [
+     456,
+     42,
+     "/api/v1/me"
+    ],
+    [
+     563,
+     66,
+     "CatalogStructure"
+    ]
+   ]
+  },
+  {
+   "view": "finance",
+   "settledMs": 1411,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 7,
+   "graphql": 0,
+   "api": 5,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/daily",
+     "ms": 773,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/summary",
+     "ms": 701,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/daily",
+     "ms": 698,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/finance\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/finance/layout.tsx\n\nWa"
+   ],
+   "timeline": [
+    [
+     470,
+     73,
+     "/api/v1/me"
+    ],
+    [
+     637,
+     459,
+     "/finance/summary"
+    ],
+    [
+     637,
+     698,
+     "/finance/daily"
+    ],
+    [
+     638,
+     11,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     638,
+     19,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     638,
+     701,
+     "/finance/summary"
+    ],
+    [
+     638,
+     773,
+     "/finance/daily"
+    ]
+   ]
+  },
+  {
+   "view": "finance/breakdown",
+   "settledMs": 1916,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 5,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/breakdown",
+     "ms": 830,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/breakdown",
+     "ms": 781,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 355,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/finance/breakdown\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/finance/layo"
+   ],
+   "timeline": [
+    [
+     635,
+     355,
+     "/api/v1/me"
+    ],
+    [
+     1086,
+     36,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     1086,
+     67,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     1086,
+     781,
+     "/finance/breakdown"
+    ],
+    [
+     1086,
+     830,
+     "/finance/breakdown"
+    ]
+   ]
+  },
+  {
+   "view": "finance/expenses",
+   "settledMs": 807,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 7,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/expenses",
+     "ms": 226,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/expenses",
+     "ms": 189,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 67,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/finance/expenses\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/finance/layou"
+   ],
+   "timeline": [
+    [
+     443,
+     67,
+     "/api/v1/me"
+    ],
+    [
+     581,
+     8,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     581,
+     17,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     581,
+     23,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     581,
+     28,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     581,
+     189,
+     "/finance/expenses"
+    ],
+    [
+     581,
+     226,
+     "/finance/expenses"
+    ]
+   ]
+  },
+  {
+   "view": "finance/inventory",
+   "settledMs": 1451,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 9,
+   "graphql": 0,
+   "api": 5,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/inventory",
+     "ms": 595,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/inventory",
+     "ms": 486,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 386,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/finance/inventory\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/finance/layo"
+   ],
+   "timeline": [
+    [
+     701,
+     89,
+     "/api/v1/me"
+    ],
+    [
+     855,
+     6,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     855,
+     116,
+     "/warehouses"
+    ],
+    [
+     855,
+     486,
+     "/finance/inventory"
+    ],
+    [
+     856,
+     11,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     856,
+     15,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     856,
+     21,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     856,
+     386,
+     "/warehouses"
+    ],
+    [
+     856,
+     595,
+     "/finance/inventory"
+    ]
+   ]
+  },
+  {
+   "view": "finance/margin",
+   "settledMs": 1058,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 5,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/margin",
+     "ms": 375,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/margin",
+     "ms": 315,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 75,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/finance/margin\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/finance/layout."
+   ],
+   "timeline": [
+    [
+     510,
+     75,
+     "/api/v1/me"
+    ],
+    [
+     683,
+     15,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     683,
+     27,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     683,
+     315,
+     "/finance/margin"
+    ],
+    [
+     683,
+     375,
+     "/finance/margin"
+    ]
+   ]
+  },
+  {
+   "view": "discounts",
+   "settledMs": 945,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 89,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 56,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/discounts\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/discounts/layout.tsx"
+   ],
+   "timeline": [
+    [
+     722,
+     89,
+     "/api/v1/me"
+    ],
+    [
+     889,
+     56,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "discounts/vouchers",
+   "settledMs": 672,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 112,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 60,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/discounts/vouchers\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/discounts/l"
+   ],
+   "timeline": [
+    [
+     437,
+     60,
+     "/api/v1/me"
+    ],
+    [
+     560,
+     112,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "shipping",
+   "settledMs": 876,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 52,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CheckoutSettings"
+     ],
+     "ms": 33,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/shipping\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/shipping/page.tsx\n\nWa"
+   ],
+   "timeline": [
+    [
+     735,
+     52,
+     "/api/v1/me"
+    ],
+    [
+     843,
+     33,
+     "CheckoutSettings"
+    ]
+   ]
+  },
+  {
+   "view": "themes",
+   "settledMs": 8624,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 6,
+   "graphql": 1,
+   "api": 5,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/storefront",
+     "ms": 163,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/storefront",
+     "ms": 162,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/storefront",
+     "ms": 144,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/themes\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/themes/layout.tsx\n\nWays"
+   ],
+   "timeline": [
+    [
+     468,
+     42,
+     "/api/v1/me"
+    ],
+    [
+     599,
+     119,
+     "Batch"
+    ],
+    [
+     760,
+     142,
+     "/storefront"
+    ],
+    [
+     760,
+     144,
+     "/storefront"
+    ],
+    [
+     760,
+     162,
+     "/storefront"
+    ],
+    [
+     760,
+     163,
+     "/storefront"
+    ]
+   ]
+  },
+  {
+   "view": "themes/home",
+   "settledMs": 1034,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 116,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 112,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/themes/[tab]\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/themes/layout.tsx"
+   ],
+   "timeline": [
+    [
+     725,
+     116,
+     "/api/v1/me"
+    ],
+    [
+     922,
+     112,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "themes/banners",
+   "settledMs": 655,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 109,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 37,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/themes/[tab]\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/themes/layout.tsx"
+   ],
+   "timeline": [
+    [
+     438,
+     37,
+     "/api/v1/me"
+    ],
+    [
+     546,
+     109,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "themes/menus",
+   "settledMs": 691,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 141,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 48,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/themes/[tab]\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/themes/layout.tsx"
+   ],
+   "timeline": [
+    [
+     423,
+     48,
+     "/api/v1/me"
+    ],
+    [
+     550,
+     141,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "themes/pages",
+   "settledMs": 581,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 84,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 54,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/themes/[tab]\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/themes/layout.tsx"
+   ],
+   "timeline": [
+    [
+     371,
+     54,
+     "/api/v1/me"
+    ],
+    [
+     497,
+     84,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "team",
+   "settledMs": 1058,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/team",
+     "ms": 151,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 124,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/team",
+     "ms": 120,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/team\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/team/page.tsx\n\nWays to fi"
+   ],
+   "timeline": [
+    [
+     734,
+     124,
+     "/api/v1/me"
+    ],
+    [
+     906,
+     120,
+     "/team"
+    ],
+    [
+     907,
+     151,
+     "/team"
+    ]
+   ]
+  },
+  {
+   "view": "whatsapp-notifications",
+   "settledMs": 1072,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 81,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "NotificationSettings"
+     ],
+     "ms": 27,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/whatsapp-notifications\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/whatsap"
+   ],
+   "timeline": [
+    [
+     865,
+     81,
+     "/api/v1/me"
+    ],
+    [
+     1045,
+     27,
+     "NotificationSettings"
+    ]
+   ]
+  },
+  {
+   "view": "whatsapp-notifications/log",
+   "settledMs": 1233,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 2,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CheckoutSettings"
+     ],
+     "ms": 76,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 72,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "NotificationLog"
+     ],
+     "ms": 27,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/whatsapp-notifications/log\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/wha"
+   ],
+   "timeline": [
+    [
+     783,
+     72,
+     "/api/v1/me"
+    ],
+    [
+     968,
+     27,
+     "NotificationLog"
+    ],
+    [
+     1157,
+     76,
+     "CheckoutSettings"
+    ]
+   ]
+  },
+  {
+   "view": "whatsapp-notifications/templates",
+   "settledMs": 1078,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 114,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "NotificationSettings"
+     ],
+     "ms": 22,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/whatsapp-notifications/templates\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/adm"
+   ],
+   "timeline": [
+    [
+     882,
+     114,
+     "/api/v1/me"
+    ],
+    [
+     1056,
+     22,
+     "NotificationSettings"
+    ]
+   ]
+  },
+  {
+   "view": "billing",
+   "settledMs": 816,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/billing",
+     "ms": 210,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/billing",
+     "ms": 159,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 51,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/billing\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/billing/page.tsx\n\nWays",
+    "pageerror: TypeError: Cannot read properties of null (reading 'code')"
+   ],
+   "timeline": [
+    [
+     504,
+     51,
+     "/api/v1/me"
+    ],
+    [
+     606,
+     159,
+     "/billing"
+    ],
+    [
+     606,
+     210,
+     "/billing"
+    ]
+   ]
+  },
+  {
+   "view": "multi-warehouse",
+   "settledMs": 930,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 284,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 226,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 118,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/multi-warehouse\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/multi-warehous"
+   ],
+   "timeline": [
+    [
+     474,
+     118,
+     "/api/v1/me"
+    ],
+    [
+     646,
+     226,
+     "/warehouses"
+    ],
+    [
+     646,
+     284,
+     "/warehouses"
+    ]
+   ]
+  },
+  {
+   "view": "multi-warehouse/movements",
+   "settledMs": 2784,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 5,
+   "graphql": 0,
+   "api": 5,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 1095,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses/movements",
+     "ms": 873,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 674,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/multi-warehouse/movements\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/mult"
+   ],
+   "timeline": [
+    [
+     1376,
+     220,
+     "/api/v1/me"
+    ],
+    [
+     1688,
+     674,
+     "/warehouses"
+    ],
+    [
+     1689,
+     563,
+     "/warehouses/movements"
+    ],
+    [
+     1689,
+     873,
+     "/warehouses/movements"
+    ],
+    [
+     1689,
+     1095,
+     "/warehouses"
+    ]
+   ]
+  },
+  {
+   "view": "multi-warehouse/transfer",
+   "settledMs": 1515,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 368,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 202,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 121,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/multi-warehouse/transfer\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/multi"
+   ],
+   "timeline": [
+    [
+     939,
+     121,
+     "/api/v1/me"
+    ],
+    [
+     1147,
+     202,
+     "/warehouses"
+    ],
+    [
+     1147,
+     368,
+     "/warehouses"
+    ]
+   ]
+  },
+  {
+   "view": "multi-currency",
+   "settledMs": 787,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/currencies/rates",
+     "ms": 269,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/currencies/rates",
+     "ms": 226,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 37,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/multi-currency\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/multi-currency/"
+   ],
+   "timeline": [
+    [
+     437,
+     37,
+     "/api/v1/me"
+    ],
+    [
+     518,
+     226,
+     "/currencies/rates"
+    ],
+    [
+     518,
+     269,
+     "/currencies/rates"
+    ]
+   ]
+  },
+  {
+   "view": "mobile-app",
+   "settledMs": 959,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/mobile-app",
+     "ms": 234,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/mobile-app",
+     "ms": 179,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 52,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/mobile-app\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/mobile-app/page.tsx"
+   ],
+   "timeline": [
+    [
+     583,
+     52,
+     "/api/v1/me"
+    ],
+    [
+     724,
+     179,
+     "/mobile-app"
+    ],
+    [
+     725,
+     234,
+     "/mobile-app"
+    ]
+   ]
+  },
+  {
+   "view": "custom-domain",
+   "settledMs": 1284,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/custom-domain",
+     "ms": 227,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/custom-domain",
+     "ms": 189,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 125,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/custom-domain\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/custom-domain/pa"
+   ],
+   "timeline": [
+    [
+     881,
+     125,
+     "/api/v1/me"
+    ],
+    [
+     1056,
+     189,
+     "/custom-domain"
+    ],
+    [
+     1057,
+     227,
+     "/custom-domain"
+    ]
+   ]
+  }
+ ]
+}

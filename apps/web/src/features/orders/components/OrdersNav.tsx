@@ -2,7 +2,7 @@
 
 import { cn } from "@kshop/ui";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useStorePathname } from "@/lib/navigation";
 
 const SECTIONS = [
   { href: "/admin/orders", label: "Pedidos" },
@@ -12,7 +12,7 @@ const SECTIONS = [
 ] as const;
 
 export function OrdersNav() {
-  const pathname = usePathname();
+  const pathname = useStorePathname();
   const active = (href: string) =>
     href === "/admin/orders"
       ? pathname === href || /^\/admin\/orders\/[0-9a-f-]{36}$/.test(pathname)

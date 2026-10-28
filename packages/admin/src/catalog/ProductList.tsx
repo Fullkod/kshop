@@ -3,7 +3,8 @@
 import { formatMoney, type ProductStatus } from "@kshop/core";
 import { AdminProductsQuery, type ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, buttonVariants, Card, Input, Select } from "@kshop/ui";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { LoadError } from "../LoadError";
 import { useSession } from "../session";
 import { Link, useStore } from "@kshop/storefront";
 import { categoryOptions, useApiAction, useCatalogApi, useCatalogStructure } from "./use-catalog";
@@ -35,6 +36,9 @@ export function ProductList() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [version, setVersion] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
+  // The first page loads at once; later changes (typing in the search) wait 250 ms (R11: the delay pushed the first
+  // read out of the screen's batch).
+  const loadedOnce = useRef(false);
 
   const variables = (after: string | null) => ({
     storeId: store.id,
@@ -48,19 +52,24 @@ export function ProductList() {
 
   useEffect(() => {
     let cancelled = false;
-    const timer = setTimeout(async () => {
-      const result = await graphql.query(AdminProductsQuery, variables(null)).toPromise();
-      if (cancelled) return;
-      if (result.error) {
-        setLoadError("No se pudieron cargar los productos.");
-        return;
-      }
-      const page = result.data?.adminSearchProducts;
-      setRows(page?.edges.map((e) => e.node) ?? []);
-      setTotal(page?.totalCount ?? 0);
-      setCursor(page?.pageInfo.hasNextPage ? (page.pageInfo.endCursor ?? null) : null);
-      setSelected(new Set());
-    }, 250);
+    const timer = setTimeout(
+      async () => {
+        loadedOnce.current = true;
+        const result = await graphql.query(AdminProductsQuery, variables(null)).toPromise();
+        if (cancelled) return;
+        if (result.error) {
+          setLoadError("No se pudieron cargar los productos.");
+          return;
+        }
+        setLoadError(null);
+        const page = result.data?.adminSearchProducts;
+        setRows(page?.edges.map((e) => e.node) ?? []);
+        setTotal(page?.totalCount ?? 0);
+        setCursor(page?.pageInfo.hasNextPage ? (page.pageInfo.endCursor ?? null) : null);
+        setSelected(new Set());
+      },
+      loadedOnce.current ? 250 : 0,
+    );
     return () => {
       cancelled = true;
       clearTimeout(timer);
@@ -134,7 +143,8 @@ export function ProductList() {
         </label>
       </div>
 
-      {(loadError || action.error) && <Alert variant="destructive">{loadError ?? action.error}</Alert>}
+      {loadError && <LoadError message={loadError} onRetry={() => setVersion((v) => v + 1)} />}
+      {action.error && <Alert variant="destructive">{action.error}</Alert>}
 
       {selected.size > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-md bg-accent-soft px-3 py-2 text-sm">

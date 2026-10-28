@@ -97,6 +97,7 @@ export function useCatalogStructure() {
           setError("No se pudo cargar el catálogo.");
           return;
         }
+        setError(null);
         const d = result.data;
         setData({
           attributes: nodes(d.attributesCollection).map((a) => ({

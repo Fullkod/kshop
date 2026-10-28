@@ -296,7 +296,7 @@ function StoreGate() {
  */
 async function loadStore(
   myStore: MyStore,
-  status: string,
+  status: Promise<string>,
   graphql: ReturnType<typeof useSession>["graphql"],
 ): Promise<PublicStore> {
   try {
@@ -312,7 +312,7 @@ async function loadStore(
     id: myStore.id,
     slug: myStore.slug,
     name: myStore.name,
-    status: status as StoreStatus,
+    status: (await status) as StoreStatus,
     baseCurrency: row.baseCurrency as CurrencyCode,
     whatsappPhone: row.whatsappPhone ?? null,
     logoUrl: null,
@@ -337,12 +337,20 @@ function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => 
     let cancelled = false;
     (async () => {
       try {
-        const admin = await loadAdminState(api, graphql, myStore.id);
+        // The store card is read at the same time as the admin state (R11: one after the other before).
+        const adminState = loadAdminState(api, myStore.id);
+        const storeCard = loadStore(
+          myStore,
+          adminState.then((a) => a?.storeStatus ?? "active"),
+          graphql,
+        );
+        storeCard.catch(() => {}); // awaited below only when the admin state allows it
+        const admin = await adminState;
         if (!admin) {
           if (!cancelled) setState({ kind: "forbidden" });
           return;
         }
-        const store = await loadStore(myStore, admin.storeStatus, graphql);
+        const store = await storeCard;
         if (!cancelled) setState({ kind: "ready", admin, store });
       } catch {
         if (!cancelled) setState({ kind: "error" });

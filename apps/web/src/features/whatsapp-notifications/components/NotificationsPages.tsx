@@ -15,7 +15,7 @@ import {
 import { NotificationLogQuery, NotificationSettingsQuery } from "@kshop/data";
 import { Alert, Badge, Button, Card, cn, FieldError, Input, Label } from "@kshop/ui";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useStorePathname } from "@/lib/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useApiAction } from "@/features/catalog/use-catalog";
@@ -76,7 +76,7 @@ const SECTIONS = [
 ] as const;
 
 export function NotificationsNav() {
-  const pathname = usePathname();
+  const pathname = useStorePathname();
   return (
     <nav className="mb-6 flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none]" aria-label="Secciones de avisos">
       {SECTIONS.map((s) => (

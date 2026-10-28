@@ -295,6 +295,15 @@ if (contactError) throw contactError;
     console.log("Set the warehouses that serve each zone");
   }
 
+  // The USD rate the history belongs to (a fresh database, e.g. the local one of R11, does not have it yet).
+  const { error: usdError } = await service
+    .from("store_currencies")
+    .upsert(
+      { store_id: store.id, currency: "USD", is_base: false, sells: true, rate_to_base: 300 },
+      { onConflict: "store_id,currency", ignoreDuplicates: true },
+    );
+  if (usdError) throw usdError;
+
   const { count: historyCount } = await service
     .from("currency_rate_history")
     .select("id", { count: "exact", head: true })

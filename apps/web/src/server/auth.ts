@@ -13,13 +13,45 @@ export type ApiUser = {
   appMetadata: Record<string, unknown>;
 };
 
-/** Validates `Authorization: Bearer <Supabase access token>` (web and mobile apps; no cookies). */
-export async function getUserFromBearer(request: Request): Promise<ApiUser> {
+// One verification per request: the store-writable guard and the route handler share it (R11).
+const requestUsers = new WeakMap<Request, Promise<ApiUser>>();
+
+/**
+ * Validates `Authorization: Bearer <Supabase access token>` (web and mobile apps; no cookies). The JWT is verified
+ * locally (getClaims: ES256 signature against the project's JWKS, cached in the instance) instead of a GoTrue call
+ * per request (R11, decision D3 of Roberto): a user banned or deleted in Auth keeps access until the token expires
+ * (≤ 1 h). Store membership is still checked on every call (requireStoreRole), and a superadmin token is always
+ * confirmed with GoTrue.
+ */
+export function getUserFromBearer(request: Request): Promise<ApiUser> {
+  let user = requestUsers.get(request);
+  if (!user) {
+    user = verifyBearer(request);
+    requestUsers.set(request, user);
+  }
+  return user;
+}
+
+async function verifyBearer(request: Request): Promise<ApiUser> {
   const header = request.headers.get("authorization") ?? "";
   const match = header.match(/^Bearer\s+(.+)$/i);
   if (!match?.[1]) throw unauthorized();
 
   const accessToken = match[1].trim();
+  const { data: verified, error: claimsError } = await getServiceClient().auth.getClaims(accessToken);
+  const claims = verified?.claims;
+  if (claimsError || !claims?.sub) throw unauthorized();
+  const appMetadata = (claims.app_metadata ?? {}) as Record<string, unknown>;
+  if (appMetadata.role !== "superadmin") {
+    return {
+      id: claims.sub,
+      email: typeof claims.email === "string" && claims.email ? claims.email : null,
+      isSuperadmin: false,
+      accessToken,
+      appMetadata,
+    };
+  }
+
   const { data, error } = await getServiceClient().auth.getUser(accessToken);
   if (error || !data.user) throw unauthorized();
 
@@ -38,16 +70,34 @@ export async function requireSuperadmin(request: Request): Promise<ApiUser> {
   return user;
 }
 
-/** Role of the user in the store, or null. */
-export async function getStoreRole(userId: string, storeId: string): Promise<StoreRole | null> {
-  const { data, error } = await getServiceClient()
-    .from("store_members")
-    .select("role")
-    .eq("store_id", storeId)
-    .eq("user_id", userId)
-    .maybeSingle<{ role: StoreRole }>();
-  if (error) throw error;
-  return data?.role ?? null;
+export type StoreGuard = {
+  role: StoreRole | null;
+  storeStatus: string | null;
+  suspendedReason: string | null;
+};
+
+const requestGuards = new WeakMap<ApiUser, Map<string, Promise<StoreGuard>>>();
+
+/**
+ * Role of the user in the store and the store's status, in one query (public.api_guard), once per request: the
+ * store-writable check and requireStoreRole used to read store_members and stores one after the other (R11).
+ */
+export function getStoreGuard(user: ApiUser, storeId: string): Promise<StoreGuard> {
+  let byStore = requestGuards.get(user);
+  if (!byStore) requestGuards.set(user, (byStore = new Map()));
+  let guard = byStore.get(storeId);
+  if (!guard) {
+    guard = (async () => {
+      const { data, error } = await getServiceClient().rpc("api_guard", {
+        p_user_id: user.id,
+        p_store_id: storeId,
+      });
+      if (error) throw error;
+      return (data ?? { role: null, storeStatus: null, suspendedReason: null }) as StoreGuard;
+    })();
+    byStore.set(storeId, guard);
+  }
+  return guard;
 }
 
 /** The superadmin can act on every store; anyone else needs at least `minRole` in that store. */
@@ -56,7 +106,7 @@ export async function requireStoreRole(
   storeId: string,
   minRole: StoreRole,
 ): Promise<StoreRole | null> {
-  const role = await getStoreRole(user.id, storeId);
+  const { role } = await getStoreGuard(user, storeId);
   if (user.isSuperadmin) return role;
   if (!role || !hasMinRole(role, minRole)) throw forbidden();
   return role;

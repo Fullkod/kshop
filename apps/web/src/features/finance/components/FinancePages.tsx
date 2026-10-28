@@ -27,7 +27,8 @@ import {
 } from "@kshop/data";
 import { Alert, BarChart, Button, Card, FieldError, Input, Label, Select, cn } from "@kshop/ui";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useStorePathname } from "@/lib/navigation";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useSession } from "@/lib/session";
@@ -64,7 +65,7 @@ export function useFinanceFilters(): FinancePeriod & { set: (patch: Partial<Fina
   const store = useStore();
   const params = useSearchParams();
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = useStorePathname();
   const today = havanaToday();
   const from = params.get("from") ?? `${today.slice(0, 8)}01`;
   const to = params.get("to") ?? today;
@@ -148,7 +149,7 @@ function Busy({ loading, children, testId }: { loading: boolean; children: React
 }
 
 export function FinanceShell({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
+  const pathname = useStorePathname();
   const search = useSearchParams().toString();
   const filters = useFinanceFilters();
   const store = useStore();

@@ -14,3 +14,4 @@ export * from "./orders/OrderDetail";
 export * from "./SalesTodayCard";
 export * from "./home";
 export * from "./StaffLoginForm";
+export * from "./LoadError";

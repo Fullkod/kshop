@@ -1,5 +1,6 @@
 import { cacheExchange, Client, fetchExchange } from "@urql/core";
 import { createBatchingFetch } from "./graphql-batch";
+import { createResilientFetch } from "./resilient-fetch";
 import type { SupabaseConfig } from "./supabase";
 
 export type GraphqlClientOptions = SupabaseConfig & {
@@ -13,10 +14,22 @@ export type GraphqlClientOptions = SupabaseConfig & {
   batch?: boolean;
 };
 
+/** Queries may be retried; anything else (a mutation) is sent once. */
+function isQueryRequest(init: RequestInit | undefined): boolean {
+  if (typeof init?.body !== "string") return false;
+  try {
+    return !/^\s*mutation\b/.test((JSON.parse(init.body) as { query?: string }).query ?? "mutation");
+  } catch {
+    return false;
+  }
+}
+
 /** urql client for pg_graphql. Works in the browser, the server and the Capacitor apps. */
 export function createGraphqlClient(options: GraphqlClientOptions): Client {
   const rawFetch = options.fetch ?? ((input: RequestInfo | URL, init?: RequestInit) => fetch(input, init));
-  const baseFetch = options.batch ? createBatchingFetch(rawFetch) : rawFetch;
+  // Time limit and one retry under the batching: a failed batch is sent again whole, never split in N (R11).
+  const safeFetch = createResilientFetch(rawFetch, { canRetry: isQueryRequest });
+  const baseFetch = options.batch ? createBatchingFetch(safeFetch) : safeFetch;
   return new Client({
     url: `${options.url}/graphql/v1`,
     exchanges: options.noCache ? [fetchExchange] : [cacheExchange, fetchExchange],

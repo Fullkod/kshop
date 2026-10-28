@@ -9,8 +9,12 @@ function Link({ href, ...props }: LinkProps) {
   return <NextLink href={href} {...props} />;
 }
 
-// On the server the path may still carry the host rewrite (/s/{slug}/…); the shopper never sees it.
-function useShopperPathname() {
+/**
+ * The path as the browser shows it. On the server the path still carries the host rewrite (/s/{slug}/…), so comparing
+ * `usePathname()` with "/admin/…" differs between server and browser (hydration mismatch; R11: /admin/login never
+ * loaded). Use this in every component under /s/[storeSlug].
+ */
+export function useStorePathname() {
   return usePathname().replace(/^\/s\/[^/]+(?=\/|$)/, "") || "/";
 }
 
@@ -20,7 +24,7 @@ export function NextNavigationProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       Link,
-      usePathname: useShopperPathname,
+      usePathname: useStorePathname,
       push: (href: string) => router.push(href),
       replace: (href: string) => router.replace(href),
     }),

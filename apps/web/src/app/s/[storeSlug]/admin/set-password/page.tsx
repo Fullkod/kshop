@@ -53,7 +53,7 @@ export default function SetPasswordPage() {
             El enlace no es válido o ya se usó. Pide a Fullkod un enlace nuevo.
           </Alert>
         ) : (
-          <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          <form method="post" onSubmit={onSubmit} className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">Cuenta: {session.user.email}</p>
             <div className="flex flex-col gap-2">
               <Label htmlFor="password">Contraseña nueva</Label>

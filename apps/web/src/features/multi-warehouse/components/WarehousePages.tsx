@@ -10,7 +10,7 @@ import {
 } from "@kshop/data";
 import { Alert, Badge, Button, Card, Input, Label, Select, cn } from "@kshop/ui";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useStorePathname } from "@/lib/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useSession } from "@/lib/session";
@@ -26,7 +26,7 @@ const SECTIONS = [
 ];
 
 export function WarehousesNav() {
-  const pathname = usePathname();
+  const pathname = useStorePathname();
   return (
     <nav className="mb-6 flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none]" aria-label="Secciones de almacenes">
       {SECTIONS.map((s) => (
