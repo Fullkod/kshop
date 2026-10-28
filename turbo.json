@@ -8,7 +8,13 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "env": ["SUPABASE_SECRET_KEY", "PLATFORM_CANONICAL_DOMAIN", "KSHOP_STORE", "KSHOP_API_URL"],
+      "env": [
+        "SUPABASE_SECRET_KEY",
+        "PLATFORM_CANONICAL_DOMAIN",
+        "KSHOP_STORE",
+        "KSHOP_API_URL",
+        "KSHOP_CUSTOM_DOMAIN_REDIRECT"
+      ],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "typecheck": {

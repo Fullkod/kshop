@@ -130,6 +130,11 @@
 cae con 57014. Nunca lanzar `e2e:*`, `qa:*`, `klaushop:*`, `test:rls`, `db:graphql-schema` ni `pnpm build` mientras
 alguien usa la web ni justo antes de un deploy; en serie, nunca a la vez. Medir siempre en rondas alternadas.
 
+**Dominio propio y Vercel (R11, 2026-10-28):** `KSHOP_CUSTOM_DOMAIN_REDIRECT=off` en Vercel (Production y Preview) hace
+que el proxy no consulte, en cada visita a `{slug}.kshop.fullkod.com`, a qué dominio propio redirigir (ninguna tienda tiene uno
+activo). **Antes de activar el primer dominio propio, borrar esa variable y redesplegar**; si no, la tienda funciona pero su
+subdominio no redirige al dominio. El dominio propio en sí se resuelve siempre.
+
 **WhatsApp en modo real** (Superadmin › WhatsApp, desde 2026-10-27): los `e2e:*` y `qa:*` crean pedidos y tiendas con
 teléfonos de relleno que recibirían mensajes de verdad. Antes de correrlos, poner el modo en «Simulado» (`dry_run`) y
 volver a «Real» al terminar. Para probar envíos reales solo los números de prueba de Roberto: +5352564206 y +5353077035.

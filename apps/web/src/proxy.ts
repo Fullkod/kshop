@@ -5,6 +5,10 @@ const PLATFORM_DOMAIN = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN ?? "kshop.localh
 const PROTOCOL = PLATFORM_DOMAIN.includes("localhost") ? "http" : "https";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
+// "off" while no store has a live custom domain (R11 T9): a visit to {slug}.kshop.fullkod.com then skips the lookup of
+// the domain it should redirect to (one database call per store page and instance). Turn it back on (remove the
+// variable in Vercel) before the first store goes live on its own domain; that domain is resolved either way.
+const SUBDOMAIN_REDIRECT = process.env.KSHOP_CUSTOM_DOMAIN_REDIRECT !== "off";
 
 // Internal route that store hosts are rewritten to. Never reachable directly.
 const STORE_PREFIX = "/s/";
@@ -107,7 +111,7 @@ export async function proxy(request: NextRequest) {
   if (target.kind === "platform") return NextResponse.next();
 
   if (target.kind === "store") {
-    if (!isAdminPath(pathname)) {
+    if (SUBDOMAIN_REDIRECT && !isAdminPath(pathname)) {
       const domain = await cachedRpc<string | null>("resolve_store_custom_domain", { p_slug: target.slug });
       if (domain) {
         const origin = storePublicOrigin(

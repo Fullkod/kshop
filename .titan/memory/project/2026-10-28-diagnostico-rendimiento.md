@@ -73,6 +73,8 @@ síntesis, 10 revisores que intentaron refutar cada causa: ninguna cayó). Infor
   Lecturas). Si un día nada lo usa, se puede quitar la extensión (decisión aparte).
 - Ojo al escribir una RPC: `product_media` (oculta `source_url`) y `stores` tienen permisos por columna para
   `authenticated`: nada de `select *` sobre ellas.
+- **T9 hecho (2026-10-28):** `KSHOP_CUSTOM_DOMAIN_REDIRECT=off` en Vercel (la puso Roberto; Claude no tiene acceso a
+  Vercel: guiarle paso a paso). Quitarla antes del primer dominio propio activo (regla en `AGENTS.md`).
 - (Antes) Falta: desplegar el código (permiso de Roberto) y medir en producción con `qa:admin-perf` (línea base
   `.titan/qa/r11-rendimiento-admin/perf-prod-antes.json`: mediana 4,4 s, p95 20,9 s).
 
