@@ -322,6 +322,10 @@ export const storeDescriptionSchema = z.object({
 });
 export type StoreDescriptionInput = z.input<typeof storeDescriptionSchema>;
 
+/** Store logo (Appearance): shown in the storefront header instead of the name and used as the app icon. */
+export const storeLogoSchema = z.object({ logoUrl: z.url().max(500).nullable() });
+export type StoreLogoInput = z.input<typeof storeLogoSchema>;
+
 export const menuInputSchema = z.object({
   items: z.array(menuLeafSchema.extend({ children: z.array(menuLeafSchema).max(20).default([]) })).max(20),
 });

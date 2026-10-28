@@ -90,7 +90,7 @@ export async function uploadProductImage(
 export async function uploadCatalogImage(
   supabase: SupabaseClient,
   storeId: string,
-  folder: "categories" | "collections" | "brands",
+  folder: "categories" | "collections" | "brands" | "logo",
   file: File,
 ): Promise<string> {
   if (!file.type.startsWith("image/")) throw new Error("El archivo no es una imagen.");

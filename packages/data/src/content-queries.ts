@@ -9,6 +9,7 @@ export const AdminContentQuery = graphql(`
         node {
           theme
           description
+          logoUrl
         }
       }
     }

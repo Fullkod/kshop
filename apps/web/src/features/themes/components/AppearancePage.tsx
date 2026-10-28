@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, cn } from "@kshop/ui";
+import { Alert, Button, cn } from "@kshop/ui";
 import Link from "next/link";
 import { useCatalogStructure } from "@/features/catalog/use-catalog";
 import { useContent } from "../use-content";
@@ -9,6 +9,7 @@ import { MenusEditor } from "./MenusEditor";
 import { PagesEditor } from "./PagesEditor";
 import { SectionsEditor } from "./SectionsEditor";
 import { StoreDescriptionCard } from "./StoreDescriptionCard";
+import { StoreLogoCard } from "./StoreLogoCard";
 import { ThemeEditor } from "./ThemeEditor";
 
 export const APPEARANCE_TABS = [
@@ -55,12 +56,22 @@ export function AppearancePage({ tab }: { tab: AppearanceTab }) {
       </nav>
 
       {error || structureError ? (
-        <Alert variant="destructive">{error ?? structureError}</Alert>
+        <div className="flex flex-col items-start gap-3">
+          <Alert variant="destructive">{error ?? structureError}</Alert>
+          <Button
+            variant="outline"
+            // The catalog structure has no reload of its own: a full reload covers both reads.
+            onClick={() => (structureError ? window.location.reload() : reload())}
+          >
+            Reintentar
+          </Button>
+        </div>
       ) : !content || !structure ? (
         <p className="text-muted-foreground">Cargando…</p>
       ) : tab === "theme" ? (
         <div className="flex flex-col gap-6">
           <ThemeEditor content={content} save={(theme) => api.saveTheme(theme)} />
+          <StoreLogoCard initial={content.logoUrl} save={(logoUrl) => api.saveLogo({ logoUrl })} />
           <StoreDescriptionCard
             initial={content.description}
             save={(description) => api.saveDescription({ description })}

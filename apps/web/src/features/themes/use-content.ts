@@ -48,6 +48,8 @@ export type AdminContent = {
   theme: unknown;
   /** Footer text of the store. */
   description: string | null;
+  /** Header logo (null = the store's name is shown). */
+  logoUrl: string | null;
   banners: AdminBanner[];
   sections: AdminSection[];
   menus: Record<MenuLocation, AdminMenuItem[]>;
@@ -96,6 +98,7 @@ export function useContent() {
           setError("No se pudo cargar el contenido de la tienda.");
           return;
         }
+        setError(null);
         const d = result.data;
         const menu = (location: MenuLocation): AdminMenuItem[] => {
           const items = nodes(
@@ -114,6 +117,7 @@ export function useContent() {
         setData({
           theme: json(nodes(d.storesCollection)[0]?.theme),
           description: nodes(d.storesCollection)[0]?.description ?? null,
+          logoUrl: nodes(d.storesCollection)[0]?.logoUrl ?? null,
           banners: nodes(d.bannersCollection).map((b) => ({
             id: b.id,
             eyebrow: b.eyebrow ?? null,

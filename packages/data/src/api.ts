@@ -15,6 +15,7 @@ import type {
   MenuLocation,
   PageInput,
   StoreDescriptionInput,
+  StoreLogoInput,
   ThemeInput,
   ImportPreview,
   ImportProgress,
@@ -861,6 +862,7 @@ export function createApiClient(options: ApiClientOptions) {
         saveTheme: (input: ThemeInput) => request<{ theme: ThemeInput }>("PUT", `${base}/theme`, input),
         saveDescription: (input: StoreDescriptionInput) =>
           request<{ description: string | null }>("PUT", `${base}/description`, input),
+        saveLogo: (input: StoreLogoInput) => request<{ logoUrl: string | null }>("PUT", `${base}/logo`, input),
         saveMenu: (location: MenuLocation, input: MenuInput) =>
           request<null>("PUT", `${base}/menus/${location}`, input),
       };
