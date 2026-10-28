@@ -320,6 +320,27 @@ WhatsApp queda en «Simulado» mientras dure R11 (decisión de Roberto, 2026-10-
   imágenes viejas de Supabase y el grupo `backend-api` (con permiso de Roberto); el `ext4.vhdx` de Docker (98,6 GB) no
   encoge solo: compactarlo es manual y con permisos de administrador.
 
+### 2026-10-28: Fase 5 (lecturas diarias a RPC)
+- **Medición en producción tras el deploy** (`perf-prod-despues*.json`): mediana 4,4 s → 1,8–2,0 s; quedaban vistas de
+  3–16 s por lotes de pg_graphql (Batch, CheckoutSettings, NotificationSettings, CatalogStructure).
+- **Causa medida** (`graphql.resolve` como el dueño, conexión caliente frente a fría, sin DDL): las consultas cuestan
+  11–47 ms; la primera de cada conexión cuesta 226–296 ms (reconstrucción del esquema). PostgREST cierra las
+  conexiones ociosas, así que casi cada vista paga el peaje, multiplicado cuando la Nano está estrangulada.
+- **Hecho**: `admin_orders`, `admin_order`, `admin_checkout_settings`, `admin_notification_log` (security invoker,
+  `jsonb` con la forma exacta del resultado de pg_graphql; cursores = desplazamiento). Cliente `createAdminReads` en
+  `@kshop/data` (límite de 12 s + un reintento) y `reads` en la sesión del admin. Los ajustes de pedidos se comparten
+  60 s entre componentes (el detalle los leía dos veces). Inicio, Pedidos, detalle de pedido, Métodos de pago,
+  Entregas y el registro de avisos quedan **sin ninguna petición a pg_graphql**.
+- **Validación**: `scripts/compare-admin-reads.mjs` 14/14 idénticos con los 168 pedidos de la Demo (incluye filtro de
+  estados, búsqueda y segunda página); `test:rls` 654/654 en prueba y en producción (test 15 nuevo); en el navegador,
+  pestañas, búsqueda por número y nombre y «Ver más» hasta 142 de 142 sin repetidos.
+- **Error**: medir con una tabla temporal (`create temp table`) es DDL y sube `graphql.seq_schema_version`: invalida la
+  caché de pg_graphql de todas las conexiones. Medir con CTE `materialized` y `clock_timestamp()`.
+- **Error**: el volcado del esquema desde el proyecto de prueba reordena cientos de líneas (otros OID):
+  `db:graphql-schema` va siempre a producción.
+- **Pendiente** (si la medición lo pide): Catálogo (CatalogStructure, lista, ficha), Descuentos y Apariencia siguen en
+  pg_graphql; son vistas de uso menos diario.
+
 ---
 
 ## Gotchas

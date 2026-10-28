@@ -61,6 +61,11 @@ síntesis, 10 revisores que intentaron refutar cada causa: ninguna cayó). Infor
   1,8–2,0 s, máximo 33,8 s → 16–24 s, peticiones 168 → 90–100, GraphQL 66 → 26. Quedan picos de pg_graphql en frío
   (lote de 9,7 s con 500 en themes/menus) y en la 1ª ronda, justo tras el deploy, 500 rápidos pasajeros en `/api/v1`
   (`/me`, billing, warehouses…) que no se repitieron; causa sin confirmar (logs de Vercel en otra cuenta).
+- **Fase 5 (2026-10-28)**: el peaje es pg_graphql en frío (226–296 ms por conexión nueva frente a 11–47 ms de la
+  consulta). Pedidos, detalle, Inicio, Métodos de pago, Entregas y registro de avisos leen por RPC (`admin_orders`,
+  `admin_order`, `admin_checkout_settings`, `admin_notification_log`, idénticas a pg_graphql:
+  `scripts/compare-admin-reads.mjs`). Regla: una vista solo se libra del peaje si **no** le queda ninguna lectura
+  pg_graphql. Nunca medir con DDL (tabla temporal): invalida la caché de pg_graphql de todos.
 - (Antes) Falta: desplegar el código (permiso de Roberto) y medir en producción con `qa:admin-perf` (línea base
   `.titan/qa/r11-rendimiento-admin/perf-prod-antes.json`: mediana 4,4 s, p95 20,9 s).
 

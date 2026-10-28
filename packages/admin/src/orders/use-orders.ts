@@ -1,7 +1,7 @@
 "use client";
 
 import type { CurrencyCode, ShippingType } from "@kshop/core";
-import { CheckoutSettingsQuery } from "@kshop/data";
+import type { AdminReads, CheckoutSettingsQuery, ResultOf } from "@kshop/data";
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "../session";
 import { useStore } from "@kshop/storefront";
@@ -45,24 +45,46 @@ export type CheckoutSettings = {
 const nodes = <T>(c: { edges: { node: T }[] } | null | undefined): T[] => (c?.edges ?? []).map((e) => e.node);
 const num = (v: string | number | null | undefined) => (v == null ? null : Number(v));
 
-/** Store order prefix, shipping and payment settings (pg_graphql as the staff; inactive rows included). */
+// One read shared by every screen part that needs the settings (the order detail, its notices, the list): each used
+// to read them on its own. Kept 60 s per session and store; reload() reads them again (the settings pages after a save).
+type SettingsResult = ResultOf<typeof CheckoutSettingsQuery>;
+const SETTINGS_TTL_MS = 60_000;
+const settingsCache = new WeakMap<
+  AdminReads,
+  Map<string, { at: number; promise: Promise<SettingsResult> }>
+>();
+
+function readCheckoutSettings(reads: AdminReads, storeId: string, fresh: boolean): Promise<SettingsResult> {
+  let byStore = settingsCache.get(reads);
+  if (!byStore) settingsCache.set(reads, (byStore = new Map()));
+  const hit = byStore.get(storeId);
+  if (hit && !fresh && Date.now() - hit.at < SETTINGS_TTL_MS) return hit.promise;
+  const promise = reads.checkoutSettings(storeId);
+  byStore.set(storeId, { at: Date.now(), promise });
+  // A failed read is not kept: the next screen tries again.
+  promise.catch(() => byStore.get(storeId)?.promise === promise && byStore.delete(storeId));
+  return promise;
+}
+
+/** Store order prefix, shipping and payment settings (as the staff; inactive rows included). */
 export function useCheckoutSettings() {
   const store = useStore();
-  const { graphql } = useSession();
+  const { reads } = useSession();
   const [data, setData] = useState<CheckoutSettings | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    graphql
-      .query(CheckoutSettingsQuery, { storeId: store.id })
-      .toPromise()
-      .then((result) => {
+    readCheckoutSettings(reads, store.id, version > 0)
+      .then(
+        (d) => ({ d, failed: false }),
+        () => ({ d: null, failed: true }),
+      )
+      .then(({ d, failed }) => {
         if (cancelled) return;
-        const d = result.data;
         const storeRow = nodes(d?.storesCollection)[0];
-        if (result.error || !d || !storeRow) {
+        if (failed || !d || !storeRow) {
           setError("No se pudieron cargar los ajustes de pedidos.");
           return;
         }
@@ -96,7 +118,7 @@ export function useCheckoutSettings() {
     return () => {
       cancelled = true;
     };
-  }, [graphql, store.id, version]);
+  }, [reads, store.id, version]);
 
   const reload = useCallback(() => setVersion((v) => v + 1), []);
   return { data, error, reload };

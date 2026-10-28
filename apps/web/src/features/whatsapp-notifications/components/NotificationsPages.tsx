@@ -12,7 +12,7 @@ import {
   type NotificationContactInput,
   type NotificationStatus,
 } from "@kshop/core";
-import { NotificationLogQuery, NotificationSettingsQuery } from "@kshop/data";
+import { NotificationSettingsQuery } from "@kshop/data";
 import { Alert, Badge, Button, Card, cn, FieldError, Input, Label } from "@kshop/ui";
 import Link from "next/link";
 import { useStorePathname } from "@/lib/navigation";
@@ -78,7 +78,10 @@ const SECTIONS = [
 export function NotificationsNav() {
   const pathname = useStorePathname();
   return (
-    <nav className="mb-6 flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none]" aria-label="Secciones de avisos">
+    <nav
+      className="mb-6 flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none]"
+      aria-label="Secciones de avisos"
+    >
       {SECTIONS.map((s) => (
         <Link
           key={s.href}
@@ -472,23 +475,20 @@ function TemplateEditor({
 
 function useNotificationLog(orderId?: string) {
   const store = useStore();
-  const { graphql } = useSession();
+  const { reads } = useSession();
   const [rows, setRows] = useState<LogRow[] | null>(null);
   const [version, setVersion] = useState(0);
   // New notices and their sending status arrive on their own (Realtime).
   const live = useStoreVersion(store.id);
   useEffect(() => {
     let cancelled = false;
-    graphql
-      .query(NotificationLogQuery, {
-        filter: { storeId: { eq: store.id }, ...(orderId && { orderId: { eq: orderId } }) },
-        first: 50,
-      })
-      .toPromise()
-      .then((r) => {
+    reads
+      .notificationLog({ storeId: store.id, orderId, first: 50 })
+      .catch(() => null)
+      .then((data) => {
         if (cancelled) return;
         setRows(
-          nodes(r.data?.notificationLogCollection).map((n) => ({
+          nodes(data?.notificationLogCollection).map((n) => ({
             id: n.id,
             orderId: n.orderId ?? null,
             orderNumber: n.orders?.number ?? null,
@@ -506,7 +506,7 @@ function useNotificationLog(orderId?: string) {
     return () => {
       cancelled = true;
     };
-  }, [graphql, store.id, orderId, version, live]);
+  }, [reads, store.id, orderId, version, live]);
   const reload = useCallback(() => setVersion((v) => v + 1), []);
   return { rows, reload };
 }

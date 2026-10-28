@@ -1,9 +1,11 @@
 "use client";
 
 import {
+  createAdminReads,
   createApiClient,
   createAuthClient,
   createGraphqlClient,
+  type AdminReads,
   type ApiClient,
   type AuthStorage,
   type SupabaseConfig,
@@ -33,6 +35,8 @@ type SessionContextValue = {
   ready: boolean;
   api: ApiClient;
   graphql: Client;
+  /** The daily reads as plain RPCs (orders, order, checkout settings, WhatsApp log; R11 phase 5). */
+  reads: AdminReads;
   config: AdminConfig;
 };
 
@@ -75,6 +79,7 @@ export function SessionProvider({ config, children }: { config: AdminConfig; chi
     return {
       api: createApiClient({ baseUrl: config.apiBaseUrl, getAccessToken }),
       graphql: createGraphqlClient({ ...config.supabase, getAccessToken, noCache: true, batch: true }),
+      reads: createAdminReads({ ...config.supabase, getAccessToken }),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- userId: new clients only for another user
   }, [supabase, config, userId]);

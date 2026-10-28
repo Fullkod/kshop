@@ -15,7 +15,7 @@ else **test** when `SUPABASE_TEST_PROJECT_REF` is set.
 
 | Test by default (through `scripts/db-env.mjs`) | Always production |
 |---|---|
-| `pnpm dev`, `demo:seed`, `superadmin:create`, `e2e:*`, `qa:*`, `test:rls`, `db:graphql-schema` | `db:status`, `db:migrate`, `db:query`, `db:auth-config`, `klaushop:*` |
+| `pnpm dev`, `demo:seed`, `superadmin:create`, `e2e:*`, `qa:*`, `test:rls` | `db:status`, `db:migrate`, `db:query`, `db:auth-config`, `db:graphql-schema`, `klaushop:*` |
 | `db:test:status`, `db:test:migrate`, `db:test:query`, `db:test:auth-config` (always test) | |
 
 Run a test-by-default command against production with `KSHOP_DB_TARGET=prod` (PowerShell:
@@ -24,8 +24,10 @@ QA_ADMIN_URL=https://demo.kshop.fullkod.com pnpm qa:admin-perf <label>`.
 
 ## New migration
 
-1. `pnpm db:test:migrate`, then `pnpm test:rls` and `pnpm db:graphql-schema && pnpm codegen` (test).
-2. Production: `pnpm db:migrate`, then one `KSHOP_DB_TARGET=prod pnpm test:rls`, never while someone uses the admin.
+1. `pnpm db:test:migrate`, then `pnpm test:rls` (test).
+2. Production: `pnpm db:migrate`, then one `KSHOP_DB_TARGET=prod pnpm test:rls` and `pnpm db:graphql-schema && pnpm codegen`,
+   never while someone uses the admin. The schema is always dumped from production: the test project has other OIDs
+   and orders the same schema differently, so its dump is a diff of hundreds of lines.
 
 ## Setting it up again
 

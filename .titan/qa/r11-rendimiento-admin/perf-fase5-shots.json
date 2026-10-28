@@ -1,0 +1,131 @@
+{
+ "summary": {
+  "label": "fase5-shots",
+  "base": "http://demo.kshop.localhost:3003",
+  "at": "2026-10-28T15:27:08.812Z",
+  "views": 2,
+  "medianMs": 1970,
+  "p95Ms": 2073,
+  "maxMs": 2073,
+  "viewsWithErrors": 0,
+  "requests": 9,
+  "graphqlRequests": 0
+ },
+ "results": [
+  {
+   "view": "orders",
+   "settledMs": 2073,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/rest/v1/rpc/admin_checkout_settings",
+     "ms": 686,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_orders",
+     "ms": 612,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 539,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/orders\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/orders/layout.tsx\n\nWays"
+   ],
+   "timeline": [
+    [
+     784,
+     539,
+     "/api/v1/me"
+    ],
+    [
+     1387,
+     686,
+     "/rest/v1/rpc/admin_checkout_settings"
+    ],
+    [
+     1388,
+     612,
+     "/rest/v1/rpc/admin_orders"
+    ]
+   ]
+  },
+  {
+   "view": "orders/579fa21e-a499-441a-8f96-120802e703d4",
+   "settledMs": 1970,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 6,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 617,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_order",
+     "ms": 525,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/rpc/admin_order",
+     "ms": 494,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [
+    "Error: Route \"/s/[storeSlug]/admin/orders/[orderId]\": Could not validate that a segment in your UI has instant navigation.\n\nThis segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.\n\nDropped segment:\n  apps/web/src/app/s/[storeSlug]/admin/orders/layout"
+   ],
+   "timeline": [
+    [
+     334,
+     617,
+     "/api/v1/me"
+    ],
+    [
+     983,
+     237,
+     "/rest/v1/rpc/admin_checkout_settings"
+    ],
+    [
+     984,
+     494,
+     "/rest/v1/rpc/admin_order"
+    ],
+    [
+     984,
+     525,
+     "/rest/v1/rpc/admin_order"
+    ],
+    [
+     1509,
+     426,
+     "/rest/v1/rpc/admin_notification_log"
+    ],
+    [
+     1509,
+     461,
+     "/rest/v1/rpc/admin_notification_log"
+    ]
+   ]
+  }
+ ]
+}

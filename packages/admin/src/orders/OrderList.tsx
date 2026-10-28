@@ -14,7 +14,7 @@ import {
   type OrderTabKey,
   type PaymentStatus,
 } from "@kshop/core";
-import { AdminOrdersQuery, type VariablesOf } from "@kshop/data";
+import type { AdminOrdersArgs } from "@kshop/data";
 import { Alert, Badge, Button, Card, Input, MessageCircle, cn } from "@kshop/ui";
 import { useEffect, useRef, useState } from "react";
 import { useApiAction } from "../catalog/use-catalog";
@@ -24,7 +24,7 @@ import { useSession } from "../session";
 import { Link, useStore } from "@kshop/storefront";
 import { useCheckoutSettings } from "./use-orders";
 
-type Filter = VariablesOf<typeof AdminOrdersQuery>["filter"];
+type Filter = Omit<AdminOrdersArgs, "first" | "after">;
 type Row = {
   id: string;
   number: number;
@@ -86,7 +86,7 @@ export function StatusPill({ status }: { status: OrderStatus }) {
 /** The list reads again on its own when an order of the store changes (Realtime). */
 export function OrderList() {
   const store = useStore();
-  const { graphql, api } = useSession();
+  const { reads, api } = useSession();
   const { data: settings } = useCheckoutSettings();
   const action = useApiAction();
   const [tab, setTab] = useState<OrderTabKey>("pending");
@@ -107,28 +107,20 @@ export function OrderList() {
     const statuses = ORDER_TABS.find((t) => t.key === tab)!.statuses as unknown as OrderStatus[];
     const q = query.trim().replace(/^[A-Z0-9]+-/i, "");
     // A search looks in every status (a customer's delivered orders too); the tabs filter the plain list.
-    const base: Filter = { storeId: { eq: store.id }, ...(q ? {} : { status: { in: statuses } }) };
+    const base: Filter = { storeId: store.id, ...(q ? {} : { statuses }) };
     if (!q) return base;
-    if (/^\d{1,9}$/.test(q) && Number(q) >= 1000) return { ...base, number: { eq: Number(q) } };
-    return {
-      ...base,
-      or: [
-        { customerName: { ilike: `%${q}%` } },
-        { customerPhone: { ilike: `%${q.replace(/\D/g, "") || q}%` } },
-      ],
-    };
+    if (/^\d{1,9}$/.test(q) && Number(q) >= 1000) return { ...base, number: Number(q) };
+    return { ...base, search: { name: `%${q}%`, phone: `%${q.replace(/\D/g, "") || q}%` } };
   };
 
   async function load(after: string | null) {
-    const result = await graphql
-      .query(AdminOrdersQuery, { filter: filter(), first: PAGE_SIZE, after })
-      .toPromise();
-    if (result.error) {
+    const data = await reads.orders({ ...filter(), first: PAGE_SIZE, after }).catch(() => null);
+    if (!data) {
       setLoadError("No se pudieron cargar los pedidos.");
       return null;
     }
     setLoadError(null);
-    const page = result.data?.ordersCollection;
+    const page = data.ordersCollection;
     setTotal(page?.totalCount ?? 0);
     setCursor(page?.pageInfo.hasNextPage ? (page.pageInfo.endCursor ?? null) : null);
     return (page?.edges ?? []).map(({ node: o }) => ({
@@ -162,7 +154,7 @@ export function OrderList() {
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load() is derived from these
-  }, [graphql, store.id, tab, query, version, live]);
+  }, [reads, store.id, tab, query, version, live]);
 
   async function quick(row: Row, to: Exclude<OrderStatus, "cancelled">) {
     const ok = await action.run(() => api.orders(store.id).transition(row.id, to));

@@ -17,7 +17,7 @@ import {
   type PaymentStatus,
   type ShippingType,
 } from "@kshop/core";
-import { AdminOrderQuery, type ResultOf } from "@kshop/data";
+import type { AdminOrderQuery, ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, Card, cn, Input, Label, Select } from "@kshop/ui";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useApiAction } from "../catalog/use-catalog";
@@ -84,7 +84,7 @@ export function OrderDetail({
   notices?: (orderId: string) => ReactNode;
 }) {
   const store = useStore();
-  const { graphql, api, supabase, config } = useSession();
+  const { reads, api, supabase, config } = useSession();
   const { data: settings } = useCheckoutSettings();
   const action = useApiAction();
   const [order, setOrder] = useState<OrderNode | null>(null);
@@ -101,22 +101,25 @@ export function OrderDetail({
 
   useEffect(() => {
     let cancelled = false;
-    graphql
-      .query(AdminOrderQuery, { id: orderId })
-      .toPromise()
-      .then((r) => {
+    reads
+      .order(orderId)
+      .then(
+        (data) => ({ data, failed: false }),
+        () => ({ data: null, failed: true }),
+      )
+      .then(({ data, failed }) => {
         if (cancelled) return;
         // A failed read (busy database, no network) is not «no encontrado» (R11).
-        if (r.error) return setLoadError(true);
+        if (failed) return setLoadError(true);
         setLoadError(false);
-        const node = nodes(r.data?.ordersCollection)[0];
+        const node = nodes(data?.ordersCollection)[0];
         if (!node || node.storeId !== store.id) setMissing(true);
         else setOrder(node);
       });
     return () => {
       cancelled = true;
     };
-  }, [graphql, orderId, store.id, version, live]);
+  }, [reads, orderId, store.id, version, live]);
 
   const reload = useCallback(() => setVersion((v) => v + 1), []);
   const run = async (fn: () => Promise<unknown>) => {

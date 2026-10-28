@@ -1,7 +1,7 @@
 "use client";
 
 import type { CurrencyCode, OrderStatus, PaymentStatus, ShippingType } from "@kshop/core";
-import { AdminOrdersQuery, type HomeSummary, type SalesToday } from "@kshop/data";
+import type { HomeSummary, SalesToday } from "@kshop/data";
 import { useStore } from "@kshop/storefront";
 import { useCallback, useEffect, useState } from "react";
 import { ORDER_TABLES, useStoreVersion } from "./realtime";
@@ -41,7 +41,7 @@ export function useAdminHome({
   recent?: number;
 }): AdminHome {
   const store = useStore();
-  const { api, graphql } = useSession();
+  const { api, reads } = useSession();
   const [data, setData] = useState<Omit<AdminHome, "reload">>({
     summary: null,
     today: null,
@@ -59,27 +59,25 @@ export function useAdminHome({
     void Promise.all([
       orders.summary().catch(() => null),
       salesToday ? orders.salesToday().catch(() => null) : null,
-      graphql
-        .query(AdminOrdersQuery, { filter: { storeId: { eq: store.id } }, first: recent })
-        .toPromise()
+      reads
+        .orders({ storeId: store.id, first: recent })
         .then((r) =>
-          r.error
-            ? null
-            : (r.data?.ordersCollection.edges ?? []).map(({ node: o }) => ({
-                id: o.id,
-                number: o.number,
-                status: o.status as OrderStatus,
-                paymentStatus: o.paymentStatus as PaymentStatus,
-                currency: String(o.currency) as CurrencyCode,
-                total: o.total == null ? null : Number(o.total),
-                subtotal: Number(o.subtotal),
-                customerName: o.customerName,
-                customerPhone: o.customerPhone,
-                shippingType: (o.shippingType as ShippingType | null) ?? null,
-                createdAt: o.createdAt,
-                items: (o.orderLinesCollection?.edges ?? []).reduce((sum, e) => sum + e.node.quantity, 0),
-              })),
-        ),
+          (r.ordersCollection.edges ?? []).map(({ node: o }) => ({
+            id: o.id,
+            number: o.number,
+            status: o.status as OrderStatus,
+            paymentStatus: o.paymentStatus as PaymentStatus,
+            currency: String(o.currency) as CurrencyCode,
+            total: o.total == null ? null : Number(o.total),
+            subtotal: Number(o.subtotal),
+            customerName: o.customerName,
+            customerPhone: o.customerPhone,
+            shippingType: (o.shippingType as ShippingType | null) ?? null,
+            createdAt: o.createdAt,
+            items: (o.orderLinesCollection?.edges ?? []).reduce((sum, e) => sum + e.node.quantity, 0),
+          })),
+        )
+        .catch(() => null),
     ]).then(([summary, today, list]) => {
       if (cancelled) return;
       // A failed read keeps what was already on screen.
@@ -94,7 +92,7 @@ export function useAdminHome({
     return () => {
       cancelled = true;
     };
-  }, [api, graphql, store.id, salesToday, recent, live, attempt]);
+  }, [api, reads, store.id, salesToday, recent, live, attempt]);
 
   return { ...data, reload };
 }
