@@ -1,0 +1,1634 @@
+{
+ "summary": {
+  "label": "prod-despues-2",
+  "base": "https://demo.kshop.fullkod.com",
+  "at": "2026-10-28T14:41:00.099Z",
+  "views": 37,
+  "medianMs": 2008,
+  "p95Ms": 15311,
+  "maxMs": 16353,
+  "viewsWithErrors": 1,
+  "requests": 90,
+  "graphqlRequests": 26
+ },
+ "results": [
+  {
+   "view": "home",
+   "settledMs": 5623,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 1,
+   "api": 3,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 1214,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/sales-today",
+     "ms": 718,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+     "ms": 499,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     4035,
+     314,
+     "/api/v1/me"
+    ],
+    [
+     4397,
+     499,
+     "/orders/summary"
+    ],
+    [
+     4397,
+     718,
+     "/orders/sales-today"
+    ],
+    [
+     4409,
+     1214,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "orders",
+   "settledMs": 1040,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 398,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 315,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     294,
+     315,
+     "/api/v1/me"
+    ],
+    [
+     642,
+     398,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "orders/579fa21e-a499-441a-8f96-120802e703d4",
+   "settledMs": 7025,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 3,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 2506,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "NotificationLog"
+     ],
+     "ms": 2013,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 1012,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     590,
+     1012,
+     "/api/v1/me"
+    ],
+    [
+     1633,
+     2506,
+     "Batch"
+    ],
+    [
+     4165,
+     2013,
+     "NotificationLog"
+    ],
+    [
+     6199,
+     826,
+     "CheckoutSettings"
+    ]
+   ]
+  },
+  {
+   "view": "orders/customers",
+   "settledMs": 1948,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "AdminCustomers"
+     ],
+     "ms": 853,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 472,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     321,
+     472,
+     "/api/v1/me"
+    ],
+    [
+     1095,
+     853,
+     "AdminCustomers"
+    ]
+   ]
+  },
+  {
+   "view": "orders/payment-methods",
+   "settledMs": 2008,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 795,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CheckoutSettings"
+     ],
+     "ms": 782,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     390,
+     795,
+     "/api/v1/me"
+    ],
+    [
+     1226,
+     782,
+     "CheckoutSettings"
+    ]
+   ]
+  },
+  {
+   "view": "sales-today",
+   "settledMs": 2002,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/sales-today",
+     "ms": 982,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 687,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     303,
+     687,
+     "/api/v1/me"
+    ],
+    [
+     1020,
+     982,
+     "/orders/sales-today"
+    ]
+   ]
+  },
+  {
+   "view": "catalog",
+   "settledMs": 2623,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 1887,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 388,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     310,
+     388,
+     "/api/v1/me"
+    ],
+    [
+     736,
+     1887,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/products/9cd3a82e-e293-445f-8054-c77a2af2b373",
+   "settledMs": 2568,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 1566,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 465,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     491,
+     465,
+     "/api/v1/me"
+    ],
+    [
+     1002,
+     1566,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/categories",
+   "settledMs": 2457,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CatalogStructure"
+     ],
+     "ms": 1402,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 528,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     492,
+     528,
+     "/api/v1/me"
+    ],
+    [
+     1055,
+     1402,
+     "CatalogStructure"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/attributes",
+   "settledMs": 2416,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CatalogStructure"
+     ],
+     "ms": 1470,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 418,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     484,
+     418,
+     "/api/v1/me"
+    ],
+    [
+     946,
+     1470,
+     "CatalogStructure"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/brands",
+   "settledMs": 1946,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CatalogStructure"
+     ],
+     "ms": 795,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 629,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     489,
+     629,
+     "/api/v1/me"
+    ],
+    [
+     1151,
+     795,
+     "CatalogStructure"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/collections",
+   "settledMs": 1198,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 400,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CatalogStructure"
+     ],
+     "ms": 329,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     424,
+     400,
+     "/api/v1/me"
+    ],
+    [
+     869,
+     329,
+     "CatalogStructure"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/warehouses",
+   "settledMs": 1893,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CatalogStructure"
+     ],
+     "ms": 930,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 493,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     415,
+     493,
+     "/api/v1/me"
+    ],
+    [
+     963,
+     930,
+     "CatalogStructure"
+    ]
+   ]
+  },
+  {
+   "view": "finance",
+   "settledMs": 1778,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/daily",
+     "ms": 1005,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/summary",
+     "ms": 904,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/store_currencies",
+     "ms": 474,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     289,
+     441,
+     "/api/v1/me"
+    ],
+    [
+     773,
+     474,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     773,
+     904,
+     "/finance/summary"
+    ],
+    [
+     773,
+     1005,
+     "/finance/daily"
+    ]
+   ]
+  },
+  {
+   "view": "finance/breakdown",
+   "settledMs": 1390,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/breakdown",
+     "ms": 519,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 487,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/store_currencies",
+     "ms": 212,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     365,
+     487,
+     "/api/v1/me"
+    ],
+    [
+     871,
+     212,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     871,
+     519,
+     "/finance/breakdown"
+    ]
+   ]
+  },
+  {
+   "view": "finance/expenses",
+   "settledMs": 1487,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/expenses",
+     "ms": 738,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/store_currencies",
+     "ms": 510,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 381,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     328,
+     381,
+     "/api/v1/me"
+    ],
+    [
+     749,
+     282,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     749,
+     510,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     749,
+     738,
+     "/finance/expenses"
+    ]
+   ]
+  },
+  {
+   "view": "finance/inventory",
+   "settledMs": 1608,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 5,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/inventory",
+     "ms": 976,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 666,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/store_currencies",
+     "ms": 402,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     313,
+     303,
+     "/api/v1/me"
+    ],
+    [
+     632,
+     201,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     632,
+     402,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     632,
+     666,
+     "/warehouses"
+    ],
+    [
+     632,
+     976,
+     "/finance/inventory"
+    ]
+   ]
+  },
+  {
+   "view": "finance/margin",
+   "settledMs": 1298,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/margin",
+     "ms": 659,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 295,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/store_currencies",
+     "ms": 240,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     296,
+     295,
+     "/api/v1/me"
+    ],
+    [
+     639,
+     240,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     639,
+     659,
+     "/finance/margin"
+    ]
+   ]
+  },
+  {
+   "view": "discounts",
+   "settledMs": 6528,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 2527,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 825,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     3119,
+     825,
+     "/api/v1/me"
+    ],
+    [
+     4002,
+     2527,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "discounts/vouchers",
+   "settledMs": 2219,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 912,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 892,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     367,
+     892,
+     "/api/v1/me"
+    ],
+    [
+     1307,
+     912,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "shipping",
+   "settledMs": 3214,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CheckoutSettings"
+     ],
+     "ms": 2100,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 428,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     636,
+     428,
+     "/api/v1/me"
+    ],
+    [
+     1114,
+     2100,
+     "CheckoutSettings"
+    ]
+   ]
+  },
+  {
+   "view": "themes",
+   "settledMs": 15311,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 1,
+   "api": 3,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/storefront",
+     "ms": 10978,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/storefront",
+     "ms": 5284,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 3506,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     319,
+     431,
+     "/api/v1/me"
+    ],
+    [
+     807,
+     3506,
+     "Batch"
+    ],
+    [
+     4333,
+     5284,
+     "/storefront"
+    ],
+    [
+     4333,
+     10978,
+     "/storefront"
+    ]
+   ]
+  },
+  {
+   "view": "themes/home",
+   "settledMs": 1473,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 0,
+   "graphql": 0,
+   "api": 0,
+   "bootRequests": null,
+   "slowest": [],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": []
+  },
+  {
+   "view": "themes/banners",
+   "settledMs": 5441,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 3513,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 1432,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     459,
+     1432,
+     "/api/v1/me"
+    ],
+    [
+     1928,
+     3513,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "themes/menus",
+   "settledMs": 16353,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 2,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 9774,
+     "status": 500
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 3744,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 1743,
+     "status": 200
+    }
+   ],
+   "failures": [
+    {
+     "kind": "graphql",
+     "path": "/graphql/v1",
+     "startMs": 4311,
+     "ms": 9774,
+     "ops": [
+      "Batch"
+     ],
+     "status": 500,
+     "error": "{\"code\":\"57014\",\"details\":null,\"hint\":null,\"message\":\"canceling statement due to statement timeout\"}"
+    }
+   ],
+   "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 500 ()"
+   ],
+   "timeline": [
+    [
+     522,
+     3744,
+     "/api/v1/me"
+    ],
+    [
+     4311,
+     9774,
+     "Batch"
+    ],
+    [
+     14610,
+     1743,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "themes/pages",
+   "settledMs": 2596,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 1423,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 501,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     620,
+     501,
+     "/api/v1/me"
+    ],
+    [
+     1173,
+     1423,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "team",
+   "settledMs": 1716,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/team",
+     "ms": 900,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 499,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     285,
+     499,
+     "/api/v1/me"
+    ],
+    [
+     816,
+     900,
+     "/team"
+    ]
+   ]
+  },
+  {
+   "view": "whatsapp-notifications",
+   "settledMs": 4590,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "NotificationSettings"
+     ],
+     "ms": 3714,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 543,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     284,
+     543,
+     "/api/v1/me"
+    ],
+    [
+     877,
+     3714,
+     "NotificationSettings"
+    ]
+   ]
+  },
+  {
+   "view": "whatsapp-notifications/log",
+   "settledMs": 3783,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 2,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CheckoutSettings"
+     ],
+     "ms": 1637,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "NotificationLog"
+     ],
+     "ms": 1271,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 488,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     282,
+     488,
+     "/api/v1/me"
+    ],
+    [
+     822,
+     1271,
+     "NotificationLog"
+    ],
+    [
+     2146,
+     1637,
+     "CheckoutSettings"
+    ]
+   ]
+  },
+  {
+   "view": "whatsapp-notifications/templates",
+   "settledMs": 1429,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 510,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "NotificationSettings"
+     ],
+     "ms": 467,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     423,
+     510,
+     "/api/v1/me"
+    ],
+    [
+     962,
+     467,
+     "NotificationSettings"
+    ]
+   ]
+  },
+  {
+   "view": "billing",
+   "settledMs": 1934,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/billing",
+     "ms": 1065,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 508,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     346,
+     508,
+     "/api/v1/me"
+    ],
+    [
+     869,
+     1065,
+     "/billing"
+    ]
+   ]
+  },
+  {
+   "view": "multi-warehouse",
+   "settledMs": 1354,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 639,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 397,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     305,
+     397,
+     "/api/v1/me"
+    ],
+    [
+     715,
+     639,
+     "/warehouses"
+    ]
+   ]
+  },
+  {
+   "view": "multi-warehouse/movements",
+   "settledMs": 2840,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses/movements",
+     "ms": 1790,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 750,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 604,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     429,
+     604,
+     "/api/v1/me"
+    ],
+    [
+     1050,
+     750,
+     "/warehouses"
+    ],
+    [
+     1050,
+     1790,
+     "/warehouses/movements"
+    ]
+   ]
+  },
+  {
+   "view": "multi-warehouse/transfer",
+   "settledMs": 2157,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 938,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 380,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     818,
+     380,
+     "/api/v1/me"
+    ],
+    [
+     1219,
+     938,
+     "/warehouses"
+    ]
+   ]
+  },
+  {
+   "view": "multi-currency",
+   "settledMs": 2471,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/currencies/rates",
+     "ms": 1171,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 771,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     509,
+     771,
+     "/api/v1/me"
+    ],
+    [
+     1300,
+     1171,
+     "/currencies/rates"
+    ]
+   ]
+  },
+  {
+   "view": "mobile-app",
+   "settledMs": 1474,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/mobile-app",
+     "ms": 551,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 455,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     451,
+     455,
+     "/api/v1/me"
+    ],
+    [
+     923,
+     551,
+     "/mobile-app"
+    ]
+   ]
+  },
+  {
+   "view": "custom-domain",
+   "settledMs": 1160,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/custom-domain",
+     "ms": 506,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 367,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     277,
+     367,
+     "/api/v1/me"
+    ],
+    [
+     654,
+     506,
+     "/custom-domain"
+    ]
+   ]
+  }
+ ]
+}

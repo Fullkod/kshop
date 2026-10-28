@@ -1,0 +1,1831 @@
+{
+ "summary": {
+  "label": "prod-despues",
+  "base": "https://demo.kshop.fullkod.com",
+  "at": "2026-10-28T14:35:35.237Z",
+  "views": 37,
+  "medianMs": 1789,
+  "p95Ms": 11400,
+  "maxMs": 23836,
+  "viewsWithErrors": 10,
+  "requests": 100,
+  "graphqlRequests": 26
+ },
+ "results": [
+  {
+   "view": "home",
+   "settledMs": 7512,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 1,
+   "api": 3,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/summary",
+     "ms": 1140,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/sales-today",
+     "ms": 1070,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 1054,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     5368,
+     947,
+     "/api/v1/me"
+    ],
+    [
+     6372,
+     1070,
+     "/orders/sales-today"
+    ],
+    [
+     6372,
+     1140,
+     "/orders/summary"
+    ],
+    [
+     6386,
+     1054,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "orders",
+   "settledMs": 1355,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 551,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 445,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     332,
+     445,
+     "/api/v1/me"
+    ],
+    [
+     804,
+     551,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "orders/579fa21e-a499-441a-8f96-120802e703d4",
+   "settledMs": 3210,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 3,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 1257,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 648,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "NotificationLog"
+     ],
+     "ms": 476,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     440,
+     1257,
+     "/api/v1/me"
+    ],
+    [
+     1725,
+     648,
+     "Batch"
+    ],
+    [
+     2402,
+     476,
+     "NotificationLog"
+    ],
+    [
+     2895,
+     315,
+     "CheckoutSettings"
+    ]
+   ]
+  },
+  {
+   "view": "orders/customers",
+   "settledMs": 1092,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 356,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "AdminCustomers"
+     ],
+     "ms": 226,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     232,
+     356,
+     "/api/v1/me"
+    ],
+    [
+     866,
+     226,
+     "AdminCustomers"
+    ]
+   ]
+  },
+  {
+   "view": "orders/payment-methods",
+   "settledMs": 1258,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CheckoutSettings"
+     ],
+     "ms": 502,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 374,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     357,
+     374,
+     "/api/v1/me"
+    ],
+    [
+     756,
+     502,
+     "CheckoutSettings"
+    ]
+   ]
+  },
+  {
+   "view": "sales-today",
+   "settledMs": 1547,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/orders/sales-today",
+     "ms": 889,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 388,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     258,
+     388,
+     "/api/v1/me"
+    ],
+    [
+     658,
+     889,
+     "/orders/sales-today"
+    ]
+   ]
+  },
+  {
+   "view": "catalog",
+   "settledMs": 1169,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 561,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 324,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     255,
+     324,
+     "/api/v1/me"
+    ],
+    [
+     608,
+     561,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/products/9cd3a82e-e293-445f-8054-c77a2af2b373",
+   "settledMs": 1789,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 1017,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 287,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     454,
+     287,
+     "/api/v1/me"
+    ],
+    [
+     772,
+     1017,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/categories",
+   "settledMs": 1124,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 332,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CatalogStructure"
+     ],
+     "ms": 317,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     450,
+     332,
+     "/api/v1/me"
+    ],
+    [
+     807,
+     317,
+     "CatalogStructure"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/attributes",
+   "settledMs": 1122,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CatalogStructure"
+     ],
+     "ms": 343,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 310,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     443,
+     310,
+     "/api/v1/me"
+    ],
+    [
+     779,
+     343,
+     "CatalogStructure"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/brands",
+   "settledMs": 2027,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CatalogStructure"
+     ],
+     "ms": 1243,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 316,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     444,
+     316,
+     "/api/v1/me"
+    ],
+    [
+     784,
+     1243,
+     "CatalogStructure"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/collections",
+   "settledMs": 1187,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 372,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CatalogStructure"
+     ],
+     "ms": 357,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     434,
+     372,
+     "/api/v1/me"
+    ],
+    [
+     830,
+     357,
+     "CatalogStructure"
+    ]
+   ]
+  },
+  {
+   "view": "catalog/warehouses",
+   "settledMs": 1135,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 355,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CatalogStructure"
+     ],
+     "ms": 301,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     456,
+     355,
+     "/api/v1/me"
+    ],
+    [
+     834,
+     301,
+     "CatalogStructure"
+    ]
+   ]
+  },
+  {
+   "view": "finance",
+   "settledMs": 2611,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/summary",
+     "ms": 2008,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/daily",
+     "ms": 814,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/store_currencies",
+     "ms": 450,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     270,
+     315,
+     "/api/v1/me"
+    ],
+    [
+     603,
+     814,
+     "/finance/daily"
+    ],
+    [
+     603,
+     2008,
+     "/finance/summary"
+    ],
+    [
+     604,
+     450,
+     "/rest/v1/store_currencies"
+    ]
+   ]
+  },
+  {
+   "view": "finance/breakdown",
+   "settledMs": 1198,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/breakdown",
+     "ms": 614,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 326,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/store_currencies",
+     "ms": 228,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     243,
+     326,
+     "/api/v1/me"
+    ],
+    [
+     584,
+     228,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     584,
+     614,
+     "/finance/breakdown"
+    ]
+   ]
+  },
+  {
+   "view": "finance/expenses",
+   "settledMs": 1199,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/rest/v1/store_currencies",
+     "ms": 513,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/expenses",
+     "ms": 473,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 416,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     252,
+     416,
+     "/api/v1/me"
+    ],
+    [
+     686,
+     263,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     686,
+     473,
+     "/finance/expenses"
+    ],
+    [
+     686,
+     513,
+     "/rest/v1/store_currencies"
+    ]
+   ]
+  },
+  {
+   "view": "finance/inventory",
+   "settledMs": 1468,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 5,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/inventory",
+     "ms": 760,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 692,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/store_currencies",
+     "ms": 529,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     343,
+     347,
+     "/api/v1/me"
+    ],
+    [
+     707,
+     220,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     708,
+     529,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     708,
+     692,
+     "/warehouses"
+    ],
+    [
+     708,
+     760,
+     "/finance/inventory"
+    ]
+   ]
+  },
+  {
+   "view": "finance/margin",
+   "settledMs": 1080,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/finance/margin",
+     "ms": 457,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 362,
+     "status": 200
+    },
+    {
+     "path": "/rest/v1/store_currencies",
+     "ms": 330,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     245,
+     362,
+     "/api/v1/me"
+    ],
+    [
+     623,
+     330,
+     "/rest/v1/store_currencies"
+    ],
+    [
+     623,
+     457,
+     "/finance/margin"
+    ]
+   ]
+  },
+  {
+   "view": "discounts",
+   "settledMs": 1025,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 370,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 356,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     271,
+     356,
+     "/api/v1/me"
+    ],
+    [
+     655,
+     370,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "discounts/vouchers",
+   "settledMs": 1220,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 622,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 302,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     268,
+     302,
+     "/api/v1/me"
+    ],
+    [
+     598,
+     622,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "shipping",
+   "settledMs": 919,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CheckoutSettings"
+     ],
+     "ms": 343,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 272,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     280,
+     272,
+     "/api/v1/me"
+    ],
+    [
+     576,
+     343,
+     "CheckoutSettings"
+    ]
+   ]
+  },
+  {
+   "view": "themes",
+   "settledMs": 3849,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 1,
+   "api": 3,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/storefront",
+     "ms": 2300,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/storefront",
+     "ms": 1089,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 844,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     310,
+     343,
+     "/api/v1/me"
+    ],
+    [
+     690,
+     844,
+     "Batch"
+    ],
+    [
+     1549,
+     1089,
+     "/storefront"
+    ],
+    [
+     1549,
+     2300,
+     "/storefront"
+    ]
+   ]
+  },
+  {
+   "view": "themes/home",
+   "settledMs": 23836,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 1,
+   "graphql": 0,
+   "api": 1,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 11147,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     662,
+     11147,
+     "/api/v1/me"
+    ]
+   ]
+  },
+  {
+   "view": "themes/banners",
+   "settledMs": 3834,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 1,
+   "api": 2,
+   "bootRequests": 2,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 1243,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 749,
+     "status": 500
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 476,
+     "status": 200
+    }
+   ],
+   "failures": [
+    {
+     "kind": "api",
+     "path": "/api/v1/me",
+     "startMs": 500,
+     "ms": 749,
+     "status": 500,
+     "error": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Error inesperado. Inténtalo de nuevo.\"}}"
+    }
+   ],
+   "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 500 ()"
+   ],
+   "timeline": [
+    [
+     500,
+     749,
+     "/api/v1/me"
+    ],
+    [
+     2089,
+     476,
+     "/api/v1/me"
+    ],
+    [
+     2591,
+     1243,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "themes/menus",
+   "settledMs": 1672,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 699,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 503,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     444,
+     503,
+     "/api/v1/me"
+    ],
+    [
+     973,
+     699,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "themes/pages",
+   "settledMs": 7643,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 1,
+   "api": 2,
+   "bootRequests": 2,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "Batch"
+     ],
+     "ms": 3481,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 2268,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 897,
+     "status": 500
+    }
+   ],
+   "failures": [
+    {
+     "kind": "api",
+     "path": "/api/v1/me",
+     "startMs": 470,
+     "ms": 897,
+     "status": 500,
+     "error": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Error inesperado. Inténtalo de nuevo.\"}}"
+    }
+   ],
+   "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 500 ()"
+   ],
+   "timeline": [
+    [
+     470,
+     897,
+     "/api/v1/me"
+    ],
+    [
+     1866,
+     2268,
+     "/api/v1/me"
+    ],
+    [
+     4162,
+     3481,
+     "Batch"
+    ]
+   ]
+  },
+  {
+   "view": "team",
+   "settledMs": 11400,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/team",
+     "ms": 6446,
+     "status": 500
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/team",
+     "ms": 1662,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 1587,
+     "status": 200
+    }
+   ],
+   "failures": [
+    {
+     "kind": "api",
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/team",
+     "startMs": 3027,
+     "ms": 6446,
+     "status": 500,
+     "error": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Error inesperado. Inténtalo de nuevo.\"}}"
+    }
+   ],
+   "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 500 ()"
+   ],
+   "timeline": [
+    [
+     1425,
+     1587,
+     "/api/v1/me"
+    ],
+    [
+     3027,
+     6446,
+     "/team"
+    ],
+    [
+     9738,
+     1662,
+     "/team"
+    ]
+   ]
+  },
+  {
+   "view": "whatsapp-notifications",
+   "settledMs": 7363,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "NotificationSettings"
+     ],
+     "ms": 5955,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 1086,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     296,
+     1086,
+     "/api/v1/me"
+    ],
+    [
+     1408,
+     5955,
+     "NotificationSettings"
+    ]
+   ]
+  },
+  {
+   "view": "whatsapp-notifications/log",
+   "settledMs": 5340,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 3,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "NotificationLog"
+     ],
+     "ms": 1827,
+     "status": 200
+    },
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "CheckoutSettings"
+     ],
+     "ms": 1395,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 765,
+     "status": 200
+    }
+   ],
+   "failures": [
+    {
+     "kind": "graphql",
+     "path": "/graphql/v1",
+     "startMs": 2940,
+     "ms": 313,
+     "ops": [
+      "CheckoutSettings"
+     ],
+     "status": 500,
+     "error": "{\"code\":\"25P02\",\"details\":null,\"hint\":null,\"message\":\"current transaction is aborted, commands ignored until end of transaction block\"}"
+    }
+   ],
+   "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 500 ()"
+   ],
+   "timeline": [
+    [
+     293,
+     765,
+     "/api/v1/me"
+    ],
+    [
+     1085,
+     1827,
+     "NotificationLog"
+    ],
+    [
+     2940,
+     313,
+     "CheckoutSettings"
+    ],
+    [
+     3945,
+     1395,
+     "CheckoutSettings"
+    ]
+   ]
+  },
+  {
+   "view": "whatsapp-notifications/templates",
+   "settledMs": 1750,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 1,
+   "api": 1,
+   "bootRequests": 1,
+   "slowest": [
+    {
+     "path": "/graphql/v1",
+     "ops": [
+      "NotificationSettings"
+     ],
+     "ms": 927,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 518,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     273,
+     518,
+     "/api/v1/me"
+    ],
+    [
+     823,
+     927,
+     "NotificationSettings"
+    ]
+   ]
+  },
+  {
+   "view": "billing",
+   "settledMs": 2150,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/billing",
+     "ms": 648,
+     "status": 500
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/billing",
+     "ms": 541,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 400,
+     "status": 200
+    }
+   ],
+   "failures": [
+    {
+     "kind": "api",
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/billing",
+     "startMs": 699,
+     "ms": 648,
+     "status": 500,
+     "error": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Error inesperado. Inténtalo de nuevo.\"}}"
+    }
+   ],
+   "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 500 ()"
+   ],
+   "timeline": [
+    [
+     272,
+     400,
+     "/api/v1/me"
+    ],
+    [
+     699,
+     648,
+     "/billing"
+    ],
+    [
+     1609,
+     541,
+     "/billing"
+    ]
+   ]
+  },
+  {
+   "view": "multi-warehouse",
+   "settledMs": 1888,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 508,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 393,
+     "status": 500
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 306,
+     "status": 200
+    }
+   ],
+   "failures": [
+    {
+     "kind": "api",
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "startMs": 645,
+     "ms": 393,
+     "status": 500,
+     "error": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Error inesperado. Inténtalo de nuevo.\"}}"
+    }
+   ],
+   "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 500 ()"
+   ],
+   "timeline": [
+    [
+     320,
+     306,
+     "/api/v1/me"
+    ],
+    [
+     645,
+     393,
+     "/warehouses"
+    ],
+    [
+     1380,
+     508,
+     "/warehouses"
+    ]
+   ]
+  },
+  {
+   "view": "multi-warehouse/movements",
+   "settledMs": 3609,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 4,
+   "graphql": 0,
+   "api": 4,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses/movements",
+     "ms": 1289,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses/movements",
+     "ms": 798,
+     "status": 500
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 744,
+     "status": 200
+    }
+   ],
+   "failures": [
+    {
+     "kind": "api",
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses/movements",
+     "startMs": 1046,
+     "ms": 798,
+     "status": 500,
+     "error": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Error inesperado. Inténtalo de nuevo.\"}}"
+    }
+   ],
+   "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 500 ()"
+   ],
+   "timeline": [
+    [
+     519,
+     510,
+     "/api/v1/me"
+    ],
+    [
+     1046,
+     744,
+     "/warehouses"
+    ],
+    [
+     1046,
+     798,
+     "/warehouses/movements"
+    ],
+    [
+     2320,
+     1289,
+     "/warehouses/movements"
+    ]
+   ]
+  },
+  {
+   "view": "multi-warehouse/transfer",
+   "settledMs": 4780,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/warehouses",
+     "ms": 1728,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 887,
+     "status": 500
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 339,
+     "status": 200
+    }
+   ],
+   "failures": [
+    {
+     "kind": "api",
+     "path": "/api/v1/me",
+     "startMs": 1434,
+     "ms": 887,
+     "status": 500,
+     "error": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Error inesperado. Inténtalo de nuevo.\"}}"
+    }
+   ],
+   "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 500 ()"
+   ],
+   "timeline": [
+    [
+     1434,
+     887,
+     "/api/v1/me"
+    ],
+    [
+     2693,
+     339,
+     "/api/v1/me"
+    ],
+    [
+     3052,
+     1728,
+     "/warehouses"
+    ]
+   ]
+  },
+  {
+   "view": "multi-currency",
+   "settledMs": 2271,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/currencies/rates",
+     "ms": 573,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 368,
+     "status": 500
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 358,
+     "status": 200
+    }
+   ],
+   "failures": [
+    {
+     "kind": "api",
+     "path": "/api/v1/me",
+     "startMs": 345,
+     "ms": 368,
+     "status": 500,
+     "error": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Error inesperado. Inténtalo de nuevo.\"}}"
+    }
+   ],
+   "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 500 ()"
+   ],
+   "timeline": [
+    [
+     345,
+     368,
+     "/api/v1/me"
+    ],
+    [
+     1313,
+     358,
+     "/api/v1/me"
+    ],
+    [
+     1698,
+     573,
+     "/currencies/rates"
+    ]
+   ]
+  },
+  {
+   "view": "mobile-app",
+   "settledMs": 2248,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 3,
+   "graphql": 0,
+   "api": 3,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/mobile-app",
+     "ms": 521,
+     "status": 500
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/mobile-app",
+     "ms": 367,
+     "status": 500
+    },
+    {
+     "path": "/api/v1/me",
+     "ms": 317,
+     "status": 200
+    }
+   ],
+   "failures": [
+    {
+     "kind": "api",
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/mobile-app",
+     "startMs": 644,
+     "ms": 521,
+     "status": 500,
+     "error": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Error inesperado. Inténtalo de nuevo.\"}}"
+    },
+    {
+     "kind": "api",
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/mobile-app",
+     "startMs": 1881,
+     "ms": 367,
+     "status": 500,
+     "error": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Error inesperado. Inténtalo de nuevo.\"}}"
+    }
+   ],
+   "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 500 ()",
+    "Failed to load resource: the server responded with a status of 500 ()"
+   ],
+   "timeline": [
+    [
+     298,
+     317,
+     "/api/v1/me"
+    ],
+    [
+     644,
+     521,
+     "/mobile-app"
+    ],
+    [
+     1881,
+     367,
+     "/mobile-app"
+    ]
+   ]
+  },
+  {
+   "view": "custom-domain",
+   "settledMs": 1799,
+   "timedOut": false,
+   "hanging": [],
+   "stuck": false,
+   "navError": null,
+   "requests": 2,
+   "graphql": 0,
+   "api": 2,
+   "bootRequests": null,
+   "slowest": [
+    {
+     "path": "/api/v1/me",
+     "ms": 837,
+     "status": 200
+    },
+    {
+     "path": "/api/v1/stores/693d5ec1-c6fb-4270-8cf2-c6c9daaec07a/custom-domain",
+     "ms": 584,
+     "status": 200
+    }
+   ],
+   "failures": [],
+   "consoleErrors": [],
+   "timeline": [
+    [
+     366,
+     837,
+     "/api/v1/me"
+    ],
+    [
+     1215,
+     584,
+     "/custom-domain"
+    ]
+   ]
+  }
+ ]
+}

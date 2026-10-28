@@ -54,7 +54,11 @@ síntesis, 10 revisores que intentaron refutar cada causa: ninguna cayó). Infor
   llenaron el disco C:. Se quitaron `scripts/db-env.mjs`, `docs/LOCAL_DB.md`, `supabase/config.toml` y los
   `db:local:*`; todo vuelve a la base online. D1 queda abierta: la alternativa es un **2º proyecto Supabase Free**
   de pruebas (la organización tiene 1 de 2), pendiente de que Roberto lo cree o lo autorice.
-- Falta: desplegar el código (permiso de Roberto) y medir en producción con `qa:admin-perf` (línea base
+- **Desplegado 2026-10-28** (`92ebd31` + `b161a32`). Producción después (`perf-prod-despues*.json`): mediana 4,4 s →
+  1,8–2,0 s, máximo 33,8 s → 16–24 s, peticiones 168 → 90–100, GraphQL 66 → 26. Quedan picos de pg_graphql en frío
+  (lote de 9,7 s con 500 en themes/menus) y en la 1ª ronda, justo tras el deploy, 500 rápidos pasajeros en `/api/v1`
+  (`/me`, billing, warehouses…) que no se repitieron; causa sin confirmar (logs de Vercel en otra cuenta).
+- (Antes) Falta: desplegar el código (permiso de Roberto) y medir en producción con `qa:admin-perf` (línea base
   `.titan/qa/r11-rendimiento-admin/perf-prod-antes.json`: mediana 4,4 s, p95 20,9 s).
 
 ## Estado al cerrar la sesión
