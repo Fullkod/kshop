@@ -12,7 +12,7 @@ import {
   type NotificationContactInput,
   type NotificationStatus,
 } from "@kshop/core";
-import { NotificationSettingsQuery } from "@kshop/data";
+import { asResult } from "@kshop/data";
 import { Alert, Badge, Button, Card, cn, FieldError, Input, Label } from "@kshop/ui";
 import Link from "next/link";
 import { useStorePathname } from "@/lib/navigation";
@@ -100,31 +100,28 @@ export function NotificationsNav() {
 
 function useNotificationSettings() {
   const store = useStore();
-  const { graphql } = useSession();
+  const { reads } = useSession();
   const [data, setData] = useState<{ contacts: Contact[]; templates: Template[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
   useEffect(() => {
     let cancelled = false;
-    graphql
-      .query(NotificationSettingsQuery, { storeId: store.id })
-      .toPromise()
-      .then((r) => {
-        if (cancelled) return;
-        if (r.error || !r.data) return setError("No se pudieron cargar los avisos.");
-        setData({
-          contacts: nodes(r.data.storeNotificationContactsCollection),
-          templates: nodes(r.data.whatsappTemplatesCollection).map((t) => ({
-            ...t,
-            storeId: t.storeId ?? null,
-            audience: String(t.audience) as NotificationAudience,
-          })),
-        });
+    asResult(reads.notificationSettings(store.id)).then((r) => {
+      if (cancelled) return;
+      if (r.error || !r.data) return setError("No se pudieron cargar los avisos.");
+      setData({
+        contacts: nodes(r.data.storeNotificationContactsCollection),
+        templates: nodes(r.data.whatsappTemplatesCollection).map((t) => ({
+          ...t,
+          storeId: t.storeId ?? null,
+          audience: String(t.audience) as NotificationAudience,
+        })),
       });
+    });
     return () => {
       cancelled = true;
     };
-  }, [graphql, store.id, version]);
+  }, [reads, store.id, version]);
   const reload = useCallback(() => setVersion((v) => v + 1), []);
   return { data, error, reload };
 }

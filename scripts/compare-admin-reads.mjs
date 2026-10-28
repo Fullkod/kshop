@@ -1,4 +1,4 @@
-// R11 phase 5: the admin's RPC reads (admin_orders, admin_order, admin_checkout_settings, admin_notification_log)
+// R11: the admin's RPC reads (supabase/migrations/20261108100400_admin_reads.sql, 20261108100500_admin_reads_all.sql)
 // must return exactly what the pg_graphql queries they replace return. Runs both as the Tienda Demo owner inside a
 // read-only transaction and compares them (only endCursor differs: the RPCs use offset cursors).
 //   node scripts/compare-admin-reads.mjs        (through scripts/db-env.mjs: test project by default)
@@ -23,10 +23,10 @@ async function sql(query) {
   return res.json();
 }
 
-// The GraphQL documents, straight from packages/data (fragments are not used by these four).
-const src =
-  readFileSync(join(root, "packages/data/src/order-queries.ts"), "utf8") +
-  readFileSync(join(root, "packages/data/src/notification-queries.ts"), "utf8");
+// The GraphQL documents, straight from packages/data (none of them uses fragments).
+const src = ["order", "notification", "catalog", "discount", "content"]
+  .map((f) => readFileSync(join(root, `packages/data/src/${f}-queries.ts`), "utf8"))
+  .join("\n");
 const doc = (name) => src.match(new RegExp(String.raw`graphql\(\`\s*(query ${name}\b[\s\S]*?)\`\)`))[1];
 
 const [{ id: storeId }] = await sql("select id from public.stores where slug = 'demo'");
@@ -40,6 +40,22 @@ const [{ id: noticeOrder } = {}] = await sql(
 const [{ name: someName } = {}] = await sql(
   `select substr(customer_name, 1, 3) as name from public.orders where store_id = '${storeId}' limit 1`,
 );
+const [{ number: someNumber } = {}] = await sql(
+  `select number from public.orders where store_id = '${storeId}' order by created_at desc limit 1`,
+);
+// Products with the most variants, prices, costs and media first (the detail has the most nested reads).
+const products = await sql(`select p.id from public.products p where p.store_id = '${storeId}'
+  order by (select count(*) from public.product_variants v where v.product_id = p.id) desc, p.id limit 4`);
+const [{ word } = {}] = await sql(
+  `select lower(split_part(name, ' ', 1)) as word from public.products where store_id = '${storeId}' limit 1`,
+);
+const [{ id: categoryId } = {}] = await sql(
+  `select id from public.categories where store_id = '${storeId}' and parent_id is null limit 1`,
+);
+const [{ phone, first: firstName } = {}] = await sql(
+  `select phone, substr(first_name, 1, 3) as first from public.customers where store_id = '${storeId}' limit 1`,
+);
+const productIds = products.map((p) => p.id);
 
 const cases = [
   ["AdminOrders", { filter: { storeId: { eq: storeId } }, first: 20 }, `admin_orders('${storeId}', 20)`],
@@ -90,6 +106,73 @@ const cases = [
         ],
       ]
     : []),
+  // Global search (Ctrl K): number OR name OR phone.
+  [
+    "AdminOrders",
+    {
+      filter: {
+        storeId: { eq: storeId },
+        or: [{ number: { eq: someNumber } }, { customerName: { ilike: `%${someName}%` } }],
+      },
+      first: 5,
+    },
+    `admin_orders('${storeId}', 5, p_name => '%${someName}%', p_search_number => ${someNumber})`,
+  ],
+  [
+    "AdminCustomers",
+    { filter: { storeId: { eq: storeId } }, first: 50 },
+    `admin_customers('${storeId}', 50)`,
+  ],
+  [
+    "AdminCustomers",
+    {
+      filter: {
+        storeId: { eq: storeId },
+        or: [{ firstName: { ilike: `%${firstName}%` } }, { lastName: { ilike: `%${firstName}%` } }],
+      },
+      first: 50,
+    },
+    `admin_customers('${storeId}', 50, p_name => '%${firstName}%')`,
+  ],
+  [
+    "AdminCustomers",
+    { filter: { storeId: { eq: storeId }, phone: { eq: phone } }, first: 1 },
+    `admin_customers('${storeId}', 1, p_phone => '${phone}')`,
+  ],
+  ["CatalogStructure", { storeId }, `admin_catalog_structure('${storeId}')`],
+  ["AdminProducts", { storeId, first: 20 }, `admin_products('${storeId}', 20)`],
+  ["AdminProducts", { storeId, first: 20, after: "$cursor" }, `admin_products('${storeId}', 20, 20)`],
+  [
+    "AdminProducts",
+    { storeId, query: word, first: 20 },
+    `admin_products('${storeId}', 20, p_query => '${word}')`,
+  ],
+  [
+    "AdminProducts",
+    { storeId, status: "published", lowStock: true, first: 20 },
+    `admin_products('${storeId}', 20, p_status => 'published', p_low_stock => true)`,
+  ],
+  ...(categoryId
+    ? [
+        [
+          "AdminProducts",
+          { storeId, categoryId, first: 20 },
+          `admin_products('${storeId}', 20, p_category_id => '${categoryId}')`,
+        ],
+      ]
+    : []),
+  ...products.map((p) => ["ProductDetail", { id: p.id }, `admin_product('${p.id}')`]),
+  ["OrderVariantSearch", { storeId, query: word }, `admin_variant_search('${storeId}', '${word}')`],
+  ["OrderVariantSearch", { storeId }, `admin_variant_search('${storeId}')`],
+  ["AdminPromotions", { storeId }, `admin_promotions('${storeId}')`],
+  ["AdminVouchers", { storeId }, `admin_vouchers('${storeId}')`],
+  [
+    "DiscountTargets",
+    { storeId, productIds },
+    `admin_discount_targets('${storeId}', '{${productIds.join(",")}}')`,
+  ],
+  ["AdminContent", { storeId }, `admin_content('${storeId}')`],
+  ["NotificationSettings", { storeId }, `admin_notification_settings('${storeId}')`],
 ];
 
 const dropCursors = (v) =>
@@ -124,7 +207,7 @@ for (const [name, given, call] of cases) {
     const [first] = await asOwner(
       `select graphql.resolve($q$${doc(name)}$q$, '${JSON.stringify({ ...vars, after: undefined })}'::jsonb) as g`,
     );
-    vars = { ...vars, after: first.g.data.ordersCollection.pageInfo.endCursor };
+    vars = { ...vars, after: Object.values(first.g.data)[0].pageInfo.endCursor };
   }
   const [row] = await asOwner(
     `select graphql.resolve($q$${doc(name)}$q$, '${JSON.stringify(vars)}'::jsonb) as g, public.${call} as r`,

@@ -1,7 +1,7 @@
 "use client";
 
 import { formatMoney, type ProductStatus } from "@kshop/core";
-import { AdminProductsQuery, type ResultOf } from "@kshop/data";
+import { asResult, type AdminProductsQuery, type ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, buttonVariants, Card, Input, Select } from "@kshop/ui";
 import { useEffect, useRef, useState } from "react";
 import { LoadError } from "../LoadError";
@@ -21,7 +21,7 @@ const PAGE_SIZE = 25;
 
 export function ProductList() {
   const store = useStore();
-  const { graphql } = useSession();
+  const { reads } = useSession();
   const { data: structure } = useCatalogStructure();
   const { catalog } = useCatalogApi();
   const action = useApiAction();
@@ -55,7 +55,7 @@ export function ProductList() {
     const timer = setTimeout(
       async () => {
         loadedOnce.current = true;
-        const result = await graphql.query(AdminProductsQuery, variables(null)).toPromise();
+        const result = await asResult(reads.products(variables(null)));
         if (cancelled) return;
         if (result.error) {
           setLoadError("No se pudieron cargar los productos.");
@@ -75,10 +75,10 @@ export function ProductList() {
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- variables() is derived from these
-  }, [graphql, store.id, query, status, categoryId, lowStock, version]);
+  }, [reads, store.id, query, status, categoryId, lowStock, version]);
 
   async function loadMore() {
-    const result = await graphql.query(AdminProductsQuery, variables(cursor)).toPromise();
+    const result = await asResult(reads.products(variables(cursor)));
     const page = result.data?.adminSearchProducts;
     setRows((current) => [...(current ?? []), ...(page?.edges.map((e) => e.node) ?? [])]);
     setCursor(page?.pageInfo.hasNextPage ? (page.pageInfo.endCursor ?? null) : null);

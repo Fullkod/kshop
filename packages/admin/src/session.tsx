@@ -4,14 +4,12 @@ import {
   createAdminReads,
   createApiClient,
   createAuthClient,
-  createGraphqlClient,
   type AdminReads,
   type ApiClient,
   type AuthStorage,
   type SupabaseConfig,
 } from "@kshop/data";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
-import type { Client } from "@urql/core";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 /** Where the staff session talks to: the web passes its env, the admin app its build config (PRP-7 D2, D6). */
@@ -34,8 +32,7 @@ type SessionContextValue = {
   /** False until the stored session (or the one in an access link) has been read. */
   ready: boolean;
   api: ApiClient;
-  graphql: Client;
-  /** The daily reads as plain RPCs (orders, order, checkout settings, WhatsApp log; R11 phase 5). */
+  /** Every read of the admin, as plain RPCs (R11: the admin no longer reads through pg_graphql). */
   reads: AdminReads;
   config: AdminConfig;
 };
@@ -78,7 +75,6 @@ export function SessionProvider({ config, children }: { config: AdminConfig; chi
     const getAccessToken = async () => (await supabase.auth.getSession()).data.session?.access_token;
     return {
       api: createApiClient({ baseUrl: config.apiBaseUrl, getAccessToken }),
-      graphql: createGraphqlClient({ ...config.supabase, getAccessToken, noCache: true, batch: true }),
       reads: createAdminReads({ ...config.supabase, getAccessToken }),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- userId: new clients only for another user

@@ -24,7 +24,7 @@ import {
   type ModuleCode,
   type StoreStatus,
 } from "@kshop/core";
-import { CheckoutSettingsQuery, type MeResponse } from "@kshop/data";
+import type { MeResponse } from "@kshop/data";
 import {
   NavigationProvider,
   StoreProvider,
@@ -297,7 +297,7 @@ function StoreGate() {
 async function loadStore(
   myStore: MyStore,
   status: Promise<string>,
-  graphql: ReturnType<typeof useSession>["graphql"],
+  reads: ReturnType<typeof useSession>["reads"],
 ): Promise<PublicStore> {
   try {
     const res = await fetch(`${appConfig.apiBaseUrl}/api/v1/stores/${myStore.id}/storefront?view=store`);
@@ -305,8 +305,8 @@ async function loadStore(
   } catch {
     // Read below.
   }
-  const result = await graphql.query(CheckoutSettingsQuery, { storeId: myStore.id }).toPromise();
-  const row = result.data?.storesCollection?.edges[0]?.node;
+  const settings = await reads.checkoutSettings(myStore.id);
+  const row = settings.storesCollection?.edges[0]?.node;
   if (!row) throw new Error("store not readable");
   return {
     id: myStore.id,
@@ -329,7 +329,7 @@ type Loaded =
   | { kind: "ready"; admin: AdminState; store: PublicStore };
 
 function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => void }) {
-  const { api, graphql } = useSession();
+  const { api, reads } = useSession();
   const signOut = useSignOut();
   const [state, setState] = useState<Loaded>({ kind: "loading" });
 
@@ -342,7 +342,7 @@ function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => 
         const storeCard = loadStore(
           myStore,
           adminState.then((a) => a?.storeStatus ?? "active"),
-          graphql,
+          reads,
         );
         storeCard.catch(() => {}); // awaited below only when the admin state allows it
         const admin = await adminState;
@@ -359,7 +359,7 @@ function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => 
     return () => {
       cancelled = true;
     };
-  }, [api, graphql, myStore]);
+  }, [api, reads, myStore]);
 
   if (state.kind === "loading") return <Loading />;
   if (state.kind !== "ready") {

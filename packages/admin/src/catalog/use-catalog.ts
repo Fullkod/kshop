@@ -1,7 +1,7 @@
 "use client";
 
 import { hasMinRole, type AttributeInputType, type CurrencyCode } from "@kshop/core";
-import { ApiError, CatalogStructureQuery } from "@kshop/data";
+import { ApiError, asResult } from "@kshop/data";
 import { useCallback, useEffect, useState } from "react";
 import { useAdmin } from "../admin-context";
 import { useSession } from "../session";
@@ -78,85 +78,82 @@ export type CatalogStructure = {
 
 const nodes = <T>(c: { edges: { node: T }[] } | null | undefined): T[] => (c?.edges ?? []).map((e) => e.node);
 
-/** Loads the store's catalog structure (attributes, types, categories…) through pg_graphql. */
+/** Loads the store's catalog structure (attributes, types, categories…). */
 export function useCatalogStructure() {
   const store = useStore();
-  const { graphql } = useSession();
+  const { reads } = useSession();
   const [data, setData] = useState<CatalogStructure | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    graphql
-      .query(CatalogStructureQuery, { storeId: store.id })
-      .toPromise()
-      .then((result) => {
-        if (cancelled) return;
-        if (result.error || !result.data) {
-          setError("No se pudo cargar el catálogo.");
-          return;
-        }
-        setError(null);
-        const d = result.data;
-        setData({
-          attributes: nodes(d.attributesCollection).map((a) => ({
-            id: a.id,
-            name: a.name,
-            slug: a.slug,
-            inputType: a.inputType as AttributeInputType,
-            unit: a.unit ?? null,
-            valueRequired: a.valueRequired,
-            visibleInStorefront: a.visibleInStorefront,
-            filterableInStorefront: a.filterableInStorefront,
-            values: nodes(a.attributeValuesCollection).map((v) => ({ ...v, value: v.value ?? null })),
+    asResult(reads.catalogStructure(store.id)).then((result) => {
+      if (cancelled) return;
+      if (result.error || !result.data) {
+        setError("No se pudo cargar el catálogo.");
+        return;
+      }
+      setError(null);
+      const d = result.data;
+      setData({
+        attributes: nodes(d.attributesCollection).map((a) => ({
+          id: a.id,
+          name: a.name,
+          slug: a.slug,
+          inputType: a.inputType as AttributeInputType,
+          unit: a.unit ?? null,
+          valueRequired: a.valueRequired,
+          visibleInStorefront: a.visibleInStorefront,
+          filterableInStorefront: a.filterableInStorefront,
+          values: nodes(a.attributeValuesCollection).map((v) => ({ ...v, value: v.value ?? null })),
+        })),
+        productTypes: nodes(d.productTypesCollection).map((t) => ({
+          id: t.id,
+          name: t.name,
+          slug: t.slug,
+          hasVariants: t.hasVariants,
+          isShippingRequired: t.isShippingRequired,
+          attributes: nodes(t.productTypeAttributesCollection).map((x) => ({
+            attributeId: x.attributeId,
+            scope: x.scope as "product" | "variant",
+            variantSelection: x.variantSelection,
           })),
-          productTypes: nodes(d.productTypesCollection).map((t) => ({
-            id: t.id,
-            name: t.name,
-            slug: t.slug,
-            hasVariants: t.hasVariants,
-            isShippingRequired: t.isShippingRequired,
-            attributes: nodes(t.productTypeAttributesCollection).map((x) => ({
-              attributeId: x.attributeId,
-              scope: x.scope as "product" | "variant",
-              variantSelection: x.variantSelection,
-            })),
-          })),
-          categories: nodes(d.categoriesCollection).map((c) => ({
-            ...c,
-            parentId: c.parentId ?? null,
-            description: c.description ?? null,
-            imageUrl: c.imageUrl ?? null,
-          })),
-          brands: nodes(d.brandsCollection).map((b) => ({
-            ...b,
-            description: b.description ?? null,
-            logoUrl: b.logoUrl ?? null,
-          })),
-          collections: nodes(d.collectionsCollection).map((c) => ({
-            ...c,
-            description: c.description ?? null,
-            imageUrl: c.imageUrl ?? null,
-          })),
-          warehouses: nodes(d.warehousesCollection).map((w) => ({
-            ...w,
-            address: w.address ?? null,
-            phone: w.phone ?? null,
-          })),
-          currencies: nodes(d.storeCurrenciesCollection).map((c) => ({
-            currency: c.currency as CurrencyCode,
-            isBase: c.isBase,
-            sells: c.sells,
-            rateToBase: Number(c.rateToBase),
-            rounding: c.rounding == null ? null : Number(c.rounding),
-          })),
-        });
+        })),
+        categories: nodes(d.categoriesCollection).map((c) => ({
+          ...c,
+          parentId: c.parentId ?? null,
+          description: c.description ?? null,
+          imageUrl: c.imageUrl ?? null,
+        })),
+        brands: nodes(d.brandsCollection).map((b) => ({
+          ...b,
+          description: b.description ?? null,
+          logoUrl: b.logoUrl ?? null,
+        })),
+        collections: nodes(d.collectionsCollection).map((c) => ({
+          ...c,
+          description: c.description ?? null,
+          imageUrl: c.imageUrl ?? null,
+        })),
+        warehouses: nodes(d.warehousesCollection).map((w) => ({
+          ...w,
+          address: w.address ?? null,
+          phone: w.phone ?? null,
+        })),
+        currencies: nodes(d.storeCurrenciesCollection).map((c) => ({
+          currency: c.currency as CurrencyCode,
+          isBase: c.isBase,
+          sells: c.sells,
+          rateToBase: Number(c.rateToBase),
+          rounding: c.rounding == null ? null : Number(c.rounding),
+        })),
       });
+    });
     return () => {
       cancelled = true;
     };
-  }, [graphql, store.id, version]);
+  }, [reads, store.id, version]);
 
   const reload = useCallback(() => setVersion((v) => v + 1), []);
   return { data, error, reload };

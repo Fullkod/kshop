@@ -338,8 +338,22 @@ WhatsApp queda en «Simulado» mientras dure R11 (decisión de Roberto, 2026-10-
   caché de pg_graphql de todas las conexiones. Medir con CTE `materialized` y `clock_timestamp()`.
 - **Error**: el volcado del esquema desde el proyecto de prueba reordena cientos de líneas (otros OID):
   `db:graphql-schema` va siempre a producción.
-- **Pendiente** (si la medición lo pide): Catálogo (CatalogStructure, lista, ficha), Descuentos y Apariencia siguen en
-  pg_graphql; son vistas de uso menos diario.
+- ~~Pendiente: Catálogo, Descuentos y Apariencia siguen en pg_graphql~~ → hecho, ver abajo.
+
+### 2026-10-28: Todo el admin fuera de pg_graphql (decisión de Roberto)
+- `20261108100500_admin_reads_all.sql`: `admin_customers`, `admin_catalog_structure`, `admin_products`,
+  `admin_variant_search`, `admin_product`, `admin_promotions`, `admin_vouchers`, `admin_discount_targets`,
+  `admin_content`, `admin_notification_settings`; `admin_orders` rehecha con búsqueda «número O nombre O teléfono»
+  para Ctrl K. Comparador 35/35 idénticos con la Demo (incluye la paginación por `id` de `adminSearchProducts`: pg_graphql
+  pagina una función por clave primaria, no por su `order by`). Test 16 (7 checks); RLS 661/661 en prueba y producción.
+- La sesión del admin ya no crea cliente `graphql`; `asResult()` da `{ data, error }` como urql para no tocar el manejo
+  de errores de cada pantalla. En el navegador (web local con datos de producción): 37 vistas, 0 peticiones a
+  pg_graphql, 0 fallos; Ctrl K (pedido 1168 y productos), búsqueda de «Nuevo pedido» con variantes.
+- **Error**: `select *` sobre `product_media` falla como `authenticated` (permiso por columna, `source_url` oculto).
+  Se corrigió en el archivo de la migración (recién aplicada, sin uso) y se reaplicó solo esa función en los dos
+  proyectos.
+- El aviso de Next en desarrollo «Could not validate that a segment… instant navigation» sale en todas las vistas desde
+  antes de R11: no es de este cambio.
 
 ---
 

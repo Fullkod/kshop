@@ -16,7 +16,7 @@ import {
   type ProductInput,
   type ProductStatus,
 } from "@kshop/core";
-import { ProductDetailQuery, type ProductMedia, type ResultOf } from "@kshop/data";
+import { asResult, type ProductDetailQuery, type ProductMedia, type ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, Card, FieldError, Input, Label, Select } from "@kshop/ui";
 import { useEffect, useMemo, useState } from "react";
 import { uploadProductImage } from "../images";
@@ -204,7 +204,7 @@ const num = (v: string) => (v.trim() === "" ? undefined : Number(v.replace(",", 
 export function ProductEditor({ productId }: { productId?: string }) {
   const store = useStore();
   const router = useRouter();
-  const { graphql, supabase, config } = useSession();
+  const { reads, supabase, config } = useSession();
   const { data: structure, error: structureError, reload: reloadStructure } = useCatalogStructure();
   const { catalog, seesCosts, canDelete, has } = useCatalogApi();
   const action = useApiAction();
@@ -225,23 +225,20 @@ export function ProductEditor({ productId }: { productId?: string }) {
   useEffect(() => {
     if (!productId) return;
     let cancelled = false;
-    graphql
-      .query(ProductDetailQuery, { id: productId })
-      .toPromise()
-      .then((result) => {
-        if (cancelled) return;
-        const p = result.data?.productsCollection?.edges[0]?.node;
-        if (result.error) setProductError("No se pudo cargar el producto.");
-        else if (!p) setProductError("Producto no encontrado.");
-        else {
-          setProductError(null);
-          setFetched(p);
-        }
-      });
+    asResult(reads.product(productId)).then((result) => {
+      if (cancelled) return;
+      const p = result.data?.productsCollection?.edges[0]?.node;
+      if (result.error) setProductError("No se pudo cargar el producto.");
+      else if (!p) setProductError("Producto no encontrado.");
+      else {
+        setProductError(null);
+        setFetched(p);
+      }
+    });
     return () => {
       cancelled = true;
     };
-  }, [productId, graphql, productVersion]);
+  }, [productId, reads, productVersion]);
 
   // The saved product as a form, once the structure and the product are both in; edits live in loadedForm.
   const initial = useMemo(

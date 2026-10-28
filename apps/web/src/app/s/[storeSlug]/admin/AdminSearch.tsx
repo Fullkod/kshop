@@ -1,7 +1,7 @@
 "use client";
 
 import { formatMoney, ORDER_STATUS_LABELS, type CurrencyCode, type OrderStatus } from "@kshop/core";
-import { AdminCustomersQuery, AdminOrdersQuery, AdminProductsQuery, type VariablesOf } from "@kshop/data";
+import { asResult } from "@kshop/data";
 import { cn, type LucideIcon, Package, Search, ShoppingBag, UserRound, X } from "@kshop/ui";
 import { useStore } from "@kshop/storefront";
 import { useRouter } from "next/navigation";
@@ -27,7 +27,7 @@ export function AdminSearch({
   catalog: boolean;
 }) {
   const store = useStore();
-  const { graphql } = useSession();
+  const { reads } = useSession();
   const router = useRouter();
   const desktopInput = useRef<HTMLInputElement>(null);
   const phoneInput = useRef<HTMLInputElement>(null);
@@ -75,28 +75,25 @@ export function AdminSearch({
       const digits = q.replace(/\D/g, "");
       // «DM-1151» or «1151», as in the order list.
       const number = q.replace(/^[A-Z0-9]+-/i, "");
-      const orderFilter: VariablesOf<typeof AdminOrdersQuery>["filter"] = {
-        storeId: { eq: store.id },
-        or: [
-          ...(/^\d{1,9}$/.test(number) ? [{ number: { eq: Number(number) } }] : []),
-          { customerName: { ilike: `%${q}%` } },
-          ...(digits.length >= 3 ? [{ customerPhone: { ilike: `%${digits}%` } }] : []),
-        ],
-      };
-      const customerFilter: VariablesOf<typeof AdminCustomersQuery>["filter"] = {
-        storeId: { eq: store.id },
-        or: [
-          { firstName: { ilike: `%${q}%` } },
-          { lastName: { ilike: `%${q}%` } },
-          ...(digits.length >= 3 ? [{ phone: { ilike: `%${digits}%` } }] : []),
-        ],
-      };
+      const phone = digits.length >= 3 ? `%${digits}%` : undefined;
       const [o, p, c] = await Promise.all([
-        orders ? graphql.query(AdminOrdersQuery, { filter: orderFilter, first: 5 }).toPromise() : null,
-        catalog
-          ? graphql.query(AdminProductsQuery, { storeId: store.id, query: q, first: 5 }).toPromise()
+        orders
+          ? asResult(
+              reads.orders({
+                storeId: store.id,
+                first: 5,
+                search: {
+                  name: `%${q}%`,
+                  phone,
+                  number: /^\d{1,9}$/.test(number) ? Number(number) : undefined,
+                },
+              }),
+            )
           : null,
-        orders ? graphql.query(AdminCustomersQuery, { filter: customerFilter, first: 4 }).toPromise() : null,
+        catalog ? asResult(reads.products({ storeId: store.id, query: q, first: 5 })) : null,
+        orders
+          ? asResult(reads.customers({ storeId: store.id, first: 4, search: { name: `%${q}%`, phone } }))
+          : null,
       ]);
       if (cancelled) return;
       const results: Result[] = [
@@ -139,7 +136,7 @@ export function AdminSearch({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [q, graphql, store.id, orders, catalog]);
+  }, [q, reads, store.id, orders, catalog]);
 
   const results = q ? [...sectionHits, ...(found.query === q ? found.results : [])] : [];
   const searching = q.length >= 2 && found.query !== q;

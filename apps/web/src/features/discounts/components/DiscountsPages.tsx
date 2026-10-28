@@ -16,12 +16,7 @@ import {
   type VoucherInput,
   type VoucherScope,
 } from "@kshop/core";
-import {
-  AdminPromotionsQuery,
-  AdminVouchersQuery,
-  DiscountTargetsQuery,
-  OrderVariantSearchQuery,
-} from "@kshop/data";
+import { asResult } from "@kshop/data";
 import { Alert, Badge, Button, Card, cn, FieldError, Input, Label, Select } from "@kshop/ui";
 import Link from "next/link";
 import { useStorePathname } from "@/lib/navigation";
@@ -123,7 +118,10 @@ export function DiscountsNav() {
   const sections = SECTIONS.filter((s) => admin.enabledModules.has(s.module));
   if (sections.length < 2) return null;
   return (
-    <nav className="mb-6 flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none]" aria-label="Secciones de descuentos">
+    <nav
+      className="mb-6 flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none]"
+      aria-label="Secciones de descuentos"
+    >
       {sections.map((s) => (
         <Link
           key={s.href}
@@ -166,12 +164,10 @@ function useQueryData<T>(load: () => Promise<T | null>, deps: unknown[]) {
 /** Names of categories, collections, brands and the chosen products (for the target chips and pickers). */
 function useTargetNames(productIds: string[]) {
   const store = useStore();
-  const { graphql } = useSession();
+  const { reads } = useSession();
   const key = [...new Set(productIds)].sort().join(",");
   const { data } = useQueryData(async () => {
-    const r = await graphql
-      .query(DiscountTargetsQuery, { storeId: store.id, productIds: key ? key.split(",") : [] })
-      .toPromise();
+    const r = await asResult(reads.discountTargets(store.id, key ? key.split(",") : []));
     if (r.error || !r.data) return null;
     return {
       category: nodes(r.data.categoriesCollection).map((c) => ({
@@ -182,7 +178,7 @@ function useTargetNames(productIds: string[]) {
       brand: nodes(r.data.brandsCollection),
       product: nodes(r.data.productsCollection),
     };
-  }, [graphql, store.id, key]);
+  }, [reads, store.id, key]);
   return data;
 }
 
@@ -208,7 +204,7 @@ function TargetPicker({
   names: TargetNames | null;
 }) {
   const store = useStore();
-  const { graphql } = useSession();
+  const { reads } = useSession();
   const [type, setType] = useState<Exclude<DiscountTarget, "variant">>("category");
   const [query, setQuery] = useState("");
   const [found, setFound] = useState<{ id: string; name: string }[]>([]);
@@ -220,14 +216,14 @@ function TargetPicker({
     if (type !== "product" || q.length < 2) return;
     let cancelled = false;
     const timer = setTimeout(async () => {
-      const r = await graphql.query(OrderVariantSearchQuery, { storeId: store.id, query: q }).toPromise();
+      const r = await asResult(reads.variantSearch(store.id, q));
       if (!cancelled) setFound(nodes(r.data?.adminSearchProducts).map((p) => ({ id: p.id, name: p.name })));
     }, 250);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [graphql, store.id, query, type]);
+  }, [reads, store.id, query, type]);
 
   const options = type === "product" ? [] : (names?.[type] ?? []);
   return (
@@ -405,13 +401,13 @@ const formNumber = (data: FormData, name: string) =>
 
 export function PromotionsPage() {
   const store = useStore();
-  const { graphql, api } = useSession();
+  const { reads, api } = useSession();
   const { data: settings } = useCheckoutSettings();
   const action = useApiAction();
   const canEdit = useCanEdit();
   const [editing, setEditing] = useState<Promotion | "new" | null>(null);
   const { data, error, reload } = useQueryData<Promotion[]>(async () => {
-    const r = await graphql.query(AdminPromotionsQuery, { storeId: store.id }).toPromise();
+    const r = await asResult(reads.promotions(store.id));
     if (r.error || !r.data) return null;
     return nodes(r.data.promotionsCollection).map((p) => ({
       id: p.id,
@@ -425,7 +421,7 @@ export function PromotionsPage() {
       priority: p.priority,
       targets: targetsOf(p.promotionTargetsCollection),
     }));
-  }, [graphql, store.id]);
+  }, [reads, store.id]);
   const names = useTargetNames(
     (data ?? []).flatMap((p) => p.targets.filter((t) => t.type === "product").map((t) => t.id)),
   );
@@ -607,14 +603,14 @@ function PromotionForm({
 
 export function VouchersPage() {
   const store = useStore();
-  const { graphql, api } = useSession();
+  const { reads, api } = useSession();
   const { data: settings } = useCheckoutSettings();
   const action = useApiAction();
   const canEdit = useCanEdit();
   const [editing, setEditing] = useState<Voucher | "new" | null>(null);
   const [usagesOf, setUsagesOf] = useState<string | null>(null);
   const { data, error, reload } = useQueryData<Voucher[]>(async () => {
-    const r = await graphql.query(AdminVouchersQuery, { storeId: store.id }).toPromise();
+    const r = await asResult(reads.vouchers(store.id));
     if (r.error || !r.data) return null;
     return nodes(r.data.vouchersCollection).map((v) => ({
       id: v.id,
@@ -644,7 +640,7 @@ export function VouchersPage() {
           : null,
       })),
     }));
-  }, [graphql, store.id]);
+  }, [reads, store.id]);
   const names = useTargetNames(
     (data ?? []).flatMap((v) => v.targets.filter((t) => t.type === "product").map((t) => t.id)),
   );

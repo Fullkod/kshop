@@ -55,7 +55,7 @@
 | Apps móviles | `apps/store-app` (una por tienda) y `apps/admin-app`: **Vite + React + Capacitor** (se añaden en la Fase 7) |
 | Paquetes | `packages/ui` (shadcn/Tailwind, temas por tokens), `packages/core` (tipos, Zod, dinero/monedas, carrito, estados de orden), `packages/data` (cliente Supabase, documentos GraphQL + codegen, llamadas a la API) |
 | BD / Auth / Storage | **Supabase** (proyecto propio `siyiupetrjyzkumhdupy`, nunca el de klauShop; por ahora dev = prod) |
-| Lecturas | **pg_graphql** + urql + graphql-codegen; filtros facetados/búsqueda → funciones SQL |
+| Lecturas | **Admin (web y Kshop Admin): RPC** `public.admin_*` (`security invoker`, `jsonb` con la forma del documento GraphQL de `packages/data`, que queda como tipo) por `reads` de la sesión (`createAdminReads`); **nunca pg_graphql en el admin** (R11, 2026-10-28: su primera consulta por conexión reconstruye el esquema, ~250 ms de CPU, segundos en la Nano). Cada RPC nueva se compara con `scripts/compare-admin-reads.mjs` y lleva test de aislamiento. **Tienda pública: pg_graphql** + urql + graphql-codegen tras la caché del servidor; filtros facetados/búsqueda → funciones SQL |
 | Escrituras críticas | Funciones SQL transaccionales (`for update` cuando toque) con `execute` solo para `service_role`, llamadas por RPC desde `/api/v1` |
 | Esquema | `supabase/migrations/*.sql` (SQL a mano, sin Drizzle) aplicadas con la Management API; tests de RLS en `supabase/tests/` |
 | Estilos | Tailwind v4 + componentes propios estilo shadcn en `@kshop/ui`; tokens de la marca (violeta #5B21B6, noche #24104F, dorado #F2B705; Outfit + DM Sans) |

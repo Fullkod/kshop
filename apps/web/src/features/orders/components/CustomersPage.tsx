@@ -1,7 +1,7 @@
 "use client";
 
 import { formatPhone, hasMinRole, whatsappLink } from "@kshop/core";
-import { AdminCustomersQuery, type RecoveryCodeResponse, type VariablesOf } from "@kshop/data";
+import { asResult, type RecoveryCodeResponse } from "@kshop/data";
 import { Alert, Badge, Button, Card, Input } from "@kshop/ui";
 import { useEffect, useState } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
@@ -24,7 +24,7 @@ type Row = {
 export function CustomersPage() {
   const store = useStore();
   const admin = useAdmin();
-  const { graphql, api } = useSession();
+  const { reads, api } = useSession();
   const action = useApiAction();
   const isAdmin = admin.role === null || hasMinRole(admin.role, "admin");
   const [query, setQuery] = useState("");
@@ -38,17 +38,10 @@ export function CustomersPage() {
     const timer = setTimeout(async () => {
       const q = query.trim();
       const digits = q.replace(/\D/g, "");
-      const filter: VariablesOf<typeof AdminCustomersQuery>["filter"] = {
-        storeId: { eq: store.id },
-        ...(q && {
-          or: [
-            { firstName: { ilike: `%${q}%` } },
-            { lastName: { ilike: `%${q}%` } },
-            ...(digits.length >= 3 ? [{ phone: { ilike: `%${digits}%` } }] : []),
-          ],
-        }),
-      };
-      const r = await graphql.query(AdminCustomersQuery, { filter, first: 50 }).toPromise();
+      const search = q
+        ? { name: `%${q}%`, phone: digits.length >= 3 ? `%${digits}%` : undefined }
+        : undefined;
+      const r = await asResult(reads.customers({ storeId: store.id, first: 50, search }));
       if (cancelled) return;
       setTotal(r.data?.customersCollection?.totalCount ?? 0);
       setRows(
@@ -68,7 +61,7 @@ export function CustomersPage() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [graphql, store.id, query, version]);
+  }, [reads, store.id, query, version]);
 
   async function toggleBlock(row: Row) {
     const ok = await action.run(() => api.customers(store.id).setBlocked(row.id, !row.isBlocked));

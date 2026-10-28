@@ -66,6 +66,13 @@ síntesis, 10 revisores que intentaron refutar cada causa: ninguna cayó). Infor
   `admin_order`, `admin_checkout_settings`, `admin_notification_log`, idénticas a pg_graphql:
   `scripts/compare-admin-reads.mjs`). Regla: una vista solo se libra del peaje si **no** le queda ninguna lectura
   pg_graphql. Nunca medir con DDL (tabla temporal): invalida la caché de pg_graphql de todos.
+- **Decisión de Roberto (2026-10-28): todo el admin fuera de pg_graphql.** 15 RPC `admin_*` (migraciones
+  20261108100400 y 20261108100500) con la forma exacta del documento GraphQL (35/35 idénticas en
+  `scripts/compare-admin-reads.mjs`, tests 15 y 16; RLS 661/661). La sesión del admin ya no tiene cliente `graphql`,
+  solo `reads`. pg_graphql queda para la tienda pública, tras la caché del servidor. Regla en `AGENTS.md` (Stack ›
+  Lecturas). Si un día nada lo usa, se puede quitar la extensión (decisión aparte).
+- Ojo al escribir una RPC: `product_media` (oculta `source_url`) y `stores` tienen permisos por columna para
+  `authenticated`: nada de `select *` sobre ellas.
 - (Antes) Falta: desplegar el código (permiso de Roberto) y medir en producción con `qa:admin-perf` (línea base
   `.titan/qa/r11-rendimiento-admin/perf-prod-antes.json`: mediana 4,4 s, p95 20,9 s).
 

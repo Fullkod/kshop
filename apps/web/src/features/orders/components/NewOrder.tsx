@@ -1,7 +1,7 @@
 "use client";
 
 import { formatMoney, formatPhone, normalizePhone, SHIPPING_TYPE_LABELS } from "@kshop/core";
-import { AdminCustomersQuery, OrderVariantSearchQuery } from "@kshop/data";
+import { asResult } from "@kshop/data";
 import { Alert, Button, Card, Input, Label, Select } from "@kshop/ui";
 import { useRouter } from "next/navigation";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
@@ -22,7 +22,7 @@ export function NewOrder() {
   const router = useRouter();
   const admin = useAdmin();
   const [manualReward, setManualReward] = useState<"" | "percent" | "fixed">("");
-  const { graphql, api } = useSession();
+  const { reads, api } = useSession();
   const { data: settings } = useCheckoutSettings();
   const action = useApiAction();
   const [query, setQuery] = useState("");
@@ -40,7 +40,7 @@ export function NewOrder() {
     if (q.length < 2) return;
     let cancelled = false;
     const timer = setTimeout(async () => {
-      const r = await graphql.query(OrderVariantSearchQuery, { storeId: store.id, query: q }).toPromise();
+      const r = await asResult(reads.variantSearch(store.id, q));
       if (cancelled) return;
       setResults(
         (r.data?.adminSearchProducts?.edges ?? []).flatMap(({ node: p }) =>
@@ -58,7 +58,7 @@ export function NewOrder() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [graphql, store.id, query]);
+  }, [reads, store.id, query]);
 
   // An account with that phone in this store can be linked to the order (so it shows in «Mis pedidos»).
   const normalized = normalizePhone(phone);
@@ -66,21 +66,14 @@ export function NewOrder() {
   useEffect(() => {
     if (!normalized) return;
     let cancelled = false;
-    graphql
-      .query(AdminCustomersQuery, {
-        filter: { storeId: { eq: store.id }, phone: { eq: normalized } },
-        first: 1,
-      })
-      .toPromise()
-      .then((r) => {
-        const c = r.data?.customersCollection?.edges[0]?.node;
-        if (!cancelled)
-          setCustomer(c ? { id: c.id, name: `${c.firstName} ${c.lastName ?? ""}`.trim() } : null);
-      });
+    asResult(reads.customers({ storeId: store.id, phone: normalized, first: 1 })).then((r) => {
+      const c = r.data?.customersCollection?.edges[0]?.node;
+      if (!cancelled) setCustomer(c ? { id: c.id, name: `${c.firstName} ${c.lastName ?? ""}`.trim() } : null);
+    });
     return () => {
       cancelled = true;
     };
-  }, [graphql, store.id, normalized]);
+  }, [reads, store.id, normalized]);
 
   const activeZones = settings?.zones.filter((z) => z.isActive) ?? [];
   const methods = useMemo(
