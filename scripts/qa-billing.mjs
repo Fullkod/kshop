@@ -25,8 +25,10 @@ for (const line of existsSync(join(root, ".env.local"))
 }
 
 const SLUG = "qa-billing";
-const BASE = `http://${SLUG}.kshop.localhost:3000`;
-const PLATFORM = env.QA_PLATFORM_URL ?? "http://kshop.localhost:3000";
+// QA_PORT: another port than pnpm dev's 3000 (start it with NEXT_PUBLIC_PLATFORM_DOMAIN=kshop.localhost:<port>).
+const PORT = env.QA_PORT ?? "3000";
+const BASE = `http://${SLUG}.kshop.localhost:${PORT}`;
+const PLATFORM = env.QA_PLATFORM_URL ?? `http://kshop.localhost:${PORT}`;
 const OUT = join(root, ".titan/qa/fase-5");
 const SUPER = { email: "qa-bill-super@e2e.kshop.test", password: randomBytes(12).toString("base64url") };
 const OWNER = { email: "qa-bill-owner@e2e.kshop.test", password: randomBytes(12).toString("base64url") };
@@ -207,7 +209,11 @@ try {
       ((await admin.getByTestId("nav-locked-multi_currency").getAttribute("title")) ?? "").includes("3 USD"),
   );
   await shot(admin, "06-admin-plan-facturacion-1280");
-  check("Base: «Apariencia» is locked in the menu", await admin.getByTestId("nav-locked-themes").isVisible());
+  // R12 D6: outside the plan, «Apariencia» is managed by the platform (badge «Admin»), not a PRO upsell.
+  check(
+    "Base: «Apariencia» is managed by the platform in the menu",
+    (await admin.getByTestId("nav-themes").innerText()).includes("Admin"),
+  );
   await admin.goto(`${BASE}/admin/themes`);
   await admin.getByText("la configura el equipo de Kshop").waitFor({ timeout: 15000 });
   check("Base: the look is set up by Kshop", true);
@@ -215,8 +221,10 @@ try {
 
   await admin.goto(`${BASE}/admin/team`);
   await admin.getByTestId("team-usage").waitFor({ timeout: 15000 });
+  // R13: the invitation opens in a dialog.
+  await admin.getByRole("button", { name: "Invitar persona" }).click();
   await admin.fill("#email", INVITED);
-  await admin.getByRole("button", { name: "Invitar" }).click();
+  await admin.getByRole("dialog").getByRole("button", { name: "Invitar", exact: true }).click();
   await admin.getByTestId("team-invited").waitFor({ timeout: 20000 });
   await admin.getByTestId(`member-${INVITED}`).waitFor({ timeout: 15000 });
   check(

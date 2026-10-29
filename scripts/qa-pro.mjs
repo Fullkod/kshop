@@ -27,7 +27,9 @@ for (const line of existsSync(join(root, ".env.local"))
 // A new subdomain per run: the store card is cached for minutes per slug, so reusing "qa-pro" right after deleting
 // it would show the previous store.
 const SLUG = `qa-pro-${Date.now().toString(36).slice(-5)}`;
-const BASE = `http://${SLUG}.kshop.localhost:3000`;
+// QA_PORT: another port than pnpm dev's 3000 (start it with NEXT_PUBLIC_PLATFORM_DOMAIN=kshop.localhost:<port>).
+const PORT = env.QA_PORT ?? "3000";
+const BASE = `http://${SLUG}.kshop.localhost:${PORT}`;
 const OUT = join(root, ".titan/qa/fase-6");
 const OWNER = { email: "qa-pro-owner@e2e.kshop.test", password: randomBytes(12).toString("base64url") };
 mkdirSync(OUT, { recursive: true });
@@ -357,9 +359,11 @@ try {
 
   await admin.getByRole("link", { name: "Gastos" }).click();
   await admin.getByTestId("expenses").getByText("Alquiler").waitFor({ timeout: 15000 });
+  // R13: the form opens in a dialog; its submit button has the same name as the one that opens it.
+  await admin.getByTestId("add-expense").click();
   await admin.fill("#expense-category", "Mensajería");
   await admin.fill("#expense-amount", "450");
-  await admin.getByRole("button", { name: "Añadir gasto" }).click();
+  await admin.getByRole("dialog").getByRole("button", { name: "Añadir gasto" }).click();
   await admin.getByTestId("expenses").getByText("Mensajería").waitFor({ timeout: 15000 });
   check(
     "expenses: added from the form",
@@ -393,17 +397,21 @@ try {
     (await admin.getByTestId("custom-domain").innerText()).includes("Activo"),
   );
   await shot(admin, "12-dominio-activo-1280");
-  await phone.goto(`http://${DOMAIN}:3000/`);
+  await phone.goto(`http://${DOMAIN}:${PORT}/`);
   await phone.getByText("QA Pro").first().waitFor({ timeout: 30000 });
   check(
     "domain: the store is served on its domain",
-    new URL(phone.url()).host === `${DOMAIN}:3000`,
+    new URL(phone.url()).host === `${DOMAIN}:${PORT}`,
     phone.url(),
   );
   await shot(phone, "13-tienda-en-su-dominio-390");
   await phone.goto(`${BASE}/`);
   await phone.waitForLoadState("domcontentloaded");
-  check("domain: the subdomain redirects to it", new URL(phone.url()).host === `${DOMAIN}:3000`, phone.url());
+  check(
+    "domain: the subdomain redirects to it",
+    new URL(phone.url()).host === `${DOMAIN}:${PORT}`,
+    phone.url(),
+  );
 
   if (errors.length) writeFileSync(join(OUT, "console-errors.txt"), errors.join("\n\n"));
   check("no console errors", errors.length === 0, errors.map((e) => e.slice(0, 300)).join(" | "));

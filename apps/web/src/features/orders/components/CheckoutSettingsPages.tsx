@@ -9,7 +9,7 @@ import {
   type CurrencyCode,
   type ShippingType,
 } from "@kshop/core";
-import { Alert, Badge, Button, Card, FieldError, Input, Label, Select } from "@kshop/ui";
+import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label, Select } from "@kshop/ui";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useApiAction } from "@/features/catalog/use-catalog";
@@ -87,7 +87,7 @@ export function ShippingPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      {action.error && <Alert variant="destructive">{action.error}</Alert>}
+      {action.error && !editingZone && !editingMethod && <Alert variant="destructive">{action.error}</Alert>}
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div>
@@ -98,22 +98,33 @@ export function ShippingPage() {
           </div>
           {canEdit && <Button onClick={() => setEditingZone("new")}>Nueva zona</Button>}
         </div>
-        {editingZone && (
-          <ZoneForm
-            zone={editingZone === "new" ? null : editingZone}
-            onCancel={() => setEditingZone(null)}
-            onSave={async (input, id) => {
-              const ok = await action.run(() =>
-                id ? settings.update("zones", id, input) : settings.create("zones", input),
-              );
-              if (ok) {
-                setEditingZone(null);
-                reload();
-              }
-            }}
-            fieldErrors={action.fieldErrors}
-          />
-        )}
+        <Dialog
+          open={Boolean(editingZone)}
+          onClose={() => setEditingZone(null)}
+          title={editingZone === "new" ? "Nueva zona" : `Editar «${editingZone ? editingZone.name : ""}»`}
+        >
+          {action.error && (
+            <Alert variant="destructive" className="mb-4">
+              {action.error}
+            </Alert>
+          )}
+          {editingZone && (
+            <ZoneForm
+              zone={editingZone === "new" ? null : editingZone}
+              onCancel={() => setEditingZone(null)}
+              onSave={async (input, id) => {
+                const ok = await action.run(() =>
+                  id ? settings.update("zones", id, input) : settings.create("zones", input),
+                );
+                if (ok) {
+                  setEditingZone(null);
+                  reload();
+                }
+              }}
+              fieldErrors={action.fieldErrors}
+            />
+          )}
+        </Dialog>
         <Card className="p-0">
           <ul className="divide-y">
             {data.zones.length === 0 && (
@@ -143,25 +154,40 @@ export function ShippingPage() {
           </div>
           {canEdit && <Button onClick={() => setEditingMethod("new")}>Nuevo método</Button>}
         </div>
-        {editingMethod && (
-          <MethodForm
-            method={editingMethod === "new" ? null : editingMethod}
-            zones={data.zones}
-            pickupPoints={pickupPoints}
-            currency={data.baseCurrency}
-            fieldErrors={action.fieldErrors}
-            onCancel={() => setEditingMethod(null)}
-            onSave={async (input, id) => {
-              const ok = await action.run(() =>
-                id ? settings.update("methods", id, input) : settings.create("methods", input),
-              );
-              if (ok) {
-                setEditingMethod(null);
-                reload();
-              }
-            }}
-          />
-        )}
+        <Dialog
+          open={Boolean(editingMethod)}
+          onClose={() => setEditingMethod(null)}
+          title={
+            editingMethod === "new"
+              ? "Nuevo método de entrega"
+              : `Editar «${editingMethod ? editingMethod.name : ""}»`
+          }
+        >
+          {action.error && (
+            <Alert variant="destructive" className="mb-4">
+              {action.error}
+            </Alert>
+          )}
+          {editingMethod && (
+            <MethodForm
+              method={editingMethod === "new" ? null : editingMethod}
+              zones={data.zones}
+              pickupPoints={pickupPoints}
+              currency={data.baseCurrency}
+              fieldErrors={action.fieldErrors}
+              onCancel={() => setEditingMethod(null)}
+              onSave={async (input, id) => {
+                const ok = await action.run(() =>
+                  id ? settings.update("methods", id, input) : settings.create("methods", input),
+                );
+                if (ok) {
+                  setEditingMethod(null);
+                  reload();
+                }
+              }}
+            />
+          )}
+        </Dialog>
         <Card className="p-0">
           <ul className="divide-y">
             {data.methods.length === 0 && (
@@ -227,28 +253,26 @@ function ZoneForm({
     );
   }
   return (
-    <Card>
-      <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="zone-name">Nombre</Label>
-          <Input id="zone-name" name="name" defaultValue={zone?.name} required />
-          <FieldError>{fieldErrors.name}</FieldError>
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="zone-description">Descripción (opcional)</Label>
-          <Input id="zone-description" name="description" defaultValue={zone?.description ?? ""} />
-        </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="isActive" defaultChecked={zone?.isActive ?? true} /> Activa
-        </label>
-        <div className="flex gap-2 sm:col-span-2">
-          <Button type="submit">Guardar</Button>
-          <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancelar
-          </Button>
-        </div>
-      </form>
-    </Card>
+    <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="zone-name">Nombre</Label>
+        <Input id="zone-name" name="name" defaultValue={zone?.name} required />
+        <FieldError>{fieldErrors.name}</FieldError>
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="zone-description">Descripción (opcional)</Label>
+        <Input id="zone-description" name="description" defaultValue={zone?.description ?? ""} />
+      </div>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="isActive" defaultChecked={zone?.isActive ?? true} /> Activa
+      </label>
+      <div className="flex gap-2 sm:col-span-2">
+        <Button type="submit">Guardar</Button>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancelar
+        </Button>
+      </div>
+    </form>
   );
 }
 
@@ -306,100 +330,98 @@ function MethodForm({
   }
 
   return (
-    <Card>
-      <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
+    <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="m-type">Tipo</Label>
+        <Select id="m-type" value={type} onChange={(e) => setType(e.target.value as ShippingType)}>
+          {SHIPPING_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {SHIPPING_TYPE_LABELS[t]}
+            </option>
+          ))}
+        </Select>
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="m-name">Nombre</Label>
+        <Input id="m-name" name="name" defaultValue={method?.name} required />
+        <FieldError>{fieldErrors.name}</FieldError>
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="m-zone">Zona</Label>
+        <Select id="m-zone" name="zoneId" defaultValue={method?.zoneId ?? ""}>
+          <option value="">Todas las zonas</option>
+          {zones.map((z) => (
+            <option key={z.id} value={z.id}>
+              {z.name}
+            </option>
+          ))}
+        </Select>
+      </div>
+      {type === "pickup" && (
         <div className="flex flex-col gap-1">
-          <Label htmlFor="m-type">Tipo</Label>
-          <Select id="m-type" value={type} onChange={(e) => setType(e.target.value as ShippingType)}>
-            {SHIPPING_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {SHIPPING_TYPE_LABELS[t]}
+          <Label htmlFor="m-warehouse">Punto de recogida</Label>
+          <Select id="m-warehouse" name="warehouseId" defaultValue={method?.warehouseId ?? ""}>
+            <option value="">Elige…</option>
+            {pickupPoints.map((w) => (
+              <option key={w.id} value={w.id}>
+                {w.name}
               </option>
             ))}
           </Select>
+          <FieldError>{fieldErrors.warehouseId}</FieldError>
         </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="m-name">Nombre</Label>
-          <Input id="m-name" name="name" defaultValue={method?.name} required />
-          <FieldError>{fieldErrors.name}</FieldError>
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="m-zone">Zona</Label>
-          <Select id="m-zone" name="zoneId" defaultValue={method?.zoneId ?? ""}>
-            <option value="">Todas las zonas</option>
-            {zones.map((z) => (
-              <option key={z.id} value={z.id}>
-                {z.name}
-              </option>
-            ))}
-          </Select>
-        </div>
-        {type === "pickup" && (
+      )}
+      {type !== "to_agree" && (
+        <>
           <div className="flex flex-col gap-1">
-            <Label htmlFor="m-warehouse">Punto de recogida</Label>
-            <Select id="m-warehouse" name="warehouseId" defaultValue={method?.warehouseId ?? ""}>
-              <option value="">Elige…</option>
-              {pickupPoints.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name}
-                </option>
-              ))}
-            </Select>
-            <FieldError>{fieldErrors.warehouseId}</FieldError>
+            <Label htmlFor="m-price">Precio ({currency})</Label>
+            <Input id="m-price" name="price" inputMode="decimal" defaultValue={method?.price ?? 0} />
+            <FieldError>{fieldErrors.price}</FieldError>
           </div>
-        )}
-        {type !== "to_agree" && (
-          <>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="m-price">Precio ({currency})</Label>
-              <Input id="m-price" name="price" inputMode="decimal" defaultValue={method?.price ?? 0} />
-              <FieldError>{fieldErrors.price}</FieldError>
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="m-free">Gratis desde ({currency}, opcional)</Label>
-              <Input
-                id="m-free"
-                name="freeOverSubtotal"
-                inputMode="decimal"
-                defaultValue={method?.freeOverSubtotal ?? ""}
-              />
-            </div>
-          </>
-        )}
-        <div className="flex gap-3">
           <div className="flex flex-col gap-1">
-            <Label htmlFor="m-min">Días mín.</Label>
+            <Label htmlFor="m-free">Gratis desde ({currency}, opcional)</Label>
             <Input
-              id="m-min"
-              name="minDays"
-              inputMode="numeric"
-              defaultValue={method?.minDays ?? ""}
-              className="w-24"
+              id="m-free"
+              name="freeOverSubtotal"
+              inputMode="decimal"
+              defaultValue={method?.freeOverSubtotal ?? ""}
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="m-max">Días máx.</Label>
-            <Input
-              id="m-max"
-              name="maxDays"
-              inputMode="numeric"
-              defaultValue={method?.maxDays ?? ""}
-              className="w-24"
-            />
-            <FieldError>{fieldErrors.maxDays}</FieldError>
-          </div>
+        </>
+      )}
+      <div className="flex gap-3">
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="m-min">Días mín.</Label>
+          <Input
+            id="m-min"
+            name="minDays"
+            inputMode="numeric"
+            defaultValue={method?.minDays ?? ""}
+            className="w-24"
+          />
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="isActive" defaultChecked={method?.isActive ?? true} /> Activo
-        </label>
-        <div className="flex gap-2 sm:col-span-2">
-          <Button type="submit">Guardar</Button>
-          <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancelar
-          </Button>
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="m-max">Días máx.</Label>
+          <Input
+            id="m-max"
+            name="maxDays"
+            inputMode="numeric"
+            defaultValue={method?.maxDays ?? ""}
+            className="w-24"
+          />
+          <FieldError>{fieldErrors.maxDays}</FieldError>
         </div>
-      </form>
-    </Card>
+      </div>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="isActive" defaultChecked={method?.isActive ?? true} /> Activo
+      </label>
+      <div className="flex gap-2 sm:col-span-2">
+        <Button type="submit">Guardar</Button>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancelar
+        </Button>
+      </div>
+    </form>
   );
 }
 
@@ -446,9 +468,18 @@ export function PaymentMethodsPage() {
         </p>
         {canEdit && <Button onClick={() => setEditing("new")}>Nuevo método</Button>}
       </div>
-      {action.error && <Alert variant="destructive">{action.error}</Alert>}
-      {editing && (
-        <Card>
+      {action.error && !editing && <Alert variant="destructive">{action.error}</Alert>}
+      <Dialog
+        open={Boolean(editing)}
+        onClose={() => setEditing(null)}
+        title={current ? `Editar «${current.name}»` : "Nuevo método de pago"}
+      >
+        {action.error && (
+          <Alert variant="destructive" className="mb-4">
+            {action.error}
+          </Alert>
+        )}
+        {editing && (
           <form key={current?.id ?? "new"} onSubmit={onSubmit} className="flex flex-col gap-3">
             <div className="flex flex-col gap-1">
               <Label htmlFor="p-name">Nombre</Label>
@@ -488,8 +519,8 @@ export function PaymentMethodsPage() {
               </Button>
             </div>
           </form>
-        </Card>
-      )}
+        )}
+      </Dialog>
       <Card className="p-0">
         <ul className="divide-y">
           {data.paymentMethods.length === 0 && (

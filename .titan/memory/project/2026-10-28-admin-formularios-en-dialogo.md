@@ -14,4 +14,7 @@ Roberto no quiere que los formularios de crear/editar del admin salgan en la mis
   el tema oscuro. Se migra pantalla por pantalla sin tocar su lógica.
 
 ## Estado
-- Pendiente: PRP propio **R13** (después o aparte de R12, el panel del superadmin v3). Aún sin escribir.
+- **Hecho (R13, 2026-10-28)**, sin desplegar. `Dialog` en `packages/ui/src/dialog.tsx` (`<dialog>` nativo, `showModal`,
+  hoja a pantalla completa < 640 px, no se cierra al pulsar fuera para no perder un formulario a medias). 17 pantallas;
+  QA `pnpm qa:dialogs` (capturas en `.titan/qa/r13-dialogos/`). PRP: `.titan/plans/prp-r13-formularios-en-dialogo.md`.
+- **Regla para pantallas nuevas del admin:** crear/editar corto → `Dialog` de `@kshop/ui`; largo (producto, pedido) → página.

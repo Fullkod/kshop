@@ -2,7 +2,7 @@
 
 import { ROLE_LABELS, type StoreRole } from "@kshop/core";
 import { ApiError, type TeamInviteResponse, type TeamResponse } from "@kshop/data";
-import { Alert, Button, Card, FieldError, Input, Label, Select } from "@kshop/ui";
+import { Alert, Button, Card, Dialog, FieldError, Input, Label, Select } from "@kshop/ui";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { formatDate } from "@/lib/format";
 import { useSession } from "@/lib/session";
@@ -22,6 +22,7 @@ export default function TeamPage() {
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, string>>({});
   const [pending, setPending] = useState(false);
+  const [inviting, setInviting] = useState(false);
   const isOwner = admin.role === "owner" || (admin.isSuperadmin && admin.role === null);
 
   const load = useCallback(() => api.team(store.id).list(), [api, store.id]);
@@ -67,6 +68,7 @@ export default function TeamPage() {
       });
       setInvited(result);
       element.reset();
+      setInviting(false);
     });
   }
 
@@ -89,15 +91,72 @@ export default function TeamPage() {
 
   return (
     <div className="flex max-w-4xl flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Equipo</h1>
-        <p className="text-sm text-muted-foreground" data-testid="team-usage">
-          {data.usage.limit == null
-            ? `${data.usage.used} personas además del dueño.`
-            : `${data.usage.used} de ${data.usage.limit} personas permitidas por tu plan (sin contar al dueño).`}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">Equipo</h1>
+          <p className="text-sm text-muted-foreground" data-testid="team-usage">
+            {data.usage.limit == null
+              ? `${data.usage.used} personas además del dueño.`
+              : `${data.usage.used} de ${data.usage.limit} personas permitidas por tu plan (sin contar al dueño).`}
+          </p>
+        </div>
+        {!full && (
+          <Button
+            onClick={() => {
+              setError(null);
+              setFields({});
+              setInviting(true);
+            }}
+          >
+            Invitar persona
+          </Button>
+        )}
       </div>
-      {error && <Alert variant="destructive">{error}</Alert>}
+      {error && !inviting && <Alert variant="destructive">{error}</Alert>}
+      {full && (
+        <Alert data-testid="team-full">
+          Tu plan permite {data.usage.limit} {data.usage.limit === 1 ? "persona" : "personas"} de equipo. Para
+          añadir más, mejora el plan en «Plan y facturación».
+        </Alert>
+      )}
+      {invited && whatsapp && (
+        <Alert variant="success" data-testid="team-invited">
+          {invited.member.email} ya es del equipo. Envíale el enlace de acceso (vale una sola vez):{" "}
+          <a href={whatsapp} target="_blank" rel="noreferrer" className="font-medium underline">
+            enviar por WhatsApp
+          </a>
+          .
+        </Alert>
+      )}
+      <Dialog open={inviting} onClose={() => setInviting(false)} title="Invitar al equipo">
+        <form onSubmit={onInvite} className="grid gap-3 sm:grid-cols-2">
+          <div className="flex flex-col gap-1 sm:col-span-2">
+            <Label htmlFor="email">Email de la persona</Label>
+            <Input id="email" name="email" type="email" required autoComplete="off" />
+            <FieldError>{fields.email}</FieldError>
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="role">Rol</Label>
+            <Select id="role" name="role" defaultValue="staff">
+              <option value="staff">{ROLE_LABELS.staff}</option>
+              {isOwner && <option value="admin">{ROLE_LABELS.admin}</option>}
+            </Select>
+          </div>
+          {error && (
+            <Alert variant="destructive" className="sm:col-span-2">
+              {error}
+            </Alert>
+          )}
+          <div className="flex gap-2 sm:col-span-2">
+            <Button type="submit" disabled={pending}>
+              Invitar
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setInviting(false)}>
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      </Dialog>
 
       <Card className="overflow-x-auto p-0">
         <table className="w-full text-left text-sm">
@@ -152,42 +211,6 @@ export default function TeamPage() {
             ))}
           </tbody>
         </table>
-      </Card>
-
-      <Card>
-        {full ? (
-          <p className="text-sm" data-testid="team-full">
-            Tu plan permite {data.usage.limit} {data.usage.limit === 1 ? "persona" : "personas"} de equipo.
-            Para añadir más, mejora el plan en «Plan y facturación».
-          </p>
-        ) : (
-          <form onSubmit={onInvite} className="grid gap-3 sm:grid-cols-[1fr_160px_auto]">
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="email">Email de la persona</Label>
-              <Input id="email" name="email" type="email" required autoComplete="off" />
-              <FieldError>{fields.email}</FieldError>
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="role">Rol</Label>
-              <Select id="role" name="role" defaultValue="staff">
-                <option value="staff">{ROLE_LABELS.staff}</option>
-                {isOwner && <option value="admin">{ROLE_LABELS.admin}</option>}
-              </Select>
-            </div>
-            <Button type="submit" className="self-end" disabled={pending}>
-              Invitar
-            </Button>
-          </form>
-        )}
-        {invited && whatsapp && (
-          <Alert variant="success" className="mt-4" data-testid="team-invited">
-            {invited.member.email} ya es del equipo. Envíale el enlace de acceso (vale una sola vez):{" "}
-            <a href={whatsapp} target="_blank" rel="noreferrer" className="font-medium underline">
-              enviar por WhatsApp
-            </a>
-            .
-          </Alert>
-        )}
       </Card>
     </div>
   );

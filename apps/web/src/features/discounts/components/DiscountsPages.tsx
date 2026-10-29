@@ -17,7 +17,7 @@ import {
   type VoucherScope,
 } from "@kshop/core";
 import { asResult } from "@kshop/data";
-import { Alert, Badge, Button, Card, cn, FieldError, Input, Label, Select } from "@kshop/ui";
+import { Alert, Badge, Button, Card, cn, Dialog, FieldError, Input, Label, Select } from "@kshop/ui";
 import Link from "next/link";
 import { useStorePathname } from "@/lib/navigation";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
@@ -438,28 +438,40 @@ export function PromotionsPage() {
           Rebajas automáticas: la tienda muestra el precio tachado y la etiqueta. Si a un producto le tocan
           varias, se aplica la que deja el precio más bajo.
         </p>
-        {canEdit && !editing && <Button onClick={() => setEditing("new")}>Nueva promoción</Button>}
+        {canEdit && <Button onClick={() => setEditing("new")}>Nueva promoción</Button>}
       </div>
-      {action.error && <Alert variant="destructive">{action.error}</Alert>}
-      {editing && (
-        <PromotionForm
-          promotion={editing === "new" ? null : editing}
-          currency={currency}
-          names={names}
-          errors={action.fieldErrors}
-          pending={action.pending}
-          onCancel={() => setEditing(null)}
-          onSave={async (input, id) => {
-            const ok = await action.run(() =>
-              id ? discounts.updatePromotion(id, input) : discounts.createPromotion(input),
-            );
-            if (ok) {
-              setEditing(null);
-              reload();
-            }
-          }}
-        />
-      )}
+      {action.error && !editing && <Alert variant="destructive">{action.error}</Alert>}
+      <Dialog
+        open={Boolean(editing)}
+        onClose={() => setEditing(null)}
+        title={editing === "new" ? "Nueva promoción" : "Editar promoción"}
+        size="lg"
+      >
+        {action.error && (
+          <Alert variant="destructive" className="mb-4">
+            {action.error}
+          </Alert>
+        )}
+        {editing && (
+          <PromotionForm
+            promotion={editing === "new" ? null : editing}
+            currency={currency}
+            names={names}
+            errors={action.fieldErrors}
+            pending={action.pending}
+            onCancel={() => setEditing(null)}
+            onSave={async (input, id) => {
+              const ok = await action.run(() =>
+                id ? discounts.updatePromotion(id, input) : discounts.createPromotion(input),
+              );
+              if (ok) {
+                setEditing(null);
+                reload();
+              }
+            }}
+          />
+        )}
+      </Dialog>
       <Card className="p-0">
         <ul className="divide-y" data-testid="promotions-list">
           {data.length === 0 && <li className="px-4 py-3 text-sm text-muted-foreground">Sin promociones.</li>}
@@ -542,58 +554,55 @@ function PromotionForm({
   }
 
   return (
-    <Card>
-      <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
-        <h3 className="font-semibold sm:col-span-2">{promotion ? "Editar promoción" : "Nueva promoción"}</h3>
-        <Field id="name" label="Nombre (lo ve el cliente)" error={errors.name}>
-          <Input
-            id="name"
-            name="name"
-            defaultValue={promotion?.name ?? ""}
-            placeholder="Black Friday"
-            required
-          />
-        </Field>
-        <Field id="priority" label="Prioridad (desempate)" error={errors.priority}>
-          <Input
-            id="priority"
-            name="priority"
-            type="number"
-            min={-100}
-            max={100}
-            defaultValue={promotion?.priority ?? 0}
-          />
-        </Field>
-        <RewardFields
-          reward={reward}
-          setReward={setReward}
-          value={promotion?.value ?? null}
-          currency={currency}
-          errors={errors}
+    <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
+      <Field id="name" label="Nombre (lo ve el cliente)" error={errors.name}>
+        <Input
+          id="name"
+          name="name"
+          defaultValue={promotion?.name ?? ""}
+          placeholder="Black Friday"
+          required
         />
-        <DateFields startsAt={promotion?.startsAt} endsAt={promotion?.endsAt ?? null} errors={errors} />
-        <Field id="description" label="Descripción interna (opcional)" error={errors.description} wide>
-          <Input id="description" name="description" defaultValue={promotion?.description ?? ""} />
-        </Field>
-        <div className="flex flex-col gap-1 sm:col-span-2">
-          <Label>Se aplica a</Label>
-          <TargetPicker value={targets} onChange={setTargets} names={names} />
-          <FieldError>{errors.targets}</FieldError>
-        </div>
-        <label className="flex items-center gap-2 text-sm sm:col-span-2">
-          <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
-          Activa (desmárcala para pausarla sin borrarla)
-        </label>
-        <div className="flex gap-2 sm:col-span-2">
-          <Button type="submit" disabled={pending}>
-            {pending ? "Guardando…" : "Guardar"}
-          </Button>
-          <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancelar
-          </Button>
-        </div>
-      </form>
-    </Card>
+      </Field>
+      <Field id="priority" label="Prioridad (desempate)" error={errors.priority}>
+        <Input
+          id="priority"
+          name="priority"
+          type="number"
+          min={-100}
+          max={100}
+          defaultValue={promotion?.priority ?? 0}
+        />
+      </Field>
+      <RewardFields
+        reward={reward}
+        setReward={setReward}
+        value={promotion?.value ?? null}
+        currency={currency}
+        errors={errors}
+      />
+      <DateFields startsAt={promotion?.startsAt} endsAt={promotion?.endsAt ?? null} errors={errors} />
+      <Field id="description" label="Descripción interna (opcional)" error={errors.description} wide>
+        <Input id="description" name="description" defaultValue={promotion?.description ?? ""} />
+      </Field>
+      <div className="flex flex-col gap-1 sm:col-span-2">
+        <Label>Se aplica a</Label>
+        <TargetPicker value={targets} onChange={setTargets} names={names} />
+        <FieldError>{errors.targets}</FieldError>
+      </div>
+      <label className="flex items-center gap-2 text-sm sm:col-span-2">
+        <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
+        Activa (desmárcala para pausarla sin borrarla)
+      </label>
+      <div className="flex gap-2 sm:col-span-2">
+        <Button type="submit" disabled={pending}>
+          {pending ? "Guardando…" : "Guardar"}
+        </Button>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancelar
+        </Button>
+      </div>
+    </form>
   );
 }
 
@@ -657,28 +666,40 @@ export function VouchersPage() {
           Códigos que el cliente escribe en el carrito. Un cupón por pedido, compatible con las promociones.
           El uso se cuenta al crear el pedido y se devuelve si se cancela.
         </p>
-        {canEdit && !editing && <Button onClick={() => setEditing("new")}>Nuevo cupón</Button>}
+        {canEdit && <Button onClick={() => setEditing("new")}>Nuevo cupón</Button>}
       </div>
-      {action.error && <Alert variant="destructive">{action.error}</Alert>}
-      {editing && (
-        <VoucherForm
-          voucher={editing === "new" ? null : editing}
-          currency={currency}
-          names={names}
-          errors={action.fieldErrors}
-          pending={action.pending}
-          onCancel={() => setEditing(null)}
-          onSave={async (input, id) => {
-            const ok = await action.run(() =>
-              id ? discounts.updateVoucher(id, input) : discounts.createVoucher(input),
-            );
-            if (ok) {
-              setEditing(null);
-              reload();
-            }
-          }}
-        />
-      )}
+      {action.error && !editing && <Alert variant="destructive">{action.error}</Alert>}
+      <Dialog
+        open={Boolean(editing)}
+        onClose={() => setEditing(null)}
+        title={editing === "new" ? "Nuevo cupón" : "Editar cupón"}
+        size="lg"
+      >
+        {action.error && (
+          <Alert variant="destructive" className="mb-4">
+            {action.error}
+          </Alert>
+        )}
+        {editing && (
+          <VoucherForm
+            voucher={editing === "new" ? null : editing}
+            currency={currency}
+            names={names}
+            errors={action.fieldErrors}
+            pending={action.pending}
+            onCancel={() => setEditing(null)}
+            onSave={async (input, id) => {
+              const ok = await action.run(() =>
+                id ? discounts.updateVoucher(id, input) : discounts.createVoucher(input),
+              );
+              if (ok) {
+                setEditing(null);
+                reload();
+              }
+            }}
+          />
+        )}
+      </Dialog>
       <Card className="p-0">
         <ul className="divide-y" data-testid="vouchers-list">
           {data.length === 0 && <li className="px-4 py-3 text-sm text-muted-foreground">Sin cupones.</li>}
@@ -815,97 +836,94 @@ function VoucherForm({
   }
 
   return (
-    <Card>
-      <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
-        <h3 className="font-semibold sm:col-span-2">{voucher ? "Editar cupón" : "Nuevo cupón"}</h3>
-        <Field id="code" label="Código" error={errors.code}>
-          <Input
-            id="code"
-            name="code"
-            defaultValue={voucher?.code ?? ""}
-            placeholder="BIENVENIDA10"
-            className="uppercase"
-            required
-          />
-        </Field>
-        <Field id="name" label="Nombre" error={errors.name}>
-          <Input id="name" name="name" defaultValue={voucher?.name ?? ""} placeholder="Bienvenida" required />
-        </Field>
-        <Field id="scope" label="Se descuenta de" wide>
-          <Select id="scope" value={scope} onChange={(e) => setScope(e.target.value as VoucherScope)}>
-            {VOUCHER_SCOPES.map((s) => (
-              <option key={s} value={s}>
-                {VOUCHER_SCOPE_LABELS[s]}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <RewardFields
-          reward={reward}
-          setReward={setReward}
-          value={voucher?.value ?? null}
-          currency={currency}
-          errors={errors}
+    <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
+      <Field id="code" label="Código" error={errors.code}>
+        <Input
+          id="code"
+          name="code"
+          defaultValue={voucher?.code ?? ""}
+          placeholder="BIENVENIDA10"
+          className="uppercase"
+          required
         />
-        {scope === "shipping" && (
-          <p className="text-xs text-muted-foreground sm:col-span-2">Envío gratis = porcentaje 100.</p>
-        )}
-        {scope === "specific" && (
-          <div className="flex flex-col gap-1 sm:col-span-2">
-            <Label>Productos a los que se aplica</Label>
-            <TargetPicker value={targets} onChange={setTargets} names={names} />
-            <FieldError>{errors.targets}</FieldError>
-          </div>
-        )}
-        <Field id="minSubtotal" label={`Pedido mínimo (${currency}, opcional)`} error={errors.minSubtotal}>
-          <Input
-            id="minSubtotal"
-            name="minSubtotal"
-            inputMode="decimal"
-            defaultValue={voucher?.minSubtotal ?? ""}
-          />
-        </Field>
-        <Field id="minQuantity" label="Mínimo de productos (opcional)" error={errors.minQuantity}>
-          <Input
-            id="minQuantity"
-            name="minQuantity"
-            type="number"
-            min={1}
-            defaultValue={voucher?.minQuantity ?? ""}
-          />
-        </Field>
-        <Field id="usageLimit" label="Usos en total (opcional)" error={errors.usageLimit}>
-          <Input
-            id="usageLimit"
-            name="usageLimit"
-            type="number"
-            min={1}
-            defaultValue={voucher?.usageLimit ?? ""}
-          />
-        </Field>
-        <Field id="usagePerCustomer" label="Usos por cliente (opcional)" error={errors.usagePerCustomer}>
-          <Input
-            id="usagePerCustomer"
-            name="usagePerCustomer"
-            type="number"
-            min={1}
-            defaultValue={voucher?.usagePerCustomer ?? ""}
-          />
-        </Field>
-        <DateFields startsAt={voucher?.startsAt} endsAt={voucher?.endsAt ?? null} errors={errors} />
-        <label className="flex items-center gap-2 text-sm sm:col-span-2">
-          <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
-          Activo
-        </label>
-        <div className="flex gap-2 sm:col-span-2">
-          <Button type="submit" disabled={pending}>
-            {pending ? "Guardando…" : "Guardar"}
-          </Button>
-          <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancelar
-          </Button>
+      </Field>
+      <Field id="name" label="Nombre" error={errors.name}>
+        <Input id="name" name="name" defaultValue={voucher?.name ?? ""} placeholder="Bienvenida" required />
+      </Field>
+      <Field id="scope" label="Se descuenta de" wide>
+        <Select id="scope" value={scope} onChange={(e) => setScope(e.target.value as VoucherScope)}>
+          {VOUCHER_SCOPES.map((s) => (
+            <option key={s} value={s}>
+              {VOUCHER_SCOPE_LABELS[s]}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      <RewardFields
+        reward={reward}
+        setReward={setReward}
+        value={voucher?.value ?? null}
+        currency={currency}
+        errors={errors}
+      />
+      {scope === "shipping" && (
+        <p className="text-xs text-muted-foreground sm:col-span-2">Envío gratis = porcentaje 100.</p>
+      )}
+      {scope === "specific" && (
+        <div className="flex flex-col gap-1 sm:col-span-2">
+          <Label>Productos a los que se aplica</Label>
+          <TargetPicker value={targets} onChange={setTargets} names={names} />
+          <FieldError>{errors.targets}</FieldError>
         </div>
-      </form>
-    </Card>
+      )}
+      <Field id="minSubtotal" label={`Pedido mínimo (${currency}, opcional)`} error={errors.minSubtotal}>
+        <Input
+          id="minSubtotal"
+          name="minSubtotal"
+          inputMode="decimal"
+          defaultValue={voucher?.minSubtotal ?? ""}
+        />
+      </Field>
+      <Field id="minQuantity" label="Mínimo de productos (opcional)" error={errors.minQuantity}>
+        <Input
+          id="minQuantity"
+          name="minQuantity"
+          type="number"
+          min={1}
+          defaultValue={voucher?.minQuantity ?? ""}
+        />
+      </Field>
+      <Field id="usageLimit" label="Usos en total (opcional)" error={errors.usageLimit}>
+        <Input
+          id="usageLimit"
+          name="usageLimit"
+          type="number"
+          min={1}
+          defaultValue={voucher?.usageLimit ?? ""}
+        />
+      </Field>
+      <Field id="usagePerCustomer" label="Usos por cliente (opcional)" error={errors.usagePerCustomer}>
+        <Input
+          id="usagePerCustomer"
+          name="usagePerCustomer"
+          type="number"
+          min={1}
+          defaultValue={voucher?.usagePerCustomer ?? ""}
+        />
+      </Field>
+      <DateFields startsAt={voucher?.startsAt} endsAt={voucher?.endsAt ?? null} errors={errors} />
+      <label className="flex items-center gap-2 text-sm sm:col-span-2">
+        <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
+        Activo
+      </label>
+      <div className="flex gap-2 sm:col-span-2">
+        <Button type="submit" disabled={pending}>
+          {pending ? "Guardando…" : "Guardar"}
+        </Button>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancelar
+        </Button>
+      </div>
+    </form>
   );
 }

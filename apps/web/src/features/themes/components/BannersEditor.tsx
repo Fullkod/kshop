@@ -2,7 +2,7 @@
 
 import type { BannerInput, Link } from "@kshop/core";
 import type { ApiClient } from "@kshop/data";
-import { Alert, Badge, Button, Card, Input, Label } from "@kshop/ui";
+import { Alert, Badge, Button, Card, Dialog, Input, Label } from "@kshop/ui";
 import { useState } from "react";
 import { useApiAction, type CatalogStructure } from "@/features/catalog/use-catalog";
 import { uploadBannerImage } from "@/lib/images";
@@ -101,94 +101,105 @@ export function BannersEditor({
         </p>
         <Button onClick={() => setDraft({ ...empty })}>Nuevo banner</Button>
       </div>
-      {action.error && <Alert variant="destructive">{action.error}</Alert>}
+      {action.error && !draft && <Alert variant="destructive">{action.error}</Alert>}
 
-      {draft && (
-        <Card className="grid gap-4 sm:grid-cols-2" data-testid="banner-form">
-          <h3 className="font-semibold sm:col-span-2">{draft.id ? "Editar banner" : "Nuevo banner"}</h3>
-          {(["imageUrl", "imageMobileUrl"] as const).map((field) => (
-            <div key={field} className="flex flex-col gap-2">
-              <Label htmlFor={field}>
-                {field === "imageUrl"
-                  ? "Imagen (ancha, para ordenador)"
-                  : "Imagen para móvil (opcional, vertical)"}
-              </Label>
-              {draft[field] && (
-                // eslint-disable-next-line @next/next/no-img-element -- preview of the uploaded banner
-                <img
-                  src={draft[field]!}
-                  alt=""
-                  className="aspect-[21/9] w-full rounded-md border object-cover"
+      <Dialog
+        open={draft !== null}
+        onClose={() => setDraft(null)}
+        title={draft?.id ? "Editar banner" : "Nuevo banner"}
+        size="lg"
+      >
+        {action.error && (
+          <Alert variant="destructive" className="mb-4">
+            {action.error}
+          </Alert>
+        )}
+        {draft && (
+          <div className="grid gap-4 sm:grid-cols-2" data-testid="banner-form">
+            {(["imageUrl", "imageMobileUrl"] as const).map((field) => (
+              <div key={field} className="flex flex-col gap-2">
+                <Label htmlFor={field}>
+                  {field === "imageUrl"
+                    ? "Imagen (ancha, para ordenador)"
+                    : "Imagen para móvil (opcional, vertical)"}
+                </Label>
+                {draft[field] && (
+                  // eslint-disable-next-line @next/next/no-img-element -- preview of the uploaded banner
+                  <img
+                    src={draft[field]!}
+                    alt=""
+                    className="aspect-[21/9] w-full rounded-md border object-cover"
+                  />
+                )}
+                <input
+                  id={field}
+                  type="file"
+                  accept="image/*"
+                  className="text-sm"
+                  onChange={(e) => upload(field, e.target.files?.[0])}
                 />
-              )}
-              <input
-                id={field}
-                type="file"
-                accept="image/*"
-                className="text-sm"
-                onChange={(e) => upload(field, e.target.files?.[0])}
-              />
-              {uploading === field && <span className="text-xs text-muted-foreground">Subiendo…</span>}
+                {uploading === field && <span className="text-xs text-muted-foreground">Subiendo…</span>}
+              </div>
+            ))}
+            {(
+              [
+                ["eyebrow", "Antetítulo (opcional, p. ej. «Nueva temporada»)"],
+                ["title", "Título (opcional)"],
+                ["subtitle", "Subtítulo (opcional)"],
+                ["ctaLabel", "Texto del botón (opcional)"],
+                ["alt", "Descripción de la imagen (para lectores de pantalla)"],
+              ] as const
+            ).map(([key, label]) => (
+              <div key={key} className="flex flex-col gap-1">
+                <Label htmlFor={`banner-${key}`}>{label}</Label>
+                <Input
+                  id={`banner-${key}`}
+                  value={draft[key] ?? ""}
+                  onChange={(e) => setDraft({ ...draft, [key]: e.target.value })}
+                />
+              </div>
+            ))}
+            <div className="flex flex-col gap-1 sm:col-span-2">
+              <Label htmlFor="banner-product">Producto destacado en el carrusel (opcional)</Label>
+              <select
+                id="banner-product"
+                value={draft.productId ?? ""}
+                onChange={(e) => setDraft({ ...draft, productId: e.target.value || null })}
+                className="h-11 rounded-md border bg-background px-2 text-sm"
+              >
+                <option value="">Ninguno</option>
+                {content.products.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Sale en una tarjeta pequeña sobre la foto, con su precio y el botón de añadir.
+              </p>
             </div>
-          ))}
-          {(
-            [
-              ["eyebrow", "Antetítulo (opcional, p. ej. «Nueva temporada»)"],
-              ["title", "Título (opcional)"],
-              ["subtitle", "Subtítulo (opcional)"],
-              ["ctaLabel", "Texto del botón (opcional)"],
-              ["alt", "Descripción de la imagen (para lectores de pantalla)"],
-            ] as const
-          ).map(([key, label]) => (
-            <div key={key} className="flex flex-col gap-1">
-              <Label htmlFor={`banner-${key}`}>{label}</Label>
-              <Input
-                id={`banner-${key}`}
-                value={draft[key] ?? ""}
-                onChange={(e) => setDraft({ ...draft, [key]: e.target.value })}
+            <div className="sm:col-span-2">
+              <LinkPicker
+                id="banner-link"
+                value={draft.link}
+                onChange={(link: Link | null) => setDraft({ ...draft, link })}
+                structure={structure}
+                content={content}
+                optional
               />
             </div>
-          ))}
-          <div className="flex flex-col gap-1 sm:col-span-2">
-            <Label htmlFor="banner-product">Producto destacado en el carrusel (opcional)</Label>
-            <select
-              id="banner-product"
-              value={draft.productId ?? ""}
-              onChange={(e) => setDraft({ ...draft, productId: e.target.value || null })}
-              className="h-11 rounded-md border bg-background px-2 text-sm"
-            >
-              <option value="">Ninguno</option>
-              {content.products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-muted-foreground">
-              Sale en una tarjeta pequeña sobre la foto, con su precio y el botón de añadir.
-            </p>
+            <Schedule draft={draft} onChange={(patch) => setDraft({ ...draft, ...patch })} />
+            <div className="flex gap-2 sm:col-span-2">
+              <Button onClick={save} disabled={action.pending || !draft.imageUrl || uploading !== null}>
+                {action.pending ? "Guardando…" : "Guardar"}
+              </Button>
+              <Button variant="ghost" onClick={() => setDraft(null)}>
+                Cancelar
+              </Button>
+            </div>
           </div>
-          <div className="sm:col-span-2">
-            <LinkPicker
-              id="banner-link"
-              value={draft.link}
-              onChange={(link: Link | null) => setDraft({ ...draft, link })}
-              structure={structure}
-              content={content}
-              optional
-            />
-          </div>
-          <Schedule draft={draft} onChange={(patch) => setDraft({ ...draft, ...patch })} />
-          <div className="flex gap-2 sm:col-span-2">
-            <Button onClick={save} disabled={action.pending || !draft.imageUrl || uploading !== null}>
-              {action.pending ? "Guardando…" : "Guardar"}
-            </Button>
-            <Button variant="ghost" onClick={() => setDraft(null)}>
-              Cancelar
-            </Button>
-          </div>
-        </Card>
-      )}
+        )}
+      </Dialog>
 
       {content.banners.length === 0 ? (
         <Card className="text-center text-muted-foreground">Todavía no hay banners.</Card>

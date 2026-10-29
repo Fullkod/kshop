@@ -1,7 +1,7 @@
 "use client";
 
 import { ATTRIBUTE_INPUT_TYPES, VALUE_LIST_TYPES, type AttributeInputType } from "@kshop/core";
-import { Alert, Badge, Button, Card, FieldError, Input, Label, Select } from "@kshop/ui";
+import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label, Select } from "@kshop/ui";
 import { useState } from "react";
 import { useApiAction, useCatalogApi, useCatalogStructure, type Attribute } from "../use-catalog";
 
@@ -113,121 +113,128 @@ export function AttributesPage() {
 
       {action.error && !draft && <Alert variant="destructive">{action.error}</Alert>}
 
-      {draft && (
-        <Card className="flex flex-col gap-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="attr-name">Nombre</Label>
-              <Input
-                id="attr-name"
-                value={draft.name}
-                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-              />
-              <FieldError>{action.fieldErrors.name ?? action.fieldErrors.slug}</FieldError>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="attr-type">Tipo</Label>
-              <Select
-                id="attr-type"
-                value={draft.inputType}
-                onChange={(e) => setDraft({ ...draft, inputType: e.target.value as AttributeInputType })}
-              >
-                {ATTRIBUTE_INPUT_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {INPUT_TYPE_LABELS[t]}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            {draft.inputType === "numeric" && (
+      <Dialog
+        open={draft !== null}
+        onClose={() => setDraft(null)}
+        title={draft?.id ? "Editar atributo" : "Nuevo atributo"}
+        size="lg"
+      >
+        {draft && (
+          <div className="flex flex-col gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="attr-unit">Unidad (opcional)</Label>
+                <Label htmlFor="attr-name">Nombre</Label>
                 <Input
-                  id="attr-unit"
-                  value={draft.unit}
-                  placeholder="cm, kg, ml…"
-                  onChange={(e) => setDraft({ ...draft, unit: e.target.value })}
+                  id="attr-name"
+                  value={draft.name}
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
                 />
+                <FieldError>{action.fieldErrors.name ?? action.fieldErrors.slug}</FieldError>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="attr-type">Tipo</Label>
+                <Select
+                  id="attr-type"
+                  value={draft.inputType}
+                  onChange={(e) => setDraft({ ...draft, inputType: e.target.value as AttributeInputType })}
+                >
+                  {ATTRIBUTE_INPUT_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {INPUT_TYPE_LABELS[t]}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              {draft.inputType === "numeric" && (
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="attr-unit">Unidad (opcional)</Label>
+                  <Input
+                    id="attr-unit"
+                    value={draft.unit}
+                    placeholder="cm, kg, ml…"
+                    onChange={(e) => setDraft({ ...draft, unit: e.target.value })}
+                  />
+                </div>
+              )}
+              <label className="flex items-center gap-2 text-sm sm:col-span-2">
+                <input
+                  type="checkbox"
+                  checked={draft.filterableInStorefront}
+                  onChange={(e) => setDraft({ ...draft, filterableInStorefront: e.target.checked })}
+                />
+                Usar como filtro en la tienda
+              </label>
+            </div>
+
+            {usesValues && (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="attr-new-value">Valores</Label>
+                <div className="flex flex-wrap gap-2" data-testid="attribute-values">
+                  {draft.values.map((v, i) => (
+                    <span
+                      key={v.id ?? `new-${i}`}
+                      className="flex items-center gap-1 rounded-full border px-2 py-1 text-sm"
+                    >
+                      {draft.inputType === "swatch" && (
+                        <input
+                          type="color"
+                          aria-label={`Color de ${v.name}`}
+                          value={v.value ?? "#000000"}
+                          onChange={(e) =>
+                            setDraft({
+                              ...draft,
+                              values: draft.values.map((x, j) =>
+                                j === i ? { ...x, value: e.target.value } : x,
+                              ),
+                            })
+                          }
+                          className="h-5 w-5 cursor-pointer rounded-full border-0 bg-transparent p-0"
+                        />
+                      )}
+                      {v.name}
+                      <button
+                        type="button"
+                        aria-label={`Quitar ${v.name}`}
+                        className="px-1 text-muted-foreground hover:text-destructive"
+                        onClick={() => setDraft({ ...draft, values: draft.values.filter((_, j) => j !== i) })}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    id="attr-new-value"
+                    value={newValue}
+                    placeholder="Escribe un valor o varios separados por comas (S, M, L)"
+                    onChange={(e) => setNewValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addValue();
+                      }
+                    }}
+                  />
+                  <Button type="button" variant="outline" onClick={addValue}>
+                    Añadir
+                  </Button>
+                </div>
               </div>
             )}
-            <label className="flex items-center gap-2 text-sm sm:col-span-2">
-              <input
-                type="checkbox"
-                checked={draft.filterableInStorefront}
-                onChange={(e) => setDraft({ ...draft, filterableInStorefront: e.target.checked })}
-              />
-              Usar como filtro en la tienda
-            </label>
-          </div>
 
-          {usesValues && (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="attr-new-value">Valores</Label>
-              <div className="flex flex-wrap gap-2" data-testid="attribute-values">
-                {draft.values.map((v, i) => (
-                  <span
-                    key={v.id ?? `new-${i}`}
-                    className="flex items-center gap-1 rounded-full border px-2 py-1 text-sm"
-                  >
-                    {draft.inputType === "swatch" && (
-                      <input
-                        type="color"
-                        aria-label={`Color de ${v.name}`}
-                        value={v.value ?? "#000000"}
-                        onChange={(e) =>
-                          setDraft({
-                            ...draft,
-                            values: draft.values.map((x, j) =>
-                              j === i ? { ...x, value: e.target.value } : x,
-                            ),
-                          })
-                        }
-                        className="h-5 w-5 cursor-pointer rounded-full border-0 bg-transparent p-0"
-                      />
-                    )}
-                    {v.name}
-                    <button
-                      type="button"
-                      aria-label={`Quitar ${v.name}`}
-                      className="px-1 text-muted-foreground hover:text-destructive"
-                      onClick={() => setDraft({ ...draft, values: draft.values.filter((_, j) => j !== i) })}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  id="attr-new-value"
-                  value={newValue}
-                  placeholder="Escribe un valor o varios separados por comas (S, M, L)"
-                  onChange={(e) => setNewValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addValue();
-                    }
-                  }}
-                />
-                <Button type="button" variant="outline" onClick={addValue}>
-                  Añadir
-                </Button>
-              </div>
+            {action.error && <Alert variant="destructive">{action.error}</Alert>}
+            <div className="flex gap-2">
+              <Button onClick={save} disabled={action.pending}>
+                {action.pending ? "Guardando…" : "Guardar"}
+              </Button>
+              <Button variant="ghost" onClick={() => setDraft(null)}>
+                Cancelar
+              </Button>
             </div>
-          )}
-
-          {action.error && <Alert variant="destructive">{action.error}</Alert>}
-          <div className="flex gap-2">
-            <Button onClick={save} disabled={action.pending}>
-              {action.pending ? "Guardando…" : "Guardar"}
-            </Button>
-            <Button variant="ghost" onClick={() => setDraft(null)}>
-              Cancelar
-            </Button>
           </div>
-        </Card>
-      )}
+        )}
+      </Dialog>
 
       {data.attributes.length === 0 ? (
         <Card className="text-center text-muted-foreground">Todavía no hay atributos.</Card>

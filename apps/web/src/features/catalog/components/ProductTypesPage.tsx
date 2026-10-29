@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Badge, Button, Card, FieldError, Input, Label } from "@kshop/ui";
+import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label } from "@kshop/ui";
 import { useState } from "react";
 import { useApiAction, useCatalogApi, useCatalogStructure, type ProductType } from "../use-catalog";
 
@@ -95,75 +95,83 @@ export function ProductTypesPage() {
 
       {action.error && !draft && <Alert variant="destructive">{action.error}</Alert>}
 
-      {draft && (
-        <Card className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="type-name">Nombre</Label>
-            <Input
-              id="type-name"
-              value={draft.name}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-            />
-            <FieldError>{action.fieldErrors.name ?? action.fieldErrors.slug}</FieldError>
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={draft.hasVariants}
-              onChange={(e) => setDraft({ ...draft, hasVariants: e.target.checked })}
-            />
-            Se vende en variantes (cada combinación tiene su SKU, precio y stock)
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={draft.isShippingRequired}
-              onChange={(e) => setDraft({ ...draft, isShippingRequired: e.target.checked })}
-            />
-            Requiere entrega física
-          </label>
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium">Atributos</span>
-            {data.attributes.length === 0 && (
-              <p className="text-sm text-muted-foreground">Primero crea atributos en la pestaña Atributos.</p>
-            )}
-            {data.attributes.map((a) => (
-              <div
-                key={a.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2"
-              >
-                <span className="text-sm">{a.name}</span>
-                <select
-                  aria-label={`Uso de ${a.name}`}
-                  className="rounded-md border bg-background px-2 py-1 text-sm"
-                  value={draft.roles[a.id] ?? "none"}
-                  onChange={(e) =>
-                    setDraft({ ...draft, roles: { ...draft.roles, [a.id]: e.target.value as Role } })
-                  }
+      <Dialog
+        open={draft !== null}
+        onClose={() => setDraft(null)}
+        title={draft?.id ? "Editar tipo de producto" : "Nuevo tipo de producto"}
+      >
+        {draft && (
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="type-name">Nombre</Label>
+              <Input
+                id="type-name"
+                value={draft.name}
+                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              />
+              <FieldError>{action.fieldErrors.name ?? action.fieldErrors.slug}</FieldError>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={draft.hasVariants}
+                onChange={(e) => setDraft({ ...draft, hasVariants: e.target.checked })}
+              />
+              Se vende en variantes (cada combinación tiene su SKU, precio y stock)
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={draft.isShippingRequired}
+                onChange={(e) => setDraft({ ...draft, isShippingRequired: e.target.checked })}
+              />
+              Requiere entrega física
+            </label>
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-medium">Atributos</span>
+              {data.attributes.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Primero crea atributos en la pestaña Atributos.
+                </p>
+              )}
+              {data.attributes.map((a) => (
+                <div
+                  key={a.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2"
                 >
-                  {(draft.hasVariants
-                    ? (["none", "product", "variant-selection", "variant"] as Role[])
-                    : (["none", "product"] as Role[])
-                  ).map((r) => (
-                    <option key={r} value={r}>
-                      {ROLE_LABELS[r]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
+                  <span className="text-sm">{a.name}</span>
+                  <select
+                    aria-label={`Uso de ${a.name}`}
+                    className="rounded-md border bg-background px-2 py-1 text-sm"
+                    value={draft.roles[a.id] ?? "none"}
+                    onChange={(e) =>
+                      setDraft({ ...draft, roles: { ...draft.roles, [a.id]: e.target.value as Role } })
+                    }
+                  >
+                    {(draft.hasVariants
+                      ? (["none", "product", "variant-selection", "variant"] as Role[])
+                      : (["none", "product"] as Role[])
+                    ).map((r) => (
+                      <option key={r} value={r}>
+                        {ROLE_LABELS[r]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+            {action.error && <Alert variant="destructive">{action.error}</Alert>}
+            <div className="flex gap-2">
+              <Button onClick={save} disabled={action.pending}>
+                {action.pending ? "Guardando…" : "Guardar"}
+              </Button>
+              <Button variant="ghost" onClick={() => setDraft(null)}>
+                Cancelar
+              </Button>
+            </div>
           </div>
-          {action.error && <Alert variant="destructive">{action.error}</Alert>}
-          <div className="flex gap-2">
-            <Button onClick={save} disabled={action.pending}>
-              {action.pending ? "Guardando…" : "Guardar"}
-            </Button>
-            <Button variant="ghost" onClick={() => setDraft(null)}>
-              Cancelar
-            </Button>
-          </div>
-        </Card>
-      )}
+        )}
+      </Dialog>
 
       {data.productTypes.length === 0 ? (
         <Card className="text-center text-muted-foreground">Todavía no hay tipos de producto.</Card>

@@ -1,7 +1,7 @@
 "use client";
 
 import type { CatalogResourceInputs } from "@kshop/data";
-import { Alert, Badge, Button, Card, FieldError, Input, Label } from "@kshop/ui";
+import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label } from "@kshop/ui";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useApiAction, useCatalogApi, useCatalogStructure, type CatalogStructure } from "../use-catalog";
 import { ImageField } from "./ImageField";
@@ -37,7 +37,7 @@ export type SimpleEntityConfig<R extends "brands" | "collections" | "warehouses"
   canDelete?: (row: Row) => boolean;
 };
 
-/** List + inline form for flat catalog entities (brands, collections, warehouses). */
+/** List + form in a dialog for flat catalog entities (brands, collections, warehouses). */
 export function SimpleEntitiesPage<R extends "brands" | "collections" | "warehouses">({
   config,
 }: {
@@ -98,16 +98,17 @@ export function SimpleEntitiesPage<R extends "brands" | "collections" | "warehou
 
       {action.error && !editing && <Alert variant="destructive">{action.error}</Alert>}
 
-      {editing && (
-        <Card>
+      <Dialog
+        open={editing !== null}
+        onClose={() => setEditing(null)}
+        title={editing === "new" ? `Nuevo ${config.singular}` : `Editar «${editing?.name ?? ""}»`}
+      >
+        {editing && (
           <form
             onSubmit={onSubmit}
             className="grid gap-4 sm:grid-cols-2"
             key={editing === "new" ? "new" : editing.id}
           >
-            <h3 className="font-semibold sm:col-span-2">
-              {editing === "new" ? `Nuevo ${config.singular}` : `Editar «${editing.name}»`}
-            </h3>
             {config.fields.map((f) => [
               f.group && (
                 <p key={`${f.key}-group`} className="mt-2 border-t pt-4 text-sm font-semibold sm:col-span-2">
@@ -193,8 +194,8 @@ export function SimpleEntitiesPage<R extends "brands" | "collections" | "warehou
               </Button>
             </div>
           </form>
-        </Card>
-      )}
+        )}
+      </Dialog>
 
       {rows.length === 0 ? (
         <Card className="text-center text-muted-foreground">Todavía no hay ninguno.</Card>

@@ -25,7 +25,7 @@ import {
   type MoneyByCurrency,
   type WarehouseSummary,
 } from "@kshop/data";
-import { Alert, BarChart, Button, Card, FieldError, Input, Label, Select, cn } from "@kshop/ui";
+import { Alert, BarChart, Button, Card, Dialog, FieldError, Input, Label, Select, cn } from "@kshop/ui";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useStorePathname } from "@/lib/navigation";
@@ -189,7 +189,10 @@ export function FinanceShell({ children }: { children: ReactNode }) {
           {exporting ? "Preparando…" : "Exportar a Excel"}
         </Button>
       </div>
-      <nav className="flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none]" aria-label="Secciones de finanzas">
+      <nav
+        className="flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none]"
+        aria-label="Secciones de finanzas"
+      >
         {SECTIONS.map((s) => (
           <Link
             key={s.href}
@@ -891,11 +894,12 @@ export function FinanceExpensesPage() {
     () => api.finance(store.id).expenses({ from: f.from, to: f.to }),
     [f.from, f.to],
   );
-  const [editing, setEditing] = useState<Expense | null>(null);
+  // R13: adding and editing open the form in a dialog ("new" = add).
+  const [open, setOpen] = useState<Expense | "new" | null>(null);
+  const editing = open && open !== "new" ? open : null;
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, string>>({});
   const [pending, setPending] = useState(false);
-  const [formKey, setFormKey] = useState(0);
   const currencies = useStoreCurrencies();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -914,8 +918,7 @@ export function FinanceExpensesPage() {
     try {
       if (editing) await api.finance(store.id).updateExpense(editing.id, input);
       else await api.finance(store.id).createExpense(input);
-      setEditing(null);
-      setFormKey((k) => k + 1);
+      setOpen(null);
       list.reload();
     } catch (e) {
       setError(errorText(e, "No se pudo guardar el gasto."));
@@ -949,82 +952,103 @@ export function FinanceExpensesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Card>
-        <form
-          key={`${formKey}-${editing?.id ?? "new"}`}
-          onSubmit={(e) => void submit(e)}
-          className="grid gap-3 sm:grid-cols-[10rem_1fr_8rem_6rem]"
+      <div className="flex justify-end">
+        <Button
+          onClick={() => {
+            setError(null);
+            setFields({});
+            setOpen("new");
+          }}
+          data-testid="add-expense"
         >
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="expense-date">Fecha</Label>
-            <Input
-              id="expense-date"
-              name="spentOn"
-              type="date"
-              defaultValue={editing?.spentOn ?? havanaToday()}
-              required
-            />
-            <FieldError>{fields.spentOn}</FieldError>
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="expense-category">En qué</Label>
-            <Input
-              id="expense-category"
-              name="category"
-              list="expense-categories"
-              defaultValue={editing?.category ?? ""}
-              required
-              maxLength={60}
-            />
-            <datalist id="expense-categories">
-              {EXPENSE_CATEGORY_SUGGESTIONS.map((c) => (
-                <option key={c} value={c} />
-              ))}
-            </datalist>
-            <FieldError>{fields.category}</FieldError>
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="expense-amount">Importe</Label>
-            <Input
-              id="expense-amount"
-              name="amount"
-              inputMode="decimal"
-              defaultValue={editing ? String(editing.amount) : ""}
-              required
-            />
-            <FieldError>{fields.amount}</FieldError>
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="expense-currency">Moneda</Label>
-            <Select
-              id="expense-currency"
-              name="currency"
-              defaultValue={editing?.currency ?? store.baseCurrency}
-            >
-              {currencies.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div className="flex flex-col gap-1 sm:col-span-3">
-            <Label htmlFor="expense-note">Nota (opcional)</Label>
-            <Input id="expense-note" name="note" defaultValue={editing?.note ?? ""} maxLength={500} />
-          </div>
-          <div className="flex items-end gap-2">
-            <Button type="submit" disabled={pending}>
-              {editing ? "Guardar" : "Añadir gasto"}
-            </Button>
-            {editing && (
-              <Button type="button" variant="ghost" onClick={() => setEditing(null)}>
+          Añadir gasto
+        </Button>
+      </div>
+      <Dialog
+        open={open !== null}
+        onClose={() => setOpen(null)}
+        title={editing ? "Editar gasto" : "Nuevo gasto"}
+      >
+        {open !== null && (
+          <form
+            key={editing?.id ?? "new"}
+            onSubmit={(e) => void submit(e)}
+            className="grid gap-3 sm:grid-cols-2"
+          >
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="expense-date">Fecha</Label>
+              <Input
+                id="expense-date"
+                name="spentOn"
+                type="date"
+                defaultValue={editing?.spentOn ?? havanaToday()}
+                required
+              />
+              <FieldError>{fields.spentOn}</FieldError>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="expense-category">En qué</Label>
+              <Input
+                id="expense-category"
+                name="category"
+                list="expense-categories"
+                defaultValue={editing?.category ?? ""}
+                required
+                maxLength={60}
+              />
+              <datalist id="expense-categories">
+                {EXPENSE_CATEGORY_SUGGESTIONS.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
+              <FieldError>{fields.category}</FieldError>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="expense-amount">Importe</Label>
+              <Input
+                id="expense-amount"
+                name="amount"
+                inputMode="decimal"
+                defaultValue={editing ? String(editing.amount) : ""}
+                required
+              />
+              <FieldError>{fields.amount}</FieldError>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="expense-currency">Moneda</Label>
+              <Select
+                id="expense-currency"
+                name="currency"
+                defaultValue={editing?.currency ?? store.baseCurrency}
+              >
+                {currencies.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1 sm:col-span-2">
+              <Label htmlFor="expense-note">Nota (opcional)</Label>
+              <Input id="expense-note" name="note" defaultValue={editing?.note ?? ""} maxLength={500} />
+            </div>
+            {error && (
+              <Alert variant="destructive" className="sm:col-span-2">
+                {error}
+              </Alert>
+            )}
+            <div className="flex gap-2 sm:col-span-2">
+              <Button type="submit" disabled={pending}>
+                {editing ? "Guardar" : "Añadir gasto"}
+              </Button>
+              <Button type="button" variant="ghost" onClick={() => setOpen(null)}>
                 Cancelar
               </Button>
-            )}
-          </div>
-        </form>
-      </Card>
-      {error && <Alert variant="destructive">{error}</Alert>}
+            </div>
+          </form>
+        )}
+      </Dialog>
+      {error && open === null && <Alert variant="destructive">{error}</Alert>}
       <Card className="overflow-x-auto p-0">
         <table className="w-full text-left text-sm" data-testid="expenses">
           <thead className="border-b bg-surface text-muted-foreground">
@@ -1051,7 +1075,15 @@ export function FinanceExpensesPage() {
                 <td className="px-4 py-2 text-right tabular-nums">{formatMoney(e.amount, e.currency)}</td>
                 <td className="px-4 py-2 text-muted-foreground">{e.note}</td>
                 <td className="px-4 py-2 text-right whitespace-nowrap">
-                  <Button size="sm" variant="ghost" onClick={() => setEditing(e)}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setError(null);
+                      setFields({});
+                      setOpen(e);
+                    }}
+                  >
                     Editar
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => void remove(e)}>

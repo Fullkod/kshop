@@ -41,7 +41,9 @@ const service = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_K
 const results = [];
 function check(name, ok, detail) {
   results.push(ok);
-  console.log(`${ok ? "ok" : "not ok"} - ${name}${ok || detail === undefined ? "" : ` (${String(detail).slice(0, 400)})`}`);
+  console.log(
+    `${ok ? "ok" : "not ok"} - ${name}${ok || detail === undefined ? "" : ` (${String(detail).slice(0, 400)})`}`,
+  );
 }
 
 function chromiumPath() {
@@ -50,24 +52,42 @@ function chromiumPath() {
   const dirs = existsSync(cache) ? readdirSync(cache).filter((d) => /^chromium-\d+$/.test(d)) : [];
   dirs.sort((a, b) => Number(b.split("-")[1]) - Number(a.split("-")[1]));
   for (const dir of dirs) {
-    for (const exe of ["chrome-win64/chrome.exe", "chrome-linux/chrome", "chrome-mac/Chromium.app/Contents/MacOS/Chromium"]) {
+    for (const exe of [
+      "chrome-win64/chrome.exe",
+      "chrome-linux/chrome",
+      "chrome-mac/Chromium.app/Contents/MacOS/Chromium",
+    ]) {
       if (existsSync(join(cache, dir, exe))) return join(cache, dir, exe);
     }
   }
-  throw new Error(`No Chromium in ${cache}; install one (npx playwright install chromium) or set QA_CHROMIUM_PATH`);
+  throw new Error(
+    `No Chromium in ${cache}; install one (npx playwright install chromium) or set QA_CHROMIUM_PATH`,
+  );
 }
 
 const { data: store } = await service.from("stores").select("id").eq("slug", "demo").single();
-const { data: product } = await service.from("products").select("id").eq("store_id", store.id).eq("slug", "vestido-nandu").single();
+const { data: product } = await service
+  .from("products")
+  .select("id")
+  .eq("store_id", store.id)
+  .eq("slug", "vestido-nandu")
+  .single();
 const { data: variants } = await service.from("product_variants").select("id").eq("product_id", product.id);
 const { data: stockBefore } = await service
   .from("stocks")
   .select("variant_id, warehouse_id, quantity")
-  .in("variant_id", variants.map((v) => v.id));
+  .in(
+    "variant_id",
+    variants.map((v) => v.id),
+  );
 const startedAt = new Date().toISOString();
 
 async function removeQaUsers() {
-  const { data } = await service.from("customers").select("user_id").eq("store_id", store.id).eq("phone", `+${CUSTOMER_PHONE}`);
+  const { data } = await service
+    .from("customers")
+    .select("user_id")
+    .eq("store_id", store.id)
+    .eq("phone", `+${CUSTOMER_PHONE}`);
   for (const c of data ?? []) await service.auth.admin.deleteUser(c.user_id);
   const { data: users } = await service.auth.admin.listUsers({ perPage: 1000 });
   for (const u of users?.users ?? []) if (u.email === SUPER.email) await service.auth.admin.deleteUser(u.id);
@@ -75,37 +95,75 @@ async function removeQaUsers() {
 await removeQaUsers();
 
 // The customer with an account and its order, through the API (what the storefront does).
-const apiBase = `http://localhost:3000/api/v1/stores/${store.id}`;
+const apiBase = `${new URL(BASE).protocol}//localhost:${new URL(BASE).port || "3000"}/api/v1/stores/${store.id}`;
 const call = (method, path, body, tokenValue) =>
   fetch(`${apiBase}${path}`, {
     method,
-    headers: { "Content-Type": "application/json", ...(tokenValue && { Authorization: `Bearer ${tokenValue}` }) },
+    headers: {
+      "Content-Type": "application/json",
+      ...(tokenValue && { Authorization: `Bearer ${tokenValue}` }),
+    },
     body: body && JSON.stringify(body),
   }).then((r) => r.json());
 const registered = await call("POST", "/customer-auth/register", {
-  firstName: "Clienta QA Avisos", phone: CUSTOMER_PHONE, password: CUSTOMER_PASSWORD,
+  firstName: "Clienta QA Avisos",
+  phone: CUSTOMER_PHONE,
+  password: CUSTOMER_PASSWORD,
 });
 const customerToken = registered.session.accessToken;
-const { data: zone } = await service.from("shipping_zones").select("id").eq("store_id", store.id).eq("name", "La Habana").single();
-const { data: delivery } = await service.from("shipping_methods").select("id").eq("store_id", store.id).eq("type", "delivery").single();
-await call("PUT", "/cart", { lines: [{ variantId: variants[0].id, quantity: 1 }], mode: "add" }, customerToken);
-const accountOrder = await call("POST", "/checkout", {
-  idempotencyKey: randomUUID(), customer: { name: "Clienta QA Avisos", phone: CUSTOMER_PHONE },
-  shipping: { zoneId: zone.id, methodId: delivery.id, address: "Calle QA 6" },
-}, customerToken);
+const { data: zone } = await service
+  .from("shipping_zones")
+  .select("id")
+  .eq("store_id", store.id)
+  .eq("name", "La Habana")
+  .single();
+const { data: delivery } = await service
+  .from("shipping_methods")
+  .select("id")
+  .eq("store_id", store.id)
+  .eq("type", "delivery")
+  .single();
+await call(
+  "PUT",
+  "/cart",
+  { lines: [{ variantId: variants[0].id, quantity: 1 }], mode: "add" },
+  customerToken,
+);
+const accountOrder = await call(
+  "POST",
+  "/checkout",
+  {
+    idempotencyKey: randomUUID(),
+    customer: { name: "Clienta QA Avisos", phone: CUSTOMER_PHONE },
+    shipping: { zoneId: zone.id, methodId: delivery.id, address: "Calle QA 6" },
+  },
+  customerToken,
+);
 
-await service.auth.admin.createUser({ email: SUPER.email, password: SUPER.password, email_confirm: true, app_metadata: { role: "superadmin" } });
+await service.auth.admin.createUser({
+  email: SUPER.email,
+  password: SUPER.password,
+  email_confirm: true,
+  app_metadata: { role: "superadmin" },
+});
 
 const browser = await chromium.launch({ executablePath: chromiumPath() });
 const errors = [];
 async function newPage(viewport) {
   const context = await browser.newContext({ viewport });
   const page = await context.newPage();
-  page.on("console", (m) => m.type() === "error" && !m.text().includes("instant navigation") && errors.push(`${page.url()} :: ${m.text()}`));
+  page.on(
+    "console",
+    (m) =>
+      m.type() === "error" &&
+      !m.text().includes("instant navigation") &&
+      errors.push(`${page.url()} :: ${m.text()}`),
+  );
   return page;
 }
 // caret "initial": see qa-orders.mjs (false hydration error otherwise).
-const shot = (page, name) => page.screenshot({ path: join(OUT, `qa-${name}.png`), fullPage: true, caret: "initial" });
+const shot = (page, name) =>
+  page.screenshot({ path: join(OUT, `qa-${name}.png`), fullPage: true, caret: "initial" });
 
 const guest = await newPage({ width: 390, height: 844 });
 const admin = await newPage({ width: 1280, height: 900 });
@@ -129,9 +187,18 @@ try {
   await guest.waitForURL(/\/order\/[0-9a-f-]+\?new=1/, { timeout: 30000 });
   const token = guest.url().split("?")[0].split("/").pop();
   const { data: order } = await service.from("orders").select("id").eq("public_token", token).single();
-  const { data: queued } = await service.from("notification_log").select("audience, status").eq("order_id", order.id);
-  check("order: notices to the store and to the customer, simulated",
-    queued.map((n) => `${n.audience}:${n.status}`).sort().join(" ") === "customer:simulated store:simulated", JSON.stringify(queued));
+  const { data: queued } = await service
+    .from("notification_log")
+    .select("audience, status")
+    .eq("order_id", order.id);
+  check(
+    "order: notices to the store and to the customer, simulated",
+    queued
+      .map((n) => `${n.audience}:${n.status}`)
+      .sort()
+      .join(" ") === "customer:simulated store:simulated",
+    JSON.stringify(queued),
+  );
 
   await guest.goto(`${BASE}/account/login`);
   await guest.fill("#phone", CUSTOMER_PHONE);
@@ -151,13 +218,22 @@ try {
   await admin.waitForURL(`${BASE}/admin`, { timeout: 30000 });
   await admin.goto(`${BASE}/admin/orders/${order.id}`);
   await admin.getByText("Avisos por WhatsApp").waitFor({ timeout: 15000 });
-  check("order detail: the notices of the order", (await admin.getByTestId("notification-log").getByText("Simulado").count()) >= 2);
+  check(
+    "order detail: the notices of the order",
+    (await admin.getByTestId("notification-log").getByText("Simulado").count()) >= 2,
+  );
   await shot(admin, "12-admin-pedido-avisos-1280");
 
   await admin.goto(`${BASE}/admin/whatsapp-notifications/log`);
-  const waLink = admin.getByTestId("notification-log").getByRole("link", { name: "Abrir en WhatsApp" }).first();
+  const waLink = admin
+    .getByTestId("notification-log")
+    .getByRole("link", { name: "Abrir en WhatsApp" })
+    .first();
   await waLink.waitFor({ timeout: 15000 });
-  check("log: «Abrir en WhatsApp» opens wa.me with the message", (await waLink.getAttribute("href")).startsWith("https://wa.me/"));
+  check(
+    "log: «Abrir en WhatsApp» opens wa.me with the message",
+    (await waLink.getAttribute("href")).startsWith("https://wa.me/"),
+  );
   await shot(admin, "13-admin-historial-1280");
 
   await admin.goto(`${BASE}/admin/whatsapp-notifications`);
@@ -180,7 +256,10 @@ try {
   await platform.waitForURL(`${PLATFORM}/superadmin`, { timeout: 30000 });
   await platform.goto(`${PLATFORM}/superadmin/whatsapp`);
   await platform.getByTestId("whatsapp-queue").waitFor({ timeout: 15000 });
-  check("superadmin: platform WhatsApp page with mode and queue", await platform.getByLabel("Modo").isVisible());
+  check(
+    "superadmin: platform WhatsApp page with mode and queue",
+    await platform.getByLabel("Modo").isVisible(),
+  );
   await shot(platform, "16-superadmin-whatsapp-1280");
 
   if (errors.length) writeFileSync(join(OUT, "console-errors.txt"), errors.join("\n\n"));
@@ -199,7 +278,12 @@ try {
     .in("customer_phone", [`+${GUEST_PHONE}`, `+${CUSTOMER_PHONE}`])
     .not("status", "in", "(delivered,cancelled)");
   for (const o of open ?? []) {
-    await service.rpc("order_cancel", { p_store_id: store.id, p_order_id: o.id, p_reason: "Pedido de QA", p_user_id: null });
+    await service.rpc("order_cancel", {
+      p_store_id: store.id,
+      p_order_id: o.id,
+      p_reason: "Pedido de QA",
+      p_user_id: null,
+    });
   }
   for (const row of stockBefore) {
     const { data: now } = await service

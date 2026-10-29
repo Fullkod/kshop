@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Card, FieldError, Input, Label, Select } from "@kshop/ui";
+import { Alert, Button, Card, Dialog, FieldError, Input, Label, Select } from "@kshop/ui";
 import { useState, type FormEvent } from "react";
 import {
   categoryOptions,
@@ -62,8 +62,12 @@ export function CategoriesPage() {
 
       {action.error && !editing && <Alert variant="destructive">{action.error}</Alert>}
 
-      {editing && (
-        <Card>
+      <Dialog
+        open={Boolean(editing)}
+        onClose={() => setEditing(null)}
+        title={editing === "new" ? "Nueva categoría" : `Editar «${editing?.name ?? ""}»`}
+      >
+        {editing && (
           <form
             onSubmit={onSubmit}
             className="grid gap-4 sm:grid-cols-2"
@@ -122,8 +126,8 @@ export function CategoriesPage() {
               </Button>
             </div>
           </form>
-        </Card>
-      )}
+        )}
+      </Dialog>
 
       {options.length === 0 ? (
         <Card className="text-center text-muted-foreground">Todavía no hay categorías.</Card>

@@ -13,7 +13,7 @@ import {
   type NotificationStatus,
 } from "@kshop/core";
 import { asResult } from "@kshop/data";
-import { Alert, Badge, Button, Card, cn, FieldError, Input, Label } from "@kshop/ui";
+import { Alert, Badge, Button, Card, cn, Dialog, FieldError, Input, Label } from "@kshop/ui";
 import Link from "next/link";
 import { useStorePathname } from "@/lib/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
@@ -148,26 +148,37 @@ export function ContactsPage() {
           Los avisos salen del WhatsApp de Kshop (no del tuyo). Aquí eliges quién recibe los pedidos nuevos y
           qué teléfonos ve el cliente para consultas.
         </p>
-        {canEdit && !editing && <Button onClick={() => setEditing("new")}>Nuevo contacto</Button>}
+        {canEdit && <Button onClick={() => setEditing("new")}>Nuevo contacto</Button>}
       </div>
-      {action.error && <Alert variant="destructive">{action.error}</Alert>}
-      {editing && (
-        <ContactForm
-          contact={editing === "new" ? null : editing}
-          errors={action.fieldErrors}
-          pending={action.pending}
-          onCancel={() => setEditing(null)}
-          onSave={async (input, id) => {
-            const ok = await action.run(() =>
-              id ? notifications.updateContact(id, input) : notifications.createContact(input),
-            );
-            if (ok) {
-              setEditing(null);
-              reload();
-            }
-          }}
-        />
-      )}
+      {action.error && !editing && <Alert variant="destructive">{action.error}</Alert>}
+      <Dialog
+        open={Boolean(editing)}
+        onClose={() => setEditing(null)}
+        title={editing === "new" ? "Nuevo contacto" : "Editar contacto"}
+      >
+        {action.error && (
+          <Alert variant="destructive" className="mb-4">
+            {action.error}
+          </Alert>
+        )}
+        {editing && (
+          <ContactForm
+            contact={editing === "new" ? null : editing}
+            errors={action.fieldErrors}
+            pending={action.pending}
+            onCancel={() => setEditing(null)}
+            onSave={async (input, id) => {
+              const ok = await action.run(() =>
+                id ? notifications.updateContact(id, input) : notifications.createContact(input),
+              );
+              if (ok) {
+                setEditing(null);
+                reload();
+              }
+            }}
+          />
+        )}
+      </Dialog>
       <Card className="p-0">
         <ul className="divide-y" data-testid="contacts-list">
           {data.contacts.length === 0 && (
@@ -254,47 +265,44 @@ function ContactForm({
     );
   }
   return (
-    <Card>
-      <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
-        <h3 className="font-semibold sm:col-span-2">{contact ? "Editar contacto" : "Nuevo contacto"}</h3>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="contact-name">Nombre</Label>
-          <Input
-            id="contact-name"
-            name="name"
-            defaultValue={contact?.name ?? ""}
-            placeholder="Dueña"
-            required
-          />
-          <FieldError>{errors.name}</FieldError>
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="contact-phone">Teléfono (WhatsApp)</Label>
-          <Input
-            id="contact-phone"
-            name="phone"
-            type="tel"
-            defaultValue={contact ? formatPhone(contact.phone) : ""}
-            required
-          />
-          <FieldError>{errors.phone}</FieldError>
-        </div>
-        <div className="flex flex-col gap-1 sm:col-span-2">
-          {toggle("notifyNewOrder", "Recibe los pedidos nuevos")}
-          {toggle("notifyPaymentRecorded", "Recibe los pagos registrados")}
-          {toggle("showToCustomer", "El cliente lo ve como contacto de la tienda")}
-          {toggle("isActive", "Activo")}
-        </div>
-        <div className="flex gap-2 sm:col-span-2">
-          <Button type="submit" disabled={pending}>
-            {pending ? "Guardando…" : "Guardar"}
-          </Button>
-          <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancelar
-          </Button>
-        </div>
-      </form>
-    </Card>
+    <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="contact-name">Nombre</Label>
+        <Input
+          id="contact-name"
+          name="name"
+          defaultValue={contact?.name ?? ""}
+          placeholder="Dueña"
+          required
+        />
+        <FieldError>{errors.name}</FieldError>
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="contact-phone">Teléfono (WhatsApp)</Label>
+        <Input
+          id="contact-phone"
+          name="phone"
+          type="tel"
+          defaultValue={contact ? formatPhone(contact.phone) : ""}
+          required
+        />
+        <FieldError>{errors.phone}</FieldError>
+      </div>
+      <div className="flex flex-col gap-1 sm:col-span-2">
+        {toggle("notifyNewOrder", "Recibe los pedidos nuevos")}
+        {toggle("notifyPaymentRecorded", "Recibe los pagos registrados")}
+        {toggle("showToCustomer", "El cliente lo ve como contacto de la tienda")}
+        {toggle("isActive", "Activo")}
+      </div>
+      <div className="flex gap-2 sm:col-span-2">
+        <Button type="submit" disabled={pending}>
+          {pending ? "Guardando…" : "Guardar"}
+        </Button>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancelar
+        </Button>
+      </div>
+    </form>
   );
 }
 
