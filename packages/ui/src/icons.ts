@@ -18,6 +18,7 @@ export {
   Coins,
   CreditCard,
   ExternalLink,
+  Ellipsis,
   Eye,
   EyeOff,
   FileSpreadsheet,

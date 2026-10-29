@@ -215,6 +215,54 @@ try {
   );
   await shot(rootPage, "06-superadmin-hidden-1280");
   await rootPage.context().close();
+
+  // --- Superadmin › Tiendas (list v3) ---------------------------------------------------------------------------
+  for (const [width, dark] of [
+    [1280, false],
+    [1280, true],
+    [390, false],
+    [390, true],
+  ]) {
+    const page = await newPage(rootSession, { width, height: width === 390 ? 844 : 900, dark });
+    let listRequests = 0;
+    page.on(
+      "request",
+      (r) => r.url().includes("/api/v1/platform/stores") && r.method() === "GET" && listRequests++,
+    );
+    await page.goto(`${PLATFORM_URL}/superadmin`);
+    const row = page.getByTestId(width === 390 ? "store-card-demo" : "store-row-demo");
+    await row.waitFor({ timeout: 60000 });
+    const tag = `${width}${dark ? "-dark" : ""}`;
+    if (!dark) {
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      check(`superadmin list ${width}: no horizontal scroll`, overflow <= 0, overflow);
+      // Each request is one SQL statement (platform_stores_overview); dev mounts effects twice (React StrictMode).
+      check(`superadmin list ${width}: at most one list request per mount`, listRequests <= 2, listRequests);
+      for (const text of ["Por cobrar", "Vence", "pedidos 30 d", "Último pedido", "productos"]) {
+        check(`superadmin list ${width}: shows «${text}»`, (await page.getByText(text).count()) > 0);
+      }
+    }
+    await shot(page, `07-superadmin-list-${tag}`);
+    if (width === 1280 && !dark) {
+      await page.getByTestId("store-search").fill("zzz-no-such-store");
+      check(
+        "superadmin list: search with no match",
+        (await page.getByText("Ninguna tienda coincide").count()) === 1,
+      );
+      await page.getByTestId("store-search").fill("demo");
+      await row.waitFor();
+      check("superadmin list: search by slug finds the Demo", true);
+      await page.getByTestId("store-search").fill("");
+      await page.getByTestId("store-actions-demo").first().locator("summary").click();
+      await shot(page, "08-superadmin-list-actions-1280");
+      await page.getByRole("button", { name: "Enviar acceso al dueño" }).first().click();
+      check(
+        "superadmin list: «Enviar acceso al dueño» opens from the row",
+        (await page.getByTestId("row-owner-access").count()) === 1,
+      );
+    }
+    await page.context().close();
+  }
 } catch (error) {
   check("unexpected error", false, error?.stack ?? error);
 } finally {
