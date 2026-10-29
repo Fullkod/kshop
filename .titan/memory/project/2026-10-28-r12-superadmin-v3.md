@@ -20,5 +20,5 @@ menú para que nos lo pidan a nosotros (soporte), u ocultar lo que no usan. PRP:
 - Pruebas: `pnpm e2e:sections`, `pnpm qa:sections`.
 
 ## Estado
-- Hecho y verificado; migración en prueba y producción (RLS 692/692). **No desplegado**: falta push con permiso.
+- Hecho y verificado; migración en prueba y producción (RLS 692/692). Subido a `main` por Roberto (2026-10-29).
 - Hueco conocido: «Monedas» gestionada se puede tocar desde Catálogo › Monedas (misma ruta `catalog/currencies`).

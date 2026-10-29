@@ -1,8 +1,8 @@
 # PRP R12: Panel del superadmin v3 (menú de cada tienda, lista de tiendas y accesos directos)
 
 > **Estado**: HECHO (2026-10-28, commits `b2a8161`..`21258c6` + docs; aprobado por Roberto). Migración en prueba y
-> producción (RLS 692/692 en las dos), `e2e:sections` 15/15, `qa:sections` 31/31, build en verde. **Sin desplegar**
-> (falta el push a `main` con permiso de Roberto). Texto de la marca: «Gestionado por admin».
+> producción (RLS 692/692 en las dos), `e2e:sections` 15/15, `qa:sections` 31/31, build en verde. Subido a `main` por Roberto
+> (2026-10-29). Texto de la marca: «Gestionado por admin».
 > **Fecha**: 2026-10-28
 > **Proyecto**: Kshop
 > **Sigue a**: `prp-r8-superadmin-y-realtime.md` (panel v2) y `prp-r11-rendimiento-admin.md` («Pendiente tras R11»:

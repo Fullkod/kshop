@@ -1,6 +1,6 @@
 # PRP R13: crear y editar en diálogo en el admin
 
-> **Estado**: HECHO (2026-10-28), sin desplegar (falta push con permiso de Roberto). Criterio aprobado por Roberto el 2026-10-28 («me parece bien lo de los modal»,
+> **Estado**: HECHO (2026-10-28), subido a `main` por Roberto (2026-10-29). Criterio aprobado por Roberto el 2026-10-28 («me parece bien lo de los modal»,
 > memoria `project/2026-10-28-admin-formularios-en-dialogo.md`) y «continúa con r13».
 > **Proyecto**: Kshop · **Sigue a**: R12 (`prp-r12-superadmin-v3.md`).
 
