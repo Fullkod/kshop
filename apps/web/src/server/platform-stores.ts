@@ -1,84 +1,26 @@
 import "server-only";
-import {
-  DEFAULT_HOME_SECTIONS,
-  storeOrigin,
-  type CreateStoreInput,
-  type PlanCode,
-  type StoreStatus,
-} from "@kshop/core";
+import { DEFAULT_HOME_SECTIONS, storeOrigin, type CreateStoreInput, type StoreStatus } from "@kshop/core";
 import type { CreateStoreResponse, PlatformStore } from "@kshop/data";
 import { publicEnv, platformProtocol } from "@/env";
 import { serverEnv } from "./env";
 import { HttpError, notFound } from "./http";
 import { getServiceClient } from "./supabase";
 
-type StoreRow = {
-  id: string;
-  slug: string;
-  name: string;
-  status: StoreStatus;
-  base_currency: PlatformStore["baseCurrency"];
-  created_at: string;
-  store_domains: { domain: string; is_primary: boolean }[];
-  subscriptions: {
-    status: string;
-    trial_ends_at: string | null;
-    plans: { code: PlanCode; name: string } | null;
-  } | null;
-  store_members: { user_id: string; role: string }[];
-};
-
-const STORE_SELECT = `
-  id, slug, name, status, base_currency, created_at,
-  store_domains (domain, is_primary),
-  subscriptions (status, trial_ends_at, plans (code, name)),
-  store_members (user_id, role)
-`;
-
-async function ownerEmails(): Promise<Map<string, string | null>> {
-  // Few staff accounts at this stage; paginate when the platform grows.
-  const { data, error } = await getServiceClient().auth.admin.listUsers({ perPage: 1000 });
-  if (error) throw error;
-  return new Map(data.users.map((u) => [u.id, u.email ?? null]));
-}
-
-function toPlatformStore(row: StoreRow, emails: Map<string, string | null>): PlatformStore {
-  const owner = row.store_members.find((m) => m.role === "owner");
-  return {
-    id: row.id,
-    slug: row.slug,
-    name: row.name,
-    status: row.status,
-    baseCurrency: row.base_currency,
-    primaryDomain: row.store_domains.find((d) => d.is_primary)?.domain ?? null,
-    plan: row.subscriptions?.plans ?? null,
-    subscriptionStatus: row.subscriptions?.status ?? null,
-    trialEndsAt: row.subscriptions?.trial_ends_at ?? null,
-    owner: owner ? { id: owner.user_id, email: emails.get(owner.user_id) ?? null } : null,
-    createdAt: row.created_at,
-  };
-}
-
+/**
+ * Every store with its owner, plan, billing and activity in one statement (R12: platform_stores_overview, service_role
+ * only). It replaced a stores select plus auth.admin.listUsers(perPage 1000) on every load.
+ */
 export async function listPlatformStores(): Promise<PlatformStore[]> {
-  const { data, error } = await getServiceClient()
-    .from("stores")
-    .select(STORE_SELECT)
-    .order("created_at", { ascending: false })
-    .returns<StoreRow[]>();
+  const { data, error } = await getServiceClient().rpc("platform_stores_overview");
   if (error) throw error;
-  const emails = await ownerEmails();
-  return data.map((row) => toPlatformStore(row, emails));
+  return (data ?? []) as PlatformStore[];
 }
 
 export async function getPlatformStore(storeId: string): Promise<PlatformStore> {
-  const { data, error } = await getServiceClient()
-    .from("stores")
-    .select(STORE_SELECT)
-    .eq("id", storeId)
-    .maybeSingle<StoreRow>();
-  if (error) throw error;
-  if (!data) throw notFound("Tienda");
-  return toPlatformStore(data, await ownerEmails());
+  // Few stores at this stage: the overview of all of them costs one indexed statement.
+  const store = (await listPlatformStores()).find((s) => s.id === storeId);
+  if (!store) throw notFound("Tienda");
+  return store;
 }
 
 async function isSlugTaken(slug: string): Promise<boolean> {

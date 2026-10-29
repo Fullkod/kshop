@@ -1,5 +1,5 @@
 import "server-only";
-import { hasMinRole, type ModuleCode, type StoreRole } from "@kshop/core";
+import { hasMinRole, type ModuleCode, type SectionSettings, type StoreRole } from "@kshop/core";
 import { cacheLife, cacheTag } from "next/cache";
 import { forbidden, HttpError, unauthorized } from "./http";
 import { getServiceClient } from "./supabase";
@@ -74,6 +74,8 @@ export type StoreGuard = {
   role: StoreRole | null;
   storeStatus: string | null;
   suspendedReason: string | null;
+  /** R12: sections of the admin menu that are not visible (no entry = visible). */
+  sections?: SectionSettings;
 };
 
 const requestGuards = new WeakMap<ApiUser, Map<string, Promise<StoreGuard>>>();

@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { CONFIGURABLE_SECTIONS } from "./admin-sections";
 import { MODULE_CODES } from "./modules";
 import { RESERVED_SLUGS } from "./slug";
 
@@ -13,9 +14,22 @@ const migrations = readdirSync(migrationsDir)
 describe("TypeScript constants mirror the database", () => {
   it("MODULE_CODES matches the seeded public.modules", () => {
     // Every insert into public.modules (phase 0b seed, later modules such as vouchers in phase 5).
-    const seeds = [...migrations.matchAll(/insert into public\.modules[\s\S]*?on conflict/g)].map((m) => m[0]);
-    const codes = seeds.flatMap((seed) => [...seed.matchAll(/^\s*(?:values )?\('([a-z_]+)'/gm)].map((m) => m[1]));
+    const seeds = [...migrations.matchAll(/insert into public\.modules[\s\S]*?on conflict/g)].map(
+      (m) => m[0],
+    );
+    const codes = seeds.flatMap((seed) =>
+      [...seed.matchAll(/^\s*(?:values )?\('([a-z_]+)'/gm)].map((m) => m[1]),
+    );
     expect(codes.sort()).toEqual([...MODULE_CODES].sort());
+  });
+
+  it("CONFIGURABLE_SECTIONS matches the check of store_section_settings", () => {
+    const check =
+      migrations.match(
+        /section text not null references public\.modules \(code\) check \(section in \(([\s\S]*?)\)\)/,
+      )?.[1] ?? "";
+    const sections = [...check.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);
+    expect(sections.sort()).toEqual([...CONFIGURABLE_SECTIONS].sort());
   });
 
   it("RESERVED_SLUGS matches the stores_slug_not_reserved check", () => {

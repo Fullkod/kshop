@@ -1,6 +1,7 @@
 export * from "./currency";
 export * from "./host";
 export * from "./modules";
+export * from "./admin-sections";
 export * from "./platform";
 export * from "./roles";
 export * from "./slug";

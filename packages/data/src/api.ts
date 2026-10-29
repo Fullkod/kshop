@@ -1,5 +1,7 @@
 import type {
   ProductSort,
+  SectionSettings,
+  SectionVisibilityInput,
   AttributeInput,
   CustomDomainInput,
   CustomDomainStatus,
@@ -116,6 +118,8 @@ export type AdminBootstrap = {
   addonPrices: Record<string, number>;
   /** Orders waiting for confirmation (the bell). */
   toConfirm: number;
+  /** R12: admin menu sections that are not visible (no entry = visible). Absent in boots cached before R12. */
+  sections?: SectionSettings;
 };
 
 export type EntitlementsResponse = {
@@ -135,8 +139,17 @@ export type PlatformStore = {
   plan: { code: PlanCode; name: string } | null;
   subscriptionStatus: string | null;
   trialEndsAt: string | null;
-  owner: { id: string; email: string | null } | null;
+  owner: { id: string; email: string | null; lastSignInAt: string | null } | null;
   createdAt: string;
+  /** R12: Superadmin › Tiendas reads all of it in one statement (platform_stores_overview). */
+  suspendedReason: "billing" | "manual" | null;
+  currentPeriodEnd: string | null;
+  /** USD still owed on pending platform invoices. */
+  amountDue: number;
+  nextDueAt: string | null;
+  orders30d: number;
+  lastOrderAt: string | null;
+  products: number;
 };
 
 export type CreateStoreResponse = {
@@ -1156,6 +1169,10 @@ export function createApiClient(options: ApiClientOptions) {
         request<{ store: PlatformStore }>("PATCH", `/platform/stores/${storeId}`, { status }),
       ownerAccess: (storeId: string) =>
         request<OwnerAccessResponse>("POST", `/platform/stores/${storeId}/owner-access`),
+      sections: (storeId: string) =>
+        request<{ sections: SectionSettings }>("GET", `/platform/stores/${storeId}/sections`),
+      setSection: (storeId: string, input: SectionVisibilityInput) =>
+        request<{ sections: SectionSettings }>("PUT", `/platform/stores/${storeId}/sections`, input),
       domains: () =>
         request<{ domains: PlatformDomain[]; mode: "dry_run" | "live" }>("GET", "/platform/domains"),
       checkDomain: (id: string) => request<null>("POST", `/platform/domains/${id}/check`),
