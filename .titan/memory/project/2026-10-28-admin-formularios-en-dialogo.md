@@ -19,4 +19,5 @@ Roberto no quiere que los formularios de crear/editar del admin salgan en la mis
   QA `pnpm qa:dialogs` (capturas en `.titan/qa/r13-dialogos/`). PRP: `.titan/plans/prp-r13-formularios-en-dialogo.md`.
 - **Regla para pantallas nuevas del admin:** crear/editar corto → `Dialog` de `@kshop/ui`; largo (producto, pedido) → página.
 - **Siguiente (Roberto, 2026-10-28): las confirmaciones también en diálogo** → PRP R14
-  (`.titan/plans/prp-r14-confirmaciones-en-dialogo.md`), pendiente de aprobación.
+  (`.titan/plans/prp-r14-confirmaciones-en-dialogo.md`); P1–P4 respondidas el 2026-10-29 (confirmar también los borrados
+  que hoy no preguntan, suspender tienda, quitar regalo/suelto; cancelar pedido y anular factura en diálogo).

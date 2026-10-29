@@ -83,7 +83,7 @@ Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desa
 | R11. Rendimiento del admin | Hecha 2026-10-28: todo se lee por funciones SQL (`admin_*`, `sf_*`), pg_graphql quitado de producción, proyecto de prueba «KShop Test»; admin mediana 1,05 s. **Pendiente**: 24 h de logs y la tabla «Pendiente tras R11» del PRP | `prp-r11-rendimiento-admin.md`, `project/2026-10-28-diagnostico-rendimiento.md` | `634a742` |
 | R12. Superadmin v3 | Hecha 2026-10-28: secciones del menú por tienda (Visible / Gestionado por admin / Oculto, 403 en la API), lista de tiendas v3, «Menú de la tienda». Migración en producción. **Pendiente**: push/deploy (con permiso) y enlace de entrada de un solo uso | `prp-r12-superadmin-v3.md`, `project/2026-10-28-r12-superadmin-v3.md` | `d487b17` |
 | R13. Formularios en diálogo | Hecha 2026-10-28: `Dialog` de `@kshop/ui`, 17 pantallas. **Pendiente**: push/deploy (con permiso) | `prp-r13-formularios-en-dialogo.md`, `project/2026-10-28-admin-formularios-en-dialogo.md` | `4d30e09` |
-| R14. Confirmaciones en diálogo | **PRP pendiente de aprobación** (P1–P4) | `prp-r14-confirmaciones-en-dialogo.md` | — |
+| R14. Confirmaciones en diálogo | PRP con P1–P4 respondidas (2026-10-29: todo como se proponía); falta el «adelante» | `prp-r14-confirmaciones-en-dialogo.md` | — |
 | 8. Migrar klauShop | 8.1–8.5 hechas 2026-10-28 (tienda `klau`; `klaushop:verify` 21/22, el único «not ok» son los avisos del incidente documentado). **Pendiente**: 8.6 (QA en navegador y medición) y 8.7 (corte, con permiso de Roberto) | `prp-fase-8-klaushop.md` | ver PRP |
 
 El remoto `origin` (`Fullkod/kshop`) lo sube Roberto. Al 2026-10-28 `origin/main` llega hasta `c9f63a9` (incluye R12

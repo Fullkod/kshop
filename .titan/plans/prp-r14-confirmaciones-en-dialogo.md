@@ -1,6 +1,7 @@
 # PRP R14: confirmaciones en diálogo
 
-> **Estado**: PENDIENTE de aprobación de Roberto (2026-10-28). No se ha tocado código.
+> **Estado**: PREGUNTAS RESPONDIDAS (2026-10-29, P1–P4 como se proponían; ver «Respuestas de Roberto»). Falta el
+> «adelante» para implementar. No se ha tocado código.
 > **Proyecto**: Kshop · **Sigue a**: R13 (`prp-r13-formularios-en-dialogo.md`, el `Dialog` de `@kshop/ui`).
 > Memoria: `project/2026-10-28-admin-formularios-en-dialogo.md`.
 
@@ -32,7 +33,7 @@ confirmación en línea (cancelar pedido, anular factura) se abren en diálogo c
 - [ ] 0 llamadas a `window.confirm`/`window.prompt`/`window.alert` en `apps/` y `packages/` (regla de ESLint
       `no-restricted-globals`/`no-alert` para que no vuelvan).
 - [ ] Las 13 llamadas de hoy (12 `confirm`, 1 `prompt`) pasan al diálogo con el mismo texto (inventario abajo).
-- [ ] Ganan confirmación (P1–P3, si Roberto las aprueba): borrar promoción, cupón, zona, método de entrega, método de
+- [ ] Ganan confirmación (P1–P3, aprobadas): borrar promoción, cupón, zona, método de entrega, método de
       pago y contacto de WhatsApp; suspender tienda; quitar regalo y quitar módulo suelto.
 - [ ] Cancelar pedido y anular factura se abren en diálogo con su motivo (P4); la fecha de un regalo, en un diálogo
       con `<input type="date">`.
@@ -85,6 +86,12 @@ la tienda pública (no tiene confirmaciones).
 | P2 | ¿Confirmar «Suspender tienda» en el superadmin? | Sí («La tienda deja de vender y su admin queda en solo lectura»); reactivar no pregunta |
 | P3 | ¿Confirmar «Quitar regalo» y «Quitar suelto»? | Sí (cambian la próxima factura) |
 | P4 | ¿Cancelar pedido y anular factura en diálogo (con el motivo dentro)? | Sí, como los formularios de R13 |
+
+### Respuestas de Roberto (2026-10-29)
+- **P1: sí**, confirman los borrados de promociones, cupones, zonas, métodos de entrega y de pago y contactos.
+- **P2: sí, solo al suspender** («La tienda deja de vender y su admin queda en solo lectura»); reactivar no pregunta.
+- **P3: sí**, «Quitar regalo» y «Quitar suelto» confirman (cambian la próxima factura).
+- **P4: sí**, cancelar pedido y anular factura en diálogo con el motivo dentro.
 
 ### Decisiones técnicas
 | # | Decisión | Por qué |
@@ -160,4 +167,4 @@ diálogo con campo de fecha), mismo texto.
 
 ---
 
-*PRP pendiente de aprobación. No se ha modificado código.*
+*Preguntas respondidas el 2026-10-29. No se ha modificado código.*
