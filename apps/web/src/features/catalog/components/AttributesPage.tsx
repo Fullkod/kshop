@@ -1,7 +1,7 @@
 "use client";
 
 import { ATTRIBUTE_INPUT_TYPES, VALUE_LIST_TYPES, type AttributeInputType } from "@kshop/core";
-import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label, Select } from "@kshop/ui";
+import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label, Select, useConfirm } from "@kshop/ui";
 import { useState } from "react";
 import { useApiAction, useCatalogApi, useCatalogStructure, type Attribute } from "../use-catalog";
 
@@ -36,6 +36,7 @@ export function AttributesPage() {
   const { data, error, reload } = useCatalogStructure();
   const { catalog, canManageStructure } = useCatalogApi();
   const action = useApiAction();
+  const { confirm } = useConfirm();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [newValue, setNewValue] = useState("");
 
@@ -95,7 +96,14 @@ export function AttributesPage() {
   }
 
   async function onDelete(a: Attribute) {
-    if (!window.confirm(`¿Borrar el atributo «${a.name}» y sus valores?`)) return;
+    if (
+      !(await confirm({
+        title: `¿Borrar el atributo «${a.name}» y sus valores?`,
+        confirmLabel: "Borrar",
+        tone: "destructive",
+      }))
+    )
+      return;
     if ((await action.run(() => catalog.remove("attributes", a.id))) !== undefined) reload();
   }
 

@@ -2,7 +2,7 @@
 
 import { CUSTOM_DOMAIN_STATUS_LABELS, storePublicOrigin } from "@kshop/core";
 import { ApiError, type CustomDomain, type CustomDomainResponse } from "@kshop/data";
-import { Alert, Badge, Button, Card, FieldError, Input, Label } from "@kshop/ui";
+import { Alert, Badge, Button, Card, FieldError, Input, Label, useConfirm } from "@kshop/ui";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { platformProtocol, publicEnv } from "@/env";
@@ -55,6 +55,7 @@ export function CustomDomainPage() {
   const store = useStore();
   const admin = useAdmin();
   const { api } = useSession();
+  const { confirm } = useConfirm();
   const [data, setData] = useState<CustomDomainResponse | null>(null);
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -112,8 +113,15 @@ export function CustomDomainPage() {
           ? "El dominio está verificado."
           : "Todavía no vemos los registros DNS. Pueden tardar hasta unas horas en propagarse.";
     });
-  const onRemove = () => {
-    if (!window.confirm("¿Quitar el dominio? La tienda volverá a verse solo en su dirección de Kshop."))
+  const onRemove = async () => {
+    if (
+      !(await confirm({
+        title: "¿Quitar el dominio?",
+        description: "La tienda volverá a verse solo en su dirección de Kshop.",
+        confirmLabel: "Quitar",
+        tone: "destructive",
+      }))
+    )
       return;
     void run(async () => {
       await api.customDomain(store.id).remove();

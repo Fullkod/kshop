@@ -33,7 +33,7 @@
 - [pendiente-realtime.md](project/pendiente-realtime.md) — Realtime con señales sin datos (hecho 2026-10-27): temas, dónde está y cómo añadir una pantalla
 - [lecturas-tienda-r9.md](project/lecturas-tienda-r9.md) — Por qué la Nano se hundía (demasiadas consultas en serie, recorridos del catálogo, tienda en frío tras cada pedido), qué se cambió en R9 y la deuda resuelta en R10 (RLS con subplan hash, facetas en una pasada, entitlements cacheados)
 - [2026-10-28-diagnostico-rendimiento.md](project/2026-10-28-diagnostico-rendimiento.md) — Auditoría del admin lento y los 57014: no es volumen; peaje de esquema de pg_graphql por conexión + ráfagas del desarrollo + admin frágil + bug login/set-password; reglas operativas (nada de e2e/qa/imports/build con la web en uso), decisiones D1–D5 cerradas, WhatsApp en «Simulado» durante R11; **todo se lee por funciones SQL (`admin_*`, `sf_*`); pg_graphql quitado de producción** (decisión de Roberto, 2026-10-28); proyecto de prueba «KShop Test»
-- [2026-10-28-admin-formularios-en-dialogo.md](project/2026-10-28-admin-formularios-en-dialogo.md) — Crear/editar del admin en diálogo (cortos) o página (producto, pedido); hoja en móvil; `Dialog` de `@kshop/ui`; **R13 hecho** (17 pantallas, sin desplegar); confirmaciones → R14 (PRP pendiente)
+- [2026-10-28-admin-formularios-en-dialogo.md](project/2026-10-28-admin-formularios-en-dialogo.md) — Crear/editar del admin en diálogo (cortos) o página (producto, pedido); hoja en móvil; `Dialog` de `@kshop/ui`; **R13 hecho** (17 pantallas, sin desplegar); confirmaciones en `useConfirm()` (R14 hecho)
 - [2026-10-28-r12-superadmin-v3.md](project/2026-10-28-r12-superadmin-v3.md) — R12 hecho: secciones del menú por tienda (Visible / Gestionado por admin / Oculto, 403 en la API), lista de tiendas v3, «Menú de la tienda»; dónde está cada pieza; sin desplegar
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
 
@@ -49,7 +49,7 @@
 
 ## Planes (`.titan/plans/`)
 
-- `arranque-y-fases.md` — Paso 0, convenciones, fases 0a–8 y tabla de estado (al 2026-10-28: 0a–7, v2 y R8–R13 hechas; R14 con preguntas respondidas; Fase 8 en 8.6)
+- `arranque-y-fases.md` — Paso 0, convenciones, fases 0a–8 y tabla de estado (al 2026-10-28: 0a–7, v2 y R8–R14 hechas; Fase 8 en 8.6)
 - `prp-base.md` — Plantilla de PRP
 - `prp-fase-0b-cimientos.md` — Fase 0b: monorepo, esquema de plataforma + RLS + tests A/B, host → tienda, superadmin (COMPLETADO 2026-10-24, commit 9fcd43f)
 - `prp-fase-1-catalogo.md` — Fase 1: catálogo (tipos, atributos, variantes, costo privado, monedas, categorías, colecciones, marcas, medias, almacenes/stock, Excel) (COMPLETADO 2026-10-25, commits hasta d6f1507)
@@ -67,4 +67,4 @@
 - `prp-r11-rendimiento-admin.md` — R11: admin lento y 57014 según el informe de diagnóstico (`.titan/qa/r11-rendimiento-admin/`): bug login/set-password, sesión estable + timeouts/reintento único, arranque plano por `/api/v1/me?storeId=` (`admin_bootstrap`), `getClaims` + `api_guard`, proxy sin RPC de dominio, G10/cron/tests condicionales; D1–D6 cerradas: proyecto de prueba «KShop Test» (Docker retirado), cron solo promociones, getClaims sí, G13 hecho y G14 descartado, todo a funciones SQL y pg_graphql quitado, pagar tras medir. **HECHO** 2026-10-28 (admin mediana 1,05 s, p95 2,2 s, 0 errores); falta la Fase 7 (24 h de logs) y lo de «Pendiente tras R11»
 - `prp-r12-superadmin-v3.md` — R12: visibilidad del menú de cada tienda (Visible / Gestionado / Oculto) con bloqueo de escrituras en `assertStoreWritable`, tabla `store_section_settings`, lista de tiendas v3 (`platform_stores_overview`, búsqueda, filtros, acciones) y accesos directos en la ficha; D1–D10; preguntas respondidas: básicas siempre visibles, texto «Gestionado por admin», todas las columnas — **HECHO** 2026-10-28 (sin desplegar)
 - `prp-r13-formularios-en-dialogo.md` — R13: crear/editar del admin en `Dialog` (`<dialog>` nativo, hoja en móvil), 17 pantallas, `qa:dialogs` — **HECHO** 2026-10-28 (sin desplegar)
-- `prp-r14-confirmaciones-en-dialogo.md` — R14: `window.confirm`/`prompt` → `ConfirmDialog` + `useConfirm()` sobre el `Dialog` de R13 (13 llamadas), confirmar borrados y acciones del superadmin que hoy no preguntan, cancelar pedido y anular factura en diálogo, regla `no-alert`; P1–P4 respondidas 2026-10-29 (todo como se proponía; falta el «adelante»)
+- `prp-r14-confirmaciones-en-dialogo.md` — R14: `window.confirm`/`prompt` → `ConfirmDialog` + `useConfirm()` sobre el `Dialog` de R13 (13 llamadas), confirmar borrados y acciones del superadmin que hoy no preguntan, cancelar pedido y anular factura en diálogo, regla `no-alert`; **HECHO** 2026-10-29 (`qa:confirms` 32/32; sin desplegar)

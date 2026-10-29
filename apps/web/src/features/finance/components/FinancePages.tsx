@@ -25,7 +25,19 @@ import {
   type MoneyByCurrency,
   type WarehouseSummary,
 } from "@kshop/data";
-import { Alert, BarChart, Button, Card, Dialog, FieldError, Input, Label, Select, cn } from "@kshop/ui";
+import {
+  Alert,
+  BarChart,
+  Button,
+  Card,
+  Dialog,
+  FieldError,
+  Input,
+  Label,
+  Select,
+  cn,
+  useConfirm,
+} from "@kshop/ui";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useStorePathname } from "@/lib/navigation";
@@ -897,6 +909,7 @@ export function FinanceExpensesPage() {
   // R13: adding and editing open the form in a dialog ("new" = add).
   const [open, setOpen] = useState<Expense | "new" | null>(null);
   const editing = open && open !== "new" ? open : null;
+  const { confirm } = useConfirm();
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, string>>({});
   const [pending, setPending] = useState(false);
@@ -932,9 +945,11 @@ export function FinanceExpensesPage() {
 
   async function remove(expense: Expense) {
     if (
-      !window.confirm(
-        `¿Borrar el gasto «${expense.category}» de ${formatMoney(expense.amount, expense.currency)}?`,
-      )
+      !(await confirm({
+        title: `¿Borrar el gasto «${expense.category}» de ${formatMoney(expense.amount, expense.currency)}?`,
+        confirmLabel: "Borrar",
+        tone: "destructive",
+      }))
     )
       return;
     try {

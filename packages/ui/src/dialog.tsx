@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode, type RefObject } from "react";
 import { cn } from "./cn";
 import { X } from "./icons";
 
@@ -18,6 +18,8 @@ export function Dialog({
   size = "md",
   children,
   className,
+  initialFocus,
+  compact = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -26,6 +28,10 @@ export function Dialog({
   size?: "md" | "lg";
   children: ReactNode;
   className?: string;
+  /** Element focused on opening (showModal focuses the first focusable one, the close button, otherwise). */
+  initialFocus?: RefObject<HTMLElement | null>;
+  /** Below 640 px, a bottom sheet as tall as its content (confirmations) instead of the full screen (forms). */
+  compact?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -33,9 +39,12 @@ export function Dialog({
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
+    if (open && !dialog.open) {
+      dialog.showModal();
+      initialFocus?.current?.focus();
+    }
     if (!open && dialog.open) dialog.close();
-  }, [open]);
+  }, [open, initialFocus]);
 
   return (
     <dialog
@@ -43,7 +52,8 @@ export function Dialog({
       aria-labelledby={titleId}
       onClose={() => open && onClose()}
       className={cn(
-        "m-0 mt-auto h-dvh max-h-none w-full max-w-none overflow-hidden bg-background p-0 text-foreground shadow-sf-lg",
+        "m-0 mt-auto w-full max-w-none overflow-hidden bg-background p-0 text-foreground shadow-sf-lg",
+        compact ? "h-fit max-h-[90dvh] rounded-t-xl" : "h-dvh max-h-none",
         "backdrop:bg-[color-mix(in_srgb,var(--ink)_55%,transparent)]",
         "sm:m-auto sm:h-fit sm:max-h-[90dvh] sm:w-[calc(100%-2rem)] sm:rounded-xl sm:border",
         size === "md" ? "sm:max-w-xl" : "sm:max-w-3xl",

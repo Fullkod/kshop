@@ -13,7 +13,7 @@ import {
   type ProductSort,
 } from "@kshop/core";
 import type { ApiClient } from "@kshop/data";
-import { Alert, Badge, Button, Card, Dialog, Input, Label } from "@kshop/ui";
+import { Alert, Badge, Button, Card, Dialog, Input, Label, useConfirm } from "@kshop/ui";
 import { useState, type ReactNode } from "react";
 import { categoryOptions, useApiAction, type CatalogStructure } from "@/features/catalog/use-catalog";
 import type { AdminContent, AdminSection } from "../use-content";
@@ -294,6 +294,7 @@ export function SectionsEditor({
   reload: () => void;
 }) {
   const action = useApiAction();
+  const { confirm } = useConfirm();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [newType, setNewType] = useState<HomeSectionType>("hero_slider");
 
@@ -315,7 +316,13 @@ export function SectionsEditor({
     if ((await action.run(() => api.reorder("sections", ids))) !== undefined) reload();
   }
   async function remove(section: AdminSection) {
-    if (!window.confirm(`¿Borrar la sección «${section.title || HOME_SECTION_LABELS[section.type]}»?`))
+    if (
+      !(await confirm({
+        title: `¿Borrar la sección «${section.title || HOME_SECTION_LABELS[section.type]}»?`,
+        confirmLabel: "Borrar",
+        tone: "destructive",
+      }))
+    )
       return;
     if ((await action.run(() => api.remove("sections", section.id))) !== undefined) reload();
   }

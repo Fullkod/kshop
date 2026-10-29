@@ -17,7 +17,7 @@ import {
   type ProductStatus,
 } from "@kshop/core";
 import { asResult, type ProductDetailQuery, type ProductMedia, type ResultOf } from "@kshop/data";
-import { Alert, Badge, Button, Card, FieldError, Input, Label, Select } from "@kshop/ui";
+import { Alert, Badge, Button, Card, FieldError, Input, Label, Select, useConfirm } from "@kshop/ui";
 import { useEffect, useMemo, useState } from "react";
 import { uploadProductImage } from "../images";
 import { LoadError } from "../LoadError";
@@ -208,6 +208,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
   const { data: structure, error: structureError, reload: reloadStructure } = useCatalogStructure();
   const { catalog, seesCosts, canDelete, has } = useCatalogApi();
   const action = useApiAction();
+  const { confirm } = useConfirm();
   const [loadedForm, setForm] = useState<Form | null>(null);
   const [mediaEdits, setMediaEdits] = useState<ProductMedia[] | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -451,7 +452,12 @@ export function ProductEditor({ productId }: { productId?: string }) {
   async function onDeleteProduct() {
     if (
       !productId ||
-      !window.confirm("¿Borrar el producto para siempre? Si solo quieres ocultarlo, archívalo.")
+      !(await confirm({
+        title: "¿Borrar el producto para siempre?",
+        description: "Si solo quieres ocultarlo, archívalo.",
+        confirmLabel: "Borrar",
+        tone: "destructive",
+      }))
     )
       return;
     if ((await action.run(() => catalog.deleteProduct(productId))) !== undefined)

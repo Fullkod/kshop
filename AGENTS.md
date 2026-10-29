@@ -99,6 +99,8 @@
   (sin i18n en el MVP, pero sin textos imposibles de extraer después).
 - Componentes `PascalCase.tsx`; funciones/variables `camelCase`.
 - Admin: crear/editar corto en el `Dialog` de `@kshop/ui` (R13); los largos (producto, nuevo pedido) en su página.
+- Confirmaciones con `useConfirm()` de `@kshop/ui` (R14), nunca `window.confirm`/`prompt`/`alert` (lint `no-alert`); todo
+  borrado y toda acción que cambie la factura o suspenda una tienda pregunta antes.
 - Validar con **Zod** toda entrada (route handlers, funciones). Escrituras críticas con
   `requireStoreRole(storeId, role)` explícito en servidor.
 - Operaciones de stock/órdenes en transacción con `for update`.
@@ -130,6 +132,7 @@
 | `pnpm e2e:favorites` | Rediseño v2: API de favoritos del cliente en la Tienda Demo (cliente temporal `@e2e.kshop.test`, se borra), con `pnpm dev` corriendo |
 | `pnpm e2e:sections` · `pnpm qa:sections` | R12: visibilidad de las secciones del admin (403 `section_managed`/`section_hidden` al personal, el superadmin pasa; tienda temporal) y QA en navegador del menú de la Demo, la lista de tiendas y «Menú de la tienda» (capturas en `.titan/qa/r12-superadmin-v3/`), con `pnpm dev` corriendo (`E2E_APP_URL`/`QA_BASE_URL` para otro puerto) |
 | `pnpm qa:dialogs` | R13: QA en navegador de los formularios en diálogo del admin de la Tienda Demo (17 pantallas, crea y borra una marca; capturas en `.titan/qa/r13-dialogos/`), con `pnpm dev` corriendo (`QA_BASE_URL` para otro puerto) |
+| `pnpm qa:confirms` | R14: QA en navegador de las confirmaciones (Tienda Demo como dueño y tienda temporal como superadmin): cancelar no escribe nada, confirmar hace lo de siempre, ninguna caja del navegador; capturas en `.titan/qa/r14-confirmaciones/`, con `pnpm dev` corriendo (`QA_BASE_URL` para otro puerto) |
 | `pnpm app:config <slug>` · `pnpm app:build <slug\|admin>` · `pnpm app:publish <slug\|admin>` · `pnpm app:keystore <slug\|admin>` | Fase 7: config de la app de tienda; proyecto Android con iconos (`--assemble` compila y firma; en la práctica lo hace el workflow «Android app» de GitHub Actions); sube el APK del artefacto a `store-apps` y lo registra oculto; crea la clave de firma fuera del repo (`--github`: secretos de Actions). Ver `docs/APPS.md` |
 | `pnpm qa:apps` | QA en navegador de la app de tienda, Kshop Admin y la distribución (`/app`, Admin › App móvil, Superadmin › Apps), con `pnpm dev` y los Vite de las apps (5173, 5174) corriendo; capturas en `.titan/qa/fase-7/` |
 | `pnpm demo:seed` | Crea/repara la tienda de pruebas permanente «Tienda Demo» (`demo.kshop.localhost:3000`) |

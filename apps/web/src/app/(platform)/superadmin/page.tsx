@@ -17,6 +17,7 @@ import {
   Receipt,
   Search,
   Select,
+  useConfirm,
 } from "@kshop/ui";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react";
@@ -64,6 +65,7 @@ function matches(store: PlatformStore, f: Filters, now: number): boolean {
 // (platform_stores_overview); search, filters and the actions of each store from its row.
 export default function SuperadminStoresPage() {
   const { api } = useSession();
+  const { confirm } = useConfirm();
   const [stores, setStores] = useState<PlatformStore[] | null>(null);
   // When the list was read: «vence en 7 días» and late invoices are measured from it (no clock in render).
   const [now, setNow] = useState(0);
@@ -92,6 +94,16 @@ export default function SuperadminStoresPage() {
   }, [api, live]);
 
   async function setStatus(store: PlatformStore, status: StoreStatus) {
+    if (
+      status === "suspended" &&
+      !(await confirm({
+        title: `¿Suspender «${store.name}»?`,
+        description: "La tienda deja de vender y su admin queda en solo lectura hasta que la reactives.",
+        confirmLabel: "Suspender",
+        tone: "destructive",
+      }))
+    )
+      return;
     setBusyId(store.id);
     setError(null);
     try {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Card, Dialog, FieldError, Input, Label, Select } from "@kshop/ui";
+import { Alert, Button, Card, Dialog, FieldError, Input, Label, Select, useConfirm } from "@kshop/ui";
 import { useState, type FormEvent } from "react";
 import {
   categoryOptions,
@@ -15,6 +15,7 @@ export function CategoriesPage() {
   const { data, error, reload } = useCatalogStructure();
   const { catalog, canManageStructure } = useCatalogApi();
   const action = useApiAction();
+  const { confirm } = useConfirm();
   const [editing, setEditing] = useState<Category | "new" | null>(null);
 
   if (error) return <Alert variant="destructive">{error}</Alert>;
@@ -44,7 +45,14 @@ export function CategoriesPage() {
   }
 
   async function onDelete(category: Category) {
-    if (!window.confirm(`¿Borrar la categoría «${category.name}»?`)) return;
+    if (
+      !(await confirm({
+        title: `¿Borrar la categoría «${category.name}»?`,
+        confirmLabel: "Borrar",
+        tone: "destructive",
+      }))
+    )
+      return;
     if ((await action.run(() => catalog.remove("categories", category.id))) !== undefined) reload();
   }
 

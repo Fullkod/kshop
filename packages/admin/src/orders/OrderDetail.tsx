@@ -18,7 +18,7 @@ import {
   type ShippingType,
 } from "@kshop/core";
 import type { AdminOrderQuery, ResultOf } from "@kshop/data";
-import { Alert, Badge, Button, Card, cn, Input, Label, Select } from "@kshop/ui";
+import { Alert, Badge, Button, Card, cn, Input, Label, Select, useConfirm } from "@kshop/ui";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useApiAction } from "../catalog/use-catalog";
 import { ORDER_TABLES, useStoreVersion } from "../realtime";
@@ -608,35 +608,22 @@ function CancelForm({
   paid: string | null;
   onCancel: (reason?: string) => Promise<boolean>;
 }) {
-  const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState("");
-  if (!open) {
-    return (
-      <Button variant="outline" className="text-destructive" onClick={() => setOpen(true)}>
-        Cancelar pedido
-      </Button>
-    );
+  const { prompt } = useConfirm();
+  // R14: the confirmation (with its optional reason) opens in the Kshop dialog.
+  async function ask() {
+    const reason = await prompt({
+      title: "¿Cancelar el pedido?",
+      description: `Las unidades vuelven al stock.${paid ? ` Se registrará el reembolso de ${paid}.` : ""}`,
+      input: { label: "Motivo (opcional)", maxLength: 300 },
+      confirmLabel: "Confirmar cancelación",
+      cancelLabel: "Volver",
+      tone: "destructive",
+    });
+    if (reason !== null) await onCancel(reason || undefined);
   }
   return (
-    <Card className="flex flex-col gap-3 border-destructive/40 text-sm">
-      <h3 className="font-semibold">Cancelar pedido</h3>
-      <p className="text-muted-foreground">
-        Las unidades vuelven al stock.{paid && ` Se registrará el reembolso de ${paid}.`}
-      </p>
-      <Input
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-        placeholder="Motivo (opcional)"
-        aria-label="Motivo"
-      />
-      <div className="flex gap-2">
-        <Button variant="destructive" onClick={() => onCancel(reason.trim() || undefined)}>
-          Confirmar cancelación
-        </Button>
-        <Button variant="ghost" onClick={() => setOpen(false)}>
-          Volver
-        </Button>
-      </div>
-    </Card>
+    <Button variant="outline" className="text-destructive" onClick={() => void ask()}>
+      Cancelar pedido
+    </Button>
   );
 }

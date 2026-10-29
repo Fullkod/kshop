@@ -2,7 +2,7 @@
 
 import { ROLE_LABELS, type StoreRole } from "@kshop/core";
 import { ApiError, type TeamInviteResponse, type TeamResponse } from "@kshop/data";
-import { Alert, Button, Card, Dialog, FieldError, Input, Label, Select } from "@kshop/ui";
+import { Alert, Button, Card, Dialog, FieldError, Input, Label, Select, useConfirm } from "@kshop/ui";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { formatDate } from "@/lib/format";
 import { useSession } from "@/lib/session";
@@ -17,6 +17,7 @@ export default function TeamPage() {
   const admin = useAdmin();
   const { api } = useSession();
   const team = api.team(store.id);
+  const { confirm } = useConfirm();
   const [data, setData] = useState<TeamResponse | null>(null);
   const [invited, setInvited] = useState<TeamInviteResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -198,8 +199,14 @@ export default function TeamPage() {
                       size="sm"
                       variant="ghost"
                       disabled={pending}
-                      onClick={() => {
-                        if (window.confirm(`¿Quitar a ${m.email} del equipo?`))
+                      onClick={async () => {
+                        if (
+                          await confirm({
+                            title: `¿Quitar a ${m.email} del equipo?`,
+                            confirmLabel: "Quitar",
+                            tone: "destructive",
+                          })
+                        )
                           void run(() => team.remove(m.userId));
                       }}
                     >

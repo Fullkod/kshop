@@ -31,6 +31,8 @@ export default tseslint.config(
       // New `any` is forbidden: use `unknown` (AGENTS.md).
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      // R14: confirmations go through useConfirm() of @kshop/ui, never the browser's boxes.
+      "no-alert": "error",
     },
   },
   {

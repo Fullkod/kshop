@@ -9,7 +9,7 @@ import {
   type CurrencyCode,
   type ShippingType,
 } from "@kshop/core";
-import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label, Select } from "@kshop/ui";
+import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label, Select, useConfirm } from "@kshop/ui";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useApiAction } from "@/features/catalog/use-catalog";
@@ -70,6 +70,7 @@ export function ShippingPage() {
   const { api } = useSession();
   const { data, error, reload } = useCheckoutSettings();
   const action = useApiAction();
+  const { confirm } = useConfirm();
   const canEdit = useCanEdit();
   const [editingZone, setEditingZone] = useState<ShippingZone | "new" | null>(null);
   const [editingMethod, setEditingMethod] = useState<ShippingMethod | "new" | null>(null);
@@ -81,7 +82,12 @@ export function ShippingPage() {
     id ? (data.zones.find((z) => z.id === id)?.name ?? "—") : "Todas las zonas";
   const pickupPoints = data.warehouses.filter((w) => w.isPickupPoint);
 
-  async function remove(resource: "zones" | "methods", id: string) {
+  async function remove(resource: "zones" | "methods", id: string, name: string) {
+    const what = resource === "zones" ? "la zona" : "el método de entrega";
+    if (
+      !(await confirm({ title: `¿Borrar ${what} «${name}»?`, confirmLabel: "Borrar", tone: "destructive" }))
+    )
+      return;
     if (await action.run(() => settings.remove(resource, id))) reload();
   }
 
@@ -137,7 +143,7 @@ export function ShippingPage() {
                 detail={z.description}
                 badges={!z.isActive && <Badge variant="muted">Inactiva</Badge>}
                 onEdit={canEdit ? () => setEditingZone(z) : undefined}
-                onDelete={canEdit ? () => remove("zones", z.id) : undefined}
+                onDelete={canEdit ? () => remove("zones", z.id, z.name) : undefined}
               />
             ))}
           </ul>
@@ -214,7 +220,7 @@ export function ShippingPage() {
                   .join(" · ")}
                 badges={!m.isActive && <Badge variant="muted">Inactivo</Badge>}
                 onEdit={canEdit ? () => setEditingMethod(m) : undefined}
-                onDelete={canEdit ? () => remove("methods", m.id) : undefined}
+                onDelete={canEdit ? () => remove("methods", m.id, m.name) : undefined}
               />
             ))}
           </ul>
@@ -430,6 +436,7 @@ export function PaymentMethodsPage() {
   const { api } = useSession();
   const { data, error, reload } = useCheckoutSettings();
   const action = useApiAction();
+  const { confirm } = useConfirm();
   const canEdit = useCanEdit();
   const [editing, setEditing] = useState<PaymentMethod | "new" | null>(null);
 
@@ -538,6 +545,14 @@ export function PaymentMethodsPage() {
               onDelete={
                 canEdit
                   ? async () => {
+                      if (
+                        !(await confirm({
+                          title: `¿Borrar el método de pago «${p.name}»?`,
+                          confirmLabel: "Borrar",
+                          tone: "destructive",
+                        }))
+                      )
+                        return;
                       if (await action.run(() => settings.remove("payment-methods", p.id))) reload();
                     }
                   : undefined

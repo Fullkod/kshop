@@ -1,7 +1,7 @@
 # PRP R14: confirmaciones en diálogo
 
-> **Estado**: PREGUNTAS RESPONDIDAS (2026-10-29, P1–P4 como se proponían; ver «Respuestas de Roberto»). Falta el
-> «adelante» para implementar. No se ha tocado código.
+> **Estado**: HECHO (2026-10-29; P1–P4 como se proponían, «sip» de Roberto). Sin desplegar (falta push con permiso).
+> `qa:confirms` 32/32, `qa:dialogs` 41/41, `qa:orders` 14/14, `qa:billing` 16/16, `qa:pro` 18/18; build en verde.
 > **Proyecto**: Kshop · **Sigue a**: R13 (`prp-r13-formularios-en-dialogo.md`, el `Dialog` de `@kshop/ui`).
 > Memoria: `project/2026-10-28-admin-formularios-en-dialogo.md`.
 
@@ -27,18 +27,18 @@ confirmación en línea (cancelar pedido, anular factura) se abren en diálogo c
 ## Qué
 
 ### Criterios de éxito
-- [ ] `ConfirmDialog` + `useConfirm()` en `@kshop/ui`: `await confirm({ title, description, confirmLabel, tone })`
+- [x] `ConfirmDialog` + `useConfirm()` en `@kshop/ui`: `await confirm({ title, description, confirmLabel, tone })`
       devuelve `true`/`false`; un proveedor por aplicación (admin de tienda, superadmin, Kshop Admin). Foco en
       «Cancelar» al abrir en lo destructivo, Esc = cancelar, botón rojo si `tone: "destructive"`, hoja en móvil.
-- [ ] 0 llamadas a `window.confirm`/`window.prompt`/`window.alert` en `apps/` y `packages/` (regla de ESLint
+- [x] 0 llamadas a `window.confirm`/`window.prompt`/`window.alert` en `apps/` y `packages/` (regla de ESLint
       `no-restricted-globals`/`no-alert` para que no vuelvan).
-- [ ] Las 13 llamadas de hoy (12 `confirm`, 1 `prompt`) pasan al diálogo con el mismo texto (inventario abajo).
-- [ ] Ganan confirmación (P1–P3, aprobadas): borrar promoción, cupón, zona, método de entrega, método de
+- [x] Las 13 llamadas de hoy (12 `confirm`, 1 `prompt`) pasan al diálogo con el mismo texto (inventario abajo).
+- [x] Ganan confirmación (P1–P3, aprobadas): borrar promoción, cupón, zona, método de entrega, método de
       pago y contacto de WhatsApp; suspender tienda; quitar regalo y quitar módulo suelto.
-- [ ] Cancelar pedido y anular factura se abren en diálogo con su motivo (P4); la fecha de un regalo, en un diálogo
+- [x] Cancelar pedido y anular factura se abren en diálogo con su motivo (P4); la fecha de un regalo, en un diálogo
       con `<input type="date">`.
-- [ ] Cancelar el diálogo no hace nada (ninguna petición); confirmar hace exactamente lo de hoy.
-- [ ] `typecheck`, `lint`, `test`, `build` en verde; QA en navegador (`qa:confirms`) con capturas en
+- [x] Cancelar el diálogo no hace nada (ninguna petición); confirmar hace exactamente lo de hoy.
+- [x] `typecheck`, `lint`, `test`, `build` en verde; QA en navegador (`qa:confirms`) con capturas en
       `.titan/qa/r14-confirmaciones/` (1280 y 390, claro y oscuro); los QA que hoy aceptan `window.confirm`
       (`page.on("dialog")`) se adaptan y siguen en verde.
 
@@ -136,9 +136,9 @@ diálogo con campo de fecha), mismo texto.
 **Validación**: `qa:orders` y `qa:billing` en verde; captura del diálogo.
 
 ### Fase 5: validación final
-- [ ] `typecheck`, `lint`, `test`, `build` (build contra el proyecto de prueba)
-- [ ] `qa:confirms` + los QA afectados, en serie, contra el proyecto de prueba
-- [ ] Capturas en `.titan/qa/r14-confirmaciones/`; memoria, `MEMORY.md`, `arranque-y-fases.md` y `AGENTS.md` al día; commit
+- [x] `typecheck`, `lint`, `test`, `build` (build contra el proyecto de prueba)
+- [x] `qa:confirms` + los QA afectados, en serie, contra el proyecto de prueba
+- [x] Capturas en `.titan/qa/r14-confirmaciones/`; memoria, `MEMORY.md`, `arranque-y-fases.md` y `AGENTS.md` al día; commit
 
 ---
 
@@ -146,17 +146,31 @@ diálogo con campo de fecha), mismo texto.
 
 > Crece durante la implementación.
 
+- **2026-10-29 · el foco no iba a «Cancelar».** `showModal()` enfoca el primer elemento enfocable (la X del encabezado)
+  y lo hace después de que el hijo enfoque el suyo. **Fix**: prop `initialFocus` del `Dialog`, enfocado justo después
+  de `showModal()`. En `prompt` el foco va al campo.
+- **Una confirmación a pantalla completa en el móvil quedaba vacía.** **Fix**: prop `compact` del `Dialog` (hoja desde
+  abajo del alto de su contenido); la usa solo `ConfirmProvider`, los formularios siguen a pantalla completa.
+- **`confirm` global vs. el del hook:** si falta `const { confirm } = useConfirm()` en el componente, TypeScript no se
+  queja (existe `window.confirm`), pero la regla `no-alert` sí: es la red de seguridad, no quitarla.
+- **Además de lo previsto:** las tres acciones de factura (registrar pago, ajuste, anular) pasan juntas a un diálogo
+  (eran el mismo formulario en línea); «Cancelar pedido» usa `prompt` con el motivo, conservando «Confirmar
+  cancelación» y «Volver» (los QA los buscan por nombre).
+- **QA:** la Demo del proyecto de prueba no tiene pedidos cancelables; `qa:confirms` pone uno en «processing» y le
+  devuelve su estado. Los `page.on("dialog")` de `qa-billing`/`qa-pro` se quitaron (ya no hay cajas nativas;
+  `qa:confirms` falla si aparece alguna).
+
 ---
 
 ## Gotchas
-- [ ] Los QA viejos aceptan `window.confirm` con `page.on("dialog", d => d.accept())`: hoy `qa-billing.mjs` y
+- [x] Los QA viejos aceptan `window.confirm` con `page.on("dialog", d => d.accept())`: hoy `qa-billing.mjs` y
       `qa-pro.mjs`. Con el diálogo propio hay que pulsar su botón; volver a buscar `on("dialog"` en `scripts/` al cerrar.
-- [ ] Al relanzar QA de otras fases se sobrescriben sus capturas: restaurarlas con `git checkout` si solo se verifica.
-- [ ] El `Dialog` de R13 no se cierra al pulsar fuera; en una confirmación tampoco (cancelar es explícito).
-- [ ] Un diálogo de confirmación abierto desde otro diálogo (p. ej. borrar dentro de un formulario) debe apilarse
+- [x] Al relanzar QA de otras fases se sobrescriben sus capturas: restaurarlas con `git checkout` si solo se verifica.
+- [x] El `Dialog` de R13 no se cierra al pulsar fuera; en una confirmación tampoco (cancelar es explícito).
+- [x] Un diálogo de confirmación abierto desde otro diálogo (p. ej. borrar dentro de un formulario) debe apilarse
       encima: `showModal` lo permite (top layer), comprobarlo en la fase 1.
-- [ ] Tras R12, una sección «Gestionada por admin» devuelve 403 al confirmar: el error se ve donde ya se ve hoy.
-- [ ] Puerto 3000 ocupado a veces por otros proyectos de Roberto: `NEXT_PUBLIC_PLATFORM_DOMAIN=kshop.localhost:<puerto>`
+- [x] Tras R12, una sección «Gestionada por admin» devuelve 403 al confirmar: el error se ve donde ya se ve hoy.
+- [x] Puerto 3000 ocupado a veces por otros proyectos de Roberto: `NEXT_PUBLIC_PLATFORM_DOMAIN=kshop.localhost:<puerto>`
       y `QA_BASE_URL`/`QA_PORT`.
 
 ## Anti-patrones
@@ -167,4 +181,4 @@ diálogo con campo de fecha), mismo texto.
 
 ---
 
-*Preguntas respondidas el 2026-10-29. No se ha modificado código.*
+*PRP hecho el 2026-10-29. Pendiente: push/deploy con permiso de Roberto.*

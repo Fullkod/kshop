@@ -2,7 +2,7 @@
 
 import type { BannerInput, Link } from "@kshop/core";
 import type { ApiClient } from "@kshop/data";
-import { Alert, Badge, Button, Card, Dialog, Input, Label } from "@kshop/ui";
+import { Alert, Badge, Button, Card, Dialog, Input, Label, useConfirm } from "@kshop/ui";
 import { useState } from "react";
 import { useApiAction, type CatalogStructure } from "@/features/catalog/use-catalog";
 import { uploadBannerImage } from "@/lib/images";
@@ -41,6 +41,7 @@ export function BannersEditor({
   const store = useStore();
   const { supabase } = useSession();
   const action = useApiAction();
+  const { confirm } = useConfirm();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [uploading, setUploading] = useState<"imageUrl" | "imageMobileUrl" | null>(null);
 
@@ -88,7 +89,14 @@ export function BannersEditor({
   }
 
   async function remove(banner: AdminBanner) {
-    if (!window.confirm(`¿Borrar el banner «${banner.title || banner.alt || "sin título"}»?`)) return;
+    if (
+      !(await confirm({
+        title: `¿Borrar el banner «${banner.title || banner.alt || "sin título"}»?`,
+        confirmLabel: "Borrar",
+        tone: "destructive",
+      }))
+    )
+      return;
     if ((await action.run(() => api.remove("banners", banner.id))) !== undefined) reload();
   }
 

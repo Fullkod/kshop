@@ -1,7 +1,7 @@
 "use client";
 
 import { ApiError, type PlatformDomain } from "@kshop/data";
-import { Alert, Button, Card } from "@kshop/ui";
+import { Alert, Button, Card, useConfirm } from "@kshop/ui";
 import { useCallback, useEffect, useState } from "react";
 import { DnsRecords, statusBadge } from "@/features/custom-domain/components/CustomDomainPage";
 import { formatDate, storeUrl } from "@/lib/format";
@@ -12,6 +12,7 @@ import { useSession } from "@/lib/session";
 
 export default function SuperadminDomainsPage() {
   const { api } = useSession();
+  const { confirm } = useConfirm();
   const [data, setData] = useState<{ domains: PlatformDomain[]; mode: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
@@ -85,10 +86,16 @@ export default function SuperadminDomainsPage() {
                   size="sm"
                   variant="ghost"
                   disabled={pending === d.id}
-                  onClick={() =>
-                    window.confirm(`¿Quitar ${d.domain} de ${d.storeName}?`) &&
-                    void run(d.id, () => api.platform.removeDomain(d.id))
-                  }
+                  onClick={async () => {
+                    if (
+                      await confirm({
+                        title: `¿Quitar ${d.domain} de ${d.storeName}?`,
+                        confirmLabel: "Quitar",
+                        tone: "destructive",
+                      })
+                    )
+                      void run(d.id, () => api.platform.removeDomain(d.id));
+                  }}
                 >
                   Quitar
                 </Button>

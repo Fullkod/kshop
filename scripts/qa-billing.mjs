@@ -114,7 +114,6 @@ async function newPage(viewport) {
       !m.text().includes("instant navigation") &&
       errors.push(`${page.url()} :: ${m.text()}`),
   );
-  page.on("dialog", (d) => d.accept());
   return page;
 }
 // caret "initial": see qa-orders.mjs (false hydration error otherwise).

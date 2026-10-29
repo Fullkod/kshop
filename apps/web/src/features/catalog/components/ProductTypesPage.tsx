@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label } from "@kshop/ui";
+import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label, useConfirm } from "@kshop/ui";
 import { useState } from "react";
 import { useApiAction, useCatalogApi, useCatalogStructure, type ProductType } from "../use-catalog";
 
@@ -24,6 +24,7 @@ export function ProductTypesPage() {
   const { data, error, reload } = useCatalogStructure();
   const { catalog, canManageStructure } = useCatalogApi();
   const action = useApiAction();
+  const { confirm } = useConfirm();
   const [draft, setDraft] = useState<Draft | null>(null);
 
   if (error) return <Alert variant="destructive">{error}</Alert>;
@@ -71,7 +72,10 @@ export function ProductTypesPage() {
   }
 
   async function onDelete(t: ProductType) {
-    if (!window.confirm(`¿Borrar el tipo «${t.name}»?`)) return;
+    if (
+      !(await confirm({ title: `¿Borrar el tipo «${t.name}»?`, confirmLabel: "Borrar", tone: "destructive" }))
+    )
+      return;
     if ((await action.run(() => catalog.remove("product-types", t.id))) !== undefined) reload();
   }
 

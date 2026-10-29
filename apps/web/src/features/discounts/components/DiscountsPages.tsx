@@ -17,7 +17,19 @@ import {
   type VoucherScope,
 } from "@kshop/core";
 import { asResult } from "@kshop/data";
-import { Alert, Badge, Button, Card, cn, Dialog, FieldError, Input, Label, Select } from "@kshop/ui";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  cn,
+  Dialog,
+  FieldError,
+  Input,
+  Label,
+  Select,
+  useConfirm,
+} from "@kshop/ui";
 import Link from "next/link";
 import { useStorePathname } from "@/lib/navigation";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
@@ -404,6 +416,7 @@ export function PromotionsPage() {
   const { reads, api } = useSession();
   const { data: settings } = useCheckoutSettings();
   const action = useApiAction();
+  const { confirm } = useConfirm();
   const canEdit = useCanEdit();
   const [editing, setEditing] = useState<Promotion | "new" | null>(null);
   const { data, error, reload } = useQueryData<Promotion[]>(async () => {
@@ -496,9 +509,17 @@ export function PromotionsPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={async () =>
-                        (await action.run(() => discounts.deletePromotion(p.id))) !== undefined && reload()
-                      }
+                      onClick={async () => {
+                        if (
+                          !(await confirm({
+                            title: `¿Borrar la promoción «${p.name}»?`,
+                            confirmLabel: "Borrar",
+                            tone: "destructive",
+                          }))
+                        )
+                          return;
+                        if ((await action.run(() => discounts.deletePromotion(p.id))) !== undefined) reload();
+                      }}
                     >
                       Borrar
                     </Button>
@@ -615,6 +636,7 @@ export function VouchersPage() {
   const { reads, api } = useSession();
   const { data: settings } = useCheckoutSettings();
   const action = useApiAction();
+  const { confirm } = useConfirm();
   const canEdit = useCanEdit();
   const [editing, setEditing] = useState<Voucher | "new" | null>(null);
   const [usagesOf, setUsagesOf] = useState<string | null>(null);
@@ -740,9 +762,21 @@ export function VouchersPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={async () =>
-                          (await action.run(() => discounts.deleteVoucher(v.id))) !== undefined && reload()
-                        }
+                        onClick={async () => {
+                          const used = v.usedCount > 0 || v.usages.length > 0;
+                          const ok = await confirm({
+                            title: used
+                              ? `¿Desactivar el cupón «${v.code}»?`
+                              : `¿Borrar el cupón «${v.code}»?`,
+                            description: used
+                              ? "Ya se usó, así que se desactiva en vez de borrarse."
+                              : undefined,
+                            confirmLabel: used ? "Desactivar" : "Borrar",
+                            tone: "destructive",
+                          });
+                          if (!ok) return;
+                          if ((await action.run(() => discounts.deleteVoucher(v.id))) !== undefined) reload();
+                        }}
                       >
                         {v.usedCount > 0 || v.usages.length > 0 ? "Desactivar" : "Borrar"}
                       </Button>

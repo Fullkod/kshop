@@ -1,7 +1,7 @@
 "use client";
 
 import type { CatalogResourceInputs } from "@kshop/data";
-import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label } from "@kshop/ui";
+import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label, useConfirm } from "@kshop/ui";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useApiAction, useCatalogApi, useCatalogStructure, type CatalogStructure } from "../use-catalog";
 import { ImageField } from "./ImageField";
@@ -46,6 +46,7 @@ export function SimpleEntitiesPage<R extends "brands" | "collections" | "warehou
   const { data, error, reload } = useCatalogStructure();
   const { catalog, canManageStructure, has } = useCatalogApi();
   const action = useApiAction();
+  const { confirm } = useConfirm();
   const [editing, setEditing] = useState<Row | "new" | null>(null);
 
   if (error) return <Alert variant="destructive">{error}</Alert>;
@@ -76,7 +77,8 @@ export function SimpleEntitiesPage<R extends "brands" | "collections" | "warehou
   }
 
   async function onDelete(row: Row) {
-    if (!window.confirm(`¿Borrar «${row.name}»?`)) return;
+    if (!(await confirm({ title: `¿Borrar «${row.name}»?`, confirmLabel: "Borrar", tone: "destructive" })))
+      return;
     const ok = await action.run(() => catalog.remove(config.resource, row.id));
     if (ok !== undefined) reload();
   }

@@ -19,6 +19,7 @@ import {
   X,
   CreditCard,
   Users,
+  ConfirmProvider,
 } from "@kshop/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -304,112 +305,114 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   return (
     <AdminContext.Provider value={admin}>
-      <div className="flex min-h-dvh bg-surface">
-        <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col gap-1.5 overflow-hidden bg-night px-3 py-4 text-white md:flex dark:bg-ink">
-          {sidebar}
-        </aside>
-        {menuOpen && (
-          <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-label="Menú">
-            <button
-              type="button"
-              aria-label="Cerrar menú"
-              className="absolute inset-0 bg-[color-mix(in_srgb,var(--night)_55%,transparent)]"
-              onClick={() => setMenuOpen(false)}
-            />
-            <aside
-              onClick={(e) => (e.target as HTMLElement).closest("a") && setMenuOpen(false)}
-              className="relative flex h-full w-[280px] flex-col gap-1.5 overflow-hidden bg-night px-3 py-4 text-white"
-            >
-              {sidebar}
-            </aside>
-          </div>
-        )}
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background px-4 md:px-7">
-            <button
-              type="button"
-              onClick={() => setMenuOpen((o) => !o)}
-              aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
-              className="flex size-10 items-center justify-center rounded-lg border md:hidden"
-            >
-              {menuOpen ? <X size={18} aria-hidden /> : <Menu size={18} aria-hidden />}
-            </button>
-            <Link
-              href="/admin"
-              className="font-display truncate font-bold md:hidden"
-              data-testid="admin-store-name-mobile"
-            >
-              {store.name}
-            </Link>
-            <AdminSearch
-              sections={[
-                { href: "/admin", label: "Inicio", icon: House },
-                ...Object.values(groups)
-                  .flat()
-                  .filter((i) => !i.locked),
-              ]}
-              orders={ordersOn}
-              catalog={admin.enabledModules.has("catalog")}
-            />
-            <div className="ml-auto flex items-center gap-2">
-              <a
-                href="/"
-                target="_blank"
-                rel="noopener"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "sm" }),
-                  "hidden h-10 sm:inline-flex",
-                )}
+      <ConfirmProvider>
+        <div className="flex min-h-dvh bg-surface">
+          <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col gap-1.5 overflow-hidden bg-night px-3 py-4 text-white md:flex dark:bg-ink">
+            {sidebar}
+          </aside>
+          {menuOpen && (
+            <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-label="Menú">
+              <button
+                type="button"
+                aria-label="Cerrar menú"
+                className="absolute inset-0 bg-[color-mix(in_srgb,var(--night)_55%,transparent)]"
+                onClick={() => setMenuOpen(false)}
+              />
+              <aside
+                onClick={(e) => (e.target as HTMLElement).closest("a") && setMenuOpen(false)}
+                className="relative flex h-full w-[280px] flex-col gap-1.5 overflow-hidden bg-night px-3 py-4 text-white"
               >
-                Ver tienda
-                <ExternalLink size={15} aria-hidden />
-              </a>
-              {ordersOn && (
-                <Link
-                  href="/admin/orders"
-                  aria-label={toConfirm ? `${toConfirm} pedidos por confirmar` : "Pedidos"}
-                  title={toConfirm ? `${toConfirm} por confirmar` : "Sin pedidos por confirmar"}
-                  className="relative flex size-10 items-center justify-center rounded-[10px] border hover:bg-surface"
-                  data-testid="admin-bell"
+                {sidebar}
+              </aside>
+            </div>
+          )}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background px-4 md:px-7">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((o) => !o)}
+                aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+                className="flex size-10 items-center justify-center rounded-lg border md:hidden"
+              >
+                {menuOpen ? <X size={18} aria-hidden /> : <Menu size={18} aria-hidden />}
+              </button>
+              <Link
+                href="/admin"
+                className="font-display truncate font-bold md:hidden"
+                data-testid="admin-store-name-mobile"
+              >
+                {store.name}
+              </Link>
+              <AdminSearch
+                sections={[
+                  { href: "/admin", label: "Inicio", icon: House },
+                  ...Object.values(groups)
+                    .flat()
+                    .filter((i) => !i.locked),
+                ]}
+                orders={ordersOn}
+                catalog={admin.enabledModules.has("catalog")}
+              />
+              <div className="ml-auto flex items-center gap-2">
+                <a
+                  href="/"
+                  target="_blank"
+                  rel="noopener"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "hidden h-10 sm:inline-flex",
+                  )}
                 >
-                  <Bell size={18} aria-hidden />
-                  {toConfirm > 0 && (
-                    <span className="absolute top-2 right-2 size-2 rounded-full bg-destructive ring-2 ring-background" />
-                  )}
-                </Link>
-              )}
-              {action && (
-                <Link href={action.href} className={cn(buttonVariants({ size: "sm" }), "h-10")}>
-                  <Plus size={16} aria-hidden />
-                  <span className="hidden sm:inline">{action.label}</span>
-                </Link>
-              )}
-            </div>
-          </header>
-          <main className={cn("min-w-0 flex-1 px-4 py-6 md:px-7", ADMIN_CONTENT_CLASS)}>
-            {/* One centered column on wide screens, as in the superadmin; narrower pages are centered in it. */}
-            <div className="mx-auto w-full max-w-6xl [&>[class*=max-w-]]:mx-auto">
-              <AccountBanner admin={admin} />
-              {currentSection?.visibility === "hidden" ? (
-                <Alert className="max-w-4xl" data-testid="section-hidden">
-                  Esta sección no está disponible para tu tienda.
-                </Alert>
-              ) : (
-                <>
-                  {currentSection && current && (
-                    <SectionNotice
-                      section={currentSection}
-                      // «Apariencia» outside the plan already explains it on its page.
-                      silent={current.code === "themes" && !admin.enabledModules.has("themes")}
-                    />
-                  )}
-                  {children}
-                </>
-              )}
-            </div>
-          </main>
+                  Ver tienda
+                  <ExternalLink size={15} aria-hidden />
+                </a>
+                {ordersOn && (
+                  <Link
+                    href="/admin/orders"
+                    aria-label={toConfirm ? `${toConfirm} pedidos por confirmar` : "Pedidos"}
+                    title={toConfirm ? `${toConfirm} por confirmar` : "Sin pedidos por confirmar"}
+                    className="relative flex size-10 items-center justify-center rounded-[10px] border hover:bg-surface"
+                    data-testid="admin-bell"
+                  >
+                    <Bell size={18} aria-hidden />
+                    {toConfirm > 0 && (
+                      <span className="absolute top-2 right-2 size-2 rounded-full bg-destructive ring-2 ring-background" />
+                    )}
+                  </Link>
+                )}
+                {action && (
+                  <Link href={action.href} className={cn(buttonVariants({ size: "sm" }), "h-10")}>
+                    <Plus size={16} aria-hidden />
+                    <span className="hidden sm:inline">{action.label}</span>
+                  </Link>
+                )}
+              </div>
+            </header>
+            <main className={cn("min-w-0 flex-1 px-4 py-6 md:px-7", ADMIN_CONTENT_CLASS)}>
+              {/* One centered column on wide screens, as in the superadmin; narrower pages are centered in it. */}
+              <div className="mx-auto w-full max-w-6xl [&>[class*=max-w-]]:mx-auto">
+                <AccountBanner admin={admin} />
+                {currentSection?.visibility === "hidden" ? (
+                  <Alert className="max-w-4xl" data-testid="section-hidden">
+                    Esta sección no está disponible para tu tienda.
+                  </Alert>
+                ) : (
+                  <>
+                    {currentSection && current && (
+                      <SectionNotice
+                        section={currentSection}
+                        // «Apariencia» outside the plan already explains it on its page.
+                        silent={current.code === "themes" && !admin.enabledModules.has("themes")}
+                      />
+                    )}
+                    {children}
+                  </>
+                )}
+              </div>
+            </main>
+          </div>
         </div>
-      </div>
+      </ConfirmProvider>
     </AdminContext.Provider>
   );
 }

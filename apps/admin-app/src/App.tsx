@@ -68,6 +68,7 @@ import {
   UserRound,
   Users,
   Wallet,
+  ConfirmProvider,
 } from "@kshop/ui";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
@@ -1016,7 +1017,9 @@ export function App() {
     <BrowserRouter>
       <SessionProvider config={sessionConfig}>
         <RouterNavigation>
-          <AdminApp />
+          <ConfirmProvider>
+            <AdminApp />
+          </ConfirmProvider>
         </RouterNavigation>
       </SessionProvider>
     </BrowserRouter>

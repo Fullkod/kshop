@@ -18,6 +18,8 @@ Roberto no quiere que los formularios de crear/editar del admin salgan en la mis
   hoja a pantalla completa < 640 px, no se cierra al pulsar fuera para no perder un formulario a medias). 17 pantallas;
   QA `pnpm qa:dialogs` (capturas en `.titan/qa/r13-dialogos/`). PRP: `.titan/plans/prp-r13-formularios-en-dialogo.md`.
 - **Regla para pantallas nuevas del admin:** crear/editar corto → `Dialog` de `@kshop/ui`; largo (producto, pedido) → página.
-- **Siguiente (Roberto, 2026-10-28): las confirmaciones también en diálogo** → PRP R14
-  (`.titan/plans/prp-r14-confirmaciones-en-dialogo.md`); P1–P4 respondidas el 2026-10-29 (confirmar también los borrados
-  que hoy no preguntan, suspender tienda, quitar regalo/suelto; cancelar pedido y anular factura en diálogo).
+- **Confirmaciones (R14, hecho 2026-10-29):** nunca `window.confirm`/`prompt`/`alert` (regla `no-alert`). Usar
+  `const { confirm, prompt } = useConfirm()` de `@kshop/ui` (proveedor en admin de tienda, superadmin y Kshop Admin):
+  `if (!(await confirm({ title, description, confirmLabel, tone: "destructive" }))) return;`. Todo borrado y toda acción
+  que cambie la factura o deje a una tienda sin vender pregunta (decisión de Roberto, P1–P3). PRP:
+  `.titan/plans/prp-r14-confirmaciones-en-dialogo.md`; QA `pnpm qa:confirms`.

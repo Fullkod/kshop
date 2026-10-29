@@ -2,7 +2,7 @@
 
 import { catalogSlug, type PageInput } from "@kshop/core";
 import type { ApiClient } from "@kshop/data";
-import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label } from "@kshop/ui";
+import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label, useConfirm } from "@kshop/ui";
 import { useState } from "react";
 import { useApiAction } from "@/features/catalog/use-catalog";
 import type { AdminContent, AdminPage } from "../use-content";
@@ -19,6 +19,7 @@ export function PagesEditor({
   reload: () => void;
 }) {
   const action = useApiAction();
+  const { confirm } = useConfirm();
   const [draft, setDraft] = useState<Draft | null>(null);
 
   async function save() {
@@ -31,7 +32,14 @@ export function PagesEditor({
     }
   }
   async function remove(page: AdminPage) {
-    if (!window.confirm(`¿Borrar la página «${page.title}»?`)) return;
+    if (
+      !(await confirm({
+        title: `¿Borrar la página «${page.title}»?`,
+        confirmLabel: "Borrar",
+        tone: "destructive",
+      }))
+    )
+      return;
     if ((await action.run(() => api.remove("pages", page.id))) !== undefined) reload();
   }
 

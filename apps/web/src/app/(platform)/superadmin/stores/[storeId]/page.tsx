@@ -11,7 +11,7 @@ import {
   type PlanCode,
 } from "@kshop/core";
 import { ApiError, type PlatformSubscription } from "@kshop/data";
-import { Alert, Badge, Button, Card, FieldError, Input, Label, Select } from "@kshop/ui";
+import { Alert, Badge, Button, Card, FieldError, Input, Label, Select, useConfirm } from "@kshop/ui";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
@@ -31,6 +31,7 @@ const isoFromDate = (value: string) => (value ? new Date(`${value}T23:59:00`).to
 export default function SuperadminStoreSubscriptionPage() {
   const { storeId } = useParams<{ storeId: string }>();
   const { api } = useSession();
+  const { confirm, prompt } = useConfirm();
   const sub = api.platform.subscription(storeId);
   const [data, setData] = useState<PlatformSubscription | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -130,17 +131,48 @@ export default function SuperadminStoreSubscriptionPage() {
     );
   }
 
-  function onModuleGrant(code: PlatformSubscription["modules"][number]["code"], enabled: boolean) {
-    const until = enabled ? window.prompt("¿Hasta qué fecha? (AAAA-MM-DD, vacío = sin fin)", "") : "";
-    if (until === null) return;
-    void run(() =>
-      sub.setModuleGrant(
-        code,
-        enabled,
-        isoFromDate(until.trim()),
-        enabled ? "Regalo del superadmin" : undefined,
-      ),
-    );
+  async function onModuleGrant(
+    code: PlatformSubscription["modules"][number]["code"],
+    name: string,
+    enabled: boolean,
+  ) {
+    if (enabled) {
+      const until = await prompt({
+        title: `Regalar «${name}»`,
+        description: "Déjalo vacío para que no tenga fecha de fin.",
+        input: { label: "Hasta (opcional)", type: "date" },
+        confirmLabel: "Regalar",
+      });
+      if (until === null) return;
+      void run(() => sub.setModuleGrant(code, true, isoFromDate(until), "Regalo del superadmin"));
+      return;
+    }
+    if (
+      !(await confirm({
+        title: `¿Quitar el regalo de «${name}»?`,
+        description:
+          "El módulo deja de estar activo en la tienda (sus datos se conservan) y la próxima factura se calcula sin él.",
+        confirmLabel: "Quitar regalo",
+        tone: "destructive",
+      }))
+    )
+      return;
+    void run(() => sub.setModuleGrant(code, false, null, undefined));
+  }
+
+  async function onAddon(code: PlatformSubscription["modules"][number]["code"], name: string, add: boolean) {
+    if (
+      !add &&
+      !(await confirm({
+        title: `¿Quitar «${name}» suelto?`,
+        description:
+          "Deja de cobrarse en la próxima factura y el módulo deja de estar activo en la tienda (sus datos se conservan).",
+        confirmLabel: "Quitar suelto",
+        tone: "destructive",
+      }))
+    )
+      return;
+    void run(() => sub.setAddon(code, add));
   }
 
   const store = data.store;
@@ -189,12 +221,23 @@ export default function SuperadminStoreSubscriptionPage() {
         <Button
           variant="outline"
           disabled={pending}
-          onClick={() =>
+          onClick={async () => {
+            if (
+              !isPaused &&
+              !(await confirm({
+                title: `¿Suspender «${store.name}»?`,
+                description:
+                  "La tienda deja de vender y su admin queda en solo lectura hasta que la reactives.",
+                confirmLabel: "Suspender",
+                tone: "destructive",
+              }))
+            )
+              return;
             void run(async () => {
               await api.platform.updateStoreStatus(store.id, isPaused ? "active" : "suspended");
               return sub.get();
-            })
-          }
+            });
+          }}
         >
           {isPaused ? "Reactivar tienda" : "Suspender a mano"}
         </Button>
@@ -304,7 +347,7 @@ export default function SuperadminStoreSubscriptionPage() {
                         size="sm"
                         variant={addon ? "ghost" : "outline"}
                         disabled={pending}
-                        onClick={() => void run(() => sub.setAddon(m.code, !addon))}
+                        onClick={() => void onAddon(m.code, m.name, !addon)}
                       >
                         {addon ? "Quitar suelto" : "Añadir suelto"}
                       </Button>
@@ -314,7 +357,7 @@ export default function SuperadminStoreSubscriptionPage() {
                         size="sm"
                         variant="ghost"
                         disabled={pending}
-                        onClick={() => onModuleGrant(m.code, !gift)}
+                        onClick={() => void onModuleGrant(m.code, m.name, !gift)}
                       >
                         {gift ? "Quitar regalo" : "Regalar"}
                       </Button>

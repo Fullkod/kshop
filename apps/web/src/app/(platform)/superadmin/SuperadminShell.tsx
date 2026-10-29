@@ -16,6 +16,7 @@ import {
   Smartphone,
   Store,
   X,
+  ConfirmProvider,
 } from "@kshop/ui";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -181,7 +182,7 @@ export function SuperadminShell({ children }: { children: ReactNode }) {
         <main className={cn("min-w-0 flex-1 px-4 py-6 md:px-7", ADMIN_CONTENT_CLASS)}>
           <div className="mx-auto w-full max-w-6xl [&>[class*=max-w-]]:mx-auto">
             {isSuperadmin ? (
-              children
+              <ConfirmProvider>{children}</ConfirmProvider>
             ) : (
               <Alert variant="destructive">Esta cuenta no tiene acceso de superadmin.</Alert>
             )}

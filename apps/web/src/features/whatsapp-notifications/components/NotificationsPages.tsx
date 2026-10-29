@@ -13,7 +13,7 @@ import {
   type NotificationStatus,
 } from "@kshop/core";
 import { asResult } from "@kshop/data";
-import { Alert, Badge, Button, Card, cn, Dialog, FieldError, Input, Label } from "@kshop/ui";
+import { Alert, Badge, Button, Card, cn, Dialog, FieldError, Input, Label, useConfirm } from "@kshop/ui";
 import Link from "next/link";
 import { useStorePathname } from "@/lib/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
@@ -135,6 +135,7 @@ export function ContactsPage() {
   const { api } = useSession();
   const { data, error, reload } = useNotificationSettings();
   const action = useApiAction();
+  const { confirm } = useConfirm();
   const canEdit = useCanEdit();
   const [editing, setEditing] = useState<Contact | "new" | null>(null);
   const notifications = api.notifications(store.id);
@@ -207,9 +208,17 @@ export function ContactsPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={async () =>
-                      (await action.run(() => notifications.deleteContact(c.id))) !== undefined && reload()
-                    }
+                    onClick={async () => {
+                      if (
+                        !(await confirm({
+                          title: `¿Borrar el contacto «${c.name}»?`,
+                          confirmLabel: "Borrar",
+                          tone: "destructive",
+                        }))
+                      )
+                        return;
+                      if ((await action.run(() => notifications.deleteContact(c.id))) !== undefined) reload();
+                    }}
                   >
                     Borrar
                   </Button>
