@@ -35,6 +35,7 @@
 - [2026-10-28-diagnostico-rendimiento.md](project/2026-10-28-diagnostico-rendimiento.md) — Auditoría del admin lento y los 57014: no es volumen; peaje de esquema de pg_graphql por conexión + ráfagas del desarrollo + admin frágil + bug login/set-password; reglas operativas (nada de e2e/qa/imports/build con la web en uso), decisiones D1–D5 cerradas, WhatsApp en «Simulado» durante R11; **todo se lee por funciones SQL (`admin_*`, `sf_*`); pg_graphql quitado de producción** (decisión de Roberto, 2026-10-28); proyecto de prueba «KShop Test»
 - [2026-10-28-admin-formularios-en-dialogo.md](project/2026-10-28-admin-formularios-en-dialogo.md) — Crear/editar del admin en diálogo (cortos) o página (producto, pedido); hoja en móvil; `Dialog` de `@kshop/ui`; **R13 hecho** (17 pantallas, en `main`); confirmaciones en `useConfirm()` (R14 hecho)
 - [2026-10-28-r12-superadmin-v3.md](project/2026-10-28-r12-superadmin-v3.md) — R12 hecho: secciones del menú por tienda (Visible / Gestionado por admin / Oculto, 403 en la API), lista de tiendas v3, «Menú de la tienda»; dónde está cada pieza; en `main`
+- [2026-10-29-donde-quedamos.md](project/2026-10-29-donde-quedamos.md) — **Dónde quedamos** (pausa 2026-10-29): R12–R14 hechos (R14 en local, 3 commits sin push), qué sigue (8.6, 8.7, logs R11) y cómo retomar
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
 
 ## feedback/ — Correcciones y preferencias
