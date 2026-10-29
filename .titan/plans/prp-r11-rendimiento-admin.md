@@ -420,10 +420,10 @@ WhatsApp queda en «Simulado» mientras dure R11 (decisión de Roberto, 2026-10-
 |-----|-------|--------|
 | Fase 7: 24 h de logs de Supabase (57014) y de `/api/v1` (500 pasajeros vistos tras el primer deploy) | Claude | Desde el 2026-10-29, con uso normal |
 | Revisar juntos admin y tienda (Demo y klau) y dar feedback menor | Roberto + Claude | Próxima sesión |
-| Revisar el panel del superadmin (Roberto lo ve «pobre»); p. ej. «Enviar acceso» visible desde la lista de tiendas | Roberto + Claude | Cuando Roberto diga |
+| Revisar el panel del superadmin → **PRP R12** (`prp-r12-superadmin-v3.md`, preguntas respondidas 2026-10-28) | Roberto + Claude | En curso |
 | Volver WhatsApp a «Real» (sigue en «Simulado» por decisión de Roberto) | Roberto | Cuando lo decida |
 | Borrar `KSHOP_CUSTOM_DOMAIN_REDIRECT` en Vercel y redesplegar | Roberto (guiado) | Antes del primer dominio propio activo |
-| Compactar `C:\Users\rober\AppData\Local\Docker\wsl\data\ext4.vhdx` (91,9 GB): `wsl --shutdown` + `diskpart` como administrador | Roberto | Cuando pueda |
+| ~~Compactar el `ext4.vhdx` de Docker (91,9 GB)~~ **Hecho por Roberto (2026-10-28)** | Roberto | — |
 | D4: pagar Supabase Pro + Small | Roberto | Si con uso normal siguen picos de varios segundos (Nano sin créditos) o cuando entren clientes reales de klau |
 
 ---
