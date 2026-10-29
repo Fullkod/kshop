@@ -4,6 +4,7 @@ import { ApiError } from "@kshop/data";
 import { Alert, Button, Card, Input, Label } from "@kshop/ui";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
+import { FullkodCredit } from "@/components/FullkodCredit";
 import { useSession } from "@/lib/session";
 import { useStore } from "@kshop/storefront";
 
@@ -31,7 +32,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-surface px-4">
+    <main className="relative flex min-h-dvh items-center justify-center bg-surface px-4">
       <Card className="w-full max-w-sm">
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">{store.name}</p>
@@ -62,6 +63,7 @@ export default function ForgotPasswordPage() {
           Volver a entrar
         </Link>
       </Card>
+      <FullkodCredit pinned />
     </main>
   );
 }

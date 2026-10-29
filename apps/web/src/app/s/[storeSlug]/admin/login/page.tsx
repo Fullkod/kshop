@@ -3,12 +3,13 @@
 import { Card } from "@kshop/ui";
 import Link from "next/link";
 import { LoginForm } from "@/components/LoginForm";
+import { FullkodCredit } from "@/components/FullkodCredit";
 import { useStore } from "@kshop/storefront";
 
 export default function StoreAdminLoginPage() {
   const store = useStore();
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-surface px-4">
+    <main className="relative flex min-h-dvh items-center justify-center bg-surface px-4">
       <Card className="w-full max-w-sm">
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">Administración</p>
@@ -23,6 +24,7 @@ export default function StoreAdminLoginPage() {
           ¿Olvidaste tu contraseña?
         </Link>
       </Card>
+      <FullkodCredit pinned />
     </main>
   );
 }

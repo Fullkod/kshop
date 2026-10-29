@@ -22,6 +22,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { Brand } from "@/components/Brand";
+import { FullkodCredit } from "@/components/FullkodCredit";
 import { ADMIN_CONTENT_CLASS, SIDEBAR_NAV_CLASS } from "@/components/admin-content";
 import { useSession } from "@/lib/session";
 
@@ -186,6 +187,7 @@ export function SuperadminShell({ children }: { children: ReactNode }) {
             ) : (
               <Alert variant="destructive">Esta cuenta no tiene acceso de superadmin.</Alert>
             )}
+            <FullkodCredit />
           </div>
         </main>
       </div>

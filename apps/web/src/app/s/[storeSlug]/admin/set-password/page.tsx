@@ -4,6 +4,7 @@ import { Alert, Button, Card, FieldError, Label, PasswordInput } from "@kshop/ui
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { FullkodCredit } from "@/components/FullkodCredit";
 import { useSession } from "@/lib/session";
 import { useStore } from "@kshop/storefront";
 
@@ -41,7 +42,7 @@ export default function SetPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-surface px-4">
+    <main className="relative flex min-h-dvh items-center justify-center bg-surface px-4">
       <Card className="w-full max-w-sm">
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">{store.name}</p>
@@ -75,6 +76,7 @@ export default function SetPasswordPage() {
           </form>
         )}
       </Card>
+      <FullkodCredit pinned />
     </main>
   );
 }

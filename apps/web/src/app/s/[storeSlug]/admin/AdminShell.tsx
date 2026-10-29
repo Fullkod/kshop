@@ -27,6 +27,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ADMIN_CONTENT_CLASS, SIDEBAR_NAV_CLASS } from "@/components/admin-content";
 import { platformProtocol, publicEnv } from "@/env";
 import { ADMIN_MODULES } from "@/features/registry";
+import { FullkodCredit } from "@/components/FullkodCredit";
 import { ADMIN_GROUPS, type AdminGroup } from "@/features/types";
 import { useStorePathname } from "@/lib/navigation";
 import { useSession } from "@/lib/session";
@@ -158,7 +159,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   if (state.kind === "forbidden" || state.kind === "error") {
     return (
-      <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 px-6">
+      <main className="relative mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 px-6">
         <h1 className="text-2xl font-semibold">{store.name}</h1>
         <Alert variant="destructive" data-testid="admin-forbidden">
           {state.kind === "forbidden"
@@ -181,6 +182,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             Cerrar sesión
           </Button>
         </div>
+        <FullkodCredit pinned />
       </main>
     );
   }
@@ -408,6 +410,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                     {children}
                   </>
                 )}
+                <FullkodCredit />
               </div>
             </main>
           </div>
