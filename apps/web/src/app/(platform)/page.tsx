@@ -374,9 +374,19 @@ export default async function PlatformHome() {
           className={`${container} flex flex-wrap items-center justify-between gap-4 py-7 text-sm text-muted-foreground`}
         >
           <Brand className="h-7" />
-          <span>
-            © <CurrentYear />
-            Fullkod · {domain}
+          <span className="inline-flex flex-wrap items-center gap-x-1.5">
+            © <CurrentYear />· Un producto de
+            <a
+              href="https://fullkod.com/?ref=kshop"
+              target="_blank"
+              rel="noopener"
+              className="inline-flex items-center gap-1.5 font-semibold text-foreground"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}
+              <img src="/brand/fullkod-symbol.svg" alt="" className="h-3.5 w-3.5" />
+              Fullkod
+            </a>
+            · {domain}
           </span>
           <Link href="/superadmin" className="hover:text-foreground">
             Acceso Fullkod
