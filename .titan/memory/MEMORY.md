@@ -36,6 +36,7 @@
 - [2026-10-28-admin-formularios-en-dialogo.md](project/2026-10-28-admin-formularios-en-dialogo.md) — Crear/editar del admin en diálogo (cortos) o página (producto, pedido); hoja en móvil; `Dialog` de `@kshop/ui`; **R13 hecho** (17 pantallas, en `main`); confirmaciones en `useConfirm()` (R14 hecho)
 - [2026-10-28-r12-superadmin-v3.md](project/2026-10-28-r12-superadmin-v3.md) — R12 hecho: secciones del menú por tienda (Visible / Gestionado por admin / Oculto, 403 en la API), lista de tiendas v3, «Menú de la tienda»; dónde está cada pieza; en `main`
 - [2026-10-29-donde-quedamos.md](project/2026-10-29-donde-quedamos.md) — **Dónde quedamos** (pausa 2026-10-29): R12–R14 hechos y en `main`, qué sigue (8.6, 8.7, logs R11) y cómo retomar
+- [credito-fullkod.md](project/credito-fullkod.md) — Crédito «Un producto de Fullkod» en plataforma, superadmin, admin y pie de todas las tiendas; **próximo:** ajuste en el admin para mostrarlo u ocultarlo en la tienda
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
 
 ## feedback/ — Correcciones y preferencias

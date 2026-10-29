@@ -70,10 +70,22 @@ export function StoreFooter({
           © <CurrentYear />
           {store.name} · Precios en {listFormat.format(codes)}
         </span>
-        <span>
-          Tienda creada con{" "}
+        {/* CREA0004: the Fullkod credit on every store. Absolute symbol URL: also rendered by the store app and on
+            custom domains. */}
+        <span className="inline-flex flex-wrap items-center gap-x-1.5">
+          Tienda creada con
           <a href="https://kshop.fullkod.com" className="text-ink-foreground underline">
             Kshop
+          </a>
+          · un producto de
+          <a
+            href="https://fullkod.com/?ref=kshop-store"
+            target="_blank"
+            rel="noopener"
+            className="inline-flex items-center gap-1.5 font-semibold text-ink-foreground"
+          >
+            <img src="https://fullkod.com/brand/fullkod-symbol-reversed.svg" alt="" className="h-3.5 w-3.5" />
+            Fullkod
           </a>
         </span>
       </div>
