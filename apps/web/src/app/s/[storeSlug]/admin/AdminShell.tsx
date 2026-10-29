@@ -1,6 +1,6 @@
 "use client";
 
-import { formatUsd, ROLE_LABELS, storeOrigin } from "@kshop/core";
+import { formatUsd, MANAGED_SECTION_MESSAGE, ROLE_LABELS, storeOrigin } from "@kshop/core";
 import {
   Alert,
   Bell,
@@ -35,6 +35,7 @@ import {
   AdminContext,
   clearCachedAdminStates,
   loadAdminState,
+  menuSection,
   readCachedAdminState,
   saveCachedAdminState,
   type AdminState,
@@ -57,7 +58,12 @@ type NavItem = {
   /** Locked module: links to the plan, with its price in the title. */
   locked?: string;
   count?: number;
+  /** R12: «Admin» for a managed section; the superadmin also sees «Oculta» on the hidden ones. */
+  badge?: string;
 };
+
+// R12: the admin boots again when the superadmin changes the visibility of a section.
+const SECTION_TABLES = ["store_section_settings"] as const;
 
 /** Contextual main button of the topbar. */
 function primaryAction(pathname: string): { href: string; label: string } | null {
@@ -83,6 +89,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const live = useStoreVersion(isPublic ? null : store.id, ORDER_TABLES);
+  const sectionsLive = useStoreVersion(isPublic ? null : store.id, SECTION_TABLES);
   const userId = session?.user.id;
   // The last boot draws the admin at once while /me runs (R11); /me then replaces it. A failed /me keeps it on screen
   // (each page shows its own read errors).
@@ -119,7 +126,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [userId, isPublic, api, store.id, attempt]);
+  }, [userId, isPublic, api, store.id, attempt, sectionsLive]);
 
   // Orders waiting for confirmation: the bell's dot and the counter of «Pedidos». It starts from the boot and is read
   // again only on an order change (Realtime) with a one-line count (R11: it ran the whole admin_home_summary on every
@@ -181,23 +188,33 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const canManageAccount = admin.role === "owner" || admin.role === "admin" || admin.isSuperadmin;
   const groups: Record<AdminGroup, NavItem[]> = { sales: [], catalog: [], store: [], business: [] };
   for (const mod of ADMIN_MODULES) {
-    const enabled = admin.enabledModules.has(mod.code);
+    const { visibility, setting } = menuSection(admin, mod.code);
+    // Hidden sections disappear for the staff, also as a PRO upsell (R12 D2).
+    if (visibility === "hidden") continue;
+    // «Apariencia» outside the plan opens its page, which says the platform sets it up (D6).
+    const open = admin.enabledModules.has(mod.code) || (mod.code === "themes" && visibility === "managed");
     const price = admin.addonPrices[mod.code];
     groups[mod.group].push({
       key: mod.code,
-      href: enabled ? mod.adminPath : "/admin/billing",
+      href: open ? mod.adminPath : "/admin/billing",
       label: mod.label,
       icon: mod.icon,
-      testId: enabled ? `nav-${mod.code}` : `nav-locked-${mod.code}`,
-      locked: enabled
+      testId: open ? `nav-${mod.code}` : `nav-locked-${mod.code}`,
+      locked: open
         ? undefined
         : price != null
           ? `Incluido en Pro, o ${formatUsd(price)}/mes suelto`
           : "Incluido en el plan Pro",
       count: mod.code === "orders" && toConfirm > 0 ? toConfirm : undefined,
+      badge:
+        visibility === "managed" || setting === "managed"
+          ? "Admin"
+          : setting === "hidden"
+            ? "Oculta"
+            : undefined,
     });
     // Customers live inside Pedidos.
-    if (mod.code === "orders" && enabled) {
+    if (mod.code === "orders" && open) {
       groups.sales.push({
         key: "customers",
         href: "/admin/orders/customers",
@@ -230,6 +247,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
     .filter((href) => pathname === href || (href !== "/admin" && pathname.startsWith(`${href}/`)))
     .sort((a, b) => b.length - a.length)[0];
   const action = primaryAction(pathname);
+  const current = ADMIN_MODULES.filter(
+    (m) => pathname === m.adminPath || pathname.startsWith(`${m.adminPath}/`),
+  ).sort((a, b) => b.adminPath.length - a.adminPath.length)[0];
+  const currentSection = current ? menuSection(admin, current.code) : null;
   const email = session.user.email ?? "";
   const otherStores = admin.stores.filter((s) => s.id !== store.id);
 
@@ -369,12 +390,47 @@ export function AdminShell({ children }: { children: ReactNode }) {
             {/* One centered column on wide screens, as in the superadmin; narrower pages are centered in it. */}
             <div className="mx-auto w-full max-w-6xl [&>[class*=max-w-]]:mx-auto">
               <AccountBanner admin={admin} />
-              {children}
+              {currentSection?.visibility === "hidden" ? (
+                <Alert className="max-w-4xl" data-testid="section-hidden">
+                  Esta sección no está disponible para tu tienda.
+                </Alert>
+              ) : (
+                <>
+                  {currentSection && current && (
+                    <SectionNotice
+                      section={currentSection}
+                      // «Apariencia» outside the plan already explains it on its page.
+                      silent={current.code === "themes" && !admin.enabledModules.has("themes")}
+                    />
+                  )}
+                  {children}
+                </>
+              )}
             </div>
           </main>
         </div>
       </div>
     </AdminContext.Provider>
+  );
+}
+
+/** Notice on top of a managed section (staff) or of a configured one (superadmin). */
+function SectionNotice({ section, silent }: { section: ReturnType<typeof menuSection>; silent: boolean }) {
+  if (silent) return null;
+  const text =
+    section.visibility === "managed"
+      ? MANAGED_SECTION_MESSAGE
+      : section.setting === "managed"
+        ? "Gestionado por admin: el personal de la tienda solo puede consultar esta sección."
+        : section.setting === "hidden"
+          ? "Sección oculta al personal de la tienda: solo la ves tú."
+          : null;
+  if (!text) return null;
+  return (
+    // max-w-4xl: the width of most module pages (the column centers it, like them).
+    <Alert className="mb-4 max-w-4xl" data-testid="section-notice">
+      {text}
+    </Alert>
   );
 }
 
@@ -397,6 +453,11 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
       {item.count != null && (
         <span className="rounded-full bg-gold px-1.5 py-0.5 text-[11px] leading-none font-bold text-night">
           {item.count}
+        </span>
+      )}
+      {item.badge && (
+        <span className="rounded-md bg-white/12 px-1.5 py-0.5 text-[10px] font-bold text-[#D9D3EA]">
+          {item.badge}
         </span>
       )}
       {item.locked && (

@@ -46,6 +46,7 @@
     "app:keystore": "node scripts/app-keystore.mjs",
     "e2e:notifications": "node scripts/db-env.mjs node scripts/e2e-notifications.mjs",
     "e2e:sections": "node scripts/db-env.mjs node scripts/e2e-sections.mjs",
+    "qa:sections": "node scripts/db-env.mjs node scripts/qa-sections.mjs",
     "qa:orders": "node scripts/db-env.mjs node scripts/qa-orders.mjs",
     "qa:discounts": "node scripts/db-env.mjs node scripts/qa-discounts.mjs",
     "qa:notifications": "node scripts/db-env.mjs node scripts/qa-notifications.mjs",

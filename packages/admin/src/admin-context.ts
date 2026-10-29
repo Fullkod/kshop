@@ -1,6 +1,13 @@
 "use client";
 
-import { isModuleCode, type ModuleCode, type StoreRole } from "@kshop/core";
+import {
+  isModuleCode,
+  sectionVisibility,
+  type ModuleCode,
+  type SectionSettings,
+  type SectionVisibility,
+  type StoreRole,
+} from "@kshop/core";
 import type { ApiClient } from "@kshop/data";
 import { createContext, useContext } from "react";
 
@@ -19,6 +26,8 @@ export type AdminState = {
   stores: { id: string; slug: string; name: string }[];
   /** Orders waiting for confirmation when the admin booted (the bell starts from it). */
   toConfirm: number;
+  /** R12: admin menu sections the superadmin set to managed or hidden (no entry = visible). */
+  sections: SectionSettings;
 };
 
 export const AdminContext = createContext<AdminState | null>(null);
@@ -56,7 +65,25 @@ export async function loadAdminState(api: ApiClient, storeId: string): Promise<A
     addonPrices,
     stores: me.stores.map(({ id, slug, name }) => ({ id, slug, name })),
     toConfirm: boot.toConfirm,
+    sections: boot.sections ?? {},
   };
+}
+
+/**
+ * How the menu shows a module to this user (R12). The staff does not see hidden sections and sees managed ones as
+ * read-only; without the module in its plan, «Apariencia» counts as managed, since the platform sets it up (D6). The
+ * superadmin sees everything; `setting` keeps the store's choice for its markers.
+ */
+export function menuSection(
+  admin: AdminState,
+  code: ModuleCode,
+): { visibility: SectionVisibility; setting: SectionVisibility } {
+  const setting = sectionVisibility(admin.sections, code);
+  if (admin.isSuperadmin) return { visibility: "visible", setting };
+  if (code === "themes" && !admin.enabledModules.has("themes") && setting === "visible") {
+    return { visibility: "managed", setting };
+  }
+  return { visibility: setting, setting };
 }
 
 // The last boot of each user and store, so a page load draws the admin at once while /me runs behind it (R11). Only
@@ -76,7 +103,11 @@ export function readCachedAdminState(userId: string, storeId: string): AdminStat
     const cached = JSON.parse(raw) as CachedAdminState;
     if (Date.now() - cached.savedAt > CACHE_MAX_AGE_MS) return null;
     const { savedAt: _savedAt, ...state } = cached;
-    return { ...state, enabledModules: new Set(state.enabledModules.filter(isModuleCode)) };
+    return {
+      ...state,
+      enabledModules: new Set(state.enabledModules.filter(isModuleCode)),
+      sections: state.sections ?? {},
+    };
   } catch {
     return null;
   }

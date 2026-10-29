@@ -2,6 +2,7 @@ import {
   AdminContext,
   clearCachedAdminStates,
   loadAdminState,
+  menuSection,
   readCachedAdminState,
   saveCachedAdminState,
   OrderDetail,
@@ -15,6 +16,7 @@ import {
   useAdmin,
   useAdminHome,
   useSession,
+  useStoreVersion,
   type AdminConfig,
   type AdminHome,
   type AdminState,
@@ -355,6 +357,8 @@ function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => 
   const signOut = useSignOut();
   const [loaded, setState] = useState<Loaded>({ kind: "loading" });
   const userId = session?.user.id;
+  // R12: boot again when the superadmin changes the visibility of a section.
+  const sectionsLive = useStoreVersion(myStore.id, ["store_section_settings"]);
   // The last boot draws the admin at once while the network catches up; a failed refresh keeps it (R11).
   const cached = useMemo(() => {
     const admin = userId ? readCachedAdminState(userId, myStore.id) : null;
@@ -392,7 +396,7 @@ function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => 
     return () => {
       cancelled = true;
     };
-  }, [api, reads, myStore, userId]);
+  }, [api, reads, myStore, userId, sectionsLive]);
 
   if (state.kind === "loading") return <Loading />;
   if (state.kind !== "ready") {
@@ -448,7 +452,12 @@ function Shell({ onSwitch }: { onSwitch?: () => void }) {
     { href: "/admin", label: "Inicio", icon: House, show: true },
     { href: "/admin/orders", label: "Pedidos", icon: ShoppingBag, show: has("orders"), badge: toConfirm },
     { href: "/admin/catalog", label: "Productos", icon: Package, show: has("catalog") },
-    { href: "/admin/sales", label: "Ventas", icon: TrendingUp, show: has("sales_today") },
+    {
+      href: "/admin/sales",
+      label: "Ventas",
+      icon: TrendingUp,
+      show: has("sales_today") && menuSection(admin, "sales_today").visibility !== "hidden",
+    },
     { href: "/admin/more", label: "Más", icon: LayoutGrid, show: true },
   ].filter((t) => t.show);
   const active = (href: string) =>
@@ -890,7 +899,14 @@ function MoreList({ items }: { items: MoreItem[] }) {
   return (
     <ul className="divide-y overflow-hidden rounded-[14px] border bg-background">
       {items.map((item) => {
-        const locked = item.code !== null && !admin.enabledModules.has(item.code);
+        // R12: hidden sections disappear (also as PRO); managed ones open read-only, marked «Admin».
+        const section = item.code === null ? null : menuSection(admin, item.code);
+        if (section?.visibility === "hidden") return null;
+        const managed = section?.visibility === "managed" || section?.setting === "managed";
+        const locked =
+          item.code !== null &&
+          !admin.enabledModules.has(item.code) &&
+          !(item.code === "themes" && section?.visibility === "managed");
         return (
           <li key={item.path}>
             <a
@@ -907,6 +923,16 @@ function MoreList({ items }: { items: MoreItem[] }) {
               <span className={cn("flex-1 text-sm font-medium", locked && "text-muted-foreground")}>
                 {item.label}
               </span>
+              {managed && !locked && (
+                <span className="rounded-md bg-surface px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+                  Admin
+                </span>
+              )}
+              {section?.setting === "hidden" && (
+                <span className="rounded-md bg-surface px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+                  Oculta
+                </span>
+              )}
               {locked ? (
                 <span className="flex items-center gap-1 rounded-md bg-gold/16 px-1.5 py-0.5 text-[10px] font-bold text-[#8A5A00]">
                   <Lock size={10} aria-hidden />
