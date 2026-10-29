@@ -54,4 +54,4 @@ completa desde abajo. Sin cambiar la lógica de ninguna pantalla.
 ## Gotchas
 - `showModal()` lanza si el `<dialog>` ya está abierto o no está en el DOM: abrir/cerrar en un efecto según `open`.
 - Cerrar con Esc dispara `cancel`/`close`: sincronizar con el estado de la pantalla (`onClose`).
-- `window.confirm` de «Borrar» queda fuera del diálogo (no se toca en R13).
+- `window.confirm` de «Borrar» queda fuera del diálogo (no se toca en R13) → **R14** (`prp-r14-confirmaciones-en-dialogo.md`).

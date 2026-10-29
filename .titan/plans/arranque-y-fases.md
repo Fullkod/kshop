@@ -64,7 +64,7 @@ pg_graphql), urql + graphql-codegen para lecturas, Drizzle o SQL para esquema y 
 Tailwind + shadcn/ui, Vercel. Apps Capacitor (`apps/store-app`, `apps/admin-app`) se añaden en su fase.
 Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desarrollo separado de producción.
 
-## Estado (actualizado 2026-10-27)
+## Estado (actualizado 2026-10-28)
 | Fase | Estado | PRP / memoria | Último commit |
 |------|--------|---------------|---------------|
 | 0a. Fábrica | Hecha | `project/2026-10-24-dual-agent-tooling.md` | — |
@@ -80,10 +80,14 @@ Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desa
 | R8. Superadmin v2 + Realtime | Hecha, pendiente de la revisión de Roberto | `prp-r8-superadmin-y-realtime.md`, `project/pendiente-realtime.md` | `da1a97d`, `eecd58f` |
 | R9. Lecturas de la tienda | Hecha, pendiente de la revisión de Roberto: portada en 2 tandas, carruseles por índice, conteos de lo mostrado, refresco en segundo plano tras un pedido; sidebars con arriba y abajo fijos | `prp-r9-lecturas-tienda.md`, `project/lecturas-tienda-r9.md` | `8be1278` |
 | R10. Deuda de lecturas | Hecha (aprobada por Roberto el 2026-10-27): RLS del catálogo con subplan hash (777 variantes 16–101 ms → 3,9 ms), facetas en una pasada (267 → 36 ms), `hasModule` cacheado por tienda | `prp-r10-deuda-lecturas.md`, `project/lecturas-tienda-r9.md` | ver PRP |
-| 8. Migrar klauShop | **Sin empezar.** Antes: decidir la instancia de Supabase (la Nano se estrangula con ráfagas) | — | — |
+| R11. Rendimiento del admin | Hecha 2026-10-28: todo se lee por funciones SQL (`admin_*`, `sf_*`), pg_graphql quitado de producción, proyecto de prueba «KShop Test»; admin mediana 1,05 s. **Pendiente**: 24 h de logs y la tabla «Pendiente tras R11» del PRP | `prp-r11-rendimiento-admin.md`, `project/2026-10-28-diagnostico-rendimiento.md` | `634a742` |
+| R12. Superadmin v3 | Hecha 2026-10-28: secciones del menú por tienda (Visible / Gestionado por admin / Oculto, 403 en la API), lista de tiendas v3, «Menú de la tienda». Migración en producción. **Pendiente**: push/deploy (con permiso) y enlace de entrada de un solo uso | `prp-r12-superadmin-v3.md`, `project/2026-10-28-r12-superadmin-v3.md` | `d487b17` |
+| R13. Formularios en diálogo | Hecha 2026-10-28: `Dialog` de `@kshop/ui`, 17 pantallas. **Pendiente**: push/deploy (con permiso) | `prp-r13-formularios-en-dialogo.md`, `project/2026-10-28-admin-formularios-en-dialogo.md` | `4d30e09` |
+| R14. Confirmaciones en diálogo | **PRP pendiente de aprobación** (P1–P4) | `prp-r14-confirmaciones-en-dialogo.md` | — |
+| 8. Migrar klauShop | 8.1–8.5 hechas 2026-10-28 (tienda `klau`; `klaushop:verify` 21/22, el único «not ok» son los avisos del incidente documentado). **Pendiente**: 8.6 (QA en navegador y medición) y 8.7 (corte, con permiso de Roberto) | `prp-fase-8-klaushop.md` | ver PRP |
 
-El remoto `origin` (`Fullkod/kshop`) lo sube Roberto. Al 2026-10-27 está al día hasta `f6aa223`; `8be1278` (R9) y
-este cierre de documentación quedan en local hasta su push.
+El remoto `origin` (`Fullkod/kshop`) lo sube Roberto. Al 2026-10-28 `origin/main` llega hasta `c9f63a9` (incluye R12
+fases 1–3); R12 fases 4–5, su documentación, R13 y el PRP R14 quedan en local hasta su push.
 
 ## Fases (cada una se detalla en su PRP)
 | Fase | Alcance | Verificación |
