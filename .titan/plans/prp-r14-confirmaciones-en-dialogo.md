@@ -1,6 +1,6 @@
 # PRP R14: confirmaciones en diálogo
 
-> **Estado**: HECHO (2026-10-29; P1–P4 como se proponían, «sip» de Roberto). Sin desplegar (falta push con permiso).
+> **Estado**: HECHO (2026-10-29; P1–P4 como se proponían, «sip» de Roberto). Subido a `main` por Roberto (2026-10-29).
 > `qa:confirms` 32/32, `qa:dialogs` 41/41, `qa:orders` 14/14, `qa:billing` 16/16, `qa:pro` 18/18; build en verde.
 > **Proyecto**: Kshop · **Sigue a**: R13 (`prp-r13-formularios-en-dialogo.md`, el `Dialog` de `@kshop/ui`).
 > Memoria: `project/2026-10-28-admin-formularios-en-dialogo.md`.

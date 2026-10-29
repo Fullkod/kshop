@@ -83,11 +83,11 @@ Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desa
 | R11. Rendimiento del admin | Hecha 2026-10-28: todo se lee por funciones SQL (`admin_*`, `sf_*`), pg_graphql quitado de producción, proyecto de prueba «KShop Test»; admin mediana 1,05 s. **Pendiente**: 24 h de logs y la tabla «Pendiente tras R11» del PRP | `prp-r11-rendimiento-admin.md`, `project/2026-10-28-diagnostico-rendimiento.md` | `634a742` |
 | R12. Superadmin v3 | Hecha 2026-10-28: secciones del menú por tienda (Visible / Gestionado por admin / Oculto, 403 en la API), lista de tiendas v3, «Menú de la tienda». Migración en producción; subido a `main` por Roberto. **Pendiente**: enlace de entrada de un solo uso | `prp-r12-superadmin-v3.md`, `project/2026-10-28-r12-superadmin-v3.md` | `d487b17` |
 | R13. Formularios en diálogo | Hecha 2026-10-28: `Dialog` de `@kshop/ui`, 17 pantallas; subido a `main` por Roberto | `prp-r13-formularios-en-dialogo.md`, `project/2026-10-28-admin-formularios-en-dialogo.md` | `4d30e09` |
-| R14. Confirmaciones en diálogo | Hecha 2026-10-29: `useConfirm()` de `@kshop/ui` (sin `window.confirm`/`prompt`, regla `no-alert`), confirmación nueva en borrados que no preguntaban, suspender tienda y quitar regalo/suelto; cancelar pedido y acciones de factura en diálogo. **Pendiente**: push/deploy (con permiso) | `prp-r14-confirmaciones-en-dialogo.md` | ver PRP |
+| R14. Confirmaciones en diálogo | Hecha 2026-10-29: `useConfirm()` de `@kshop/ui` (sin `window.confirm`/`prompt`, regla `no-alert`), confirmación nueva en borrados que no preguntaban, suspender tienda y quitar regalo/suelto; cancelar pedido y acciones de factura en diálogo; subido a `main` por Roberto | `prp-r14-confirmaciones-en-dialogo.md` | ver PRP |
 | 8. Migrar klauShop | 8.1–8.5 hechas 2026-10-28 (tienda `klau`; `klaushop:verify` 21/22, el único «not ok» son los avisos del incidente documentado). **Pendiente**: 8.6 (QA en navegador y medición) y 8.7 (corte, con permiso de Roberto) | `prp-fase-8-klaushop.md` | ver PRP |
 
-El remoto `origin` (`Fullkod/kshop`) lo sube Roberto. Al 2026-10-29 `origin/main` llega hasta `cd5af0e` (R12 y R13
-completos); R14 queda en local hasta su push.
+El remoto `origin` (`Fullkod/kshop`) lo sube Roberto. Al 2026-10-29 `origin/main` llega hasta `bab1aa5` (R12, R13 y R14
+completos).
 
 ## Fases (cada una se detalla en su PRP)
 | Fase | Alcance | Verificación |
