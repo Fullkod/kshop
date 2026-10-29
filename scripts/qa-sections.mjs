@@ -26,6 +26,9 @@ const STORE_URL = `http://demo.kshop.localhost:${PORT}`;
 const PLATFORM_URL = `http://kshop.localhost:${PORT}`;
 const OUT = join(root, ".titan/qa/r12-superadmin-v3");
 const ROOT_EMAIL = "qa-sections-root@e2e.kshop.test";
+// A temporary Pro store for the store page (the Demo copied to the test project has no plan).
+const TEMP_OWNER = "qa-sections-owner@e2e.kshop.test";
+const TEMP_SLUG = "sect-qa";
 const ROOT_PASSWORD = randomBytes(12).toString("base64url");
 mkdirSync(OUT, { recursive: true });
 
@@ -79,8 +82,11 @@ async function setSection(storeId, section, visibility) {
 }
 
 async function removeRoot() {
+  await service.from("stores").delete().eq("slug", TEMP_SLUG);
   const { data } = await service.auth.admin.listUsers({ perPage: 1000 });
-  for (const u of data?.users ?? []) if (u.email === ROOT_EMAIL) await service.auth.admin.deleteUser(u.id);
+  for (const u of data?.users ?? []) {
+    if (u.email === ROOT_EMAIL || u.email === TEMP_OWNER) await service.auth.admin.deleteUser(u.id);
+  }
 }
 
 const { data: demo, error: demoError } = await service
@@ -261,6 +267,88 @@ try {
         (await page.getByTestId("row-owner-access").count()) === 1,
       );
     }
+    await page.context().close();
+  }
+
+  // --- Superadmin › Tienda: «Menú de la tienda» -------------------------------------------------------------------
+  const { data: tempOwner, error: tempOwnerError } = await service.auth.admin.createUser({
+    email: TEMP_OWNER,
+    password: ROOT_PASSWORD,
+    email_confirm: true,
+  });
+  if (tempOwnerError) throw tempOwnerError;
+  const { data: temp, error: tempError } = await service
+    .rpc("create_store", {
+      p_name: "Sections QA",
+      p_slug: TEMP_SLUG,
+      p_owner_id: tempOwner.user.id,
+      p_base_currency: "CUP",
+      p_order_prefix: "SQ",
+      p_whatsapp_phone: "5350000000",
+      p_plan_code: "base",
+      p_trial_days: 30,
+      p_platform_domain: "kshop.fullkod.com",
+      p_created_by: null,
+    })
+    .single();
+  if (tempError) throw tempError;
+  for (const [width, dark] of [
+    [1280, false],
+    [1280, true],
+    [390, false],
+    [390, true],
+  ]) {
+    const page = await newPage(rootSession, { width, height: width === 390 ? 844 : 900, dark });
+    await page.goto(`${PLATFORM_URL}/superadmin/stores/${temp.id}`);
+    const menu = page.getByTestId("store-menu");
+    await menu.waitFor({ timeout: 60000 });
+    const tag = `${width}${dark ? "-dark" : ""}`;
+    if (width === 1280 && !dark) {
+      const shippingLink = page.getByTestId("menu-row-shipping").locator("a");
+      check(
+        "store page: the shortcut opens the section in the store's admin",
+        (await shippingLink.getAttribute("href")) ===
+          `http://${TEMP_SLUG}.kshop.localhost:${PORT}/admin/shipping`,
+        await shippingLink.getAttribute("href"),
+      );
+      check(
+        "store page: basic sections are always visible (no selector)",
+        (await page.getByTestId("section-orders").count()) === 0 &&
+          (await page.getByTestId("menu-row-team").getByText("Siempre visible").count()) === 1,
+      );
+      check(
+        "store page: a Base store shows Pro modules as «Fuera del plan»",
+        (await page.getByTestId("menu-row-finance").getByText("Fuera del plan").count()) === 1,
+      );
+      await page.getByTestId("section-shipping").selectOption("managed");
+      await page.getByText("Guardado. «Entregas»: Gestionado por admin.").waitFor({ timeout: 20000 });
+      const { data: rows } = await service
+        .from("store_section_settings")
+        .select("section, visibility")
+        .eq("store_id", temp.id);
+      check(
+        "store page: choosing «Gestionado por admin» is saved",
+        rows?.length === 1 && rows[0].section === "shipping" && rows[0].visibility === "managed",
+        JSON.stringify(rows),
+      );
+      await page.getByTestId("section-shipping").selectOption("visible");
+      await page.getByText("Guardado. «Entregas»: Visible.").waitFor({ timeout: 20000 });
+      await page.getByTestId("section-finance").selectOption("hidden");
+      await page.getByText("Guardado. «Finanzas»: Oculto.").waitFor({ timeout: 20000 });
+      const { data: after } = await service
+        .from("store_section_settings")
+        .select("section")
+        .eq("store_id", temp.id);
+      check(
+        "store page: back to visible removes the setting",
+        after?.map((r) => r.section).join() === "finance",
+      );
+    } else {
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      if (width === 390 && !dark) check("store page 390: no horizontal scroll", overflow <= 0, overflow);
+    }
+    await menu.scrollIntoViewIfNeeded();
+    await menu.screenshot({ path: join(OUT, `09-superadmin-store-menu-${tag}.png`) });
     await page.context().close();
   }
 } catch (error) {

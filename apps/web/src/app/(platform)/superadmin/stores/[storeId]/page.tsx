@@ -19,6 +19,7 @@ import { InvoiceActions } from "@/features/billing/components/InvoiceActions";
 import { InvoiceCard, LinesTable, UsageMeter } from "@/features/billing/components/BillingParts";
 import { formatDate, STORE_STATUS_LABELS, storeUrl, SUBSCRIPTION_STATUS_LABELS } from "@/lib/format";
 import { OwnerAccess } from "../../OwnerAccess";
+import { StoreMenu } from "./StoreMenu";
 import { useSession } from "@/lib/session";
 
 // Superadmin › Tienda › Suscripción: plan, next invoice, modules (plan / add-on / gift), gifts, own price and
@@ -154,13 +155,6 @@ export default function SuperadminStoreSubscriptionPage() {
           <h1 className="text-2xl font-semibold">{store.name}</h1>
           <a href={storeUrl(store.slug)} target="_blank" className="text-sm text-primary hover:underline">
             {store.primaryDomain ?? store.slug}
-          </a>
-          <a
-            href={`${storeUrl(store.slug)}/admin/themes`}
-            target="_blank"
-            className="ml-3 text-sm text-primary hover:underline"
-          >
-            Personalizar la apariencia
           </a>
           <div className="mt-2 flex flex-wrap gap-2">
             <Badge>{data.plan.name}</Badge>
@@ -332,6 +326,12 @@ export default function SuperadminStoreSubscriptionPage() {
           </tbody>
         </table>
       </Card>
+
+      <StoreMenu
+        storeId={store.id}
+        slug={store.slug}
+        activeModules={new Set(data.modules.flatMap((m) => (m.source ? [m.code] : [])))}
+      />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="flex flex-col gap-3">
