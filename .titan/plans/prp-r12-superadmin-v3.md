@@ -1,7 +1,8 @@
 # PRP R12: Panel del superadmin v3 (menú de cada tienda, lista de tiendas y accesos directos)
 
-> **Estado**: PREGUNTAS RESPONDIDAS (2026-10-28; ver «Respuestas de Roberto»), pendiente del «adelante» para
-> implementar. Texto de la marca: «Gestionado por admin».
+> **Estado**: HECHO (2026-10-28, commits `b2a8161`..`21258c6` + docs; aprobado por Roberto). Migración en prueba y
+> producción (RLS 692/692 en las dos), `e2e:sections` 15/15, `qa:sections` 31/31, build en verde. **Sin desplegar**
+> (falta el push a `main` con permiso de Roberto). Texto de la marca: «Gestionado por admin».
 > **Fecha**: 2026-10-28
 > **Proyecto**: Kshop
 > **Sigue a**: `prp-r8-superadmin-y-realtime.md` (panel v2) y `prp-r11-rendimiento-admin.md` («Pendiente tras R11»:
@@ -36,26 +37,26 @@ atiende más rápido (ve quién debe y quién vence sin abrir cada ficha).
 ## Qué
 
 ### Criterios de Éxito
-- [ ] En la ficha de una tienda, el superadmin pone cualquier sección configurable en Visible / Gestionado por Fullkod
+- [x] En la ficha de una tienda, el superadmin pone cualquier sección configurable en Visible / Gestionado por Fullkod
       / Oculto; el cambio se guarda y el admin abierto de esa tienda lo refleja solo (Realtime) o al recargar.
-- [ ] Sección **gestionada**: el personal la ve en el menú con la marca «Kshop», entra, consulta, y cualquier escritura
+- [x] Sección **gestionada**: el personal la ve en el menú con la marca «Kshop», entra, consulta, y cualquier escritura
       de su rol devuelve **403 `section_managed`** con un mensaje claro; el superadmin escribe sin problema.
-- [ ] Sección **oculta**: no sale en el menú (web ni Kshop Admin), su ruta muestra «Esta sección no está disponible»
+- [x] Sección **oculta**: no sale en el menú (web ni Kshop Admin), su ruta muestra «Esta sección no está disponible»
       y sus escrituras devuelven **403 `section_hidden`**; el superadmin la ve y la usa (con una marca «Oculta al
       personal»).
-- [ ] Ninguna escritura de otra sección, ni las públicas (carrito, checkout, cuenta del cliente), cambia de
+- [x] Ninguna escritura de otra sección, ni las públicas (carrito, checkout, cuenta del cliente), cambia de
       comportamiento; el guard no añade ninguna consulta por petición (sigue siendo una llamada a `api_guard`).
-- [ ] Tests de aislamiento: el personal de A no lee la configuración de B; nadie salvo `service_role` la escribe;
+- [x] Tests de aislamiento: el personal de A no lee la configuración de B; nadie salvo `service_role` la escribe;
       `pnpm test:rls` en verde (prueba y producción).
-- [ ] Superadmin › Tiendas: búsqueda (nombre, slug, email del dueño), filtros (estado, plan, suscripción, «debe
+- [x] Superadmin › Tiendas: búsqueda (nombre, slug, email del dueño), filtros (estado, plan, suscripción, «debe
       dinero», «vence en ≤ 7 días»), columnas «Por cobrar», «Vence», «Pedidos 30 d» y «Último pedido», y por fila:
       Abrir ficha, Abrir admin, Ver tienda, Enviar acceso al dueño, Suspender/Activar. En 390 px se ve en tarjetas sin
       scroll horizontal.
-- [ ] La lista carga con una sola lectura SQL (sin `auth.admin.listUsers`).
-- [ ] Ficha de la tienda: bloque «Accesos directos» con todas las secciones del admin agrupadas como en su menú
+- [x] La lista carga con una sola lectura SQL (sin `auth.admin.listUsers`).
+- [x] Ficha de la tienda: bloque «Accesos directos» con todas las secciones del admin agrupadas como en su menú
       (Ventas · Catálogo · Tienda · Negocio), cada una abre `{tienda}/admin/<sección>` y muestra si está en el plan y
       su visibilidad.
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build` pasan; QA en navegador con capturas en
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build` pasan; QA en navegador con capturas en
       `.titan/qa/r12-superadmin-v3/` (1280 y 390, claro y oscuro, sin errores de consola).
 
 ### Comportamiento Esperado (happy path)
@@ -193,11 +194,11 @@ refleja en el admin abierto de la Demo.
 ### Fase 6: Validación final
 **Objetivo**: sistema funcionando end-to-end y documentado.
 **Validación**:
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build` pasan (build sin nadie usando la web)
-- [ ] `pnpm test:rls` en prueba y producción
-- [ ] e2e de secciones y `qa:billing` con WhatsApp en «Simulado» (ya lo está), en serie, sin la web en uso
-- [ ] Capturas en `.titan/qa/r12-superadmin-v3/` confirman la UI
-- [ ] Criterios de éxito cumplidos; memoria (`project/`) y `MEMORY.md` actualizados; commit
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build` pasan (build sin nadie usando la web)
+- [x] `pnpm test:rls` en prueba y producción
+- [x] e2e de secciones y `qa:billing` con WhatsApp en «Simulado» (ya lo está), en serie, sin la web en uso
+- [x] Capturas en `.titan/qa/r12-superadmin-v3/` confirman la UI
+- [x] Criterios de éxito cumplidos; memoria (`project/`) y `MEMORY.md` actualizados; commit
 
 ---
 
@@ -205,25 +206,40 @@ refleja en el admin abierto de la Demo.
 
 > Esta sección crece con cada error encontrado durante la implementación.
 
+- **2026-10-28 · lo que quedó distinto del plan.** «Accesos directos» y «Menú de la tienda» son **un solo bloque**
+  (`StoreMenu.tsx`): cada fila es el acceso a la sección + plan + selector. La tabla de la lista agrupa «Plan · vence» y
+  «Actividad» (pedidos 30 d, último pedido, productos) para caber a 1280 sin scroll; en < lg son tarjetas.
+- **Ruta compartida sin bloqueo:** `catalog/currencies` la usan Catálogo › Monedas (básico) y «Monedas»
+  (`multi_currency`): queda con el catálogo, así que «Monedas» gestionada se puede seguir tocando desde Catálogo › Monedas.
+  Métodos de pago (`checkout-settings/payment-methods`) es del módulo `orders`: básico, nunca se bloquea.
+- **Test del mapa de rutas:** `checkout-settings/[resource]` decide la sección por el recurso; el test la expande con
+  sus valores (zones, methods, payment-methods). Toda ruta nueva de escritura debe entrar en `SECTION_WRITES` o
+  `SECTION_FREE_WRITES` o el test falla.
+- **Puertos ocupados en la máquina de Roberto:** el 3000 lo usa a veces `fullkod-web` y el 3100 `microscope-v2`. Para
+  probar Kshop en otro puerto hay que pasar también `NEXT_PUBLIC_PLATFORM_DOMAIN=kshop.localhost:<puerto>` (si no, las
+  tiendas no se resuelven por host) y `E2E_APP_URL` / `QA_BASE_URL`. Nunca matar el proceso de otro proyecto.
+- **En dev, la lista hace 2 peticiones** al montar (StrictMode); cada una es una sola sentencia SQL.
+- **Regla del compilador de React:** nada de `Date.now()` en el render; la lista guarda la hora de la lectura.
+
 ---
 
 ## Gotchas
 
-- [ ] **Sesión por subdominio**: la sesión del admin vive en el `localStorage` de cada origen
+- [x] **Sesión por subdominio**: la sesión del admin vive en el `localStorage` de cada origen
       (`packages/admin/src/session.tsx`), así que el primer acceso directo a una tienda pide entrar otra vez en ese
       subdominio. Un enlace de entrada de un solo uso (superadmin → tienda) queda fuera de este PRP; ver Preguntas.
-- [ ] **Rutas compartidas**: varias secciones escriben por la misma carpeta (`catalog/*` sirve a Catálogo y a
+- [x] **Rutas compartidas**: varias secciones escriben por la misma carpeta (`catalog/*` sirve a Catálogo y a
       Importar Excel; `currencies` vs `catalog/currencies`; `orders/*` y «Nuevo pedido»; `checkout-settings/*`). El
       mapa debe decidir sección por subruta, no por carpeta, y tener test.
-- [ ] **Subidas directas a Storage**: el personal sube imágenes a `store-media` sin pasar por la API; en una sección
+- [x] **Subidas directas a Storage**: el personal sube imágenes a `store-media` sin pasar por la API; en una sección
       gestionada podría subir un archivo, pero no enlazarlo a nada (la escritura que lo usa pasa por la API). Aceptable;
       no se toca la política de Storage.
-- [ ] **Caché de arranque de 24 h** (`kshop.admin.*` en `localStorage`): una sección recién ocultada puede verse en el
+- [x] **Caché de arranque de 24 h** (`kshop.admin.*` en `localStorage`): una sección recién ocultada puede verse en el
       menú hasta que llega `/me` o la señal Realtime; la API ya la bloquea, así que no concede nada.
-- [ ] **Nano a créditos**: `test:rls`, e2e, QA y `build` en serie y sin la web en uso; migración primero en «KShop Test»,
+- [x] **Nano a créditos**: `test:rls`, e2e, QA y `build` en serie y sin la web en uso; migración primero en «KShop Test»,
       luego producción.
-- [ ] La ficha (`stores/[storeId]/page.tsx`) ya tiene 565 líneas: los bloques nuevos van en componentes propios.
-- [ ] `section` es texto con `check`; añadir una sección futura obliga a una migración que amplíe el `check` (igual que
+- [x] La ficha (`stores/[storeId]/page.tsx`) ya tiene 565 líneas: los bloques nuevos van en componentes propios.
+- [x] `section` es texto con `check`; añadir una sección futura obliga a una migración que amplíe el `check` (igual que
       `MODULE_CODES` ↔ `public.modules`): un test debe comparar ambas listas.
 
 ## Respuestas de Roberto (2026-10-28)
@@ -249,4 +265,4 @@ Estas respuestas **ganan** sobre lo escrito arriba (D1, D10, columnas y textos �
 
 ---
 
-*PRP pendiente de aprobación. No se ha modificado código.*
+*PRP hecho el 2026-10-28. Pendiente: desplegar (push con permiso), enlace de entrada de un solo uso (otra fase).*

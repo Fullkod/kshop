@@ -83,6 +83,11 @@
   `features/<modulo>/` con su `module.ts`, registrado en un registro central. Comprobación en las tres capas:
   UI (entitlements), API (`requireModule(storeId, code)`) y BD (`private.store_has_module`). Desactivar un
   módulo nunca borra datos. El core no importa módulos opcionales.
+- **Secciones del menú (R12):** el superadmin pone cada módulo no básico de una tienda en Visible / «Gestionado por
+  admin» / Oculto (`store_section_settings`). Es aparte del plan: ocultar no apaga ni borra. Las escrituras del personal
+  en esa sección dan 403 en `assertStoreWritable` según `server/section-guard.ts`; **toda ruta nueva de escritura bajo
+  `/api/v1/stores/{id}/` va en `SECTION_WRITES` o `SECTION_FREE_WRITES`** (un test lo exige). Básicas, nunca
+  configurables: Inicio, Pedidos, Clientes, Catálogo, Plan y facturación, Equipo.
 - **Dinero:** `numeric(12,2)` + código de moneda (`CUP`, `USD`, `EUR`; el MLC no existe). Órdenes y líneas
   guardan snapshot de precios, costo, tasa y descuentos.
 - **Storage:** prefijo `stores/{store_id}/...` y políticas por `store_id`: `store-media` (lectura pública: imágenes,
@@ -122,6 +127,7 @@
 | `pnpm e2e:orders` · `pnpm qa:orders` | API de clientes, carrito, checkout y pedidos (tiendas temporales) y QA en navegador del ciclo de compra en la Tienda Demo (playwright-core con el Chromium de la caché de Playwright o `QA_CHROMIUM_PATH`; capturas en `.titan/qa/fase-3/`), con `pnpm dev` corriendo |
 | `pnpm e2e:discounts` · `pnpm e2e:notifications` · `pnpm qa:discounts` · `pnpm qa:notifications` | Fase 4: API de promociones/cupones (carrera por el último uso) y de avisos WhatsApp en `dry_run` (tiendas temporales), y QA en navegador en la Tienda Demo (capturas en `.titan/qa/fase-4/`), con `pnpm dev` corriendo |
 | `pnpm e2e:favorites` | Rediseño v2: API de favoritos del cliente en la Tienda Demo (cliente temporal `@e2e.kshop.test`, se borra), con `pnpm dev` corriendo |
+| `pnpm e2e:sections` · `pnpm qa:sections` | R12: visibilidad de las secciones del admin (403 `section_managed`/`section_hidden` al personal, el superadmin pasa; tienda temporal) y QA en navegador del menú de la Demo, la lista de tiendas y «Menú de la tienda» (capturas en `.titan/qa/r12-superadmin-v3/`), con `pnpm dev` corriendo (`E2E_APP_URL`/`QA_BASE_URL` para otro puerto) |
 | `pnpm app:config <slug>` · `pnpm app:build <slug\|admin>` · `pnpm app:publish <slug\|admin>` · `pnpm app:keystore <slug\|admin>` | Fase 7: config de la app de tienda; proyecto Android con iconos (`--assemble` compila y firma; en la práctica lo hace el workflow «Android app» de GitHub Actions); sube el APK del artefacto a `store-apps` y lo registra oculto; crea la clave de firma fuera del repo (`--github`: secretos de Actions). Ver `docs/APPS.md` |
 | `pnpm qa:apps` | QA en navegador de la app de tienda, Kshop Admin y la distribución (`/app`, Admin › App móvil, Superadmin › Apps), con `pnpm dev` y los Vite de las apps (5173, 5174) corriendo; capturas en `.titan/qa/fase-7/` |
 | `pnpm demo:seed` | Crea/repara la tienda de pruebas permanente «Tienda Demo» (`demo.kshop.localhost:3000`) |
