@@ -34,3 +34,8 @@ Commands: see "Comandos" in [AGENTS.md](AGENTS.md).
 - Agent setup: [docs/AGENT_SETUP.md](docs/AGENT_SETUP.md)
 - Decisions and design: [.titan/memory/MEMORY.md](.titan/memory/MEMORY.md)
 - Phases: [.titan/plans/arranque-y-fases.md](.titan/plans/arranque-y-fases.md)
+
+<!-- fullkod-signature -->
+---
+
+<a href="https://fullkod.com/?ref=kshop"><img src="https://fullkod.com/brand/fullkod-symbol.svg" width="20" height="20" align="center" alt="Fullkod"></a> Built by **[Fullkod](https://fullkod.com/?ref=kshop)**
