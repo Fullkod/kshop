@@ -5,13 +5,16 @@ import { whatsappUrl } from "@kshop/storefront";
 import { CurrentYear } from "@kshop/storefront/current-year";
 import {
   ArrowRight,
+  Bell,
   Check,
+  ClipboardList,
   Coins,
-  FileSpreadsheet,
-  Globe,
   MessageCircle,
+  Package,
   Smartphone,
-  Tag,
+  TrendingUp,
+  Truck,
+  Warehouse,
   type LucideIcon,
 } from "@kshop/ui";
 import Link from "next/link";
@@ -33,52 +36,84 @@ const NAV = [
 
 const TRUST = ["Pago en efectivo", "Sin tarjeta", "Soporte por WhatsApp"];
 
-const FEATURES: { id?: string; icon: LucideIcon; title: string; text: string; card: string; box: string }[] =
-  [
-    {
-      icon: Globe,
-      title: "Tu dirección propia",
-      text: "tutienda.kshop.fullkod.com desde el primer día, o tu propio dominio en Pro.",
-      card: "bg-primary text-primary-foreground",
-      box: "bg-white/15 text-gold",
-    },
-    {
-      icon: MessageCircle,
-      title: "Pedidos por WhatsApp",
-      text: "El cliente arma su carrito y te llega el pedido listo para confirmar.",
-      card: "bg-surface",
-      box: "bg-success-soft text-whatsapp",
-    },
-    {
-      icon: Coins,
-      title: "CUP, USD y EUR",
-      text: "Precios en varias monedas con la tasa del día.",
-      card: "bg-surface",
-      box: "bg-accent-soft text-primary",
-    },
-    {
-      icon: FileSpreadsheet,
-      title: "Catálogo desde Excel",
-      text: "Sube cientos de productos con tallas, colores y fotos de una vez.",
-      card: "bg-surface",
-      box: "bg-accent-soft text-primary",
-    },
-    {
-      id: "app",
-      icon: Smartphone,
-      title: "Tu app Android",
-      text: "Una app con tu logo para tus clientes, y Kshop Admin para ti.",
-      card: "bg-gold text-night",
-      box: "bg-night/10 text-night",
-    },
-    {
-      icon: Tag,
-      title: "Ofertas que venden",
-      text: "Precio tachado, -20 % y cuenta atrás en la portada.",
-      card: "bg-surface",
-      box: "bg-sale-soft text-sale",
-    },
-  ];
+// What the business gains. `module` labels the card with the cheapest plan that has it, when the first plan doesn't.
+const FEATURES: {
+  id?: string;
+  icon: LucideIcon;
+  title: string;
+  text: string;
+  module?: ModuleCode;
+  card: string;
+  box: string;
+}[] = [
+  {
+    icon: MessageCircle,
+    title: "Vende las 24 horas",
+    text: "Tu catálogo siempre abierto. El cliente compra cuando quiere y el pedido te llega completo por WhatsApp: productos, dirección, entrega y pago. Sin repetir precios ni mandar fotos una a una.",
+    card: "bg-primary text-primary-foreground",
+    box: "bg-white/15 text-gold",
+  },
+  {
+    icon: Package,
+    title: "Inventario al día",
+    text: "Cada pedido aparta sus unidades, así no vendes lo que no tienes. Ves lo disponible y lo reservado por talla y color, lo que se acaba y cuánto vale tu mercancía. Todo el catálogo se sube desde Excel.",
+    card: "bg-surface",
+    box: "bg-accent-soft text-primary",
+  },
+  {
+    icon: Warehouse,
+    title: "Varios almacenes",
+    text: "Stock por local o almacén, cuál sirve cada zona, puntos de recogida y traspasos con el historial de cada movimiento.",
+    module: "multi_warehouse",
+    card: "bg-surface",
+    box: "bg-accent-soft text-primary",
+  },
+  {
+    icon: Truck,
+    title: "Entregas en orden",
+    text: "Zonas con su precio y plazo, envío gratis desde un importe o recogida en tienda. Cada pedido avanza de «por confirmar» a «entregado» y nadie pierde el hilo.",
+    card: "bg-surface",
+    box: "bg-accent-soft text-primary",
+  },
+  {
+    icon: Bell,
+    title: "Clientes avisados solos",
+    text: "Un WhatsApp automático cada vez que su pedido cambia de estado, con el texto que tú quieras. Menos «¿y mi pedido?».",
+    module: "whatsapp_notifications",
+    card: "bg-surface",
+    box: "bg-success-soft text-whatsapp",
+  },
+  {
+    icon: Coins,
+    title: "Cobra como ya cobras",
+    text: "Efectivo, transferencia o lo que uses, en CUP, USD o EUR con la tasa del día. Sabes qué está cobrado y qué falta por cobrar.",
+    card: "bg-surface",
+    box: "bg-accent-soft text-primary",
+  },
+  {
+    icon: TrendingUp,
+    title: "Sabe cuánto ganas",
+    text: "Ventas del día y del mes por moneda, costo de lo vendido, margen, gastos y ganancia neta, con el cierre del día para cuadrar la caja.",
+    module: "finance",
+    card: "bg-night text-white",
+    box: "bg-white/10 text-gold",
+  },
+  {
+    icon: ClipboardList,
+    title: "Todo en un solo panel",
+    text: "Pedidos de la web, de la app y los que tomas en el local o por teléfono, con su cliente e historial. Tu equipo entra con sus propios permisos.",
+    card: "bg-surface",
+    box: "bg-accent-soft text-primary",
+  },
+  {
+    id: "app",
+    icon: Smartphone,
+    title: "Clientes que vuelven",
+    text: "Tu app Android con tu logo en su móvil, ofertas con cuenta atrás y cupones. Y Kshop Admin para llevar el negocio desde el tuyo.",
+    card: "bg-gold text-night",
+    box: "bg-night/10 text-night",
+  },
+];
 
 const steps = (trialDays: number, trialPlan: string) => [
   { title: "Crea tu tienda", text: `Elige nombre y dirección. Te damos ${trialDays} días de ${trialPlan}.` },
@@ -149,6 +184,10 @@ export default async function PlatformHome() {
   // The trial gives the top public plan (decision of the pricing study).
   const trialPlan = data.plans.at(-1)?.name ?? "Pro";
   const moduleOrder = data.modules.map((m) => m.code);
+  const planOf = (module: ModuleCode | undefined) =>
+    module && !data.plans[0]?.modules.includes(module)
+      ? data.plans.find((p) => p.modules.includes(module))?.name
+      : undefined;
 
   return (
     <main className="flex min-h-dvh flex-col bg-background text-foreground [container-type:inline-size]">
@@ -196,8 +235,8 @@ export default async function PlatformHome() {
               Tu tienda online, con tu dirección y tus pedidos por <span className="text-gold">WhatsApp</span>
             </h1>
             <p className="max-w-[520px] text-[clamp(16px,1.5cqw,19px)] text-pretty text-white/80">
-              Catálogo con variantes, precios en CUP, USD o EUR y un panel para gestionar tu negocio desde el
-              móvil. Lista en una tarde.
+              Recibe pedidos las 24 horas, controla tu inventario y tus almacenes, organiza las entregas y sabe
+              cada día cuánto ganas. En CUP, USD o EUR, y lista en una tarde.
             </p>
             <div className="flex flex-wrap gap-3">
               <a
@@ -258,23 +297,33 @@ export default async function PlatformHome() {
         className={`${container} flex scroll-mt-4 flex-col gap-9 pt-[clamp(56px,7cqw,104px)]`}
       >
         <div className="flex max-w-[640px] flex-col gap-2.5">
-          <span className={eyebrow}>Todo lo que necesitas</span>
-          <h2 className={h2}>Vende como una tienda grande, sin complicarte</h2>
+          <span className={eyebrow}>Lo que gana tu negocio</span>
+          <h2 className={h2}>Vende más y lleva tu negocio en orden</h2>
         </div>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4">
-          {FEATURES.map(({ id, icon: Icon, title, text, card, box }) => (
-            <div
-              key={title}
-              id={id}
-              className={`flex scroll-mt-4 flex-col gap-3 rounded-[20px] p-[26px] ${card}`}
-            >
-              <span className={`flex size-12 items-center justify-center rounded-[14px] ${box}`}>
-                <Icon size={23} aria-hidden />
-              </span>
-              <h3 className="mt-1.5 font-display text-xl leading-tight font-bold">{title}</h3>
-              <p className="text-[15px] leading-relaxed text-pretty opacity-85">{text}</p>
-            </div>
-          ))}
+          {FEATURES.map(({ id, icon: Icon, title, text, module, card, box }) => {
+            const plan = planOf(module);
+            return (
+              <div
+                key={title}
+                id={id}
+                className={`flex scroll-mt-4 flex-col gap-3 rounded-[20px] p-[26px] ${card}`}
+              >
+                <span className="flex items-start justify-between gap-3">
+                  <span className={`flex size-12 items-center justify-center rounded-[14px] ${box}`}>
+                    <Icon size={23} aria-hidden />
+                  </span>
+                  {plan && (
+                    <span className="rounded-full border border-current px-2.5 py-1 text-[11px] leading-none font-bold tracking-[.06em] uppercase opacity-70">
+                      En {plan}
+                    </span>
+                  )}
+                </span>
+                <h3 className="mt-1.5 font-display text-xl leading-tight font-bold">{title}</h3>
+                <p className="text-[15px] leading-relaxed text-pretty opacity-85">{text}</p>
+              </div>
+            );
+          })}
         </div>
       </section>
 

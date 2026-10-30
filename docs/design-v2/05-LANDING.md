@@ -13,8 +13,10 @@ Prototipo: `referencias/Plataforma Landing.dc.html`. Marca Kshop fija y contened
      - 3 garantías con `check` en `#6FD39C`.
    - Teléfono (`0 1 380px`): marco de 340×560 con la parte de abajo cortada y la tienda demo real dentro. Encima flotan dos tarjetas: «Nuevo pedido #1046» con icono WhatsApp
      y «Vendido hoy 5 100 CUP» en gold.
-2. **Funciones:** eyebrow + H2 800 `clamp(30px,3.6cqw,46px)`. Rejilla `auto-fit minmax(300px,1fr)` de 6 tarjetas (`p-[26px] rounded-[20px]`, icono en caja de 48).
-   La 1.ª va en violeta, la 5.ª en gold y el resto en `#F7F5FC`. Tarjetas: Dirección propia · Pedidos por WhatsApp · CUP, USD y MLC · Catálogo desde Excel · Tu app Android · Ofertas que venden.
+2. **Funciones** («Lo que gana tu negocio», 2026-10-29): eyebrow + H2 800 `clamp(30px,3.6cqw,46px)`. Rejilla `auto-fit minmax(300px,1fr)` de 9 tarjetas (`p-[26px] rounded-[20px]`, icono en caja de 48).
+   La 1.ª va en violeta, la 7.ª en night, la 9.ª en gold y el resto en `#F7F5FC`. Tarjetas, contadas como ventaja para el negocio: Vende las 24 horas · Inventario al día · Varios almacenes ·
+   Entregas en orden · Clientes avisados solos · Cobra como ya cobras · Sabe cuánto ganas · Todo en un solo panel · Clientes que vuelven. Si el primer plan no trae el módulo
+   de la tarjeta, lleva la etiqueta «En <plan>» (se calcula con los planes de Superadmin › Planes).
 3. **Temas:** caja `#F7F5FC rounded-[28px]`. A la izquierda, texto y 6 botones de preset (dos puntos accent/secondary + nombre). A la derecha, la portada real a escala 0,5
    con el preset elegido. Así se vende el sistema de temas.
 4. **Pasos:** «En marcha en tres pasos», 3 tarjetas con borde y número 800 44px violeta.
