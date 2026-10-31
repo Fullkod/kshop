@@ -480,8 +480,11 @@ export function ProductEditor({ productId }: { productId?: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">{productId ? form.name || "Producto" : "Nuevo producto"}</h2>
+      {/* On a phone the name, the status and «Guardar» stay under the top bar while the long form scrolls. */}
+      <div className="sticky top-[var(--admin-header-height,0px)] z-20 -mx-4 flex flex-wrap items-center justify-between gap-3 bg-surface px-4 py-2 md:static md:mx-0 md:bg-transparent md:p-0">
+        <h2 className="min-w-0 flex-1 truncate text-lg font-semibold">
+          {productId ? form.name || "Producto" : "Nuevo producto"}
+        </h2>
         <div className="flex items-center gap-2">
           <Select
             aria-label="Estado"
@@ -655,7 +658,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
                         key={v.id}
                         aria-pressed={on}
                         onClick={() => toggleAxisValue(a.id, v.id)}
-                        className={`flex items-center gap-1 rounded-full border px-3 py-1 text-sm ${on ? "border-primary bg-accent-soft text-primary" : ""}`}
+                        className={`flex items-center gap-1 rounded-full border px-3 py-1 text-sm touch:min-h-10 ${on ? "border-primary bg-accent-soft text-primary" : ""}`}
                       >
                         {v.value && (
                           <span className="h-3 w-3 rounded-full border" style={{ background: v.value }} />

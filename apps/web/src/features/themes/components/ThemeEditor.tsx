@@ -141,7 +141,7 @@ export function ThemeEditor({
                         onChange={(e) =>
                           update({ colors: { ...theme.colors, [key]: e.target.value.toUpperCase() } })
                         }
-                        className="size-[30px] shrink-0 cursor-pointer rounded-md border"
+                        className="size-[30px] shrink-0 cursor-pointer rounded-md border touch:size-10"
                       />
                       <span className="flex min-w-0 flex-col">
                         <span className="truncate text-[12.5px] font-semibold">{label}</span>

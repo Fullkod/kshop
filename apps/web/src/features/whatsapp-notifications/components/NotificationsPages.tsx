@@ -13,8 +13,9 @@ import {
   type NotificationStatus,
 } from "@kshop/core";
 import { asResult } from "@kshop/data";
-import { Alert, Badge, Button, Card, cn, Dialog, FieldError, Input, Label, useConfirm } from "@kshop/ui";
+import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label, useConfirm } from "@kshop/ui";
 import Link from "next/link";
+import { AdminSubNav } from "@/components/AdminSubNav";
 import { useStorePathname } from "@/lib/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
@@ -78,23 +79,10 @@ const SECTIONS = [
 export function NotificationsNav() {
   const pathname = useStorePathname();
   return (
-    <nav
-      className="mb-6 flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none]"
-      aria-label="Secciones de avisos"
-    >
-      {SECTIONS.map((s) => (
-        <Link
-          key={s.href}
-          href={s.href}
-          className={cn(
-            "shrink-0 border-b-2 border-transparent pt-1 pb-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground hover:text-foreground",
-            pathname === s.href && "border-primary font-bold text-primary",
-          )}
-        >
-          {s.label}
-        </Link>
-      ))}
-    </nav>
+    <AdminSubNav
+      label="Secciones de avisos"
+      items={SECTIONS.map((s) => ({ href: s.href, label: s.label, active: pathname === s.href }))}
+    />
   );
 }
 

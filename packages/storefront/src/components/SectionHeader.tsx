@@ -39,7 +39,7 @@ export function SectionHeader({
         {href && (
           <Link
             href={href}
-            className="mr-1.5 flex items-center gap-1.5 text-sm font-semibold whitespace-nowrap"
+            className="mr-1.5 flex items-center gap-1.5 touch:min-h-10 text-sm font-semibold whitespace-nowrap"
           >
             {hrefLabel}
             <ArrowRight size={16} aria-hidden />

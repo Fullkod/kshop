@@ -93,7 +93,7 @@ export function CurrencySelect() {
       <select
         value={state.selected.currency}
         onChange={(e) => state.select(e.target.value as CurrencyCode)}
-        className="h-9 cursor-pointer rounded-sf-btn border border-border bg-background px-2 text-xs font-semibold @min-[720px]:mr-1.5 @min-[720px]:h-[42px] @min-[720px]:px-2.5 @min-[720px]:text-[13px]"
+        className="h-10 cursor-pointer rounded-sf-btn border border-border bg-background px-2 text-xs font-semibold @min-[720px]:mr-1.5 @min-[720px]:h-[42px] @min-[720px]:px-2.5 @min-[720px]:text-[13px]"
         aria-label="Moneda"
       >
         {state.currencies.map((c) => (

@@ -41,6 +41,7 @@
     "qa:pro": "node scripts/db-env.mjs node scripts/qa-pro.mjs",
     "qa:apps": "node scripts/db-env.mjs node scripts/qa-apps.mjs",
     "qa:admin-perf": "node scripts/db-env.mjs node scripts/qa-admin-perf.mjs",
+    "qa:mobile": "node scripts/db-env.mjs node scripts/qa-mobile.mjs",
     "app:config": "node scripts/app-config.mjs",
     "app:build": "node scripts/app-build.mjs",
     "app:publish": "node scripts/app-publish.mjs",

@@ -206,10 +206,12 @@ try {
 
   // Cancel an order (P4): the reason goes inside the dialog; «Volver» leaves the order as it was. The Demo of the test
   // project may have no cancellable order: one is put in «processing» for the check and given its status back.
+  // Not a counter sale: its button says «Cancelar venta».
   const { data: order } = await service
     .from("orders")
     .select("id, status")
     .eq("store_id", demo.id)
+    .neq("channel", "pos")
     .order("created_at", { ascending: false })
     .limit(1)
     .single();

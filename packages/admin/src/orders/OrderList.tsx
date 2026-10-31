@@ -189,7 +189,7 @@ export function OrderList({ initialTab = "pending" }: { initialTab?: ListTab }) 
               aria-selected={tab === t.key}
               onClick={() => setTab(t.key)}
               className={cn(
-                "h-[34px] rounded-full border px-3.5 text-sm whitespace-nowrap",
+                "h-[34px] rounded-full border px-3.5 text-sm whitespace-nowrap touch:h-10",
                 tab === t.key
                   ? "border-night bg-night font-semibold text-white"
                   : "bg-background hover:bg-surface",
@@ -264,7 +264,7 @@ export function OrderList({ initialTab = "pending" }: { initialTab?: ListTab }) 
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`WhatsApp de ${row.customerName} (${formatPhone(row.customerPhone)})`}
-                        className="flex size-9 items-center justify-center rounded-[10px] border border-success-soft text-whatsapp"
+                        className="flex size-9 touch:size-10 items-center justify-center rounded-[10px] border border-success-soft text-whatsapp"
                       >
                         <MessageCircle size={17} aria-hidden />
                       </a>

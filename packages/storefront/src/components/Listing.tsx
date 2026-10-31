@@ -131,7 +131,7 @@ export function ListingView({
               <Link
                 href={basePath}
                 rel="nofollow"
-                className="inline-flex h-[34px] items-center px-2 text-[13px] underline"
+                className="inline-flex h-[34px] items-center px-2 text-[13px] underline touch:h-10"
               >
                 Quitar todo
               </Link>
@@ -330,7 +330,7 @@ function FilterLink({
       role="checkbox"
       aria-checked={checked}
       scroll={false}
-      className="flex items-center gap-2 rounded px-1 py-1 hover:bg-surface"
+      className="flex items-center gap-2 rounded px-1 py-1 hover:bg-surface touch:min-h-10"
     >
       <span
         className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${checked ? "border-primary bg-primary text-primary-foreground" : ""}`}
@@ -356,7 +356,7 @@ export function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
           <li key={`${c.label}-${i}`} className="flex items-center gap-1">
             {i > 0 && <ChevronRight size={14} aria-hidden />}
             {c.href && i < all.length - 1 ? (
-              <Link href={c.href} className="hover:text-foreground hover:underline">
+              <Link href={c.href} className="inline-block py-1.5 hover:text-foreground hover:underline">
                 {c.label}
               </Link>
             ) : (

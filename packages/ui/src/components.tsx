@@ -23,7 +23,8 @@ const buttonCva = cva(
       },
       size: {
         default: "h-11 px-[18px] text-sm",
-        sm: "h-9 px-3.5 text-[13px]",
+        // Fingers (coarse pointer) get a taller small button; a mouse keeps the dense one.
+        sm: "h-9 px-3.5 text-[13px] touch:h-10",
         lg: "h-13 px-6 text-base",
         icon: "size-11 shrink-0",
       },
@@ -145,7 +146,7 @@ export function Segmented<T extends string>({
       {options.map((option) => {
         const active = option.value === value;
         const classes = cn(
-          "inline-flex cursor-pointer items-center justify-center rounded-[calc(var(--sf-btn-radius)-2px)] px-3.5 py-[9px] text-sm transition-colors",
+          "inline-flex cursor-pointer items-center justify-center rounded-[calc(var(--sf-btn-radius)-2px)] px-3.5 py-[9px] text-sm transition-colors touch:min-h-10",
           focusRing,
           active
             ? "bg-background font-semibold text-foreground shadow-sf"
@@ -178,7 +179,7 @@ export function Segmented<T extends string>({
 
 /** Filter chip (listings, categories). Active chips are inverted; `chipVariants` also styles links. */
 export const chipVariants = cva(
-  `inline-flex h-[34px] shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 text-[13px] font-medium transition-colors ${focusRing}`,
+  `inline-flex h-[34px] shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 text-[13px] font-medium transition-colors touch:h-10 ${focusRing}`,
   {
     variants: {
       active: {

@@ -196,7 +196,7 @@ function MenuRow({
       <a
         href={href}
         target="_blank"
-        className="flex min-w-0 flex-1 basis-48 items-center gap-2.5 text-sm font-medium hover:text-primary hover:underline"
+        className="flex min-w-0 flex-1 basis-48 items-center gap-2.5 py-2 text-sm font-medium hover:text-primary hover:underline"
         title="Abrir en el admin de la tienda"
       >
         <row.icon size={17} aria-hidden className="shrink-0 text-primary" />

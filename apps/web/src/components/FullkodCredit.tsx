@@ -26,7 +26,10 @@ export function FullkodCredit({
         href="https://fullkod.com/?ref=kshop"
         target="_blank"
         rel="noopener"
-        className={cn("inline-flex items-center gap-1.5", onDark ? "hover:text-white" : "hover:text-foreground")}
+        className={cn(
+          "inline-flex items-center gap-1.5 touch:min-h-10",
+          onDark ? "hover:text-white" : "hover:text-foreground",
+        )}
       >
         Kshop · Un producto de
         {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}

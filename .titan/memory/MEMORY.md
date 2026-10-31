@@ -52,6 +52,7 @@
 
 - [trucos-entorno-y-next.md](reference/trucos-entorno-y-next.md) — Cache Components, pg_graphql y trucos del entorno de Roberto (puertos, *.localhost, Playwright, Lighthouse)
 - [fuentes.md](reference/fuentes.md) — Rutas de materiales, klauShop, dcabellos, apululu y Saleor, y para qué sirve cada uno
+- [web-en-el-telefono.md](reference/web-en-el-telefono.md) — La web abierta desde un iPhone/Android: variante `touch:`, campos a 16 px, «Volver» en la barra, `AdminSubNav`, `FilterBar`, barras fijas, `pnpm qa:mobile` (2026-10-31)
 - [Correo de Fullkod](reference/correo-fullkod-resend.md) — @fullkod.com va por Resend (contact@, support@), sin reenvío; cada proyecto decide cómo avisar de sus formularios; Kshop envía por Resend los enlaces de acceso del personal (noreply@)
 
 ## Planes (`.titan/plans/`)

@@ -9,7 +9,9 @@ import {
   type ZoneWarehouses,
 } from "@kshop/data";
 import { Alert, Badge, Button, Card, Input, Label, Select, cn } from "@kshop/ui";
+import { FilterBar } from "@kshop/admin";
 import Link from "next/link";
+import { AdminSubNav } from "@/components/AdminSubNav";
 import { useStorePathname } from "@/lib/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
@@ -28,20 +30,10 @@ const SECTIONS = [
 export function WarehousesNav() {
   const pathname = useStorePathname();
   return (
-    <nav className="mb-6 flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none]" aria-label="Secciones de almacenes">
-      {SECTIONS.map((s) => (
-        <Link
-          key={s.href}
-          href={s.href}
-          className={cn(
-            "shrink-0 border-b-2 border-transparent pt-1 pb-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground hover:text-foreground",
-            pathname === s.href && "border-primary font-bold text-primary",
-          )}
-        >
-          {s.label}
-        </Link>
-      ))}
-    </nav>
+    <AdminSubNav
+      label="Secciones de almacenes"
+      items={SECTIONS.map((s) => ({ href: s.href, label: s.label, active: pathname === s.href }))}
+    />
   );
 }
 
@@ -533,67 +525,72 @@ export function MovementsPage({ initialWarehouseId }: { initialWarehouseId?: str
   const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
   return (
     <div className="flex flex-col gap-4">
-      <Card className="grid gap-3 sm:grid-cols-4">
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="mov-warehouse">Almacén</Label>
-          <Select
-            id="mov-warehouse"
-            value={warehouseId}
-            onChange={(e) => {
-              setWarehouseId(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">Todos</option>
-            {overview?.warehouses.map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.name}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="mov-type">Tipo</Label>
-          <Select
-            id="mov-type"
-            value={type}
-            onChange={(e) => {
-              setType(e.target.value as StockMovementType | "");
-              setPage(1);
-            }}
-          >
-            <option value="">Todos</option>
-            {STOCK_MOVEMENT_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {STOCK_MOVEMENT_LABELS[t]}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="mov-from">Desde</Label>
-          <Input
-            id="mov-from"
-            type="date"
-            value={from}
-            onChange={(e) => {
-              setFrom(e.target.value);
-              setPage(1);
-            }}
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="mov-to">Hasta</Label>
-          <Input
-            id="mov-to"
-            type="date"
-            value={to}
-            onChange={(e) => {
-              setTo(e.target.value);
-              setPage(1);
-            }}
-          />
-        </div>
+      <Card>
+        <FilterBar
+          layout="md:grid-cols-4"
+          active={(warehouseId ? 1 : 0) + (type ? 1 : 0) + (from ? 1 : 0) + (to ? 1 : 0)}
+        >
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="mov-warehouse">Almacén</Label>
+            <Select
+              id="mov-warehouse"
+              value={warehouseId}
+              onChange={(e) => {
+                setWarehouseId(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">Todos</option>
+              {overview?.warehouses.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="mov-type">Tipo</Label>
+            <Select
+              id="mov-type"
+              value={type}
+              onChange={(e) => {
+                setType(e.target.value as StockMovementType | "");
+                setPage(1);
+              }}
+            >
+              <option value="">Todos</option>
+              {STOCK_MOVEMENT_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {STOCK_MOVEMENT_LABELS[t]}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="mov-from">Desde</Label>
+            <Input
+              id="mov-from"
+              type="date"
+              value={from}
+              onChange={(e) => {
+                setFrom(e.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="mov-to">Hasta</Label>
+            <Input
+              id="mov-to"
+              type="date"
+              value={to}
+              onChange={(e) => {
+                setTo(e.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
+        </FilterBar>
       </Card>
 
       {error && <Alert variant="destructive">{error}</Alert>}

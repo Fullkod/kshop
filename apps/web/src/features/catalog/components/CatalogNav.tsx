@@ -1,7 +1,6 @@
 "use client";
 
-import { cn } from "@kshop/ui";
-import Link from "next/link";
+import { AdminSubNav } from "@/components/AdminSubNav";
 import { useStorePathname } from "@/lib/navigation";
 
 export const CATALOG_SECTIONS = [
@@ -23,19 +22,9 @@ export function CatalogNav() {
       : pathname.startsWith(href);
 
   return (
-    <nav className="mb-6 flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none]" aria-label="Secciones del catálogo">
-      {CATALOG_SECTIONS.map((s) => (
-        <Link
-          key={s.href}
-          href={s.href}
-          className={cn(
-            "shrink-0 border-b-2 border-transparent pt-1 pb-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground hover:text-foreground",
-            active(s.href) && "border-primary font-bold text-primary",
-          )}
-        >
-          {s.label}
-        </Link>
-      ))}
-    </nav>
+    <AdminSubNav
+      label="Secciones del catálogo"
+      items={CATALOG_SECTIONS.map((s) => ({ href: s.href, label: s.label, active: active(s.href) }))}
+    />
   );
 }

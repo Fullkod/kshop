@@ -347,10 +347,25 @@ export function NewOrder() {
           Las ofertas, el cupón, el envío y el total se calculan al crear el pedido.
         </p>
         {action.error && <Alert variant="destructive">{action.error}</Alert>}
-        <Button type="submit" disabled={action.pending || lines.length === 0 || !normalized}>
+        <Button
+          type="submit"
+          disabled={action.pending || lines.length === 0 || !normalized}
+          className="hidden lg:inline-flex"
+        >
           {action.pending ? "Creando…" : "Crear pedido"}
         </Button>
       </Card>
+
+      {/* On a phone the summary ends a long form: the subtotal and the button stay at the bottom of the screen. */}
+      <div className="sticky bottom-0 z-10 -mx-4 flex items-center justify-between gap-3 border-t bg-background px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] lg:hidden">
+        <span className="min-w-0">
+          <span className="block text-xs text-muted-foreground">Subtotal</span>
+          <span className="font-semibold">{formatMoney(subtotal, currency)}</span>
+        </span>
+        <Button type="submit" disabled={action.pending || lines.length === 0 || !normalized}>
+          {action.pending ? "Creando…" : "Crear pedido"}
+        </Button>
+      </div>
     </form>
   );
 }

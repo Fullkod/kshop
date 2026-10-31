@@ -202,7 +202,7 @@ function FavoriteButton({ product }: { product: ProductCardData }) {
       onClick={() => void toggle(product.id)}
       aria-pressed={on}
       aria-label={on ? `Quitar ${product.name} de favoritos` : `Guardar ${product.name} en favoritos`}
-      className={`${roundIcon} absolute top-2.5 right-2.5 size-9 bg-[color-mix(in_srgb,var(--bg)_88%,transparent)] ${on ? "text-sale" : "text-foreground hover:text-sale"}`}
+      className={`${roundIcon} absolute top-2.5 right-2.5 size-9 touch:size-10 bg-[color-mix(in_srgb,var(--bg)_88%,transparent)] ${on ? "text-sale" : "text-foreground hover:text-sale"}`}
     >
       <Heart size={18} fill={on ? "currentColor" : "none"} aria-hidden />
     </button>

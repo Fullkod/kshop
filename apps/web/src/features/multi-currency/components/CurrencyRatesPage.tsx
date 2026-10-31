@@ -182,26 +182,28 @@ function CurrencyCard({
       {row.history.length > 0 && (
         <details>
           <summary className="cursor-pointer text-sm font-medium">Historial de tasas</summary>
-          <table className="mt-2 w-full text-left text-sm" data-testid={`history-${row.currency}`}>
-            <thead className="text-muted-foreground">
-              <tr>
-                <th className="py-1 font-medium">Fecha</th>
-                <th className="py-1 font-medium">Tasa</th>
-                <th className="py-1 font-medium">Quién</th>
-              </tr>
-            </thead>
-            <tbody>
-              {row.history.map((h) => (
-                <tr key={h.setAt} className="border-t">
-                  <td className="py-1">{formatDate(h.setAt)}</td>
-                  <td className="py-1 tabular-nums">
-                    {number(h.rate)} {base}
-                  </td>
-                  <td className="py-1 text-muted-foreground">{h.setBy ?? "—"}</td>
+          <div className="mt-2 overflow-x-auto">
+            <table className="w-full text-left text-sm" data-testid={`history-${row.currency}`}>
+              <thead className="text-muted-foreground">
+                <tr>
+                  <th className="py-1 font-medium">Fecha</th>
+                  <th className="py-1 font-medium">Tasa</th>
+                  <th className="py-1 font-medium">Quién</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {row.history.map((h) => (
+                  <tr key={h.setAt} className="border-t">
+                    <td className="py-1">{formatDate(h.setAt)}</td>
+                    <td className="py-1 tabular-nums">
+                      {number(h.rate)} {base}
+                    </td>
+                    <td className="py-1 text-muted-foreground">{h.setBy ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </details>
       )}
     </Card>

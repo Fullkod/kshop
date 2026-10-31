@@ -62,7 +62,7 @@ export function PosPage() {
               aria-selected={tab === t.key}
               onClick={() => setChosen(t.key)}
               className={cn(
-                "h-[34px] rounded-full border px-3.5 text-sm whitespace-nowrap",
+                "h-[34px] rounded-full border px-3.5 text-sm whitespace-nowrap touch:h-10",
                 tab === t.key
                   ? "border-night bg-night font-semibold text-white"
                   : "bg-background hover:bg-surface",
@@ -133,7 +133,7 @@ function PosSummary() {
             aria-selected={days === p.days}
             onClick={() => setDays(p.days)}
             className={cn(
-              "h-[34px] rounded-full border px-3.5 text-sm whitespace-nowrap",
+              "h-[34px] rounded-full border px-3.5 text-sm whitespace-nowrap touch:h-10",
               days === p.days
                 ? "border-night bg-night font-semibold text-white"
                 : "bg-background hover:bg-surface",

@@ -38,7 +38,9 @@ import {
   cn,
   useConfirm,
 } from "@kshop/ui";
+import { FilterBar } from "@kshop/admin";
 import Link from "next/link";
+import { AdminSubNav } from "@/components/AdminSubNav";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useStorePathname } from "@/lib/navigation";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
@@ -201,64 +203,58 @@ export function FinanceShell({ children }: { children: ReactNode }) {
           {exporting ? "Preparando…" : "Exportar a Excel"}
         </Button>
       </div>
-      <nav
-        className="flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none]"
-        aria-label="Secciones de finanzas"
-      >
-        {SECTIONS.map((s) => (
-          <Link
-            key={s.href}
-            href={`${s.href}?${search}`}
-            className={cn(
-              "shrink-0 border-b-2 border-transparent pt-1 pb-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground hover:text-foreground",
-              pathname === s.href && "border-primary font-bold text-primary",
-            )}
-          >
-            {s.label}
-          </Link>
-        ))}
-      </nav>
+      <AdminSubNav
+        label="Secciones de finanzas"
+        className="mb-0"
+        items={SECTIONS.map((s) => ({
+          href: `${s.href}?${search}`,
+          label: s.label,
+          active: pathname === s.href,
+        }))}
+      />
       {!pathname.endsWith("/inventory") && (
-        <Card className="flex flex-wrap items-end gap-3" data-testid="finance-filters">
-          <div className="flex flex-wrap gap-1">
-            {presets.map((p) => (
-              <Button
-                key={p.label}
-                size="sm"
-                variant={filters.from === p.from && filters.to === p.to ? "default" : "outline"}
-                onClick={() => filters.set({ from: p.from, to: p.to })}
-              >
-                {p.label}
-              </Button>
-            ))}
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="finance-from">Desde</Label>
-            <Input
-              id="finance-from"
-              type="date"
-              value={filters.from}
-              max={filters.to}
-              onChange={(e) => e.target.value && filters.set({ from: e.target.value })}
-              className="h-9"
+        <Card data-testid="finance-filters">
+          <FilterBar label={`${filters.from} → ${filters.to} · ${filters.currency}`}>
+            <div className="flex flex-wrap gap-1">
+              {presets.map((p) => (
+                <Button
+                  key={p.label}
+                  size="sm"
+                  variant={filters.from === p.from && filters.to === p.to ? "default" : "outline"}
+                  onClick={() => filters.set({ from: p.from, to: p.to })}
+                >
+                  {p.label}
+                </Button>
+              ))}
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="finance-from">Desde</Label>
+              <Input
+                id="finance-from"
+                type="date"
+                value={filters.from}
+                max={filters.to}
+                onChange={(e) => e.target.value && filters.set({ from: e.target.value })}
+                className="h-9"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="finance-to">Hasta</Label>
+              <Input
+                id="finance-to"
+                type="date"
+                value={filters.to}
+                min={filters.from}
+                onChange={(e) => e.target.value && filters.set({ to: e.target.value })}
+                className="h-9"
+              />
+            </div>
+            <CurrencyPicker
+              value={filters.currency}
+              options={currencies}
+              onChange={(currency) => filters.set({ currency })}
             />
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="finance-to">Hasta</Label>
-            <Input
-              id="finance-to"
-              type="date"
-              value={filters.to}
-              min={filters.from}
-              onChange={(e) => e.target.value && filters.set({ to: e.target.value })}
-              className="h-9"
-            />
-          </div>
-          <CurrencyPicker
-            value={filters.currency}
-            options={currencies}
-            onChange={(currency) => filters.set({ currency })}
-          />
+          </FilterBar>
         </Card>
       )}
       {children}
@@ -674,58 +670,60 @@ export function FinanceInventoryPage() {
           />
         </section>
       )}
-      <Card className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-wrap gap-1">
-          {INVENTORY_FILTERS.map((x) => (
-            <Button
-              key={x}
-              size="sm"
-              variant={filter === x ? "default" : "outline"}
-              onClick={() => {
-                setFilter(x);
-                setPage(1);
-              }}
-            >
-              {INVENTORY_FILTER_LABELS[x]}
-            </Button>
-          ))}
-        </div>
-        {multiWarehouse && warehouses.length > 1 && (
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="inv-warehouse">Almacén</Label>
-            <Select
-              id="inv-warehouse"
-              value={warehouseId}
-              onChange={(e) => {
-                setWarehouseId(e.target.value);
-                setPage(1);
-              }}
-              className="h-9 w-44"
-            >
-              <option value="">Todos</option>
-              {warehouses.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name}
-                </option>
-              ))}
-            </Select>
+      <Card>
+        <FilterBar>
+          <div className="flex flex-wrap gap-1">
+            {INVENTORY_FILTERS.map((x) => (
+              <Button
+                key={x}
+                size="sm"
+                variant={filter === x ? "default" : "outline"}
+                onClick={() => {
+                  setFilter(x);
+                  setPage(1);
+                }}
+              >
+                {INVENTORY_FILTER_LABELS[x]}
+              </Button>
+            ))}
           </div>
-        )}
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="inv-search">Buscar</Label>
-          <Input
-            id="inv-search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Nombre o SKU"
-            className="h-9 w-48"
+          {multiWarehouse && warehouses.length > 1 && (
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="inv-warehouse">Almacén</Label>
+              <Select
+                id="inv-warehouse"
+                value={warehouseId}
+                onChange={(e) => {
+                  setWarehouseId(e.target.value);
+                  setPage(1);
+                }}
+                className="h-9 w-44"
+              >
+                <option value="">Todos</option>
+                {warehouses.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          )}
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="inv-search">Buscar</Label>
+            <Input
+              id="inv-search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Nombre o SKU"
+              className="h-9 w-48"
+            />
+          </div>
+          <CurrencyPicker
+            value={f.currency}
+            options={currencies}
+            onChange={(currency) => f.set({ currency })}
           />
-        </div>
-        <CurrencyPicker
-          value={f.currency}
-          options={currencies}
-          onChange={(currency) => f.set({ currency })}
-        />
+        </FilterBar>
       </Card>
       {report.error && <Alert variant="destructive">{report.error}</Alert>}
       {!report.data ? (

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowLeft,
   Alert,
   buttonVariants,
   cn,
@@ -163,6 +164,18 @@ export function SuperadminShell({ children }: { children: ReactNode }) {
           >
             {menuOpen ? <X size={18} aria-hidden /> : <Menu size={18} aria-hidden />}
           </button>
+          {/* A subpage (a store, a new store) gets «Volver» on a phone. */}
+          {pathname.split("/").length > 3 && (
+            <Link
+              href="/superadmin"
+              aria-label="Volver"
+              title="Volver"
+              className="flex size-10 shrink-0 items-center justify-center rounded-lg border md:hidden"
+              data-testid="superadmin-back"
+            >
+              <ArrowLeft size={18} aria-hidden />
+            </Link>
+          )}
           <span className="font-display truncate font-bold md:hidden">Superadmin</span>
           <div className="ml-auto flex items-center gap-2">
             <a

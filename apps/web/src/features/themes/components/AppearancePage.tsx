@@ -1,7 +1,7 @@
 "use client";
 
-import { Alert, Button, cn } from "@kshop/ui";
-import Link from "next/link";
+import { Alert, Button } from "@kshop/ui";
+import { AdminSubNav } from "@/components/AdminSubNav";
 import { useCatalogStructure } from "@/features/catalog/use-catalog";
 import { useContent } from "../use-content";
 import { BannersEditor } from "./BannersEditor";
@@ -34,26 +34,15 @@ export function AppearancePage({ tab }: { tab: AppearanceTab }) {
           href="/"
           target="_blank"
           rel="noopener"
-          className="text-sm font-medium text-primary hover:underline"
+          className="inline-flex min-h-10 items-center text-sm font-medium text-primary hover:underline"
         >
           Ver la tienda ↗
         </a>
       </div>
-      <nav className="mb-6 flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none]" aria-label="Secciones de apariencia">
-        {APPEARANCE_TABS.map((t) => (
-          <Link
-            key={t.key}
-            href={t.href}
-            aria-current={t.key === tab ? "page" : undefined}
-            className={cn(
-              "shrink-0 border-b-2 border-transparent pt-1 pb-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground hover:text-foreground",
-              t.key === tab && "border-primary font-bold text-primary",
-            )}
-          >
-            {t.label}
-          </Link>
-        ))}
-      </nav>
+      <AdminSubNav
+        label="Secciones de apariencia"
+        items={APPEARANCE_TABS.map((t) => ({ href: t.href, label: t.label, active: t.key === tab }))}
+      />
 
       {error || structureError ? (
         <div className="flex flex-col items-start gap-3">

@@ -3,6 +3,7 @@
 import { formatUsd, MANAGED_SECTION_MESSAGE, ROLE_LABELS, storeOrigin } from "@kshop/core";
 import {
   Alert,
+  ArrowLeft,
   Bell,
   Button,
   buttonVariants,
@@ -255,6 +256,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
     (m) => pathname === m.adminPath || pathname.startsWith(`${m.adminPath}/`),
   ).sort((a, b) => b.adminPath.length - a.adminPath.length)[0];
   const currentSection = current ? menuSection(admin, current.code) : null;
+  // A subpage of a module (an order, a product, Categorías…) gets «Volver» to the module on a phone.
+  const parentHref = current && pathname !== current.adminPath ? current.adminPath : null;
   const email = session.user.email ?? "";
   const otherStores = admin.stores.filter((s) => s.id !== store.id);
 
@@ -327,13 +330,24 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 type="button"
                 onClick={() => setMenuOpen((o) => !o)}
                 aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
-                className="flex size-10 items-center justify-center rounded-lg border md:hidden"
+                className="flex size-10 shrink-0 items-center justify-center rounded-lg border md:hidden"
               >
                 {menuOpen ? <X size={18} aria-hidden /> : <Menu size={18} aria-hidden />}
               </button>
+              {parentHref && (
+                <Link
+                  href={parentHref}
+                  aria-label="Volver"
+                  title="Volver"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-lg border md:hidden"
+                  data-testid="admin-back"
+                >
+                  <ArrowLeft size={18} aria-hidden />
+                </Link>
+              )}
               <Link
                 href="/admin"
-                className="font-display truncate font-bold md:hidden"
+                className="font-display flex h-10 min-w-0 items-center truncate font-bold md:hidden"
                 data-testid="admin-store-name-mobile"
               >
                 {store.name}
@@ -383,7 +397,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 )}
               </div>
             </header>
-            <main className={cn("min-w-0 flex-1 px-4 py-6 md:px-7", ADMIN_CONTENT_CLASS)}>
+            <main
+              className={cn(
+                "min-w-0 flex-1 px-4 py-6 [--admin-header-height:4rem] md:px-7",
+                ADMIN_CONTENT_CLASS,
+              )}
+            >
               {/* One centered column on wide screens, as in the superadmin; narrower pages are centered in it. */}
               <div className="mx-auto w-full max-w-6xl [&>[class*=max-w-]]:mx-auto">
                 <AccountBanner admin={admin} />

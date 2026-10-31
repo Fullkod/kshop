@@ -99,6 +99,7 @@
   (sin i18n en el MVP, pero sin textos imposibles de extraer después).
 - Componentes `PascalCase.tsx`; funciones/variables `camelCase`.
 - Admin: crear/editar corto en el `Dialog` de `@kshop/ui` (R13); los largos (producto, nuevo pedido) en su página.
+- **Teléfono:** lo que se toca mide 40 px o más bajo la variante `touch:` (dedo o pantalla estrecha), los campos van a 16 px solos; pestañas de módulo con `AdminSubNav`, filtros de lista con `FilterBar`, «Volver» lo pone la barra del móvil (ver `.titan/memory/reference/web-en-el-telefono.md`).
 - Confirmaciones con `useConfirm()` de `@kshop/ui` (R14), nunca `window.confirm`/`prompt`/`alert` (lint `no-alert`); todo
   borrado y toda acción que cambie la factura o suspenda una tienda pregunta antes.
 - Validar con **Zod** toda entrada (route handlers, funciones). Escrituras críticas con
@@ -140,6 +141,7 @@
 | `pnpm qa:apps` | QA en navegador de la app de tienda, Kshop Admin y la distribución (`/app`, Admin › App móvil, Superadmin › Apps), con `pnpm dev` y los Vite de las apps (5173, 5174) corriendo; capturas en `.titan/qa/fase-7/` |
 | `pnpm demo:seed` | Crea/repara la tienda de pruebas permanente «Tienda Demo» (`demo.kshop.localhost:3000`) |
 | `pnpm qa:admin-perf [etiqueta]` | R11: abre las 37 vistas del admin de la Tienda Demo como dueño (solo lectura) y guarda tiempo, peticiones y fallos por vista en `.titan/qa/r11-rendimiento-admin/perf-<etiqueta>.json`; `QA_ADMIN_URL` para medir producción, `QA_VIEWS` para algunas vistas |
+| `pnpm qa:mobile` | La web en un teléfono: 61 páginas (admin de la Tienda Demo, tienda y superadmin) a 390 px con táctil; informe de desbordes, objetivos de menos de 40 px, campos de menos de 16 px, tablas sin scroll y subpáginas sin «Volver» en `.titan/qa/mobile-web/`, con `pnpm dev` corriendo (`QA_BASE_URL`, `QA_PLATFORM_URL`, `QA_PAGES`, `QA_VIEWS`) |
 
 **La base es una Nano con CPU a créditos (R11, 2026-10-28):** una ráfaga la deja estrangulada varios minutos y el admin
 cae con 57014. Nunca lanzar `e2e:*`, `qa:*`, `klaushop:*`, `test:rls`, `db:graphql-schema` ni `pnpm build` mientras

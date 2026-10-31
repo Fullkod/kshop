@@ -4,6 +4,7 @@ import { formatMoney, type ProductStatus } from "@kshop/core";
 import { asResult, type AdminProductsQuery, type ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, buttonVariants, Card, Input, Select } from "@kshop/ui";
 import { useEffect, useRef, useState } from "react";
+import { FilterBar } from "../FilterBar";
 import { LoadError } from "../LoadError";
 import { useSession } from "../session";
 import { Link, useStore } from "@kshop/storefront";
@@ -115,13 +116,18 @@ export function ProductList() {
         </Link>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-[1fr_10rem_14rem_auto]">
-        <Input
-          placeholder="Buscar por nombre o SKU"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          aria-label="Buscar productos"
-        />
+      <FilterBar
+        active={(status ? 1 : 0) + (categoryId ? 1 : 0) + (lowStock ? 1 : 0)}
+        layout="md:grid-cols-[10rem_14rem_auto]"
+        search={
+          <Input
+            placeholder="Buscar por nombre o SKU"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Buscar productos"
+          />
+        }
+      >
         <Select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Estado">
           <option value="">Activos</option>
           <option value="draft">Borradores</option>
@@ -137,11 +143,11 @@ export function ProductList() {
               </option>
             ))}
         </Select>
-        <label className="flex items-center gap-2 text-sm whitespace-nowrap">
+        <label className="flex min-h-11 items-center gap-2 text-sm whitespace-nowrap">
           <input type="checkbox" checked={lowStock} onChange={(e) => setLowStock(e.target.checked)} />
           Stock bajo
         </label>
-      </div>
+      </FilterBar>
 
       {loadError && <LoadError message={loadError} onRetry={() => setVersion((v) => v + 1)} />}
       {action.error && <Alert variant="destructive">{action.error}</Alert>}
@@ -182,8 +188,9 @@ export function ProductList() {
                     }
                   />
                 </th>
-                <th className="px-3 py-2 font-medium">Producto</th>
-                <th className="px-3 py-2 font-medium">Estado</th>
+                <th className="min-w-[11rem] px-3 py-2 font-medium">Producto</th>
+                {/* On a phone the status goes under the name, so the name keeps its room. */}
+                <th className="hidden px-3 py-2 font-medium md:table-cell">Estado</th>
                 <th className="px-3 py-2 font-medium">Precio</th>
                 <th className="px-3 py-2 font-medium">Stock</th>
               </tr>
@@ -217,10 +224,13 @@ export function ProductList() {
                           <span className="block text-xs text-muted-foreground">
                             {variants.length === 1 ? variants[0]!.sku : `${variants.length} variantes`}
                           </span>
+                          <Badge variant={STATUS_VARIANT[r.status]} className="mt-1 md:hidden">
+                            {STATUS_LABELS[r.status]}
+                          </Badge>
                         </span>
                       </Link>
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="hidden px-3 py-2 md:table-cell">
                       <Badge variant={STATUS_VARIANT[r.status]}>{STATUS_LABELS[r.status]}</Badge>
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">{price(r)}</td>

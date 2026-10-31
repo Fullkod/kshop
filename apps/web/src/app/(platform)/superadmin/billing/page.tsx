@@ -96,7 +96,7 @@ export default function SuperadminBillingPage() {
             type="button"
             onClick={() => setTab(t.key)}
             className={cn(
-              "rounded-md px-3 py-1.5 text-sm whitespace-nowrap hover:bg-background",
+              "rounded-md px-3 py-1.5 text-sm whitespace-nowrap hover:bg-background touch:min-h-10",
               tab === t.key && "bg-background font-medium",
             )}
           >

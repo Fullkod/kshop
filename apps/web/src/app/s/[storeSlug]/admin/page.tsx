@@ -371,7 +371,7 @@ function RecentOrders({ orders }: { orders: RecentOrder[] | null }) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`WhatsApp de ${o.customerName} (${formatPhone(o.customerPhone)})`}
-              className="flex size-9 items-center justify-center justify-self-end rounded-lg border text-whatsapp hover:bg-surface md:justify-self-auto"
+              className="flex size-9 touch:size-10 items-center justify-center justify-self-end rounded-lg border text-whatsapp hover:bg-surface md:justify-self-auto"
             >
               <MessageCircle size={16} aria-hidden />
             </a>
