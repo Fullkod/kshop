@@ -43,10 +43,10 @@ select tests.eq('create_store: A has its primary subdomain',
   (select domain from public.store_domains where store_id = tests.fx('store_a') and is_primary), 'rls-test-a.kshop.fullkod.com');
 select tests.eq('create_store: A owner is a member',
   (select role::text from public.store_members where store_id = tests.fx('store_a') and user_id = tests.fx('owner_a')), 'owner');
-select tests.eq('create_store: A (base) gets 7 plan modules (themes is Pro since phase 5)',
-  (select count(*) from public.store_modules where store_id = tests.fx('store_a'))::int, 7);
-select tests.eq('create_store: B (pro) gets all 14 modules (vouchers since phase 5)',
-  (select count(*) from public.store_modules where store_id = tests.fx('store_b'))::int, 14);
+select tests.eq('create_store: A (base) gets 8 plan modules (themes is Pro since phase 5)',
+  (select count(*) from public.store_modules where store_id = tests.fx('store_a'))::int, 8);
+select tests.eq('create_store: B (pro) gets all 15 modules (vouchers since phase 5)',
+  (select count(*) from public.store_modules where store_id = tests.fx('store_b'))::int, 15);
 select tests.eq('create_store: A is trialing, B without trial is active',
   (select string_agg(status::text, ',' order by store_id = tests.fx('store_b')) from public.subscriptions
     where store_id in (tests.fx('store_a'), tests.fx('store_b'))), 'trialing,active');
@@ -71,7 +71,7 @@ select tests.check('anon: cannot read store_domains', tests.throws('select * fro
 select tests.check('anon: cannot read store_modules', tests.throws('select * from public.store_modules'));
 select tests.check('anon: cannot read subscriptions', tests.throws('select * from public.subscriptions'));
 select tests.check('anon: cannot read private config', tests.throws('select * from private.store_private_config'));
-select tests.check('anon: reads the module catalog', (select count(*) from public.modules) = 14);
+select tests.check('anon: reads the module catalog', (select count(*) from public.modules) = 15);
 select tests.check('anon: cannot call store_entitlements',
   tests.throws(format('select * from public.store_entitlements(%L)', tests.fx('store_a'))));
 select tests.check('anon: cannot call create_store', tests.throws(format(
@@ -98,7 +98,7 @@ select tests.eq('owner A: sees no modules of B',
 select tests.eq('owner A: sees no subscription of B',
   (select count(*) from public.subscriptions where store_id = tests.fx('store_b'))::int, 0);
 select tests.eq('owner A: entitlements of A',
-  (select count(*) from public.store_entitlements(tests.fx('store_a')))::int, 7);
+  (select count(*) from public.store_entitlements(tests.fx('store_a')))::int, 8);
 select tests.eq('owner A: entitlements of B are empty',
   (select count(*) from public.store_entitlements(tests.fx('store_b')))::int, 0);
 select tests.eq('owner A: limits of A', public.store_limits(tests.fx('store_a')), '{"max_staff": 2, "max_products": 300}'::jsonb);
@@ -171,7 +171,7 @@ select tests.eq('superadmin: sees members of A and B',
 select tests.eq('superadmin: sees both subscriptions',
   (select count(*) from public.subscriptions where store_id in (tests.fx('store_a'), tests.fx('store_b')))::int, 2);
 select tests.eq('superadmin: entitlements of B',
-  (select count(*) from public.store_entitlements(tests.fx('store_b')))::int, 14);
+  (select count(*) from public.store_entitlements(tests.fx('store_b')))::int, 15);
 select tests.eq('superadmin: uploads to the folder of any store', tests.affected(format(
   $$insert into storage.objects (bucket_id, name) values ('store-media', 'stores/%s/platform.png')$$, tests.fx('store_b'))), 1);
 select tests.eq('superadmin: cannot upload outside stores/', tests.affected(

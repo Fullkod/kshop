@@ -7,6 +7,7 @@ export * from "./roles";
 export * from "./slug";
 export * from "./catalog";
 export * from "./orders";
+export * from "./pos";
 export * from "./discounts";
 export * from "./notifications";
 export * from "./billing";

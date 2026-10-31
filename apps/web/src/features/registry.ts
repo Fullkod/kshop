@@ -7,6 +7,7 @@ import { vouchersModule } from "./vouchers/module";
 import { themesModule } from "./themes/module";
 import { excelImportModule } from "./excel-import/module";
 import { mobileAppModule } from "./mobile-app/module";
+import { posModule } from "./pos/module";
 import { salesTodayModule } from "./sales-today/module";
 import { financeModule } from "./finance/module";
 import { multiWarehouseModule } from "./multi-warehouse/module";
@@ -30,6 +31,7 @@ export const ADMIN_MODULES: readonly AdminModule[] = [
   customDomainModule,
   mobileAppModule,
   salesTodayModule,
+  posModule,
   financeModule,
 ];
 

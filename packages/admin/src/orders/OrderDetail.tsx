@@ -192,14 +192,16 @@ export function OrderDetail({
               {ORDER_ACTION_LABELS[to] ?? ORDER_STATUS_LABELS[to]}
             </Button>
           ))}
-          <a
-            href={whatsappLink(order.customerPhone, customerText)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex h-10 items-center rounded-md border px-4 text-sm font-medium hover:bg-surface"
-          >
-            WhatsApp al cliente
-          </a>
+          {order.customerPhone && (
+            <a
+              href={whatsappLink(order.customerPhone, customerText)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-10 items-center rounded-md border px-4 text-sm font-medium hover:bg-surface"
+            >
+              WhatsApp al cliente
+            </a>
+          )}
         </div>
       </div>
 
@@ -366,7 +368,7 @@ export function OrderDetail({
           <Card className="text-sm">
             <h3 className="mb-2 font-semibold">Cliente</h3>
             <p className="font-medium">{order.customerName}</p>
-            <p>{formatPhone(order.customerPhone)}</p>
+            {order.customerPhone && <p>{formatPhone(order.customerPhone)}</p>}
             {order.customers ? (
               <p className="text-muted-foreground">Con cuenta en la tienda</p>
             ) : (

@@ -179,14 +179,14 @@ create function pg_temp.product(p_n int) returns uuid language sql as $$
 $$;
 select pg_temp.product(n) from generate_series(1, 3) n;
 select tests.eq('Pro: every module, vouchers included', pg_temp.modules('store_b'),
-  'catalog,custom_domain,discounts,excel_import,finance,mobile_app,multi_currency,multi_warehouse,orders,sales_today,shipping,themes,vouchers,whatsapp_notifications');
+  'catalog,custom_domain,discounts,excel_import,finance,mobile_app,multi_currency,multi_warehouse,orders,pos,sales_today,shipping,themes,vouchers,whatsapp_notifications');
 
 -- Down to Base: modules off in the database, every row and every piece of data kept.
 select public.change_plan(tests.fx('store_b'), 'base', 'month', tests.fx('root'));
 select tests.eq('Pro -> Base: only the Base modules',
-  pg_temp.modules('store_b'), 'catalog,discounts,excel_import,mobile_app,orders,sales_today,shipping');
+  pg_temp.modules('store_b'), 'catalog,discounts,excel_import,mobile_app,orders,pos,sales_today,shipping');
 select tests.eq('Pro -> Base: the plan rows are disabled, not deleted',
-  (select count(*) from public.store_modules where store_id = tests.fx('store_b') and source = 'plan')::int, 14);
+  (select count(*) from public.store_modules where store_id = tests.fx('store_b') and source = 'plan')::int, 15);
 select tests.eq('Pro -> Base: warehouses, currencies, contacts and products kept',
   (select count(*) from public.warehouses where store_id = tests.fx('store_b'))::text
   || (select count(*) from public.store_currencies where store_id = tests.fx('store_b'))
@@ -207,7 +207,7 @@ select tests.eq('Base: effective limits', public.store_limits(tests.fx('store_b'
 -- Back to Pro: everything is there again, the same.
 select public.change_plan(tests.fx('store_b'), 'pro', 'year', tests.fx('root'));
 select tests.eq('Base -> Pro: every module back', pg_temp.modules('store_b'),
-  'catalog,custom_domain,discounts,excel_import,finance,mobile_app,multi_currency,multi_warehouse,orders,sales_today,shipping,themes,vouchers,whatsapp_notifications');
+  'catalog,custom_domain,discounts,excel_import,finance,mobile_app,multi_currency,multi_warehouse,orders,pos,sales_today,shipping,themes,vouchers,whatsapp_notifications');
 select tests.eq('Base -> Pro: yearly, Pro limits (no product limit)',
   (select billing_interval::text from public.subscriptions where store_id = tests.fx('store_b'))
   || ' ' || public.store_limits(tests.fx('store_b'))::text, 'year {"max_staff": 10}');

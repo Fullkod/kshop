@@ -132,6 +132,7 @@ const MODULE_PITCH: Record<ModuleCode, string | null> = {
   excel_import: "Importar desde Excel",
   mobile_app: "App Android con tu logo",
   sales_today: "Ventas del día",
+  pos: "Caja de mostrador, también sin internet",
   finance: "Finanzas",
   multi_warehouse: "Varios almacenes",
   multi_currency: "Multimoneda",

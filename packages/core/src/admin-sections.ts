@@ -17,6 +17,7 @@ export const CONFIGURABLE_SECTIONS = [
   "mobile_app",
   "sales_today",
   "finance",
+  "pos",
 ] as const satisfies readonly ModuleCode[];
 
 export type ConfigurableSection = (typeof CONFIGURABLE_SECTIONS)[number];

@@ -364,16 +364,20 @@ function RecentOrders({ orders }: { orders: RecentOrder[] | null }) {
           <span role="cell" className="text-muted-foreground tabular-nums max-md:hidden">
             {new Date(o.createdAt).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}
           </span>
-          <a
-            role="cell"
-            href={`https://wa.me/${o.customerPhone.replace(/\D/g, "")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`WhatsApp de ${o.customerName} (${formatPhone(o.customerPhone)})`}
-            className="flex size-9 items-center justify-center justify-self-end rounded-lg border text-whatsapp hover:bg-surface md:justify-self-auto"
-          >
-            <MessageCircle size={16} aria-hidden />
-          </a>
+          {o.customerPhone ? (
+            <a
+              role="cell"
+              href={`https://wa.me/${o.customerPhone.replace(/\D/g, "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`WhatsApp de ${o.customerName} (${formatPhone(o.customerPhone)})`}
+              className="flex size-9 items-center justify-center justify-self-end rounded-lg border text-whatsapp hover:bg-surface md:justify-self-auto"
+            >
+              <MessageCircle size={16} aria-hidden />
+            </a>
+          ) : (
+            <span role="cell" />
+          )}
         </div>
       ))}
     </div>

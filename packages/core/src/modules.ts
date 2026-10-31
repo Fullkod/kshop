@@ -9,6 +9,7 @@ export const MODULE_CODES = [
   "excel_import",
   "mobile_app",
   "sales_today",
+  "pos",
   "finance",
   "multi_warehouse",
   "multi_currency",

@@ -48,6 +48,7 @@ import type {
   CartUpdateInput,
   CheckoutInput,
   OrderPaymentInput,
+  PosSaleInput,
   PaymentMethodInput,
   ShippingMethodInput,
   ShippingZoneInput,
@@ -368,6 +369,40 @@ export type CheckoutResponse = {
 };
 
 /** Admin: «Ventas de hoy» (day in America/Havana). */
+/** Counter sales (PRP pos-offline): what the phone keeps to sell offline. */
+export type PosCatalogItem = {
+  variantId: string;
+  productId: string;
+  productName: string;
+  variantName: string;
+  sku: string;
+  price: number;
+  promoPrice: number | null;
+  promoName: string | null;
+  promoEndsAt: string | null;
+  stock: number;
+  trackInventory: boolean;
+  imageUrl: string | null;
+};
+export type PosCatalogPage = {
+  currency: CurrencyCode;
+  /** Only on the first page. */
+  paymentMethods: { id: string; name: string }[] | null;
+  items: PosCatalogItem[];
+  next: string | null;
+};
+export type PosSaleResult =
+  | {
+      id: string;
+      status: "recorded";
+      orderId: string;
+      number: number;
+      /** False when this sale had already been uploaded. */
+      created: boolean;
+      flags: unknown[];
+    }
+  | { id: string; status: "rejected"; code: string; message: string };
+
 /** KSH0002: each currency in a common unit, to suggest the rate of a payment (always editable). */
 export type PaymentRates = {
   source: "eltoque" | "store" | null;
@@ -1014,6 +1049,16 @@ export function createApiClient(options: ApiClientOptions) {
         paymentRates: () => request<PaymentRates>("GET", `${base}/payment-rates`),
         salesToday: () => request<SalesToday>("GET", `${base}/sales-today`),
         summary: () => request<HomeSummary>("GET", `${base}/summary`),
+      };
+    },
+    /** Kshop Admin: counter sales (module pos, staff+). */
+    pos: (storeId: string) => {
+      const base = `/stores/${storeId}/pos`;
+      return {
+        catalog: (after?: string) =>
+          request<PosCatalogPage>("GET", `${base}/catalog${after ? `?after=${after}` : ""}`),
+        uploadSales: (sales: PosSaleInput[]) =>
+          request<{ results: PosSaleResult[] }>("POST", `${base}/sales`, { sales }),
       };
     },
     /** Admin: promotions and vouchers (module discounts, admin+). */

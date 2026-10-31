@@ -22,6 +22,7 @@ export const SECTION_WRITES: readonly (readonly [prefix: string, section: Config
   ["custom-domain", "custom_domain"],
   ["mobile-app", "mobile_app"],
   ["finance", "finance"],
+  ["pos", "pos"],
 ];
 
 /** Write routes that are never blocked by section visibility (basic sections and public endpoints). */

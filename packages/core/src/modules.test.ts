@@ -24,10 +24,9 @@ describe("TypeScript constants mirror the database", () => {
   });
 
   it("CONFIGURABLE_SECTIONS matches the check of store_section_settings", () => {
+    // The last definition wins: later modules replace the check.
     const check =
-      migrations.match(
-        /section text not null references public\.modules \(code\) check \(section in \(([\s\S]*?)\)\)/,
-      )?.[1] ?? "";
+      [...migrations.matchAll(/check \(section in \(([\s\S]*?)\)\)/g)].at(-1)?.[1] ?? "";
     const sections = [...check.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);
     expect(sections.sort()).toEqual([...CONFIGURABLE_SECTIONS].sort());
   });

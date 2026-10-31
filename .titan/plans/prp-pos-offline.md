@@ -260,6 +260,21 @@ lector y, si hace falta, venta por peso.
 - **Tests viejos que fallan y no son de esta fase:** `e2e:orders` «sessions from before the reset» (`getClaims`, D3 de R11) y «shipping
   module disabled», y `e2e:pro` «module off on A» (caché de módulos `cacheLife("minutes")`; los tests cambian la BD por fuera).
 
+### 2026-10-30: Fase 2 (módulo y servidor) hecha
+- **Piezas:** módulo `pos` en Base y Pro, sección configurable, `orders.customer_phone` admite null solo en `channel = 'pos'`, tabla
+  `pos_sales`, `pos_catalog` (paginada, sin costos), `pos_record_sale` (idempotente, con bloqueo asesor por clave) y
+  `private.payment_terms`, que comparte el cálculo con `order_record_payment`. Rutas `pos/catalog` y `pos/sales`.
+- **Medido en prueba:** 777 variantes de la Tienda Demo, 231 KB sin comprimir y 3,4 s en 2 páginas.
+- **Producción:** las migraciones `20261108101200` y `20261108101300` **no están aplicadas**: se aplican junto con el deploy de este código.
+- **Error:** una venta con un producto borrado rompía la función (`record "v_price" is not assigned yet`), justo lo que nunca debe fallar.
+  **Fix:** asignar el record con nulos explícitos. **Aplicar en:** todo record de PL/pgSQL que se lea por una rama sin `select into`.
+- **Error:** dentro de un `if` de PL/pgSQL, el primer `then` termina la condición: un `case` ahí da «syntax error at end of input».
+  **Fix:** paréntesis alrededor del `case`.
+- **Error:** en el proyecto de prueba, la suscripción de la Tienda Demo apuntaba a un `plan_id` que no era ni Base ni Pro, y `sync_plan_modules` le
+  apagó los módulos. **Fix (solo en prueba):** apuntarla al Pro de ese proyecto. **Aplicar en:** `scripts/copy-demo-to-test.mjs` debería resolver el plan por código.
+- **Falta para la fase 6:** cancelar una venta de mostrador desde la pantalla (la API ya lo permite, el botón no aparece en `delivered`) y la etiqueta «Mostrador» en la lista.
+- **Sin probar:** el 403 de la API con el módulo apagado (la caché de módulos dura minutos); solo `requireModule` general y los derechos en SQL.
+
 ---
 
 ## Gotchas

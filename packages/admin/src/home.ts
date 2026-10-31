@@ -16,7 +16,8 @@ export type RecentOrder = {
   total: number | null;
   subtotal: number;
   customerName: string;
-  customerPhone: string;
+  /** Null in a counter sale. */
+  customerPhone: string | null;
   shippingType: ShippingType | null;
   createdAt: string;
   items: number;

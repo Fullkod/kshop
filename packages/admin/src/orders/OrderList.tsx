@@ -34,7 +34,8 @@ type Row = {
   total: number | null;
   subtotal: number;
   customerName: string;
-  customerPhone: string;
+  /** Null in a counter sale. */
+  customerPhone: string | null;
   createdAt: string;
   items: number;
   channel: string;
@@ -246,15 +247,17 @@ export function OrderList() {
                     {row.items} {row.items === 1 ? "producto" : "productos"}
                   </span>
                   <span className="ml-auto flex items-center gap-2">
-                    <a
-                      href={`https://wa.me/${row.customerPhone.replace(/\D/g, "")}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`WhatsApp de ${row.customerName} (${formatPhone(row.customerPhone)})`}
-                      className="flex size-9 items-center justify-center rounded-[10px] border border-success-soft text-whatsapp"
-                    >
-                      <MessageCircle size={17} aria-hidden />
-                    </a>
+                    {row.customerPhone && (
+                      <a
+                        href={`https://wa.me/${row.customerPhone.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`WhatsApp de ${row.customerName} (${formatPhone(row.customerPhone)})`}
+                        className="flex size-9 items-center justify-center rounded-[10px] border border-success-soft text-whatsapp"
+                      >
+                        <MessageCircle size={17} aria-hidden />
+                      </a>
+                    )}
                     {next && (
                       <Button
                         size="sm"
