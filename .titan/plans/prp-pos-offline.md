@@ -1,6 +1,6 @@
 # PRP POS: punto de venta sin conexión en Kshop Admin
 
-> **Estado**: APROBADO por Roberto (2026-10-30): P1–P4, P6 y P7 según la recomendación; P5 cambia (ver tabla). **Fases 1 y 2 en producción; fases 3, 4, 5 y 6 hechas en local, en commits sin subir (su migración sí está en producción), sin probar en un Android real (2026-10-31); falta la 7**
+> **Estado**: APROBADO por Roberto (2026-10-30): P1–P4, P6 y P7 según la recomendación; P5 cambia (ver tabla). **Fases 1 a 6 en producción y APK publicados (2026-10-31); de la fase 7 falta la prueba en un Android real**
 > **Fecha**: 2026-10-30
 > **Proyecto**: Kshop · **Tarea relacionada**: KSH0002 (Tasknic, «pagar una orden con diferentes monedas»)
 > **Primer caso real**: tienda `minimercado` (`project/tienda-minimercado.md`), abierta al público en físico.
@@ -301,6 +301,13 @@ lector y, si hace falta, venta por peso.
 - **Piezas:** Admin › Caja con pestañas **Vender** (`PosScreen`, la misma de Kshop Admin, con IndexedDB) y **Resumen**. `usePosPlace` dice «teléfono» o «navegador». `SidebarSignOut` avisa si quedan ventas sin subir.
 - **Decisiones técnicas:** el resumen no desmonta la venta en curso. En sección gestionada el personal solo ve Resumen. Con la página abierta y sin red sigue vendiendo y sube al volver la red, con un aviso de no recargar; la web no promete abrir sin internet (no hay service worker). La barra de cobrar usa `--app-tabs-height` y `--app-sidebar-width`, que pone la web.
 - **Medido:** `qa:pos` 35/35 (tamaño iPhone y escritorio, sin red, sección gestionada), `qa:pos-offline` 36/36, typecheck, lint, tests y `build` en verde. **No probado en un iPhone real** (Safari).
+
+### 2026-10-31: Subida y APK
+- Por orden de Roberto: `main` subido, deploy correcto, APK publicados: Kshop Admin 1.0.9, Minimercado 1.0.10, Tienda Demo 1.0.11, Klau's Shop 1.0.12. La app de Klau no había estado publicada nunca: ahora la ofrece su página `/app`.
+- Comprobado en producción, sin vender: la Caja web abre con el catálogo y elTOQUE sugiere su tasa del día. Descargas y `/app` de cada tienda responden con la versión nueva.
+- **Medido:** `qa:apps` 28/28.
+- **Error:** `qa:apps` llevaba roto desde R11: interceptaba `StoreEntitlements` de pg_graphql, que ya no existe. **Fix:** intercepta `/api/v1/me`. Además pulsaba «Confirmar» antes de abrir el pedido. **Aplicar en:** al cambiar cómo se lee algo, buscar en `scripts/` quién lo intercepta. En local, `qa:apps` necesita también `QA_PLATFORM_URL`.
+- **Falta:** Android real (archivos nativos, modo avión, matar la app, reiniciar) e iPhone real (Safari).
 
 ---
 

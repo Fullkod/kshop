@@ -329,6 +329,8 @@ try {
   check("admin: the app order is in the list", true);
   await shot(owner, "12-admin-pedidos-390");
   await appOrder.click();
+  // The list has a «Confirmar» per pending order: wait for the order itself.
+  await owner.waitForURL(`**/admin/orders/${order.id}`, { timeout: 20000 });
   await owner.getByRole("button", { name: "Confirmar" }).click();
   let confirmed = null;
   for (let i = 0; i < 30 && confirmed?.status !== "pending_payment"; i++) {
@@ -382,14 +384,12 @@ try {
   );
   await shot(staff, "15-admin-empleado-390");
 
-  // Without the catalog module: the entitlements read (pg_graphql) answered without it.
+  // Without the catalog module: the boot of the admin (/me) answered without it.
   const noCatalog = await signIn("empleado@demo.kshop.test", env.DEMO_STAFF_PASSWORD, null, async (page) =>
-    page.route("**/graphql/v1", async (route) => {
-      if (!route.request().postData()?.includes("StoreEntitlements")) return route.continue();
+    page.route("**/api/v1/me*", async (route) => {
       const response = await route.fetch();
       const body = await response.json();
-      const edges = body.data?.storeEntitlements?.edges;
-      if (edges) body.data.storeEntitlements.edges = edges.filter((e) => e.node.moduleCode !== "catalog");
+      if (body.admin) body.admin.modules = body.admin.modules.filter((m) => m.code !== "catalog");
       await route.fulfill({ response, json: body });
     }),
   );
