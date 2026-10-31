@@ -1,6 +1,6 @@
 # PRP POS: punto de venta sin conexión en Kshop Admin
 
-> **Estado**: APROBADO por Roberto (2026-10-30): P1–P4, P6 y P7 según la recomendación; P5 cambia (ver tabla). **Fases 1 y 2 en producción; fases 3, 4 y 5 hechas en local, en commits sin subir y sin probar en un Android real (2026-10-31); siguen la 6 y la 7**
+> **Estado**: APROBADO por Roberto (2026-10-30): P1–P4, P6 y P7 según la recomendación; P5 cambia (ver tabla). **Fases 1 y 2 en producción; fases 3, 4, 5 y 6 hechas en local, en commits sin subir (su migración sí está en producción), sin probar en un Android real (2026-10-31); falta la 7**
 > **Fecha**: 2026-10-30
 > **Proyecto**: Kshop · **Tarea relacionada**: KSH0002 (Tasknic, «pagar una orden con diferentes monedas»)
 > **Primer caso real**: tienda `minimercado` (`project/tienda-minimercado.md`), abierta al público en físico.
@@ -226,7 +226,7 @@ cerrar sesión con ventas pendientes.
 **Validación**: `e2e:pos` y `qa:pos` con red intermitente, respuesta perdida tras guardar, tienda suspendida y sesión
 caducada: ninguna venta se pierde ni se duplica; lo pendiente y lo subido cuadran con Finanzas.
 
-### Fase 6: Lo que ve el dueño en la web
+### Fase 6: Lo que ve el dueño en la web — HECHA
 **Objetivo**: filtro y etiqueta «Mostrador» en Pedidos, cobros con su tasa, faltantes y anotaciones a la vista; página del
 módulo en el panel, planes y superadmin al día.
 **Validación**: `qa:pos` en el panel; `qa:sections`; la pantalla de planes muestra el módulo según P1.
@@ -287,6 +287,14 @@ lector y, si hace falta, venta por peso.
 - **Error:** Vite sirvió módulos viejos tras añadir un `export *` y la app quedó en blanco (`does not provide an export named`). **Fix:** reiniciar Vite. **Aplicar en:** cualquier cambio de exports con el dev de las apps corriendo.
 - **Error:** el teclado español del móvil puede escribir coma: `Number("12,5")` da NaN y el formulario no calculaba. **Fix:** `parseDecimal`, también en `PaymentsCard`. **Aplicar en:** todo campo de dinero nuevo.
 - **Falta para la fase 6:** etiqueta y filtro «Mostrador» en Pedidos, botón de cancelar en una venta entregada, anotaciones (`pos_sales.flags`) a la vista del dueño y página del módulo en el panel (`availableInPhase: 9` provisional).
+
+### 2026-10-31: Fase 6 (lo que ve el dueño)
+- **Piezas:** migración `20261108101500_pos_owner_view` (`admin_orders` con `p_channel`; `admin_pos_sale`, `admin_pos_overview` y `private.pos_flag_notes`, todas `security invoker`), `apps/web/src/features/pos/components/PosPage.tsx` (Admin › Caja), `CounterSaleCard` en `OrderDetail`, pestaña «Mostrador» en `OrderList`, `canCancelOrder`, `formatRate`, `posFlagText` en `core`.
+- **Decisiones técnicas:** las pestañas por estado siguen incluyendo las ventas de mostrador; «Mostrador» es una pestaña más, solo con el módulo activo. `admin_pos_*` no imitan un documento GraphQL, así que no pasan por el comparador; sí por el test de aislamiento. La lista no marca qué venta tiene anotaciones: eso está en Admin › Caja, «Para revisar».
+- **Medido:** `test:rls` en prueba y producción, comparador 33/33, `qa:pos` 21/21, `e2e:pos` 28/28, `qa:pos-offline` 36/36, `qa:sections` 31/31, `qa:orders` 14/14, `core` 92 tests.
+- **Error:** con un `Link` de Next, `window.location` aún tiene la URL anterior cuando se monta la página de destino, y `?tab=counter` abría en Pendientes. **Fix:** la página lee `useSearchParams` y pasa `initialTab`. **Aplicar en:** todo parámetro de URL leído en un componente compartido. `?q=` de `OrderList` (búsqueda global) usa el mismo patrón y puede tener el mismo fallo: sin comprobar.
+- **Error:** `getByRole("heading", { name: "Entrega" })` coincide también con «Entregado». **Fix:** `exact: true`.
+- **Error:** tras cambiar `core`, Turbopack dio 500 («module factory is not available»). **Fix:** reiniciar el servidor. `qa:orders` toma el puerto de `QA_STORE_URL`, no de `QA_BASE_URL`.
 
 ---
 

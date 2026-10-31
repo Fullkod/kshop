@@ -187,10 +187,50 @@ select tests.eq('staff A: reads nothing of B',
 select tests.check('staff A: cannot write counter sales',
   tests.throws(format($$update public.pos_sales set flags = '[]' where order_id = %L$$, tests.fx('order_1'))));
 
+select tests.eq('filter: only the counter of A',
+  (public.admin_orders(tests.fx('store_a'), 50, p_channel => 'pos') -> 'ordersCollection' ->> 'totalCount')::int,
+  (select count(*) from public.orders where store_id = tests.fx('store_a'))::int);
+select tests.eq('filter: another channel brings nothing',
+  (public.admin_orders(tests.fx('store_a'), 50, p_channel => 'web') -> 'ordersCollection' ->> 'totalCount')::int, 0);
+select tests.eq('sale: the note says the product, not its id',
+  (select f ->> 'name' from jsonb_array_elements(public.admin_pos_sale(tests.fx('order_2')) -> 'flags') f
+   where f ->> 'type' = 'stock_shortfall'), 'Arroz a');
+select tests.eq('sale: nothing to note is an empty list',
+  public.admin_pos_sale(tests.fx('order_1')) -> 'flags', '[]'::jsonb);
+select tests.eq('overview: what was not cancelled, in the period',
+  (public.admin_pos_overview(tests.fx('store_a'), 7) ->> 'count')::int, 4);
+select tests.eq('overview: only today (the sale of 2 days ago stays out)',
+  (public.admin_pos_overview(tests.fx('store_a'), 1) ->> 'count')::int, 1);
+select tests.eq('overview: cancelled apart',
+  (public.admin_pos_overview(tests.fx('store_a'), 7) ->> 'cancelled')::int, 2);
+select tests.eq('overview: the till per currency, cancelled sales out',
+  public.admin_pos_overview(tests.fx('store_a'), 7) -> 'cash',
+  '[{"currency": "CUP", "amount": 4000.00}, {"currency": "USD", "amount": 5.00}]'::jsonb);
+select tests.eq('overview: the rate used',
+  public.admin_pos_overview(tests.fx('store_a'), 7) -> 'rates',
+  '[{"currency": "USD", "orderCurrency": "CUP", "rateToOrder": 400.00000000, "payments": 1}]'::jsonb);
+select tests.eq('overview: what needs a look',
+  (public.admin_pos_overview(tests.fx('store_a'), 7) ->> 'flaggedCount')::int, 3);
+select tests.check('overview: no cost anywhere',
+  public.admin_pos_overview(tests.fx('store_a'), 7)::text !~* 'cost');
+
+select tests.login_anon();
+select tests.check('anon: cannot read the overview',
+  tests.throws(format('select public.admin_pos_overview(%L, 7)', tests.fx('store_a'))));
+select tests.check('anon: cannot read a sale',
+  tests.throws(format('select public.admin_pos_sale(%L)', tests.fx('order_1'))));
+
 select tests.login('owner_b');
 select tests.eq('owner B: does not see the sales of A',
   (select count(*) from public.pos_sales where store_id = tests.fx('store_a'))::int, 0);
 select tests.eq('owner B: does not see the orders of A',
   (select count(*) from public.orders where id = tests.fx('order_1'))::int, 0);
+select tests.eq('owner B: the overview of A is empty',
+  public.admin_pos_overview(tests.fx('store_a'), 90),
+  '{"count": 0, "cancelled": 0, "cash": [], "rates": [], "flaggedCount": 0, "flagged": []}'::jsonb);
+select tests.check('owner B: a sale of A does not exist',
+  public.admin_pos_sale(tests.fx('order_1')) is null);
+select tests.eq('owner B: the counter filter of A is empty',
+  (public.admin_orders(tests.fx('store_a'), 50, p_channel => 'pos') -> 'ordersCollection' ->> 'totalCount')::int, 0);
 
 select tests.logout();

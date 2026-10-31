@@ -95,6 +95,22 @@ const upload = await api("POST", "/pos/sales", {
 const orderId = upload.body.results?.[0]?.orderId;
 check("upload: a counter sale", !!orderId, JSON.stringify(upload.body));
 
+// Charged at another price and half in USD: the owner must see the note and the rate.
+const flaggedUpload = await api("POST", "/pos/sales", {
+  sales: [
+    {
+      id: randomUUID(),
+      deviceId: randomUUID(),
+      localNumber: "C-QA2",
+      soldAt: new Date().toISOString(),
+      lines: [{ variantId: first.variantId, quantity: 1, unitPrice: first.price + 100, productName: first.productName }],
+      payments: [{ amount: 1, currency: "USD", rate: first.price + 100 }],
+    },
+  ],
+});
+const flaggedId = flaggedUpload.body.results?.[0]?.orderId;
+check("upload: a sale at another price", !!flaggedId, JSON.stringify(flaggedUpload.body));
+
 const browser = await chromium.launch({ executablePath: chromiumPath(), headless: true });
 try {
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
@@ -118,9 +134,58 @@ try {
   await page.getByText("Mostrador").first().waitFor({ timeout: 20000 });
   check("Pedido: no WhatsApp to a customer that does not exist", (await page.getByText("WhatsApp al cliente").count()) === 0);
   await page.screenshot({ path: join(OUT, "mostrador-pedido.png"), fullPage: true });
+
+  // What the owner sees: the counter tab, the page of the module, the note and the rate.
+  await page.goto(`${BASE}/admin/orders`);
+  await page.getByRole("tab", { name: "Mostrador" }).click();
+  await page.getByTestId("orders-list").getByText("Mostrador").first().waitFor({ timeout: 20000 });
+  await page.waitForTimeout(1000);
+  const rowCount = await page.getByTestId("orders-list").locator("li").count();
+  const counterRows = await page.getByTestId("orders-list").locator("li").filter({ hasText: "Mostrador" }).count();
+  check("Pedidos: the tab shows only counter sales", rowCount > 0 && rowCount === counterRows, `${counterRows}/${rowCount}`);
+  await page.screenshot({ path: join(OUT, "fase6-pestana-mostrador.png"), fullPage: true });
+
+  await page.goto(`${BASE}/admin/pos`);
+  await page.getByTestId("pos-overview").waitFor({ timeout: 20000 });
+  check("Caja: says the sales of today", /\d+ ventas?/.test(await page.getByTestId("pos-overview").innerText()));
+  check("Caja: the till per currency", /USD/.test(await page.getByTestId("pos-cash").innerText()), await page.getByTestId("pos-cash").innerText());
+  check("Caja: the rate used", /1 USD =/.test(await page.getByTestId("pos-rates").innerText()), await page.getByTestId("pos-rates").innerText());
+  check("Caja: what needs a look", /se cobró a/.test(await page.getByTestId("pos-flagged").innerText()), await page.getByTestId("pos-flagged").innerText());
+  check("Caja: no costs", !/costo/i.test(await page.locator("main").innerText()));
+  await page.screenshot({ path: join(OUT, "fase6-caja.png"), fullPage: true });
+  await page.getByRole("link", { name: "Ver las ventas de mostrador" }).click();
+  await page.waitForURL(/\/admin\/orders\?tab=counter/, { timeout: 20000 });
+  await page.getByRole("tab", { name: "Mostrador", selected: true }).waitFor({ timeout: 20000 });
+  check("Caja: links to the counter tab", true);
+
+  await page.goto(`${BASE}/admin/orders/${flaggedId}`);
+  await page.getByTestId("counter-flags").waitFor({ timeout: 20000 });
+  check("Pedido: the note in plain words", /se cobró a/.test(await page.getByTestId("counter-flags").innerText()));
+  check("Pedido: the rate of the payment", (await page.getByText(/1 USD =/).count()) > 0);
+  check("Pedido: no delivery nor customer of a counter sale", (await page.getByRole("heading", { name: "Entrega", exact: true }).count()) === 0 && (await page.getByRole("heading", { name: "Cliente", exact: true }).count()) === 0);
+  await page.screenshot({ path: join(OUT, "fase6-venta-anotada.png"), fullPage: true });
+
+  // Cancelling a delivered counter sale from the screen.
+  await page.getByRole("button", { name: "Cancelar venta" }).click();
+  await page.getByRole("button", { name: "Volver" }).click();
+  check("Pedido: backing out cancels nothing", (await page.getByRole("button", { name: "Cancelar venta" }).count()) === 1);
+  await page.getByRole("button", { name: "Cancelar venta" }).click();
+  await page.getByRole("button", { name: "Confirmar cancelación" }).click();
+  await page.getByText("Reembolso").first().waitFor({ timeout: 20000 });
+  const { data: cancelled } = await service.from("orders").select("status, paid_total").eq("id", flaggedId).single();
+  check("Pedido: cancelled, the balance at 0", cancelled.status === "cancelled" && Number(cancelled.paid_total) === 0, JSON.stringify(cancelled));
+  check("Pedido: no cancel button anymore", (await page.getByRole("button", { name: "Cancelar venta" }).count()) === 0);
+
+  const mobile = await (await browser.newContext({ viewport: { width: 390, height: 844 }, storageState: await page.context().storageState() })).newPage();
+  await mobile.goto(`${BASE}/admin/pos`);
+  await mobile.getByTestId("pos-overview").waitFor({ timeout: 20000 });
+  check("Caja: fits a phone", await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+  await mobile.screenshot({ path: join(OUT, "fase6-caja-movil.png"), fullPage: true });
+
   check("no errors in the page", errors.length === 0, errors.join(" | "));
 } finally {
   if (orderId) await api("POST", `/orders/${orderId}/cancel`, { reason: "QA" });
+  if (flaggedId) await api("POST", `/orders/${flaggedId}/cancel`, { reason: "QA" });
   await browser.close();
 }
 

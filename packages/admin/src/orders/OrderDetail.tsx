@@ -2,10 +2,11 @@
 
 import {
   amountToSettle,
-  CANCELLABLE_STATUSES,
+  canCancelOrder,
   CURRENCY_CODES,
   formatMoney,
   formatPhone,
+  formatRate,
   needsShippingCost,
   ORDER_ACTION_LABELS,
   ORDER_STATUS_LABELS,
@@ -14,6 +15,7 @@ import {
   parseDecimal,
   PAYMENT_STATUS_LABELS,
   paymentPreview,
+  posFlagText,
   quoteToOrderRate,
   rateQuote,
   SHIPPING_TYPE_LABELS,
@@ -26,7 +28,7 @@ import {
   type PaymentStatus,
   type ShippingType,
 } from "@kshop/core";
-import type { AdminOrderQuery, PaymentRates, ResultOf } from "@kshop/data";
+import type { AdminOrderQuery, PaymentRates, PosSaleInfo, ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, Card, cn, Input, Label, Select, useConfirm } from "@kshop/ui";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useApiAction } from "../catalog/use-catalog";
@@ -158,6 +160,7 @@ export function OrderDetail({
   const events = nodes(order.orderEventsCollection);
   const payments = nodes(order.paymentsCollection).map((p) => ({ ...p, currency: String(p.currency) }));
   const refunds = nodes(order.refundsCollection).map((r) => ({ ...r, currency: String(r.currency) }));
+  const counter = order.channel === "pos";
   const publicUrl = `${storePublicOrigin(store, config.platformDomain, config.protocol)}/order/${order.publicToken}`;
   const customerText = `Hola, ${order.customerName}. Tu pedido ${code} en ${store.name} está: ${ORDER_STATUS_LABELS[status]}.${
     total !== null && paid < total && status !== "cancelled" ? ` Total: ${money(total)}.` : ""
@@ -177,7 +180,11 @@ export function OrderDetail({
           </h2>
           <p className="text-sm text-muted-foreground">
             {dateTime(order.createdAt)} ·{" "}
-            {order.channel === "admin" ? "Creado desde el admin" : "Tienda online"}
+            {counter
+              ? "Venta de mostrador"
+              : order.channel === "admin"
+                ? "Creado desde el admin"
+                : "Tienda online"}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -216,6 +223,8 @@ export function OrderDetail({
 
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="flex flex-col gap-6">
+          {counter && <CounterSaleCard orderId={order.id} currency={currency} note={order.customerNote} />}
+
           <Card>
             <h3 className="mb-3 font-semibold">Productos</h3>
             <ul className="divide-y">
@@ -366,48 +375,55 @@ export function OrderDetail({
         </div>
 
         <div className="flex flex-col gap-6">
-          <Card className="text-sm">
-            <h3 className="mb-2 font-semibold">Cliente</h3>
-            <p className="font-medium">{order.customerName}</p>
-            {order.customerPhone && <p>{formatPhone(order.customerPhone)}</p>}
-            {order.customers ? (
-              <p className="text-muted-foreground">Con cuenta en la tienda</p>
-            ) : (
-              <p className="text-muted-foreground">Compra sin cuenta</p>
-            )}
-            {order.customerNote && <p className="mt-2 rounded bg-surface p-2">«{order.customerNote}»</p>}
-          </Card>
-
-          <Card className="text-sm">
-            <h3 className="mb-2 font-semibold">Entrega</h3>
-            <p>
-              {String(
-                shipping.method ?? SHIPPING_TYPE_LABELS[(order.shippingType ?? "to_agree") as ShippingType],
+          {!counter && (
+            <Card className="text-sm">
+              <h3 className="mb-2 font-semibold">Cliente</h3>
+              <p className="font-medium">{order.customerName}</p>
+              {order.customerPhone && <p>{formatPhone(order.customerPhone)}</p>}
+              {order.customers ? (
+                <p className="text-muted-foreground">Con cuenta en la tienda</p>
+              ) : (
+                <p className="text-muted-foreground">Compra sin cuenta</p>
               )}
-            </p>
-            {typeof shipping.zone === "string" && <p className="text-muted-foreground">{shipping.zone}</p>}
-            {shipping.pickup_point && <p>Recoge en {shipping.pickup_point.name}</p>}
-            {typeof shipping.address === "string" && <p>{shipping.address}</p>}
-            {typeof shipping.reference === "string" && (
-              <p className="text-muted-foreground">{shipping.reference}</p>
-            )}
-            {typeof shipping.recipient === "string" && <p>Recibe: {shipping.recipient}</p>}
-            {!["shipped", "delivered", "cancelled"].includes(status) && (
-              <ShippingForm
-                current={shippingTotal}
-                currency={currency}
-                onSave={(amount) => run(() => api.orders(store.id).setShipping(order.id, amount))}
-              />
-            )}
-          </Card>
+              {order.customerNote && <p className="mt-2 rounded bg-surface p-2">«{order.customerNote}»</p>}
+            </Card>
+          )}
 
-          <Card className="text-sm">
-            <h3 className="mb-2 font-semibold">Pago elegido</h3>
-            <p>{payment.name ?? "Sin elegir"}</p>
-          </Card>
+          {!counter && (
+            <Card className="text-sm">
+              <h3 className="mb-2 font-semibold">Entrega</h3>
+              <p>
+                {String(
+                  shipping.method ?? SHIPPING_TYPE_LABELS[(order.shippingType ?? "to_agree") as ShippingType],
+                )}
+              </p>
+              {typeof shipping.zone === "string" && <p className="text-muted-foreground">{shipping.zone}</p>}
+              {shipping.pickup_point && <p>Recoge en {shipping.pickup_point.name}</p>}
+              {typeof shipping.address === "string" && <p>{shipping.address}</p>}
+              {typeof shipping.reference === "string" && (
+                <p className="text-muted-foreground">{shipping.reference}</p>
+              )}
+              {typeof shipping.recipient === "string" && <p>Recibe: {shipping.recipient}</p>}
+              {!["shipped", "delivered", "cancelled"].includes(status) && (
+                <ShippingForm
+                  current={shippingTotal}
+                  currency={currency}
+                  onSave={(amount) => run(() => api.orders(store.id).setShipping(order.id, amount))}
+                />
+              )}
+            </Card>
+          )}
 
-          {CANCELLABLE_STATUSES.includes(status) && (
+          {!counter && (
+            <Card className="text-sm">
+              <h3 className="mb-2 font-semibold">Pago elegido</h3>
+              <p>{payment.name ?? "Sin elegir"}</p>
+            </Card>
+          )}
+
+          {canCancelOrder(status, order.channel) && (
             <CancelForm
+              counter={counter}
               paid={paid > 0 ? money(paid) : null}
               onCancel={(reason) => run(() => api.orders(store.id).cancel(order.id, reason))}
             />
@@ -415,6 +431,50 @@ export function OrderDetail({
         </div>
       </div>
     </div>
+  );
+}
+
+/** What only a counter sale has: when the phone sold it, when it arrived, and what did not add up. */
+function CounterSaleCard({
+  orderId,
+  currency,
+  note,
+}: {
+  orderId: string;
+  currency: string;
+  note?: string | null;
+}) {
+  const { reads } = useSession();
+  const [sale, setSale] = useState<PosSaleInfo | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    reads.posSale(orderId).then(
+      (data) => !cancelled && setSale(data),
+      () => {},
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [reads, orderId]);
+  if (!sale) return null;
+  return (
+    <Card className="flex flex-col gap-2 text-sm" data-testid="counter-sale">
+      <h3 className="font-semibold">Venta de mostrador</h3>
+      <p className="text-muted-foreground">
+        {sale.localNumber} · vendida el {dateTime(sale.soldAt)} · subida el {dateTime(sale.uploadedAt)}
+      </p>
+      {note && <p className="rounded bg-surface p-2">«{note}»</p>}
+      {sale.flags.length > 0 && (
+        <ul
+          className="flex flex-col gap-1 rounded bg-warning-soft p-2 text-warning"
+          data-testid="counter-flags"
+        >
+          {sale.flags.map((flag, i) => (
+            <li key={i}>{posFlagText(flag, currency)}</li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }
 
@@ -479,6 +539,7 @@ function PaymentsCard({
     appliedAmount: string;
     changeAmount?: string | null;
     changeCurrency?: unknown;
+    rateToOrder: string;
     reference?: string | null;
     evidencePath?: string | null;
     createdAt: string;
@@ -585,7 +646,8 @@ function PaymentsCard({
               {p.currency !== currency && Number(p.appliedAmount) > 0 && (
                 <span className="text-muted-foreground">
                   {" "}
-                  · aplica {formatMoney(Number(p.appliedAmount), currency)}
+                  · {formatRate(Number(p.rateToOrder), p.currency as CurrencyCode, currency)} · aplica{" "}
+                  {formatMoney(Number(p.appliedAmount), currency)}
                 </span>
               )}
               {p.changeAmount && (
@@ -756,9 +818,11 @@ function NoteForm({ onAdd }: { onAdd: (text: string) => Promise<boolean> }) {
 }
 
 function CancelForm({
+  counter,
   paid,
   onCancel,
 }: {
+  counter: boolean;
   paid: string | null;
   onCancel: (reason?: string) => Promise<boolean>;
 }) {
@@ -766,8 +830,10 @@ function CancelForm({
   // R14: the confirmation (with its optional reason) opens in the Kshop dialog.
   async function ask() {
     const reason = await prompt({
-      title: "¿Cancelar el pedido?",
-      description: `Las unidades vuelven al stock.${paid ? ` Se registrará el reembolso de ${paid}.` : ""}`,
+      title: counter ? "¿Cancelar la venta?" : "¿Cancelar el pedido?",
+      description: counter
+        ? "Las unidades que descontó vuelven al stock y se registra la devolución de lo cobrado, en cada moneda."
+        : `Las unidades vuelven al stock.${paid ? ` Se registrará el reembolso de ${paid}.` : ""}`,
       input: { label: "Motivo (opcional)", maxLength: 300 },
       confirmLabel: "Confirmar cancelación",
       cancelLabel: "Volver",
@@ -777,7 +843,7 @@ function CancelForm({
   }
   return (
     <Button variant="outline" className="text-destructive" onClick={() => void ask()}>
-      Cancelar pedido
+      {counter ? "Cancelar venta" : "Cancelar pedido"}
     </Button>
   );
 }

@@ -19,6 +19,14 @@ export function quoteToOrderRate(quoted: number, paid: CurrencyCode, order: Curr
   return rateQuote(paid, order).unit === paid ? quoted : 1 / quoted;
 }
 
+/** "1 USD = 850 CUP", from what a payment stored; a quote of hundreds does not need the decimals of 1/850. */
+export function formatRate(rateToOrder: number, paid: CurrencyCode, order: CurrencyCode): string {
+  const { unit, per } = rateQuote(paid, order);
+  const quote = unit === paid ? rateToOrder : 1 / rateToOrder;
+  const digits = quote >= 100 ? 2 : 4;
+  return `1 ${unit} = ${quote.toLocaleString("es", { maximumFractionDigits: digits })} ${per}`;
+}
+
 /** The quoted rate suggested by values of each currency in a common unit (elTOQUE's CUP, or the store's base). */
 export function suggestedQuote(
   paid: CurrencyCode,

@@ -47,7 +47,7 @@ export const financeInventoryQuerySchema = z.object({
 });
 export type FinanceInventoryQuery = z.infer<typeof financeInventoryQuerySchema>;
 
-export const ORDER_CHANNEL_LABELS: Record<string, string> = { web: "Tienda web", app: "App", admin: "Admin" };
+export const ORDER_CHANNEL_LABELS: Record<string, string> = { web: "Tienda web", app: "App", admin: "Admin", pos: "Mostrador" };
 
 /** Manual expenses (net profit = margin − expenses). */
 export const expenseInputSchema = z.object({

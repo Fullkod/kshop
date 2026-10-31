@@ -1,4 +1,5 @@
 import type { ResultOf } from "@graphql-typed-document-node/core";
+import type { CurrencyCode, PosFlag } from "@kshop/core";
 import type { AdminProductsQuery, CatalogStructureQuery, ProductDetailQuery } from "./catalog-queries";
 import type { AdminContentQuery } from "./content-queries";
 import type { AdminPromotionsQuery, AdminVouchersQuery, DiscountTargetsQuery } from "./discount-queries";
@@ -20,6 +21,25 @@ import type { SupabaseConfig } from "./supabase";
 // returns exactly the result of the GraphQL query it replaces (scripts/compare-admin-reads.mjs checks it), so the
 // screens keep the same types. Cursors are opaque offsets.
 
+export type PosSaleInfo = { localNumber: string; soldAt: string; uploadedAt: string; flags: PosFlag[] };
+
+export type PosOverview = {
+  count: number;
+  cancelled: number;
+  cash: { currency: CurrencyCode; amount: number }[];
+  rates: { currency: CurrencyCode; orderCurrency: CurrencyCode; rateToOrder: number; payments: number }[];
+  flaggedCount: number;
+  /** The latest 50. */
+  flagged: {
+    orderId: string;
+    number: number;
+    localNumber: string;
+    soldAt: string;
+    currency: CurrencyCode;
+    flags: PosFlag[];
+  }[];
+};
+
 export type AdminReadsOptions = SupabaseConfig & {
   getAccessToken: () => string | null | undefined | Promise<string | null | undefined>;
   fetch?: typeof fetch;
@@ -31,6 +51,7 @@ export type AdminOrdersArgs = {
   after?: string | null;
   statuses?: readonly string[];
   number?: number;
+  channel?: string;
   /** Customer name ILIKE `name` OR phone ILIKE `phone` OR number = `number` (patterns like "%ana%"; each optional). */
   search?: { name?: string; phone?: string; number?: number };
 };
@@ -84,8 +105,13 @@ export function createAdminReads(options: AdminReadsOptions) {
         p_name: args.search?.name ?? null,
         p_phone: args.search?.phone ?? null,
         p_search_number: args.search?.number ?? null,
+        p_channel: args.channel ?? null,
       }),
     order: (orderId: string) => rpc<ResultOf<typeof AdminOrderQuery>>("admin_order", { p_order_id: orderId }),
+    /** Null when the order is not a counter sale. */
+    posSale: (orderId: string) => rpc<PosSaleInfo | null>("admin_pos_sale", { p_order_id: orderId }),
+    posOverview: (storeId: string, days: number) =>
+      rpc<PosOverview>("admin_pos_overview", { p_store_id: storeId, p_days: days }),
     checkoutSettings: (storeId: string) =>
       rpc<ResultOf<typeof CheckoutSettingsQuery>>("admin_checkout_settings", { p_store_id: storeId }),
     notificationLog: (args: { storeId: string; first: number; orderId?: string; after?: string | null }) =>

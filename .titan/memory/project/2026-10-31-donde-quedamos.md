@@ -4,13 +4,13 @@ Supera a `2026-10-30-donde-quedamos.md`.
 
 ## Estado
 - **En producción:** cobro en varias monedas y POS fases 1 y 2 (módulo y servidor).
-- **En `main`, sin subir:** POS fases 3, 4 y 5: Kshop Admin arranca sin red, pantalla de Caja con búsqueda por trozos, cobro mixto, cola de subida automática, ventas retenidas, anulación, resumen del día. Nada de esto llega a nadie hasta generar un APK.
+- **En `main`, sin subir:** POS fases 3, 4, 5 y 6 (la migración de la 6 ya está en producción; es compatible con la web desplegada): Kshop Admin arranca sin red, pantalla de Caja con búsqueda por trozos, cobro mixto, cola de subida automática, ventas retenidas, anulación, resumen del día. En la web: pestaña «Mostrador», cancelar una venta entregada, anotaciones y tasas, Admin › Caja. Lo del teléfono no llega a nadie hasta generar un APK.
 - `qa:pos-offline` 36/36 en navegador. **No probado en un Android real:** archivos nativos, red nativa, matar la app, reiniciar.
 
 ## Qué sigue
-1. **Fase 6:** lo que ve el dueño en la web (lista en el PRP, Aprendizajes del 2026-10-31).
-2. **Fase 7:** APK en GitHub Actions y prueba en Android en modo avión. Necesita permiso de Roberto para subir y generar, y saber en qué teléfono.
-3. **Roberto:** elTOQUE. El token está en Vercel, pero al 2026-10-31 producción seguía sugiriendo la tasa de la tienda y `private.market_rates` estaba vacía: falta un redeploy, que sale al subir `main`. En local ya funciona.
+1. **Fase 7:** APK en GitHub Actions y prueba en Android en modo avión. Necesita permiso de Roberto para subir y generar, y saber en qué teléfono.
+2. **Roberto:** elTOQUE. El token está en Vercel, pero al 2026-10-31 producción seguía sugiriendo la tasa de la tienda y `private.market_rates` estaba vacía: falta un redeploy, que sale al subir `main`. En local ya funciona.
+3. Comprobar si `?q=` de `OrderList` falla al llegar desde la búsqueda global (ver PRP, fase 6).
 4. Lo de `2026-10-29-donde-quedamos.md` (8.6, 8.7, logs de R11) y `credito-fullkod.md`.
 
 ## Para retomar

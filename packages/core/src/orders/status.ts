@@ -18,7 +18,7 @@ export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 export const SHIPPING_TYPES = ["delivery", "pickup", "to_agree"] as const;
 export type ShippingType = (typeof SHIPPING_TYPES)[number];
 
-export const ORDER_CHANNELS = ["web", "app", "admin"] as const;
+export const ORDER_CHANNELS = ["web", "app", "admin", "pos"] as const;
 export type OrderChannel = (typeof ORDER_CHANNELS)[number];
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
@@ -61,6 +61,11 @@ export const CANCELLABLE_STATUSES: readonly OrderStatus[] = [
   "paid",
   "processing",
 ];
+
+/** A counter sale is born delivered, and cancelling it is the only way to undo it. */
+export function canCancelOrder(status: OrderStatus, channel: string): boolean {
+  return CANCELLABLE_STATUSES.includes(status) || (channel === "pos" && status === "delivered");
+}
 
 export function canTransition(from: OrderStatus, to: OrderStatus): boolean {
   return ORDER_TRANSITIONS[from].includes(to);

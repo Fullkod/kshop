@@ -17,6 +17,7 @@ import {
 import type { AdminOrdersArgs } from "@kshop/data";
 import { Alert, Badge, Button, Card, Input, MessageCircle, cn } from "@kshop/ui";
 import { useEffect, useRef, useState } from "react";
+import { useAdmin } from "../admin-context";
 import { useApiAction } from "../catalog/use-catalog";
 import { LoadError } from "../LoadError";
 import { ORDER_TABLES, useStoreVersion } from "../realtime";
@@ -25,6 +26,8 @@ import { Link, useStore } from "@kshop/storefront";
 import { useCheckoutSettings } from "./use-orders";
 
 type Filter = Omit<AdminOrdersArgs, "first" | "after">;
+/** The status tabs, and the counter sales of any status. */
+type ListTab = OrderTabKey | "counter";
 type Row = {
   id: string;
   number: number;
@@ -85,12 +88,13 @@ export function StatusPill({ status }: { status: OrderStatus }) {
 }
 
 /** The list reads again on its own when an order of the store changes (Realtime). */
-export function OrderList() {
+export function OrderList({ initialTab = "pending" }: { initialTab?: ListTab }) {
   const store = useStore();
   const { reads, api } = useSession();
+  const admin = useAdmin();
   const { data: settings } = useCheckoutSettings();
   const action = useApiAction();
-  const [tab, setTab] = useState<OrderTabKey>("pending");
+  const [tab, setTab] = useState<ListTab>(initialTab);
   // ?q= opens the list already searched (a customer picked in the global search shows their orders).
   const [query, setQuery] = useState(() =>
     typeof window === "undefined" ? "" : (new URLSearchParams(window.location.search).get("q") ?? ""),
@@ -105,10 +109,13 @@ export function OrderList() {
   const loadedOnce = useRef(false);
 
   const filter = (): Filter => {
-    const statuses = ORDER_TABS.find((t) => t.key === tab)!.statuses as unknown as OrderStatus[];
+    const statuses = ORDER_TABS.find((t) => t.key === tab)?.statuses as unknown as OrderStatus[] | undefined;
     const q = query.trim().replace(/^[A-Z0-9]+-/i, "");
     // A search looks in every status (a customer's delivered orders too); the tabs filter the plain list.
-    const base: Filter = { storeId: store.id, ...(q ? {} : { statuses }) };
+    const base: Filter = {
+      storeId: store.id,
+      ...(q ? {} : tab === "counter" ? { channel: "pos" } : { statuses }),
+    };
     if (!q) return base;
     if (/^\d{1,9}$/.test(q) && Number(q) >= 1000) return { ...base, number: Number(q) };
     return { ...base, search: { name: `%${q}%`, phone: `%${q.replace(/\D/g, "") || q}%` } };
@@ -172,7 +179,10 @@ export function OrderList() {
           aria-label="Estado"
           className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]"
         >
-          {ORDER_TABS.map((t) => (
+          {[
+            ...ORDER_TABS,
+            ...(admin.enabledModules.has("pos") ? [{ key: "counter" as const, label: "Mostrador" }] : []),
+          ].map((t) => (
             <button
               key={t.key}
               role="tab"
@@ -243,6 +253,7 @@ export function OrderList() {
                   <Badge variant="muted">{PAYMENT_STATUS_LABELS[row.paymentStatus]}</Badge>
                   {stale && <Badge variant="destructive">Más de 48 h</Badge>}
                   {row.channel === "admin" && <Badge variant="muted">Admin</Badge>}
+                  {row.channel === "pos" && <Badge variant="muted">Mostrador</Badge>}
                   <span className="text-xs text-muted-foreground">
                     {row.items} {row.items === 1 ? "producto" : "productos"}
                   </span>

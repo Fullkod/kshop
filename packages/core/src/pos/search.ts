@@ -1,6 +1,8 @@
 // Search of the counter (Roberto, P5): by name in pieces, the whole phrase and its longest consecutive pieces first, then
 // the words scattered around the name. By SKU too: a barcode reader types the code as if it were a keyboard.
 
+import { formatMoney } from "../catalog/pricing";
+
 export type PosSearchable = { productName: string; variantName: string; sku: string };
 
 export type PosSearchEntry<T extends PosSearchable> = { item: T; name: string; sku: string };
@@ -128,6 +130,33 @@ export function posDaySummary(
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([currency, value]) => ({ currency, amount: value / 100 })),
   };
+}
+
+/** Something the server noted when a sale arrived (pos_sales.flags), with the name of the product. */
+export type PosFlag = {
+  type: string;
+  name?: string | null;
+  missing?: number;
+  charged?: number;
+  expected?: number;
+  sold_at?: string;
+};
+
+/** What the owner reads about a flag. */
+export function posFlagText(flag: PosFlag, currency: string): string {
+  const name = flag.name ? `«${flag.name}»` : "Un producto";
+  switch (flag.type) {
+    case "stock_shortfall":
+      return `${name}: se vendieron ${flag.missing} más de las que había en el stock.`;
+    case "price_mismatch":
+      return `${name}: se cobró a ${formatMoney(flag.charged ?? 0, currency)} y el precio vigente era ${formatMoney(flag.expected ?? 0, currency)}.`;
+    case "unknown_variant":
+      return `${name}: ya no está en el catálogo y no se descontó del stock.`;
+    case "clock_skew":
+      return "El teléfono tenía la hora adelantada: la venta quedó con la hora en que se subió.";
+    default:
+      return "Algo no cuadró en esta venta.";
+  }
 }
 
 /** Sum of the lines in cents, to avoid floating point drift. */

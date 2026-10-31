@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatMoney,
   normalizeSearch,
   parseDecimal,
   posCartTotal,
+  posFlagText,
+  formatRate,
+  canCancelOrder,
   posDaySummary,
   posItemPrice,
   posSaleSchema,
@@ -136,6 +140,30 @@ describe("summary of the day", () => {
       count: 0,
       cash: [],
     });
+  });
+});
+
+describe("what the owner reads", () => {
+  it("says the product and the numbers of each note", () => {
+    expect(posFlagText({ type: "stock_shortfall", name: "Arroz", missing: 2 }, "CUP")).toMatch(/Arroz.*2/);
+    const price = posFlagText({ type: "price_mismatch", name: "Arroz", charged: 900, expected: 1000 }, "CUP");
+    expect(price).toContain(formatMoney(900, "CUP"));
+    expect(price).toContain(formatMoney(1000, "CUP"));
+    expect(posFlagText({ type: "unknown_variant", name: null }, "CUP")).toMatch(/^Un producto/);
+    expect(posFlagText({ type: "something_new" }, "CUP")).toBe("Algo no cuadró en esta venta.");
+  });
+
+  it("quotes a stored rate the way it was typed", () => {
+    expect(formatRate(850, "USD", "CUP")).toBe("1 USD = 850 CUP");
+    expect(formatRate(1 / 850, "CUP", "USD")).toBe("1 USD = 850 CUP");
+    expect(formatRate(1.0812, "EUR", "USD")).toMatch(/^1 EUR = 1[,.]0812 USD$/);
+  });
+
+  it("only a counter sale can be cancelled once delivered", () => {
+    expect(canCancelOrder("delivered", "pos")).toBe(true);
+    expect(canCancelOrder("delivered", "web")).toBe(false);
+    expect(canCancelOrder("cancelled", "pos")).toBe(false);
+    expect(canCancelOrder("paid", "web")).toBe(true);
   });
 });
 
