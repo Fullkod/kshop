@@ -20,6 +20,7 @@ import {
   CreditCard,
   Users,
   ConfirmProvider,
+  useConfirm,
 } from "@kshop/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -31,7 +32,7 @@ import { FullkodCredit } from "@/components/FullkodCredit";
 import { ADMIN_GROUPS, type AdminGroup } from "@/features/types";
 import { useStorePathname } from "@/lib/navigation";
 import { useSession } from "@/lib/session";
-import { ORDER_TABLES, useStoreVersion } from "@kshop/admin";
+import { ORDER_TABLES, usePosStorage, useStoreVersion } from "@kshop/admin";
 import { useStore } from "@kshop/storefront";
 import {
   AdminContext,
@@ -292,15 +293,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </span>
           <span className="truncate text-xs text-[#C8C0DA]">{email}</span>
         </span>
-        <button
-          type="button"
-          onClick={signOut}
-          aria-label="Cerrar sesión"
-          title="Cerrar sesión"
-          className="flex size-9 items-center justify-center rounded-lg text-[#D9D3EA] hover:bg-white/8 hover:text-white"
-        >
-          <LogOut size={16} aria-hidden />
-        </button>
+        <SidebarSignOut signOut={signOut} counter={admin.enabledModules.has("pos")} />
       </div>
     </>
   );
@@ -417,6 +410,43 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </div>
       </ConfirmProvider>
     </AdminContext.Provider>
+  );
+}
+
+/** The sales of the counter stay in this browser, but only someone of this store signed in here can upload them. */
+function SidebarSignOut({ signOut, counter }: { signOut: () => Promise<void>; counter: boolean }) {
+  const store = useStore();
+  const storage = usePosStorage();
+  const { confirm } = useConfirm();
+
+  async function ask() {
+    const sales = counter ? await storage.listSales(store.id).catch(() => []) : [];
+    const pending = sales.filter((s) => !s.uploaded).length;
+    if (
+      pending > 0 &&
+      !(await confirm({
+        title: `Hay ${pending === 1 ? "1 venta" : `${pending} ventas`} sin subir`,
+        description:
+          "Se quedan guardadas en este navegador, pero no se subirán hasta que alguien de la tienda vuelva a entrar aquí.",
+        confirmLabel: "Cerrar sesión igualmente",
+        tone: "destructive",
+      }))
+    ) {
+      return;
+    }
+    await signOut();
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => void ask()}
+      aria-label="Cerrar sesión"
+      title="Cerrar sesión"
+      className="flex size-9 items-center justify-center rounded-lg text-[#D9D3EA] hover:bg-white/8 hover:text-white"
+    >
+      <LogOut size={16} aria-hidden />
+    </button>
   );
 }
 

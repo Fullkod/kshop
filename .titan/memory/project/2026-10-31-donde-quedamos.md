@@ -6,6 +6,7 @@ Supera a `2026-10-30-donde-quedamos.md`.
 - **En producción:** cobro en varias monedas y POS fases 1 y 2 (módulo y servidor).
 - **En `main`, sin subir:** POS fases 3, 4, 5 y 6 (la migración de la 6 ya está en producción; es compatible con la web desplegada): Kshop Admin arranca sin red, pantalla de Caja con búsqueda por trozos, cobro mixto, cola de subida automática, ventas retenidas, anulación, resumen del día. En la web: pestaña «Mostrador», cancelar una venta entregada, anotaciones y tasas, Admin › Caja. Lo del teléfono no llega a nadie hasta generar un APK.
 - `qa:pos-offline` 36/36 en navegador. **No probado en un Android real:** archivos nativos, red nativa, matar la app, reiniciar.
+- **Caja en la web:** Admin › Caja › Vender, para quien no tiene app (iPhone). Sin probar en un iPhone real.
 
 ## Qué sigue
 1. **Fase 7:** APK en GitHub Actions y prueba en Android en modo avión. Necesita permiso de Roberto para subir y generar, y saber en qué teléfono.

@@ -1,12 +1,12 @@
 "use client";
 
 import { formatMoney, formatRate, orderCode, posFlagText } from "@kshop/core";
-import { useCheckoutSettings, LoadError, ORDER_TABLES, useStoreVersion } from "@kshop/admin";
+import { useCheckoutSettings, LoadError, ORDER_TABLES, PosScreen, useStoreVersion } from "@kshop/admin";
 import type { PosOverview } from "@kshop/data";
 import { Card, cn } from "@kshop/ui";
 import { Link, useStore } from "@kshop/storefront";
-import { useEffect, useState } from "react";
-import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { menuSection, useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useSession } from "@/lib/session";
 
 const PERIODS = [
@@ -22,8 +22,69 @@ const dateTime = (iso: string) =>
     timeZone: "America/Havana",
   }).format(new Date(iso));
 
-/** Admin › Caja: the sale happens on the phone (Kshop Admin); here the owner sees what came in and what to check. */
+function subscribeOnline(onChange: () => void) {
+  window.addEventListener("online", onChange);
+  window.addEventListener("offline", onChange);
+  return () => {
+    window.removeEventListener("online", onChange);
+    window.removeEventListener("offline", onChange);
+  };
+}
+
+/** Admin › Caja: selling from any browser (an iPhone has no app yet) and what came in. Without internet, Kshop Admin. */
 export function PosPage() {
+  const store = useStore();
+  const admin = useAdmin();
+  const online = useSyncExternalStore(
+    subscribeOnline,
+    () => navigator.onLine,
+    () => true,
+  );
+  // A managed section is read-only for the staff: the server would refuse their sales.
+  const canSell = menuSection(admin, "pos").visibility !== "managed";
+  const [chosen, setChosen] = useState<"sell" | "summary">("sell");
+  const tab = canSell ? chosen : "summary";
+
+  return (
+    <div className="flex max-w-3xl flex-col gap-4">
+      <h1 className="text-2xl font-semibold">Caja</h1>
+      {canSell && (
+        <div role="tablist" aria-label="Caja" className="flex gap-1.5">
+          {(
+            [
+              { key: "sell", label: "Vender" },
+              { key: "summary", label: "Resumen" },
+            ] as const
+          ).map((t) => (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={tab === t.key}
+              onClick={() => setChosen(t.key)}
+              className={cn(
+                "h-[34px] rounded-full border px-3.5 text-sm whitespace-nowrap",
+                tab === t.key
+                  ? "border-night bg-night font-semibold text-white"
+                  : "bg-background hover:bg-surface",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+      {/* Hidden, not unmounted: looking at the summary does not lose the sale in progress. */}
+      {canSell && (
+        <div hidden={tab !== "sell"} className="[--app-tabs-height:0px] md:[--app-sidebar-width:248px]">
+          <PosScreen storeId={store.id} online={online} />
+        </div>
+      )}
+      {tab === "summary" && <PosSummary />}
+    </div>
+  );
+}
+
+function PosSummary() {
   const store = useStore();
   const admin = useAdmin();
   const { reads } = useSession();
@@ -50,19 +111,19 @@ export function PosPage() {
   }, [reads, store.id, days, live, attempt]);
 
   return (
-    <div className="flex max-w-3xl flex-col gap-4">
-      <h1 className="text-2xl font-semibold">Caja</h1>
-      <Card className="text-sm">
-        <p>
-          Se vende desde <strong>Kshop Admin</strong> en el teléfono, también sin internet. Las ventas llegan
-          aquí cuando el teléfono tiene conexión, con la fecha en que se vendieron.
-        </p>
+    <div className="flex flex-col gap-4">
+      <p className="text-sm text-muted-foreground" data-testid="pos-web-note">
+        Para vender sin internet, usa Kshop Admin en Android: sus ventas llegan aquí cuando el teléfono tiene
+        conexión, con la fecha en que se vendieron. La venta desde esta página necesita internet para abrirse.
         {admin.enabledModules.has("mobile_app") && (
-          <Link href="/admin/mobile-app" className="mt-2 inline-block underline">
-            Instalar Kshop Admin
-          </Link>
+          <>
+            {" "}
+            <Link href="/admin/mobile-app" className="underline">
+              Instalar Kshop Admin
+            </Link>
+          </>
         )}
-      </Card>
+      </p>
 
       <div role="tablist" aria-label="Periodo" className="flex gap-1.5">
         {PERIODS.map((p) => (

@@ -1,6 +1,6 @@
 // Browser QA of the counter sales on the Tienda Demo (pnpm dev running, pnpm demo:seed done): a sale uploaded through the
-// API, without a phone, opens in the order list, the order and Inicio. Screenshots go to .titan/qa/pos/. The sale is
-// cancelled at the end, which puts the stock back.
+// API, without a phone, opens in the order list, the order and Inicio; a sale from the web page of the counter, with the
+// connection and losing it. Screenshots go to .titan/qa/pos/. Every sale is cancelled at the end, which puts the stock back.
 //
 //   pnpm qa:pos   (QA_BASE_URL for another port)
 
@@ -111,6 +111,7 @@ const flaggedUpload = await api("POST", "/pos/sales", {
 const flaggedId = flaggedUpload.body.results?.[0]?.orderId;
 check("upload: a sale at another price", !!flaggedId, JSON.stringify(flaggedUpload.body));
 
+const webOrders = [];
 const browser = await chromium.launch({ executablePath: chromiumPath(), headless: true });
 try {
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
@@ -146,6 +147,7 @@ try {
   await page.screenshot({ path: join(OUT, "fase6-pestana-mostrador.png"), fullPage: true });
 
   await page.goto(`${BASE}/admin/pos`);
+  await page.getByRole("tab", { name: "Resumen" }).click();
   await page.getByTestId("pos-overview").waitFor({ timeout: 20000 });
   check("Caja: says the sales of today", /\d+ ventas?/.test(await page.getByTestId("pos-overview").innerText()));
   check("Caja: the till per currency", /USD/.test(await page.getByTestId("pos-cash").innerText()), await page.getByTestId("pos-cash").innerText());
@@ -176,14 +178,92 @@ try {
   check("Pedido: cancelled, the balance at 0", cancelled.status === "cancelled" && Number(cancelled.paid_total) === 0, JSON.stringify(cancelled));
   check("Pedido: no cancel button anymore", (await page.getByRole("button", { name: "Cancelar venta" }).count()) === 0);
 
-  const mobile = await (await browser.newContext({ viewport: { width: 390, height: 844 }, storageState: await page.context().storageState() })).newPage();
+  const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 }, storageState: await page.context().storageState() });
+  const mobile = await mobileContext.newPage();
   await mobile.goto(`${BASE}/admin/pos`);
+  await mobile.getByRole("tab", { name: "Resumen" }).click();
   await mobile.getByTestId("pos-overview").waitFor({ timeout: 20000 });
   check("Caja: fits a phone", await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
   await mobile.screenshot({ path: join(OUT, "fase6-caja-movil.png"), fullPage: true });
 
+  // Selling from the web page, as someone with an iPhone would.
+  const sell = async (target, label) => {
+    await target.getByTestId("pos-search").fill(first.productName);
+    await target.getByTestId("pos-results").getByRole("button").first().click();
+    await target.getByTestId("pos-charge").click();
+    await target.getByTestId("pos-submit").click();
+    await target.getByTestId("pos-saved").waitFor({ timeout: 20000 });
+    return (await target.getByTestId("pos-saved").innerText()).includes(label);
+  };
+  // The number of the order an uploaded sale became, to cancel it at the end.
+  const uploadedOrder = async (target) => {
+    const row = target.getByTestId("pos-day-list").locator("li").first();
+    await row.getByText(/^Pedido \d+$/).waitFor({ timeout: 40000 });
+    const number = Number((await row.getByText(/^Pedido \d+$/).innerText()).replace(/\D/g, ""));
+    const { data } = await service.from("orders").select("id, channel, customer_id").eq("store_id", store.id).eq("number", number).single();
+    webOrders.push(data.id);
+    return data;
+  };
+
+  await mobile.getByRole("tab", { name: "Vender" }).click();
+  await mobile.getByTestId("pos-search").waitFor({ timeout: 60000 });
+  const form = await mobile.locator("main").innerText();
+  check("Web, iPhone size: sells without customer nor delivery", !/Cliente|Entrega|Envío|Dirección/.test(form), form);
+  await mobile.getByTestId("pos-search").fill(first.productName);
+  await mobile.getByTestId("pos-results").getByRole("button").first().click();
+  const bar = await mobile.getByTestId("pos-charge").boundingBox();
+  check("Web, iPhone size: the charge button at the bottom edge", bar && bar.y + bar.height > 844 - 80 && bar.y + bar.height <= 844, JSON.stringify(bar));
+  await mobile.getByRole("tab", { name: "Resumen" }).click();
+  await mobile.getByRole("tab", { name: "Vender" }).click();
+  check("Web: the summary does not lose the sale in progress", (await mobile.getByTestId("pos-quantity").innerText()) === "1");
+  check("Web, iPhone size: fits with the cart", await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+  await mobile.screenshot({ path: join(OUT, "web-vender-movil.png"), fullPage: true });
+  await mobile.getByTestId("pos-charge").click();
+  await mobile.getByTestId("pos-submit").click();
+  await mobile.getByTestId("pos-saved").waitFor({ timeout: 20000 });
+  check("Web: the sale says it is in this browser", /navegador/.test(await mobile.getByTestId("pos-saved").innerText()));
+  const webOrder = await uploadedOrder(mobile);
+  check("Web: the sale reaches the server by itself, without a customer", webOrder.channel === "pos" && webOrder.customer_id === null, JSON.stringify(webOrder));
+  await mobile.screenshot({ path: join(OUT, "web-vendida-movil.png"), fullPage: true });
+
+  // Losing the connection with the page open: it keeps selling, says not to reload and uploads when it comes back.
+  await page.goto(`${BASE}/admin/pos`);
+  await page.getByTestId("pos-search").waitFor({ timeout: 60000 });
+  await page.getByTestId("pos-search").fill(first.productName);
+  await page.getByTestId("pos-results").getByRole("button").first().click();
+  const wide = await page.getByTestId("pos-total").boundingBox();
+  check("Web, computer: the bar leaves the sidebar free", wide && wide.x >= 248, JSON.stringify(wide));
+  await page.screenshot({ path: join(OUT, "web-vender-escritorio.png") });
+  await page.getByTestId("pos-charge").click();
+  await page.getByTestId("pos-submit").click();
+  await page.getByTestId("pos-saved").waitFor({ timeout: 20000 });
+  await uploadedOrder(page);
+  await page.context().setOffline(true);
+  await page.getByTestId("pos-offline").waitFor({ timeout: 10000 });
+  check("Web, no connection: says not to reload", /no recargues/.test(await page.getByTestId("pos-offline").innerText()));
+  check("Web, no connection: sells", await sell(page, "navegador"));
+  check("Web, no connection: the sale waits", /: 1$/.test(await page.getByTestId("pos-pending").innerText()), await page.getByTestId("pos-pending").innerText());
+  await page.screenshot({ path: join(OUT, "web-sin-conexion.png"), fullPage: true });
+  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await page.getByText("Hay 1 venta sin subir").waitFor({ timeout: 10000 });
+  await page.getByRole("button", { name: "Cancelar" }).click();
+  check("Web: signing out with a sale to upload asks first", page.url().endsWith("/admin/pos"));
+  await page.context().setOffline(false);
+  await uploadedOrder(page);
+  check("Web: the connection back uploads the sale", /: 0$/.test(await page.getByTestId("pos-pending").innerText()), await page.getByTestId("pos-pending").innerText());
+
+  // A managed section is read-only for the staff.
+  const { error: managedError } = await service.from("store_section_settings").upsert({ store_id: store.id, section: "pos", visibility: "managed" });
+  check("section can be set as managed", !managedError, managedError?.message);
+  await page.goto(`${BASE}/admin/pos`);
+  await page.getByTestId("pos-overview").waitFor({ timeout: 30000 });
+  await page.getByTestId("section-notice").waitFor({ timeout: 30000 });
+  check("Web, managed section: the staff does not sell", (await page.getByRole("tab", { name: "Vender" }).count()) === 0 && (await page.getByTestId("pos-screen").count()) === 0);
+
   check("no errors in the page", errors.length === 0, errors.join(" | "));
 } finally {
+  await service.from("store_section_settings").delete().eq("store_id", store.id).eq("section", "pos");
+  for (const id of webOrders) await api("POST", `/orders/${id}/cancel`, { reason: "QA" });
   if (orderId) await api("POST", `/orders/${orderId}/cancel`, { reason: "QA" });
   if (flaggedId) await api("POST", `/orders/${flaggedId}/cancel`, { reason: "QA" });
   await browser.close();

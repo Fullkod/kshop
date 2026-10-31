@@ -22,7 +22,7 @@ import { Alert, Badge, Button, Card, Dialog, Input, Label, Select, Minus, Plus, 
 import { useMemo, useRef, useState } from "react";
 import { PosDay } from "./PosDay";
 import { usePosSales } from "./pos-sync";
-import { PosStatus, usePosCatalog, usePosStorage } from "./PosStatus";
+import { PosStatus, usePosCatalog, usePosPlace, usePosStorage } from "./PosStatus";
 import type { PosCatalogSnapshot } from "./storage";
 
 type CartLine = { item: PosCatalogItem; quantity: number; unitPrice: number };
@@ -34,6 +34,7 @@ const itemLabel = (item: PosCatalogItem) =>
 /** Selling at the counter, with or without a connection: search, add, charge. The sale is saved on the phone first. */
 export function PosScreen({ storeId, online }: { storeId: string; online: boolean }) {
   const storage = usePosStorage();
+  const place = usePosPlace();
   const catalog = usePosCatalog(storeId, online);
   const [query, setQuery] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
@@ -89,7 +90,7 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
 
       {saved && (
         <Alert data-testid="pos-saved">
-          Venta {saved.number} guardada en el teléfono.{saved.change ? ` Vuelto: ${saved.change}.` : ""}
+          Venta {saved.number} guardada en este {place}.{saved.change ? ` Vuelto: ${saved.change}.` : ""}
         </Alert>
       )}
 
@@ -186,7 +187,7 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
       )}
 
       {cart.length > 0 && (
-        <div className="fixed inset-x-0 bottom-[calc(var(--app-tabs-height,4rem)+env(safe-area-inset-bottom))] z-10 flex items-center justify-between gap-3 border-t bg-background px-4 py-3">
+        <div className="fixed right-0 left-[var(--app-sidebar-width,0px)] bottom-[calc(var(--app-tabs-height,4rem)+env(safe-area-inset-bottom))] z-10 flex items-center justify-between gap-3 border-t bg-background px-4 py-3">
           <span className="text-lg font-semibold" data-testid="pos-total">
             {formatMoney(total, currency)}
           </span>
@@ -274,6 +275,7 @@ function PosCheckout({
   const [method, setMethod] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const place = usePosPlace();
 
   const same = paidIn === currency;
   const { unit, per } = rateQuote(paidIn, currency);
@@ -320,7 +322,7 @@ function PosCheckout({
     try {
       await onConfirm([...payments, paid]);
     } catch {
-      setError("No se pudo guardar la venta en el teléfono. Inténtalo de nuevo; no se ha perdido nada.");
+      setError(`No se pudo guardar la venta en este ${place}. Inténtalo de nuevo; no se ha perdido nada.`);
       setSaving(false);
     }
   }

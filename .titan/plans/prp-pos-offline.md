@@ -296,6 +296,12 @@ lector y, si hace falta, venta por peso.
 - **Error:** `getByRole("heading", { name: "Entrega" })` coincide también con «Entregado». **Fix:** `exact: true`.
 - **Error:** tras cambiar `core`, Turbopack dio 500 («module factory is not available»). **Fix:** reiniciar el servidor. `qa:orders` toma el puerto de `QA_STORE_URL`, no de `QA_BASE_URL`.
 
+### 2026-10-31: Caja también en la web (pedido de Roberto)
+- **Por qué:** quien tiene iPhone aún no tiene app; debe poder vender desde el navegador, aunque pierda lo de sin conexión.
+- **Piezas:** Admin › Caja con pestañas **Vender** (`PosScreen`, la misma de Kshop Admin, con IndexedDB) y **Resumen**. `usePosPlace` dice «teléfono» o «navegador». `SidebarSignOut` avisa si quedan ventas sin subir.
+- **Decisiones técnicas:** el resumen no desmonta la venta en curso. En sección gestionada el personal solo ve Resumen. Con la página abierta y sin red sigue vendiendo y sube al volver la red, con un aviso de no recargar; la web no promete abrir sin internet (no hay service worker). La barra de cobrar usa `--app-tabs-height` y `--app-sidebar-width`, que pone la web.
+- **Medido:** `qa:pos` 35/35 (tamaño iPhone y escritorio, sin red, sección gestionada), `qa:pos-offline` 36/36, typecheck, lint, tests y `build` en verde. **No probado en un iPhone real** (Safari).
+
 ---
 
 ## Gotchas

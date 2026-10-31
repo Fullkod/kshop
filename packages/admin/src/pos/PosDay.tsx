@@ -2,6 +2,7 @@
 
 import { formatMoney, posCartTotal, posDaySummary, type CurrencyCode } from "@kshop/core";
 import { Alert, Badge, Button, Card, useConfirm } from "@kshop/ui";
+import { usePosPlace } from "./PosStatus";
 import type { QueuedSale } from "./storage";
 
 /** The day on this phone, per currency as it was charged, and what happened to each sale. */
@@ -21,6 +22,7 @@ export function PosDay({
   onVoid: (sale: QueuedSale) => Promise<void>;
 }) {
   const { confirm } = useConfirm();
+  const place = usePosPlace();
   const summary = posDaySummary(sales, currency);
   const held = sales.filter((s) => s.held && !s.uploaded);
   const pending = sales.filter((s) => !s.uploaded);
@@ -43,7 +45,7 @@ export function PosDay({
     <Card className="flex flex-col gap-3" data-testid="pos-day">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="font-semibold">Hoy en este teléfono</h2>
+          <h2 className="font-semibold">Hoy en este {place}</h2>
           <p className="text-sm" data-testid="pos-day-summary">
             {summary.count} {summary.count === 1 ? "venta" : "ventas"}
             {summary.cash.map((c) => ` · ${formatMoney(c.amount, c.currency)}`).join("")}
@@ -65,12 +67,14 @@ export function PosDay({
       {held.length > 0 && (
         <Alert variant="destructive" data-testid="pos-held">
           {held.length === 1 ? "1 venta retenida" : `${held.length} ventas retenidas`}:{" "}
-          {held[0]?.held?.message} Siguen guardadas en el teléfono y se suben solas cuando se resuelva.
+          {held[0]?.held?.message} Siguen guardadas en este {place} y se suben solas cuando se resuelva.
         </Alert>
       )}
       {pending.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          Si desinstalas la app, las ventas sin subir se pierden.
+          {place === "teléfono"
+            ? "Si desinstalas la app, las ventas sin subir se pierden."
+            : "Las ventas sin subir solo están en este navegador: si borras sus datos, se pierden."}
         </p>
       )}
 

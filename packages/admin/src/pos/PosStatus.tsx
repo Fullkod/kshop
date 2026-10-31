@@ -20,6 +20,11 @@ export function usePosStorage(): PosStorage {
   return config.posStorage ?? (webStorage ??= createIndexedDbPosStorage());
 }
 
+/** Where the sales are kept, in the words of the screen: the app's files or the browser of the web admin. */
+export function usePosPlace(): "teléfono" | "navegador" {
+  return useSession().config.posStorage ? "teléfono" : "navegador";
+}
+
 export function usePosCatalog(storeId: string, online: boolean) {
   const { api } = useSession();
   const storage = usePosStorage();
@@ -92,24 +97,29 @@ export function PosStatus({
   pending: number | null;
 }) {
   const { snapshot, loaded, refreshing, failed, refresh } = catalog;
+  const place = usePosPlace();
 
   const products = useMemo(() => snapshot?.items.length ?? 0, [snapshot]);
 
   return (
     <Card className="flex flex-col gap-3" data-testid="pos-status">
-      <h2 className="text-lg font-semibold">Caja</h2>
+      {place === "teléfono" && <h2 className="text-lg font-semibold">Caja</h2>}
       {!online && (
-        <Alert data-testid="pos-offline">Sin conexión. Lo guardado en este teléfono sigue disponible.</Alert>
+        <Alert data-testid="pos-offline">
+          {place === "teléfono"
+            ? "Sin conexión. Lo guardado en este teléfono sigue disponible."
+            : "Sin conexión. Puedes seguir vendiendo, pero no recargues ni cierres esta página: sin internet no vuelve a abrirse."}
+        </Alert>
       )}
       {!loaded ? (
-        <p className="text-sm text-muted-foreground">Leyendo el teléfono…</p>
+        <p className="text-sm text-muted-foreground">Leyendo el {place}…</p>
       ) : snapshot ? (
         <p className="text-sm" data-testid="pos-catalog">
           Catálogo {catalogAge(snapshot.savedAt)}: {products} productos.
         </p>
       ) : (
         <Alert variant="destructive" data-testid="pos-no-catalog">
-          Este teléfono aún no tiene el catálogo.{" "}
+          Este {place} aún no tiene el catálogo.{" "}
           {online ? "Descárgalo para vender." : "Conéctalo a internet una vez."}
         </Alert>
       )}
