@@ -87,6 +87,8 @@ select tests.eq('anon: cannot upload to a store folder', tests.affected(format(
 -- ---------------------------------------------------------------------------
 
 select tests.login('owner_a');
+select tests.eq('owner A: cannot upload an import to B', tests.affected(format(
+  $$insert into storage.objects (bucket_id, name) values ('store-imports', 'stores/%s/imports/intruder.xlsx')$$, tests.fx('store_b'))), -1);
 select tests.eq('owner A: sees the 2 members of A',
   (select count(*) from public.store_members where store_id = tests.fx('store_a'))::int, 2);
 select tests.eq('owner A: sees no members of B',
@@ -176,6 +178,10 @@ select tests.eq('superadmin: uploads to the folder of any store', tests.affected
   $$insert into storage.objects (bucket_id, name) values ('store-media', 'stores/%s/platform.png')$$, tests.fx('store_b'))), 1);
 select tests.eq('superadmin: cannot upload outside stores/', tests.affected(
   $$insert into storage.objects (bucket_id, name) values ('store-media', 'loose/platform.png')$$), -1);
+select tests.eq('superadmin: uploads an import to any store', tests.affected(format(
+  $$insert into storage.objects (bucket_id, name) values ('store-imports', 'stores/%s/imports/platform.xlsx')$$, tests.fx('store_b'))), 1);
+select tests.eq('superadmin: an import only goes in the imports folder', tests.affected(format(
+  $$insert into storage.objects (bucket_id, name) values ('store-imports', 'stores/%s/other/platform.xlsx')$$, tests.fx('store_b'))), -1);
 select tests.check('superadmin: still cannot read private config via API roles',
   tests.throws('select * from private.store_private_config'));
 

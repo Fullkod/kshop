@@ -5,6 +5,7 @@
 //   node scripts/e2e-catalog.mjs
 
 import { createClient } from "@supabase/supabase-js";
+import ExcelJS from "exceljs";
 import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -176,6 +177,48 @@ async function run() {
   check("parent from another store -> 400", r.status === 400, r);
   r = await ownerA("DELETE", `${A}/categories/${catId}`);
   check("category with children cannot be deleted -> 409", r.status === 409, r);
+
+  // Editing and moving a branch: every update sets parent_id, which fires categories_move_descendants.
+  const childCat = (await service.from("categories").select("id").eq("store_id", storeA.id).eq("name", "Vestidos").single()).data.id;
+  r = await ownerA("PATCH", `${A}/categories/${childCat}`, { name: "Vestidos largos", parentId: catId });
+  check("edit a category -> 200", r.status === 200, r);
+  r = await ownerA("POST", `${A}/categories`, { name: "Ropa" });
+  const rootCat = r.body.id;
+  r = await ownerA("PATCH", `${A}/categories/${catId}`, { name: "Mujer", parentId: rootCat });
+  check("move a branch -> 200", r.status === 200, r);
+  const { data: moved } = await service.from("categories").select("depth, path").eq("id", childCat).single();
+  const { data: rootRow } = await service.from("categories").select("path").eq("id", rootCat).single();
+  check("move a branch: the child goes with it", moved.depth === 3 && moved.path.startsWith(`${rootRow.path}.`), moved);
+  r = await ownerA("PATCH", `${A}/categories/${catId}`, { name: "Mujer", parentId: null });
+  check("move a branch back to the root -> 200", r.status === 200, r);
+  const { data: back } = await service.from("categories").select("depth").eq("id", childCat).single();
+  check("move back: the child follows", back.depth === 2, back);
+  r = await ownerA("PATCH", `${A}/categories/${catId}`, { name: "Mujer", parentId: childCat });
+  check("a category cannot move inside itself", r.status >= 400 && r.status < 500, r);
+  await ownerA("DELETE", `${A}/categories/${rootCat}`);
+
+  // The Excel import from the platform: the file goes straight to store-imports with the superadmin's session.
+  const superadminStorage = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
+    auth: { persistSession: false },
+    global: { headers: { Authorization: `Bearer ${await token(USERS.superadmin)}` } },
+  }).storage;
+  const importBook = new ExcelJS.Workbook();
+  importBook.addWorksheet("Productos").addRows([["SKU", "Nombre", "Precio"], ["IMP-1", "Producto", 100]]);
+  const importFile = Buffer.from(await importBook.xlsx.writeBuffer());
+  const importKey = `stores/${storeA.id}/imports/${randomBytes(6).toString("hex")}.xlsx`;
+  const xlsx = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  let upload = await superadminStorage.from("store-imports").upload(importKey, importFile, { contentType: xlsx });
+  check("superadmin: uploads an import to any store", !upload.error, upload.error);
+  upload = await superadminStorage.from("store-imports").upload(`stores/${storeA.id}/other/x.xlsx`, importFile, { contentType: xlsx });
+  check("superadmin: an import only goes in the imports folder", !!upload.error, upload.data);
+  const ownerBStorage = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
+    auth: { persistSession: false },
+    global: { headers: { Authorization: `Bearer ${await token(USERS.ownerB)}` } },
+  }).storage;
+  upload = await ownerBStorage.from("store-imports").upload(`stores/${storeA.id}/imports/intruso.xlsx`, importFile, { contentType: xlsx });
+  check("owner of B: cannot upload an import to A", !!upload.error, upload.data);
+  r = await superadmin("POST", `${A}/imports`, { fileKey: importKey, fileName: "plataforma.xlsx", productTypeId: typeId });
+  check("superadmin: the import of that file starts", r.status === 201, r);
 
   const product = (sku, status = "draft") => ({
     productTypeId: typeId,
