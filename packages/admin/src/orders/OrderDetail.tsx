@@ -503,6 +503,8 @@ function PaymentsCard({
     rateToOrder !== null && Number(amount) > 0
       ? paymentPreview({ amount: Number(amount), rateToOrder, remaining, sameCurrency: same })
       : null;
+  // Change too small for a cent of the paid currency can only go in the order currency.
+  const changeCurrency = preview && preview.changeInPaid > 0 ? changeIn : currency;
 
   function startPayment() {
     setPaidIn(currency);
@@ -540,11 +542,15 @@ function PaymentsCard({
       const file = data.get("evidence");
       const evidencePath = file instanceof File && file.size > 0 ? await upload(file) : undefined;
       const change =
-        preview && preview.change > 0 ? (changeIn === currency ? preview.change : preview.changeInPaid) : 0;
+        preview && preview.change > 0
+          ? changeCurrency === currency
+            ? preview.change
+            : preview.changeInPaid
+          : 0;
       const ok = await onRecord({
         amount: Number(amount),
         ...(same ? {} : { currency: paidIn, rate: rateToOrder }),
-        ...(change > 0 ? { changeAmount: change, changeCurrency: changeIn } : {}),
+        ...(change > 0 ? { changeAmount: change, changeCurrency } : {}),
         paymentMethodId: String(data.get("method") ?? "") || undefined,
         reference: String(data.get("reference") ?? "") || undefined,
         evidencePath,
@@ -666,7 +672,7 @@ function PaymentsCard({
                 <>
                   <p className="font-medium">
                     Vuelto:{" "}
-                    {changeIn === currency
+                    {changeCurrency === currency
                       ? formatMoney(preview.change, currency)
                       : formatMoney(preview.changeInPaid, paidIn)}
                   </p>

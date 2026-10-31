@@ -55,6 +55,7 @@ const email = owner.user.email;
 
 const browser = await chromium.launch({ executablePath: chromiumPath(), headless: true });
 let orderId = null;
+let changeOrderId = null;
 let token = null;
 const api = (method, path, body) =>
   fetch(`http://localhost:${port || 3000}/api/v1/stores/${store.id}${path}`, {
@@ -157,8 +158,38 @@ try {
   const history = await page.getByRole("heading", { name: "Historial" }).locator("..").innerText();
   check(`the history shows the payment in ${other}`, new RegExp(`Pago registrado[^\\n]*${other}`).test(history), history);
   await page.screenshot({ path: join(OUT, "cobro-mixto-pagado.png"), fullPage: true });
+
+  // Too many dollars: it says the change, in pesos or in dollars, and the order ends paid exactly.
+  const res2 = await api("POST", "/orders", {
+    idempotencyKey: `qa-payments-change-${Date.now()}`,
+    customer: { name: "QA vuelto", phone: "+5353123456" },
+    lines: [{ variantId: variants[0].id, quantity: 1 }],
+    shipping: { zoneId: agree.zone_id, methodId: agree.id },
+    notifyCustomer: false,
+  });
+  changeOrderId = (await res2.json()).orderId;
+  await api("POST", `/orders/${changeOrderId}/shipping`, { amount: 0 });
+  const { data: row2 } = await service.from("orders").select("total, currency").eq("id", changeOrderId).single();
+  const total2 = Number(row2.total);
+  await page.goto(`${BASE}/admin/orders/${changeOrderId}`);
+  await page.getByRole("button", { name: "Registrar pago" }).click();
+  await page.selectOption("#pay-currency", "USD");
+  await page.fill("#pay-rate", "850");
+  await page.fill("#pay-amount", "50");
+  const vuelto = page.getByRole("status").filter({ hasText: "Vuelto" });
+  await vuelto.waitFor({ timeout: 10000 });
+  const expected = 50 * 850 - total2;
+  check("change: says it in CUP", (await vuelto.innerText()).replace(/\D/g, "").includes(String(expected)), await vuelto.innerText());
+  await page.selectOption("#pay-change", "USD");
+  check("change: says it in USD", /USD/.test(await vuelto.innerText()), await vuelto.innerText());
+  await page.screenshot({ path: join(OUT, "cobro-vuelto-usd.png"), fullPage: true });
+  await page.getByRole("button", { name: "Guardar pago" }).click();
+  await page.getByText(/· vuelto/).first().waitFor({ timeout: 15000 });
+  const { data: paid2 } = await service.from("orders").select("paid_total, payment_status").eq("id", changeOrderId).single();
+  check("change: the order ends paid exactly", paid2.payment_status === "paid" && Number(paid2.paid_total) === total2, JSON.stringify(paid2));
 } finally {
   if (orderId) await api("POST", `/orders/${orderId}/cancel`, { reason: "QA" });
+  if (changeOrderId) await api("POST", `/orders/${changeOrderId}/cancel`, { reason: "QA" });
   await browser.close();
 }
 
