@@ -1,8 +1,14 @@
 # Tienda Minimercado (cliente real)
 
-Fecha: 2026-10-30. Tienda `minimercado` (Pro · Cortesía), abierta al público en físico; aún sin productos, envíos ni métodos
+Fecha: 2026-10-30. Tienda `minimercado` (Pro · Cortesía), abierta al público en físico; aún sin envíos ni métodos
 de pago. Materiales: `_materiales/kshop/clients/minimercado/` (`images/`, `brand/kit/`, valores de apariencia en
 `brand/kit/tienda/apariencia-kshop.md`).
+
+## Catálogo
+Importado el 2026-10-30 con la sesión del dueño (entonces el superadmin no podía; ya puede, ver `pendiente-superadmin-importar-excel.md`):
+174 productos de tipo «General», SKU `MM-0001`…, precios en CUP. Sale de cruzar `LEO.xlsx` con las fotos de la tienda; el
+archivo, las imágenes y lo que falta confirmar están en `catalogo/` de los materiales (`catalogo.md`). En Borrador quedaron
+los productos sin foto, el tabaco, los de precio dudoso y los que no están en el Excel.
 
 ## Portada montada
 - Tema del kit (Fresco + 12 colores, Poppins + DM Sans) y logo `minimercado-logo-tienda.png`.

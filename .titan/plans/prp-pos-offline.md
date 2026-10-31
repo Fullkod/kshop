@@ -1,6 +1,6 @@
 # PRP POS: punto de venta sin conexión en Kshop Admin
 
-> **Estado**: APROBADO por Roberto (2026-10-30): P1–P4, P6 y P7 según la recomendación; P5 cambia (ver tabla). En implementación
+> **Estado**: APROBADO por Roberto (2026-10-30): P1–P4, P6 y P7 según la recomendación; P5 cambia (ver tabla). **Fases 1 y 2 hechas y en producción (2026-10-30); sigue la fase 3**
 > **Fecha**: 2026-10-30
 > **Proyecto**: Kshop · **Tarea relacionada**: KSH0002 (Tasknic, «pagar una orden con diferentes monedas»)
 > **Primer caso real**: tienda `minimercado` (`project/tienda-minimercado.md`), abierta al público en físico.
@@ -194,20 +194,21 @@ alter table public.pos_sales enable row level security;  -- lectura: personal de
 > Solo fases. Las subtareas se generan al entrar en cada una con `tf-bucle-agentico`. Toda migración va primero a prueba y
 > luego a producción. Pruebas en serie, sin nadie usando la web y con WhatsApp en «Simulado».
 
-### Fase 1: Cobro en varias monedas en pedidos (KSH0002)
+### Fase 1: Cobro en varias monedas en pedidos (KSH0002) — HECHA
 **Objetivo**: un pedido normal se cobra en varias monedas, con tasa sugerida y ajustable, lo que falta y el vuelto; el saldo,
 la cancelación, Finanzas y Ventas de hoy cuadran por moneda.
 **Validación**: el ejemplo de 50 USD + CUP de los criterios de éxito en `e2e:orders` y `e2e:pro`; los pedidos existentes no
 cambian de saldo (comparación antes y después en prueba, incluida la tienda `klaushop`); `test:rls`; comparador de
 `admin_order`; QA en web y Kshop Admin.
 
-### Fase 2: Módulo `pos` y servidor de la venta
+### Fase 2: Módulo `pos` y servidor de la venta — HECHA
 **Objetivo**: módulo, canal, secciones y teléfono opcional; `pos/catalog` y `pos/sales` con `pos_record_sale` e idempotencia.
 **Validación**: `e2e:pos` por API (repetir no duplica, sin stock no falla y lo anota, sin WhatsApp, día correcto, 403 sin
 módulo, sin costo en la respuesta, cancelación devuelve stock); aislamiento entre tiendas en `supabase/tests/`; test de
 secciones; pantallas que leen el teléfono funcionando con null; medición del catálogo en la Tienda Demo.
 
 ### Fase 3: Arranque sin conexión y almacenamiento
+**Antes de empezar**: P5 cambió (buscar por nombre con trozos consecutivos primero y luego fraccionados; afecta a la fase 4).
 **Objetivo**: Kshop Admin arranca sin red con sesión previa; catálogo y cola guardados de forma duradera, con avisos de sin
 conexión en las demás pantallas.
 **Validación**: en un APK de prueba y en un Android real: modo avión, abrir la app, entrar; matar la app durante una
@@ -265,7 +266,8 @@ lector y, si hace falta, venta por peso.
   `pos_sales`, `pos_catalog` (paginada, sin costos), `pos_record_sale` (idempotente, con bloqueo asesor por clave) y
   `private.payment_terms`, que comparte el cálculo con `order_record_payment`. Rutas `pos/catalog` y `pos/sales`.
 - **Medido en prueba:** 777 variantes de la Tienda Demo, 231 KB sin comprimir y 3,4 s en 2 páginas.
-- **Producción:** las migraciones `20261108101200` y `20261108101300` **no están aplicadas**: se aplican junto con el deploy de este código.
+- **Producción:** migraciones y código aplicados el 2026-10-30, en ese orden: las 3 tiendas tienen el módulo, 0 ventas todavía. `test:rls` 739/740; el fallo era `09_apps_isolation`, que esperaba la versión 7 de Kshop Admin y la real ya es la 8 (arreglado y verificado en prueba).
+- **Tasa sugerida:** en producción sale de la tienda, no de elTOQUE, porque `private.market_rates` está vacía (falta `ELTOQUE_API_TOKEN` en Vercel, pendiente de Roberto desde la fase 6).
 - **Error:** una venta con un producto borrado rompía la función (`record "v_price" is not assigned yet`), justo lo que nunca debe fallar.
   **Fix:** asignar el record con nulos explícitos. **Aplicar en:** todo record de PL/pgSQL que se lea por una rama sin `select into`.
 - **Error:** dentro de un `if` de PL/pgSQL, el primer `then` termina la condición: un `case` ahí da «syntax error at end of input».

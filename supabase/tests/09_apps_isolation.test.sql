@@ -25,7 +25,7 @@ values
   (tests.fx('store_a'), 'com.fullkod.kshop.apps_test_a', 2, '1.1.0', 'stores/a/app/v2.apk', 6100000, true),
   (tests.fx('store_a'), 'com.fullkod.kshop.apps_test_a', 3, '1.2.0-beta', 'stores/a/app/v3.apk', null, false),
   (tests.fx('store_b'), 'com.fullkod.kshop.apps_test_b', 1, '1.0.0', 'stores/b/app/v1.apk', null, true),
-  (null, 'com.fullkod.kshop.admin', 7, '0.7.0', 'platform/admin/v7.apk', null, true);
+  (null, 'com.fullkod.kshop.admin', 99999, '0.7.0', 'platform/admin/v99999.apk', null, true);
 insert into public.store_app_requests (store_id, requested_by)
 values (tests.fx('store_a'), tests.fx('owner_a')), (tests.fx('store_b'), tests.fx('owner_b'));
 
@@ -52,7 +52,7 @@ select tests.check('the app id follows com.fullkod.kshop.<name>', tests.throws(f
 select tests.eq('app_info: the store app is available on Base and offers the latest published build',
   (select format('%s|%s|%s', i ->> 'available', i -> 'latest' ->> 'version_code', i -> 'latest' ->> 'version_name')
    from public.app_info(tests.fx('store_a')) i), 'true|2|1.1.0');
-select tests.eq('app_info: the admin app', (public.app_info() -> 'latest' ->> 'version_code'), '7');
+select tests.eq('app_info: the admin app', (public.app_info() -> 'latest' ->> 'version_code'), '99999');
 select tests.eq('app_info: an unknown store is not available',
   public.app_info(gen_random_uuid()) ->> 'available', 'false');
 

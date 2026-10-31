@@ -21,6 +21,8 @@ Detalle de cada error en la sección «Aprendizajes» de los PRP de las fases 1 
 - Prettier reformatea el GraphQL embebido: correr `pnpm codegen` después de formatear.
 
 ## Entorno de Roberto (Windows)
+- `pnpm db:query "…"` pasa por `cmd`: `>>`, `||` y `<>` se rompen (`->>` hasta crea un archivo suelto). Usar `jsonb_extract_path_text`, `concat()` y `!=`, o un script con `fetch` a la Management API.
+- Dentro de un `if` de PL/pgSQL el primer `then` termina la condición: un `case` ahí va entre paréntesis.
 - Node no resuelve `*.localhost` (ENOTFOUND): scripts → `http://localhost:3000`; el navegador sí.
 - El puerto 3100 es de otra app de Roberto: builds de prueba en 3200, compiladas con
   `NEXT_PUBLIC_PLATFORM_DOMAIN=kshop.localhost:3200`.
