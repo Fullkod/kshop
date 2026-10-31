@@ -309,7 +309,8 @@ export function OrderDetail({
           <PaymentsCard
             orderId={order.id}
             currency={currency as CurrencyCode}
-            remaining={total === null ? null : Math.max(0, total - paid)}
+            remaining={Math.max(0, (total ?? Number(order.subtotal) - Number(order.discountTotal)) - paid)}
+            shippingPending={total === null}
             loadRates={() => api.orders(store.id).paymentRates()}
             payments={payments}
             refunds={refunds}
@@ -452,6 +453,7 @@ function PaymentsCard({
   orderId,
   currency,
   remaining,
+  shippingPending,
   loadRates,
   payments,
   refunds,
@@ -463,7 +465,9 @@ function PaymentsCard({
 }: {
   orderId: string;
   currency: CurrencyCode;
-  remaining: number | null;
+  /** Without a total yet (shipping to agree), of the subtotal. */
+  remaining: number;
+  shippingPending: boolean;
   loadRates: () => Promise<PaymentRates>;
   payments: {
     id: string;
@@ -648,8 +652,9 @@ function PaymentsCard({
               )}
             </div>
           )}
-          {preview && remaining !== null && remaining > 0 && (
+          {preview && remaining > 0 && (
             <div className="flex flex-col gap-2 rounded-md bg-muted p-3 text-sm sm:col-span-2" role="status">
+              {shippingPending && <p>Envío por definir: se calcula sobre el subtotal.</p>}
               {!same && <p>Aplica {formatMoney(preview.applied, currency)} al pedido.</p>}
               {preview.missing > 0 && (
                 <p className="font-medium">Faltan {formatMoney(preview.missing, currency)}.</p>

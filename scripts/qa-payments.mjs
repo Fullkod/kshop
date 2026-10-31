@@ -81,6 +81,26 @@ try {
   const created = await res.json();
   if (res.status !== 201) throw new Error(`order: ${JSON.stringify(created)}`);
   orderId = created.orderId;
+
+  // Shipping still to agree: the form works on the subtotal and says so.
+  const { data: open } = await service.from("orders").select("subtotal, discount_total").eq("id", orderId).single();
+  const owed = Number(open.subtotal) - Number(open.discount_total);
+  const pending = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  await pending.goto(`${BASE}/admin/login`);
+  await pending.fill("#email", email);
+  await pending.fill("#password", env.DEMO_OWNER_PASSWORD);
+  await pending.click('button[type="submit"]');
+  await pending.waitForURL(`${BASE}/admin`, { timeout: 60000 });
+  await pending.goto(`${BASE}/admin/orders/${orderId}`);
+  await pending.getByRole("button", { name: "Registrar pago" }).click();
+  check("to agree: proposes the subtotal", Number(await pending.inputValue("#pay-amount")) === owed, await pending.inputValue("#pay-amount"));
+  await pending.fill("#pay-amount", String(owed / 2));
+  const note = pending.getByRole("status").filter({ hasText: "Envío por definir" });
+  await note.waitFor({ timeout: 10000 });
+  check("to agree: says what is missing of the subtotal", /Faltan/.test(await note.innerText()), await note.innerText());
+  await pending.screenshot({ path: join(OUT, "cobro-envio-por-definir.png"), fullPage: true });
+  await pending.context().close();
+
   await api("POST", `/orders/${orderId}/shipping`, { amount: 0 });
   const { data: row } = await service.from("orders").select("total, currency").eq("id", orderId).single();
   const total = Number(row.total);
