@@ -368,6 +368,13 @@ export type CheckoutResponse = {
 };
 
 /** Admin: «Ventas de hoy» (day in America/Havana). */
+/** KSH0002: each currency in a common unit, to suggest the rate of a payment (always editable). */
+export type PaymentRates = {
+  source: "eltoque" | "store" | null;
+  date: string | null;
+  values: Partial<Record<CurrencyCode, number>>;
+};
+
 /** Admin home (redesign R6): what to do, and with the sales_today module the week and what is owed (base currency). */
 /** Periods of the admin home KPIs: today, the last 7 days and this month (vs yesterday, the 7 before, last month). */
 export const HOME_PERIODS = ["day", "week", "month"] as const;
@@ -1004,6 +1011,7 @@ export function createApiClient(options: ApiClientOptions) {
         recordPayment: (orderId: string, input: OrderPaymentInput) => act(orderId, "payments", input),
         cancel: (orderId: string, reason?: string) => act(orderId, "cancel", { reason }),
         addNote: (orderId: string, text: string) => act(orderId, "notes", { text }),
+        paymentRates: () => request<PaymentRates>("GET", `${base}/payment-rates`),
         salesToday: () => request<SalesToday>("GET", `${base}/sales-today`),
         summary: () => request<HomeSummary>("GET", `${base}/summary`),
       };

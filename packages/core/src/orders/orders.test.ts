@@ -4,14 +4,20 @@ import { describe, expect, it } from "vitest";
 import {
   ORDER_STATUSES,
   ORDER_TRANSITIONS,
+  amountToSettle,
   canTransition,
   checkoutSchema,
   customerRegisterSchema,
   isStalePending,
   needsShippingCost,
   normalizePhone,
+  orderPaymentSchema,
   orderWhatsappText,
+  paymentPreview,
+  quoteToOrderRate,
+  rateQuote,
   shippingMethodSchema,
+  suggestedQuote,
   type WhatsappOrder,
 } from "../index";
 
@@ -32,7 +38,9 @@ describe("normalizePhone", () => {
   });
 
   it("the same person always gets the same phone (one account per store)", () => {
-    expect(customerRegisterSchema.parse({ firstName: "Ana", phone: "5123-4567", password: "secreta123" }).phone).toBe(
+    expect(
+      customerRegisterSchema.parse({ firstName: "Ana", phone: "5123-4567", password: "secreta123" }).phone,
+    ).toBe(
       customerRegisterSchema.parse({ firstName: "Ana", phone: "+53 51234567", password: "secreta123" }).phone,
     );
   });
@@ -47,7 +55,9 @@ describe("order states", () => {
       .join("\n");
     const body = /function private\.order_transition_allowed[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(sql)?.[1] ?? "";
     const pairs = [...body.matchAll(/\('(\w+)', '(\w+)'\)/g)].map((m) => `${m[1]}>${m[2]}`).sort();
-    const core = ORDER_STATUSES.flatMap((from) => ORDER_TRANSITIONS[from].map((to) => `${from}>${to}`)).sort();
+    const core = ORDER_STATUSES.flatMap((from) =>
+      ORDER_TRANSITIONS[from].map((to) => `${from}>${to}`),
+    ).sort();
     expect(pairs.length).toBeGreaterThan(0);
     expect(core).toEqual(pairs);
   });
@@ -87,8 +97,12 @@ describe("schemas", () => {
 
   it("pickup needs a warehouse and to_agree has no price", () => {
     expect(shippingMethodSchema.safeParse({ type: "pickup", name: "Tienda" }).success).toBe(false);
-    expect(shippingMethodSchema.safeParse({ type: "to_agree", name: "A convenir", price: 5 }).success).toBe(false);
-    expect(shippingMethodSchema.safeParse({ type: "delivery", name: "Mensajería", price: 200 }).success).toBe(true);
+    expect(shippingMethodSchema.safeParse({ type: "to_agree", name: "A convenir", price: 5 }).success).toBe(
+      false,
+    );
+    expect(shippingMethodSchema.safeParse({ type: "delivery", name: "Mensajería", price: 200 }).success).toBe(
+      true,
+    );
   });
 });
 
@@ -124,5 +138,73 @@ describe("orderWhatsappText", () => {
     expect(text.length).toBeLessThanOrEqual(1800);
     expect(text).toMatch(/… y \d+ productos más/);
     expect(text).toContain(order.url);
+  });
+});
+
+describe("payments in another currency (KSH0002)", () => {
+  it("50 USD at 320 of 20 000 CUP leaves 4 000 CUP", () => {
+    expect(paymentPreview({ amount: 50, rateToOrder: 320, remaining: 20_000, sameCurrency: false })).toEqual({
+      applied: 16_000,
+      missing: 4_000,
+      change: 0,
+      changeInPaid: 0,
+    });
+  });
+
+  it("gives change in either currency when it pays too much", () => {
+    expect(paymentPreview({ amount: 50, rateToOrder: 320, remaining: 15_000, sameCurrency: false })).toEqual({
+      applied: 15_000,
+      missing: 0,
+      change: 1_000,
+      changeInPaid: 3.13,
+    });
+  });
+
+  it("settles when the rate lands within one cent of the balance", () => {
+    const rate = quoteToOrderRate(333, "CUP", "USD");
+    const preview = paymentPreview({
+      amount: 5770.89,
+      rateToOrder: rate,
+      remaining: 17.33,
+      sameCurrency: false,
+    });
+    expect(preview).toMatchObject({ applied: 17.33, missing: 0, change: 0 });
+  });
+
+  it("does not round a payment in the same currency", () => {
+    expect(
+      paymentPreview({ amount: 99.99, rateToOrder: 1, remaining: 100, sameCurrency: true }).missing,
+    ).toBe(0.01);
+  });
+
+  it("without a known balance it all applies", () => {
+    expect(
+      paymentPreview({ amount: 10, rateToOrder: 320, remaining: null, sameCurrency: false }),
+    ).toMatchObject({
+      applied: 3_200,
+      change: 0,
+    });
+  });
+
+  it("quotes with the stronger currency as the unit", () => {
+    expect(rateQuote("USD", "CUP")).toEqual({ unit: "USD", per: "CUP" });
+    expect(rateQuote("CUP", "USD")).toEqual({ unit: "USD", per: "CUP" });
+    expect(quoteToOrderRate(320, "USD", "CUP")).toBe(320);
+    expect(quoteToOrderRate(320, "CUP", "USD")).toBe(1 / 320);
+    expect(suggestedQuote("USD", "CUP", { CUP: 1, USD: 320 })).toBe(320);
+    expect(suggestedQuote("CUP", "USD", { CUP: 1, USD: 320 })).toBe(320);
+    expect(suggestedQuote("EUR", "CUP", { CUP: 1, USD: 320 })).toBeNull();
+  });
+
+  it("knows how much of the other currency settles the balance", () => {
+    expect(amountToSettle(4_000, 320)).toBe(12.5);
+    expect(amountToSettle(17.33, 1 / 333)).toBe(5770.89);
+  });
+
+  it("the change needs its currency", () => {
+    expect(orderPaymentSchema.safeParse({ amount: 50, changeAmount: 3 }).success).toBe(false);
+    expect(orderPaymentSchema.safeParse({ amount: 50, changeAmount: 3, changeCurrency: "CUP" }).success).toBe(
+      true,
+    );
   });
 });

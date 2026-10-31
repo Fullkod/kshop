@@ -177,13 +177,28 @@ export type PaymentMethodInput = z.infer<typeof paymentMethodSchema>;
 
 export const orderTransitionSchema = z.object({ to: z.enum(ORDER_STATUSES).exclude(["cancelled"]) });
 export const orderShippingSchema = z.object({ amount: money });
-export const orderPaymentSchema = z.object({
-  amount: money.refine((v) => v > 0, "Debe ser mayor que 0."),
-  paymentMethodId: uuid.optional(),
-  reference: optionalText(120),
-  /** Path in store-media: stores/{storeId}/payments/... */
-  evidencePath: z.string().trim().max(300).optional(),
-});
+export const orderPaymentSchema = z
+  .object({
+    amount: money.refine((v) => v > 0, "Debe ser mayor que 0."),
+    /** Without it, the order currency. */
+    currency: currencyCodeSchema.optional(),
+    /** Units of the order currency per 1 of `currency`; the server requires it when they differ. */
+    rate: z.coerce
+      .number({ error: "Escribe un número." })
+      .positive("Debe ser mayor que 0.")
+      .max(1_000_000)
+      .optional(),
+    changeAmount: money.refine((v) => v > 0, "Debe ser mayor que 0.").optional(),
+    changeCurrency: currencyCodeSchema.optional(),
+    paymentMethodId: uuid.optional(),
+    reference: optionalText(120),
+    /** Path in store-media: stores/{storeId}/payments/... */
+    evidencePath: z.string().trim().max(300).optional(),
+  })
+  .refine((v) => (v.changeAmount === undefined) === (v.changeCurrency === undefined), {
+    message: "Indica el vuelto y su moneda.",
+    path: ["changeCurrency"],
+  });
 export type OrderPaymentInput = z.infer<typeof orderPaymentSchema>;
 export const orderCancelSchema = z.object({ reason: optionalText(300) });
 export const orderNoteSchema = z.object({ text: text(1, 1000) });

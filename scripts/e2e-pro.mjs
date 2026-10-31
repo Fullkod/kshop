@@ -583,6 +583,42 @@ async function run() {
   r = await ownerA("DELETE", `${A}/finance/expenses/${expenseId}`);
   check("expenses: delete -> 204", r.status === 204, r);
 
+  // KSH0002: the till per currency as received, the equivalent at the rate agreed on each payment (not the store's).
+  const collectedOf = (summary, currency) => summary.collected.find((x) => x.currency === currency)?.amount ?? 0;
+  const before = (await ownerA("GET", `${A}/finance/summary?${period}`)).body;
+  const o4 = await order("CUP", [{ variantId: variants["BOL-1"], quantity: 1 }], "o4");
+  await ownerA("POST", `${A}/orders/${o4}/shipping`, { amount: 0 });
+  const { data: o4row } = await service.from("orders").select("total").eq("id", o4).single();
+  const t4 = Number(o4row.total);
+  await ownerA("POST", `${A}/orders/${o4}/payments`, { amount: 2, currency: "USD", rate: t4 / 4 });
+  r = await ownerA("POST", `${A}/orders/${o4}/payments`, {
+    amount: 1,
+    currency: "USD",
+    rate: t4,
+    changeAmount: round(t4 / 2),
+    changeCurrency: "CUP",
+  });
+  const { data: o4paid } = await service.from("orders").select("paid_total, payment_status").eq("id", o4).single();
+  check("mixed: 3 USD with change in CUP settle the order", o4paid.payment_status === "paid", o4paid);
+  const after = (await ownerA("GET", `${A}/finance/summary?${period}`)).body;
+  check("mixed: the dollars count as dollars", round(collectedOf(after, "USD") - collectedOf(before, "USD")) === 3, after.collected);
+  check(
+    "mixed: the change leaves the CUP of the till",
+    Math.abs(collectedOf(after, "CUP") - collectedOf(before, "CUP") + t4 / 2) < 0.02,
+    after.collected,
+  );
+  check(
+    "mixed: the equivalent is what was applied at the agreed rate",
+    Math.abs(after.totals.collected - before.totals.collected - t4) < 0.02,
+    { before: before.totals.collected, after: after.totals.collected, t4 },
+  );
+  r = await ownerA("GET", `${A}/finance/daily?${period}`);
+  const dailyCollected = r.body.days.reduce((sum, d) => sum + d.collectedEq, 0);
+  check("mixed: the daily close adds up to the summary", Math.abs(dailyCollected - after.totals.collected) < 0.02, {
+    dailyCollected,
+    summary: after.totals.collected,
+  });
+
   const exp = await fetch(`${APP}/api/v1${A}/finance/export?${period}`, { headers: auth });
   const xwb = new ExcelJS.Workbook();
   await xwb.xlsx.load(await exp.arrayBuffer());

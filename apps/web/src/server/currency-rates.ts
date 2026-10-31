@@ -1,6 +1,6 @@
 import "server-only";
-import type { CurrencyCode } from "@kshop/core";
-import type { CurrencyRatesResponse } from "@kshop/data";
+import { CURRENCY_CODES, type CurrencyCode } from "@kshop/core";
+import type { CurrencyRatesResponse, PaymentRates } from "@kshop/data";
 import { serverEnv } from "./env";
 import { getServiceClient } from "./supabase";
 
@@ -62,7 +62,9 @@ export async function getMarketRates(): Promise<MarketRates | null> {
     await db.rpc("market_rate_put", { p_source: "eltoque", p_rate_date: today, p_rates: rates });
     return { date, cupPer: toCupPer(rates) };
   } catch (error) {
-    console.error("elTOQUE rate refresh failed.", { message: error instanceof Error ? error.message : String(error) });
+    console.error("elTOQUE rate refresh failed.", {
+      message: error instanceof Error ? error.message : String(error),
+    });
     return cached ? { date: cached.rate_date, cupPer: toCupPer(cached.rates) } : null;
   }
 }
@@ -124,4 +126,19 @@ export async function getCurrencyRates(storeId: string): Promise<CurrencyRatesRe
       .sort((a, b) => Number(b.isBase) - Number(a.isBase) || a.currency.localeCompare(b.currency)),
     reference: market ? { source: "eltoque", date: market.date } : null,
   };
+}
+
+/** KSH0002: elTOQUE when it has every currency, otherwise the rates the store set. */
+export async function getPaymentRates(storeId: string): Promise<PaymentRates> {
+  const market = await getMarketRates();
+  if (market && CURRENCY_CODES.every((c) => market.cupPer[c])) {
+    return { source: "eltoque", date: market.date, values: market.cupPer };
+  }
+  const { data, error } = await getServiceClient()
+    .from("store_currencies")
+    .select("currency, rate_to_base")
+    .eq("store_id", storeId);
+  if (error) throw error;
+  const values = Object.fromEntries((data ?? []).map((c) => [c.currency, Number(c.rate_to_base)]));
+  return { source: data?.length ? "store" : null, date: null, values };
 }

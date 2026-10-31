@@ -14,7 +14,8 @@ import { getServiceClient } from "@/server/supabase";
 // POST /api/v1/stores/{storeId}/orders/{orderId}/{action}  (staff+, module orders)
 //   transition { to }                       -> order_transition (409 invalid_transition / shipping_required)
 //   shipping   { amount }                   -> order_set_shipping ("to agree" orders)
-//   payments   { amount, paymentMethodId?, reference?, evidencePath? } -> order_record_payment
+//   payments   { amount, currency?, rate?, changeAmount?, changeCurrency?, paymentMethodId?, reference?, evidencePath? }
+//                                           -> order_record_payment
 //   cancel     { reason? }                  -> order_cancel (releases or restocks, refunds what was paid)
 //   notes      { text }                     -> internal note (never shown to the customer)
 export const POST = apiHandler(
@@ -58,6 +59,10 @@ export const POST = apiHandler(
           p_order_id: orderId,
           p_input: {
             amount: input.amount,
+            currency: input.currency ?? null,
+            rate: input.rate ?? null,
+            change_amount: input.changeAmount ?? null,
+            change_currency: input.changeCurrency ?? null,
             payment_method_id: input.paymentMethodId ?? null,
             reference: input.reference ?? null,
             evidence_path: input.evidencePath ?? null,

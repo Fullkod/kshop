@@ -138,6 +138,10 @@ export const AdminOrderQuery = graphql(`
                 evidencePath
                 paymentMethodId
                 createdAt
+                appliedAmount
+                rateToOrder
+                changeAmount
+                changeCurrency
               }
             }
           }

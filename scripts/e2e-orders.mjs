@@ -447,6 +447,70 @@ async function admin({ anon, ownerA, staffA, ownerB, storeA, storeB }, { A, B, o
   r = await ownerB("GET", `${orders}/sales-today`);
   check("sales today of A from B -> 403", r.status === 403, r);
 
+  // KSH0002: an order paid in several currencies, at the rate agreed on each payment.
+  const newOrderOf = async (total) => {
+    const res = await staffA("POST", orders, {
+      idempotencyKey: key(),
+      lines: [{ variantId: A.variants.S, quantity: 1 }],
+      customer: { name: "Cobro mixto", phone: "5359990022" },
+      shipping: { zoneId: A.zoneId, methodId: A.agreeId },
+    });
+    const { data } = await service.from("orders").select("id, subtotal").eq("public_token", res.body.order.publicToken).single();
+    await staffA("POST", `${orders}/${data.id}/shipping`, { amount: total - Number(data.subtotal) });
+    return data.id;
+  };
+  const balance = async (orderId) =>
+    (await service.from("orders").select("paid_total, payment_status").eq("id", orderId).single()).data;
+  const money = (rows) => rows.map((x) => `${Number(x.amount)} ${x.currency}`).sort().join(" + ");
+  const moves = async (table, orderId) =>
+    (await service.from(table).select("amount, currency, applied_amount").eq("order_id", orderId)).data;
+
+  const mixed = await newOrderOf(20_000);
+  r = await staffA("POST", `${orders}/${mixed}/payments`, { amount: 50, currency: "USD" });
+  check("mixed: another currency without a rate -> 400", r.status === 400, r);
+  r = await staffA("POST", `${orders}/${mixed}/payments`, { amount: 50, currency: "USD", rate: 320, reference: "Efectivo" });
+  check("mixed: 50 USD at 320 recorded", r.status === 200, r);
+  let bal = await balance(mixed);
+  check("mixed: 50 USD at 320 of 20 000 CUP leaves 4 000", Number(bal.paid_total) === 16_000 && bal.payment_status === "partially_paid", bal);
+  r = await staffA("POST", `${orders}/${mixed}/payments`, { amount: 4_000 });
+  bal = await balance(mixed);
+  check("mixed: the rest in CUP settles it", r.status === 200 && Number(bal.paid_total) === 20_000 && bal.payment_status === "paid", bal);
+  r = await staffA("GET", `${orders}/sales-today`);
+  check("mixed: sales today shows the dollars as dollars", r.body.received.some((x) => x.currency === "USD" && x.amount === 50), r.body);
+  r = await staffA("POST", `${orders}/${mixed}/cancel`, { reason: "Devuelve" });
+  bal = await balance(mixed);
+  check("mixed: cancel leaves the balance at 0", r.status === 200 && Number(bal.paid_total) === 0 && bal.payment_status === "refunded", bal);
+  check("mixed: cancel gives back each currency as it came",
+    money(await moves("refunds", mixed)) === "4000 CUP + 50 USD", await moves("refunds", mixed));
+
+  const withChange = await newOrderOf(15_000);
+  r = await staffA("POST", `${orders}/${withChange}/payments`, {
+    amount: 50, currency: "USD", rate: 320, changeAmount: 16_000, changeCurrency: "CUP",
+  });
+  check("change: more than what was paid -> 400", r.status === 400, r);
+  r = await staffA("POST", `${orders}/${withChange}/payments`, {
+    amount: 50, currency: "USD", rate: 320, changeAmount: 1_000, changeCurrency: "EUR",
+  });
+  check("change: in a third currency -> 400", r.status === 400, r);
+  r = await staffA("POST", `${orders}/${withChange}/payments`, {
+    amount: 50, currency: "USD", rate: 320, changeAmount: 1_000, changeCurrency: "CUP",
+  });
+  bal = await balance(withChange);
+  check("change: 50 USD with 1 000 CUP back settles 15 000", r.status === 200 && Number(bal.paid_total) === 15_000 && bal.payment_status === "paid", bal);
+  r = await staffA("POST", `${orders}/${withChange}/cancel`, {});
+  bal = await balance(withChange);
+  check("change: cancel leaves the balance at 0", r.status === 200 && Number(bal.paid_total) === 0 && bal.payment_status === "refunded", bal);
+  const { data: tillRows } = await service.from("payments").select("amount, currency, applied_amount, change_amount").eq("order_id", withChange);
+  check("change: the dollars go back and the pesos come back to the till",
+    money(await moves("refunds", withChange)) === "50 USD" &&
+      tillRows.some((x) => x.currency === "CUP" && Number(x.amount) === 1_000 && Number(x.applied_amount) === 0),
+    tillRows);
+
+  r = await staffA("GET", `${orders}/payment-rates`);
+  check("payment rates: staff reads the suggestion", r.status === 200 && "values" in r.body, r);
+  r = await ownerB("GET", `${orders}/payment-rates`);
+  check("payment rates of A from B -> 403", r.status === 403, r);
+
   // Customers.
   const { data: cust } = await service.from("customers").select("id").eq("store_id", storeA.id).limit(1).single();
   r = await staffA("PATCH", `/stores/${storeA.id}/customers/${cust.id}`, { isBlocked: true });

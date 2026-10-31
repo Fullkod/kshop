@@ -50,6 +50,7 @@
     "qa:dialogs": "node scripts/db-env.mjs node scripts/qa-dialogs.mjs",
     "qa:confirms": "node scripts/db-env.mjs node scripts/qa-confirms.mjs",
     "qa:orders": "node scripts/db-env.mjs node scripts/qa-orders.mjs",
+    "qa:payments": "node scripts/db-env.mjs node scripts/qa-payments.mjs",
     "qa:discounts": "node scripts/db-env.mjs node scripts/qa-discounts.mjs",
     "qa:notifications": "node scripts/db-env.mjs node scripts/qa-notifications.mjs",
     "klaushop:export": "node scripts/klaushop/export.mjs",

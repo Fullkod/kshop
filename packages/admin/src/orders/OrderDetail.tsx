@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  amountToSettle,
   CANCELLABLE_STATUSES,
+  CURRENCY_CODES,
   formatMoney,
   formatPhone,
   needsShippingCost,
@@ -10,14 +12,20 @@ import {
   ORDER_TRANSITIONS,
   orderCode,
   PAYMENT_STATUS_LABELS,
+  paymentPreview,
+  quoteToOrderRate,
+  rateQuote,
   SHIPPING_TYPE_LABELS,
   storePublicOrigin,
+  suggestedQuote,
   whatsappLink,
+  type CurrencyCode,
+  type OrderPaymentInput,
   type OrderStatus,
   type PaymentStatus,
   type ShippingType,
 } from "@kshop/core";
-import type { AdminOrderQuery, ResultOf } from "@kshop/data";
+import type { AdminOrderQuery, PaymentRates, ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, Card, cn, Input, Label, Select, useConfirm } from "@kshop/ui";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useApiAction } from "../catalog/use-catalog";
@@ -300,8 +308,9 @@ export function OrderDetail({
 
           <PaymentsCard
             orderId={order.id}
-            currency={currency}
+            currency={currency as CurrencyCode}
             remaining={total === null ? null : Math.max(0, total - paid)}
+            loadRates={() => api.orders(store.id).paymentRates()}
             payments={payments}
             refunds={refunds}
             methods={settings.paymentMethods}
@@ -333,7 +342,7 @@ export function OrderDetail({
                     : e.type === "note"
                       ? String(payload.text ?? "")
                       : payload.amount !== undefined
-                        ? money(Number(payload.amount))
+                        ? formatMoney(Number(payload.amount), String(payload.currency ?? currency))
                         : "";
                 return (
                   <li key={e.id} className="flex justify-between gap-3">
@@ -443,6 +452,7 @@ function PaymentsCard({
   orderId,
   currency,
   remaining,
+  loadRates,
   payments,
   refunds,
   methods,
@@ -452,12 +462,16 @@ function PaymentsCard({
   signedUrl,
 }: {
   orderId: string;
-  currency: string;
+  currency: CurrencyCode;
   remaining: number | null;
+  loadRates: () => Promise<PaymentRates>;
   payments: {
     id: string;
     amount: string;
     currency: string;
+    appliedAmount: string;
+    changeAmount?: string | null;
+    changeCurrency?: unknown;
     reference?: string | null;
     evidencePath?: string | null;
     createdAt: string;
@@ -465,27 +479,68 @@ function PaymentsCard({
   refunds: { id: string; amount: string; currency: string; reason?: string | null; createdAt: string }[];
   methods: { id: string; name: string; isActive: boolean }[];
   disabled: boolean;
-  onRecord: (input: {
-    amount: number;
-    paymentMethodId?: string;
-    reference?: string;
-    evidencePath?: string;
-  }) => Promise<boolean>;
+  onRecord: (input: OrderPaymentInput) => Promise<boolean>;
   upload: (file: File) => Promise<string>;
   signedUrl: (path: string) => Promise<string | null>;
 }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paidIn, setPaidIn] = useState<CurrencyCode>(currency);
+  const [amount, setAmount] = useState("");
+  const [quote, setQuote] = useState("");
+  const [rates, setRates] = useState<PaymentRates | null>(null);
+  const [changeIn, setChangeIn] = useState<CurrencyCode>(currency);
+
+  const same = paidIn === currency;
+  const { unit, per } = rateQuote(paidIn, currency);
+  const quoted = Number(quote);
+  const rateToOrder = same ? 1 : quoted > 0 ? quoteToOrderRate(quoted, paidIn, currency) : null;
+  const preview =
+    rateToOrder !== null && Number(amount) > 0
+      ? paymentPreview({ amount: Number(amount), rateToOrder, remaining, sameCurrency: same })
+      : null;
+
+  function startPayment() {
+    setPaidIn(currency);
+    setChangeIn(currency);
+    setAmount(remaining ? String(remaining) : "");
+    setQuote("");
+    setError(null);
+    setOpen(true);
+    if (!rates) loadRates().then(setRates, () => undefined);
+  }
+
+  function pickCurrency(code: CurrencyCode) {
+    setPaidIn(code);
+    const suggestion = code === currency || !rates ? null : suggestedQuote(code, currency, rates.values);
+    setQuote(suggestion ? String(suggestion) : "");
+    setAmount(
+      code === currency && remaining
+        ? String(remaining)
+        : suggestion && remaining
+          ? String(amountToSettle(remaining, quoteToOrderRate(suggestion, code, currency)))
+          : "",
+    );
+    setChangeIn(currency);
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     setError(null);
+    if (rateToOrder === null) {
+      setError(`Escribe cuántos ${per} vale 1 ${unit}.`);
+      return;
+    }
     try {
       const file = data.get("evidence");
       const evidencePath = file instanceof File && file.size > 0 ? await upload(file) : undefined;
+      const change =
+        preview && preview.change > 0 ? (changeIn === currency ? preview.change : preview.changeInPaid) : 0;
       const ok = await onRecord({
-        amount: Number(data.get("amount")),
+        amount: Number(amount),
+        ...(same ? {} : { currency: paidIn, rate: rateToOrder }),
+        ...(change > 0 ? { changeAmount: change, changeCurrency: changeIn } : {}),
         paymentMethodId: String(data.get("method") ?? "") || undefined,
         reference: String(data.get("reference") ?? "") || undefined,
         evidencePath,
@@ -501,7 +556,7 @@ function PaymentsCard({
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-semibold">Pagos</h3>
         {!disabled && !open && (
-          <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+          <Button size="sm" variant="outline" onClick={startPayment}>
             Registrar pago
           </Button>
         )}
@@ -514,6 +569,18 @@ function PaymentsCard({
           <li key={p.id} className="flex justify-between gap-2">
             <span>
               {formatMoney(Number(p.amount), p.currency)}
+              {p.currency !== currency && Number(p.appliedAmount) > 0 && (
+                <span className="text-muted-foreground">
+                  {" "}
+                  · aplica {formatMoney(Number(p.appliedAmount), currency)}
+                </span>
+              )}
+              {p.changeAmount && (
+                <span className="text-muted-foreground">
+                  {" "}
+                  · vuelto {formatMoney(Number(p.changeAmount), String(p.changeCurrency))}
+                </span>
+              )}
               {p.reference && <span className="text-muted-foreground"> · {p.reference}</span>}
               {p.evidencePath && <EvidenceLink path={p.evidencePath} signedUrl={signedUrl} />}
             </span>
@@ -533,15 +600,88 @@ function PaymentsCard({
       {open && (
         <form key={orderId} onSubmit={onSubmit} className="mt-4 grid gap-3 border-t pt-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
-            <Label htmlFor="pay-amount">Monto ({currency})</Label>
+            <Label htmlFor="pay-currency">Moneda que entrega</Label>
+            <Select
+              id="pay-currency"
+              value={paidIn}
+              onChange={(e) => pickCurrency(e.target.value as CurrencyCode)}
+            >
+              {CURRENCY_CODES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="pay-amount">Monto ({paidIn})</Label>
             <Input
               id="pay-amount"
               name="amount"
               inputMode="decimal"
-              defaultValue={remaining ?? ""}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
               required
             />
           </div>
+          {!same && (
+            <div className="flex flex-col gap-1 sm:col-span-2">
+              <Label htmlFor="pay-rate">
+                1 {unit} = ¿cuántos {per}?
+              </Label>
+              <Input
+                id="pay-rate"
+                inputMode="decimal"
+                value={quote}
+                onChange={(e) => setQuote(e.target.value)}
+                required
+              />
+              {rates?.source === "eltoque" && (
+                <p className="text-xs text-muted-foreground">
+                  Sugerida: tasa de elTOQUE del {rates.date}. Puedes cambiarla.
+                </p>
+              )}
+              {rates?.source === "store" && (
+                <p className="text-xs text-muted-foreground">
+                  Sugerida: la tasa de tu tienda. Puedes cambiarla.
+                </p>
+              )}
+            </div>
+          )}
+          {preview && remaining !== null && remaining > 0 && (
+            <div className="flex flex-col gap-2 rounded-md bg-muted p-3 text-sm sm:col-span-2" role="status">
+              {!same && <p>Aplica {formatMoney(preview.applied, currency)} al pedido.</p>}
+              {preview.missing > 0 && (
+                <p className="font-medium">Faltan {formatMoney(preview.missing, currency)}.</p>
+              )}
+              {preview.missing === 0 && preview.change === 0 && (
+                <p className="font-medium">Salda el pedido.</p>
+              )}
+              {preview.change > 0 && (
+                <>
+                  <p className="font-medium">
+                    Vuelto:{" "}
+                    {changeIn === currency
+                      ? formatMoney(preview.change, currency)
+                      : formatMoney(preview.changeInPaid, paidIn)}
+                  </p>
+                  {!same && (
+                    <div className="flex flex-col gap-1">
+                      <Label htmlFor="pay-change">Moneda del vuelto</Label>
+                      <Select
+                        id="pay-change"
+                        value={changeIn}
+                        onChange={(e) => setChangeIn(e.target.value as CurrencyCode)}
+                      >
+                        <option value={currency}>{currency}</option>
+                        <option value={paidIn}>{paidIn}</option>
+                      </Select>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
           <div className="flex flex-col gap-1">
             <Label htmlFor="pay-method">Método</Label>
             <Select id="pay-method" name="method" defaultValue="">
