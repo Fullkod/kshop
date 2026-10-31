@@ -38,6 +38,7 @@
 - [2026-10-29-donde-quedamos.md](project/2026-10-29-donde-quedamos.md) — **Dónde quedamos** (pausa 2026-10-29): R12–R14 hechos y en `main`, qué sigue (8.6, 8.7, logs R11) y cómo retomar
 - [credito-fullkod.md](project/credito-fullkod.md) — Crédito «Un producto de Fullkod» en plataforma, superadmin, admin y pie de todas las tiendas; **próximo:** ajuste en el admin para mostrarlo u ocultarlo en la tienda
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
+- [tienda-minimercado.md](project/tienda-minimercado.md) — Cliente real: portada y marca montadas sin catálogo; el superadmin ya puede subir a `store-media`
 
 ## feedback/ — Correcciones y preferencias
 
@@ -70,3 +71,4 @@
 - `prp-r12-superadmin-v3.md` — R12: visibilidad del menú de cada tienda (Visible / Gestionado / Oculto) con bloqueo de escrituras en `assertStoreWritable`, tabla `store_section_settings`, lista de tiendas v3 (`platform_stores_overview`, búsqueda, filtros, acciones) y accesos directos en la ficha; D1–D10; preguntas respondidas: básicas siempre visibles, texto «Gestionado por admin», todas las columnas — **HECHO** 2026-10-28 (en `main`)
 - `prp-r13-formularios-en-dialogo.md` — R13: crear/editar del admin en `Dialog` (`<dialog>` nativo, hoja en móvil), 17 pantallas, `qa:dialogs` — **HECHO** 2026-10-28 (en `main`)
 - `prp-r14-confirmaciones-en-dialogo.md` — R14: `window.confirm`/`prompt` → `ConfirmDialog` + `useConfirm()` sobre el `Dialog` de R13 (13 llamadas), confirmar borrados y acciones del superadmin que hoy no preguntan, cancelar pedido y anular factura en diálogo, regla `no-alert`; **HECHO** 2026-10-29 (`qa:confirms` 32/32; en `main`)
+- `prp-pos-offline.md` — POS sin conexión en Kshop Admin (módulo `pos`): catálogo en el teléfono, venta offline, cobro en varias monedas (KSH0002, fase 1), cola de subida; inventario en una segunda etapa; **PENDIENTE** de aprobación y de las preguntas P1–P7

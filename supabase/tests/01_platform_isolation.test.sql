@@ -172,6 +172,10 @@ select tests.eq('superadmin: sees both subscriptions',
   (select count(*) from public.subscriptions where store_id in (tests.fx('store_a'), tests.fx('store_b')))::int, 2);
 select tests.eq('superadmin: entitlements of B',
   (select count(*) from public.store_entitlements(tests.fx('store_b')))::int, 14);
+select tests.eq('superadmin: uploads to the folder of any store', tests.affected(format(
+  $$insert into storage.objects (bucket_id, name) values ('store-media', 'stores/%s/platform.png')$$, tests.fx('store_b'))), 1);
+select tests.eq('superadmin: cannot upload outside stores/', tests.affected(
+  $$insert into storage.objects (bucket_id, name) values ('store-media', 'loose/platform.png')$$), -1);
 select tests.check('superadmin: still cannot read private config via API roles',
   tests.throws('select * from private.store_private_config'));
 
