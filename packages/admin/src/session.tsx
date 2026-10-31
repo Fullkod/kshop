@@ -9,8 +9,9 @@ import {
   type AuthStorage,
   type SupabaseConfig,
 } from "@kshop/data";
-import type { Session, SupabaseClient } from "@supabase/supabase-js";
+import { isAuthRetryableFetchError, type Session, type SupabaseClient } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import type { PosStorage } from "./pos/storage";
 
 /** Where the staff session talks to: the web passes its env, the admin app its build config (PRP-7 D2, D6). */
 export type AdminConfig = {
@@ -24,6 +25,8 @@ export type AdminConfig = {
   authStorage?: AuthStorage;
   /** Camera or gallery of the phone for product photos (admin app, PRP-7 D8); the web uses the file input only. */
   takePhoto?: () => Promise<File | null>;
+  /** Where the counter keeps its sales and catalog; IndexedDB by default. The app passes native files. */
+  posStorage?: PosStorage;
 };
 
 type SessionContextValue = {
@@ -31,6 +34,8 @@ type SessionContextValue = {
   session: Session | null;
   /** False until the stored session (or the one in an access link) has been read. */
   ready: boolean;
+  /** The stored session could not be renewed for lack of a connection: it is still there, this is not a sign out. */
+  authUnreachable: boolean;
   api: ApiClient;
   /** Every read of the admin, as plain RPCs (R11: the admin no longer reads through pg_graphql). */
   reads: AdminReads;
@@ -55,14 +60,17 @@ export function SessionProvider({ config, children }: { config: AdminConfig; chi
   const supabase = getBrowserClient(config);
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
+  const [authUnreachable, setAuthUnreachable] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data, error }) => {
       setSession(data.session);
+      setAuthUnreachable(isAuthRetryableFetchError(error));
       setReady(true);
     });
     const { data } = supabase.auth.onAuthStateChange((_event, next) => {
       setSession(next);
+      if (next) setAuthUnreachable(false);
       setReady(true);
     });
     return () => data.subscription.unsubscribe();
@@ -81,8 +89,8 @@ export function SessionProvider({ config, children }: { config: AdminConfig; chi
   }, [supabase, config, userId]);
 
   const value = useMemo<SessionContextValue>(
-    () => ({ supabase, session, ready, ...clients, config }),
-    [supabase, session, ready, clients, config],
+    () => ({ supabase, session, ready, authUnreachable, ...clients, config }),
+    [supabase, session, ready, authUnreachable, clients, config],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

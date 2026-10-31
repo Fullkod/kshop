@@ -7,6 +7,7 @@ import {
   saveCachedAdminState,
   OrderDetail,
   OrderList,
+  PosStatus,
   ProductEditor,
   ProductList,
   dayChange,
@@ -29,7 +30,7 @@ import {
   type ModuleCode,
   type StoreStatus,
 } from "@kshop/core";
-import type { MeResponse } from "@kshop/data";
+import { ApiError, type MeResponse } from "@kshop/data";
 import {
   NavigationProvider,
   StoreProvider,
@@ -61,6 +62,7 @@ import {
   Share2,
   ShoppingBag,
   Smartphone,
+  Store,
   Tag,
   Ticket,
   TrendingUp,
@@ -70,7 +72,7 @@ import {
   Wallet,
   ConfirmProvider,
 } from "@kshop/ui";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   BrowserRouter,
   Navigate,
@@ -83,13 +85,24 @@ import {
 } from "react-router";
 import { appConfig, webAdminUrl } from "./config";
 import {
+  createNativePosStorage,
   isNative,
   paintStatusBar,
   preferencesStorage,
   takePhoto,
   useBackButton,
   useHideSplash,
+  useOnline,
 } from "./native";
+import {
+  clearOfflineBoot,
+  confirmOnlineStores,
+  loadOfflineBoot,
+  offlineAccessExpired,
+  offlineBoot,
+  readOfflineStore,
+  saveOfflineStore,
+} from "./offline";
 
 // Kshop Admin (PRP-7 D2): the essentials of the store admin on the phone — today's sales, orders and products —
 // with the same screens as the web (@kshop/admin) and «Abrir el panel completo» for everything else.
@@ -101,7 +114,12 @@ const sessionConfig: AdminConfig = {
   protocol: appConfig.protocol,
   authStorage: isNative ? preferencesStorage : undefined,
   takePhoto: isNative ? takePhoto : undefined,
+  posStorage: isNative ? createNativePosStorage() : undefined,
 };
+
+/** The server did not answer this boot: the app runs on what the phone saved (PRP pos-offline, phase 3). */
+const BootedOffline = createContext(false);
+const RETRY_ONLINE_MS = 30_000;
 
 const SELECTED_STORE_KEY = "kshop-admin-store";
 
@@ -192,6 +210,7 @@ function useSignOut() {
   return async () => {
     saveSelectedStore(null);
     clearCachedAdminStates();
+    clearOfflineBoot();
     await supabase.auth.signOut();
   };
 }
@@ -233,19 +252,59 @@ function StoreGate() {
   const navigate = useNavigate();
   const [stores, setStores] = useState<MyStore[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [offline, setOffline] = useState(false);
   const [selected, setSelected] = useState(readSelectedStore);
+  const userId = session?.user.id;
 
   useEffect(() => {
     let cancelled = false;
-    api.me().then(
-      (me) => !cancelled && setStores(me.stores),
-      () => !cancelled && setFailed(true),
-    );
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const openSaved = () => {
+      const saved = offlineBoot();
+      if (!saved || (userId && saved.userId !== userId)) return setFailed(true);
+      setStores(saved.stores);
+      setOffline(true);
+      setFailed(false);
+      // Without a session there is nothing to ask with: it comes back through the session itself.
+      if (userId) timer = setTimeout(ask, RETRY_ONLINE_MS);
+    };
+    const ask = () => {
+      api.me().then(
+        (me) => {
+          if (cancelled) return;
+          confirmOnlineStores(me.user?.id ?? userId ?? "", session?.user.email ?? null, me.stores);
+          setStores(me.stores);
+          setOffline(false);
+          setFailed(false);
+        },
+        (error: unknown) => {
+          if (cancelled) return;
+          // A refusal is an answer: only silence or a broken server mean «no connection».
+          if (error instanceof ApiError && error.status < 500) setFailed(true);
+          else openSaved();
+        },
+      );
+    };
+    if (userId) ask();
+    else void Promise.resolve().then(openSaved);
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
-  }, [api]);
+  }, [api, userId, session?.user.email]);
 
+  if (offline && offlineAccessExpired()) {
+    return (
+      <Notice>
+        <Brand />
+        <Alert variant="destructive" data-testid="offline-expired">
+          Hace más de 7 días que este teléfono no se conecta. Conéctalo a internet para seguir usando la app.
+          Las ventas guardadas siguen en el teléfono.
+        </Alert>
+        <Button onClick={() => window.location.reload()}>Reintentar</Button>
+      </Notice>
+    );
+  }
   if (failed) {
     return (
       <Notice>
@@ -282,18 +341,20 @@ function StoreGate() {
     );
   }
   return (
-    <StoreAdmin
-      key={current.id}
-      myStore={current}
-      onSwitch={
-        stores.length > 1
-          ? () => {
-              saveSelectedStore(null);
-              setSelected(null);
-            }
-          : undefined
-      }
-    />
+    <BootedOffline.Provider value={offline}>
+      <StoreAdmin
+        key={current.id}
+        myStore={current}
+        onSwitch={
+          stores.length > 1
+            ? () => {
+                saveSelectedStore(null);
+                setSelected(null);
+              }
+            : undefined
+        }
+      />
+    </BootedOffline.Provider>
   );
 }
 
@@ -356,20 +417,25 @@ type Loaded =
 function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => void }) {
   const { api, reads, session } = useSession();
   const signOut = useSignOut();
+  const offline = useContext(BootedOffline);
   const [loaded, setState] = useState<Loaded>({ kind: "loading" });
-  const userId = session?.user.id;
+  const userId = session?.user.id ?? offlineBoot()?.userId;
   // R12: boot again when the superadmin changes the visibility of a section.
   const sectionsLive = useStoreVersion(myStore.id, ["store_section_settings"]);
   // The last boot draws the admin at once while the network catches up; a failed refresh keeps it (R11).
   const cached = useMemo(() => {
     const admin = userId ? readCachedAdminState(userId, myStore.id) : null;
     const store = admin ? readCachedStore(myStore.id) : null;
-    return admin && store ? { admin, store } : null;
+    // The browser's copy ages out and can be cleared; the one in native storage is what opens the app offline.
+    return admin && store ? { admin, store } : readOfflineStore(myStore.id);
   }, [userId, myStore.id]);
+  const known: Loaded = offline && loaded.kind === "loading" ? { kind: "error" } : loaded;
   const state: Loaded =
-    cached && (loaded.kind === "loading" || loaded.kind === "error") ? { kind: "ready", ...cached } : loaded;
+    cached && (known.kind === "loading" || known.kind === "error") ? { kind: "ready", ...cached } : known;
 
   useEffect(() => {
+    // Asking without a connection would read as «no access» and clear what the phone has saved.
+    if (offline) return;
     let cancelled = false;
     (async () => {
       try {
@@ -389,6 +455,7 @@ function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => 
         }
         const store = await storeCard;
         saveCachedStore(store);
+        saveOfflineStore(myStore.id, admin, store);
         if (!cancelled) setState({ kind: "ready", admin, store });
       } catch {
         if (!cancelled) setState({ kind: "error" });
@@ -397,7 +464,7 @@ function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => 
     return () => {
       cancelled = true;
     };
-  }, [api, reads, myStore, userId, sectionsLive]);
+  }, [api, reads, myStore, userId, sectionsLive, offline]);
 
   if (state.kind === "loading") return <Loading />;
   if (state.kind !== "ready") {
@@ -440,7 +507,7 @@ function StoreAdmin({ myStore, onSwitch }: { myStore: MyStore; onSwitch?: () => 
 
 type Tab = { href: string; label: string; icon: LucideIcon; show: boolean; badge?: number };
 
-/** Kshop Admin (redesign R6, D9): bottom tabs in the brand colors — Inicio · Pedidos · Productos · Ventas · Más. */
+/** Kshop Admin (redesign R6, D9): bottom tabs in the brand colors — Inicio · Caja · Pedidos · Productos · Más (Roberto, P7). */
 function Shell({ onSwitch }: { onSwitch?: () => void }) {
   useHideSplash();
   const store = useStore();
@@ -449,15 +516,20 @@ function Shell({ onSwitch }: { onSwitch?: () => void }) {
   const has = (code: Parameters<typeof admin.enabledModules.has>[0]) => admin.enabledModules.has(code);
   const home = useAdminHome({ salesToday: has("sales_today"), recent: 0 });
   const toConfirm = home.summary?.todo.toConfirm ?? 0;
+  const networkUp = useOnline();
+  const offline = useContext(BootedOffline) || !networkUp;
+  const pos = has("pos") && menuSection(admin, "pos").visibility !== "hidden";
   const tabs: Tab[] = [
     { href: "/admin", label: "Inicio", icon: House, show: true },
+    { href: "/admin/pos", label: "Caja", icon: Store, show: pos },
     { href: "/admin/orders", label: "Pedidos", icon: ShoppingBag, show: has("orders"), badge: toConfirm },
     { href: "/admin/catalog", label: "Productos", icon: Package, show: has("catalog") },
     {
       href: "/admin/sales",
       label: "Ventas",
       icon: TrendingUp,
-      show: has("sales_today") && menuSection(admin, "sales_today").visibility !== "hidden",
+      // Five tabs fit: with the counter, Ventas opens from Más.
+      show: !pos && has("sales_today") && menuSection(admin, "sales_today").visibility !== "hidden",
     },
     { href: "/admin/more", label: "Más", icon: LayoutGrid, show: true },
   ].filter((t) => t.show);
@@ -533,6 +605,16 @@ function Shell({ onSwitch }: { onSwitch?: () => void }) {
             </>
           )}
           {has("sales_today") && <Route path="/admin/sales" element={<SalesScreen home={home} />} />}
+          {pos && (
+            <Route
+              path="/admin/pos"
+              element={
+                <Screen>
+                  <PosStatus storeId={store.id} online={!offline} />
+                </Screen>
+              }
+            />
+          )}
           <Route path="/admin/more" element={<MoreScreen onSwitch={onSwitch} />} />
           <Route path="/" element={<Navigate to="/admin" replace />} />
           <Route
@@ -958,6 +1040,15 @@ function MoreScreen({ onSwitch }: { onSwitch?: () => void }) {
   return (
     <Screen title="Más">
       <div className="flex flex-col gap-4">
+        {admin.enabledModules.has("sales_today") && (
+          <RouterLink
+            to="/admin/sales"
+            className="rounded-xl border bg-background p-4 font-medium"
+            data-testid="more-sales"
+          >
+            Ventas de hoy y de la semana
+          </RouterLink>
+        )}
         <MoreList
           items={[
             { code: "themes", label: "Apariencia", icon: Palette, path: "/admin/themes" },
@@ -1003,11 +1094,15 @@ function MoreScreen({ onSwitch }: { onSwitch?: () => void }) {
 
 function AdminApp() {
   useBackButton();
-  const { session, ready } = useSession();
+  const { session, ready, authUnreachable } = useSession();
+  const [bootRead, setBootRead] = useState(false);
   useEffect(() => {
     void paintStatusBar();
+    void loadOfflineBoot().then(() => setBootRead(true));
   }, []);
-  if (!ready) return <Loading />;
+  if (!ready || !bootRead) return <Loading />;
+  // No connection to renew an expired session is not a sign out: the counter must keep selling.
+  if (!session && authUnreachable && offlineBoot()) return <StoreGate key={offlineBoot()?.userId} />;
   if (!session) return <LoginScreen />;
   return <StoreGate key={session.user.id} />;
 }
