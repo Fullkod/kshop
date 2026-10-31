@@ -6,7 +6,7 @@ import { Network } from "@capacitor/network";
 import { Preferences } from "@capacitor/preferences";
 import { SplashScreen } from "@capacitor/splash-screen";
 import { StatusBar, Style } from "@capacitor/status-bar";
-import { createIndexedDbPosStorage, type PosStorage, type QueuedSale } from "@kshop/admin";
+import { createIndexedDbPosStorage, localNumber, type PosStorage, type QueuedSale } from "@kshop/admin";
 import type { AuthStorage } from "@kshop/data";
 import { useEffect, useState } from "react";
 
@@ -54,6 +54,7 @@ export function useOnline(): boolean {
 const salesDir = (storeId: string) => `pos/${storeId}`;
 const SALE_FILE = /^[0-9a-f-]{36}\.json$/;
 const DEVICE_FILE = "pos/device.json";
+const COUNTER_FILE = "pos/counter.json";
 
 async function readJsonFile<T>(path: string): Promise<T> {
   const { data } = await Filesystem.readFile({ path, directory: Directory.Data, encoding: Encoding.UTF8 });
@@ -105,6 +106,14 @@ export function createNativePosStorage(): PosStorage {
         await writeJsonFile(DEVICE_FILE, { id });
         return id;
       }
+    },
+    nextLocalNumber: async function () {
+      const last = await readJsonFile<{ last: number }>(COUNTER_FILE).then(
+        (c) => c.last,
+        () => 0,
+      );
+      await writeJsonFile(COUNTER_FILE, { last: last + 1 });
+      return localNumber(await this.deviceId(), last + 1);
     },
   };
 }

@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { currencyCodeSchema } from "../currency";
 
+export * from "./search";
+
 // Counter sales (PRP pos-offline): what a phone uploads. The sale already happened, so prices come from the phone.
 
 const money = z.coerce.number().min(0).max(9_999_999_999.99);

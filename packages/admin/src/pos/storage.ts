@@ -1,5 +1,5 @@
 import type { PosSaleInput } from "@kshop/core";
-import type { ApiClient, PosCatalogItem, PosCatalogPage } from "@kshop/data";
+import type { ApiClient, PaymentRates, PosCatalogItem, PosCatalogPage } from "@kshop/data";
 
 // What the phone keeps for the counter (PRP pos-offline D7). The catalog can always be downloaded again; a sale is money
 // that exists nowhere else until it is uploaded, so the app keeps sales in native files and the web in IndexedDB.
@@ -9,6 +9,8 @@ export type PosCatalogSnapshot = {
   currency: PosCatalogPage["currency"];
   paymentMethods: { id: string; name: string }[];
   items: PosCatalogItem[];
+  /** The suggestion for a payment in another currency, as of the last download. */
+  rates: PaymentRates | null;
   savedAt: string;
 };
 
@@ -28,6 +30,8 @@ export type PosStorage = {
   removeSale: (storeId: string, saleId: string) => Promise<void>;
   /** Identifies this phone in the sales it uploads. */
   deviceId: () => Promise<string>;
+  /** The number on the receipt until the server gives the real one: a part of the device and a counter. */
+  nextLocalNumber: () => Promise<string>;
 };
 
 const DB_NAME = "kshop-pos";
@@ -71,6 +75,10 @@ async function transact<T>(
 
 const saleKey = (storeId: string, saleId: string) => `${storeId}/${saleId}`;
 
+/** Two phones of a store never repeat a number. */
+export const localNumber = (deviceId: string, counter: number) =>
+  `${deviceId.slice(0, 4).toUpperCase()}-${counter}`;
+
 export function createIndexedDbPosStorage(): PosStorage {
   return {
     readCatalog: async (storeId) =>
@@ -96,12 +104,25 @@ export function createIndexedDbPosStorage(): PosStorage {
       await transact(META, "readwrite", (s) => s.put(id, "deviceId"));
       return id;
     },
+    nextLocalNumber: async function () {
+      const last =
+        ((await transact(META, "readonly", (s) => s.get("lastNumber"))) as number | undefined) ?? 0;
+      await transact(META, "readwrite", (s) => s.put(last + 1, "lastNumber"));
+      return localNumber(await this.deviceId(), last + 1);
+    },
   };
 }
 
 /** The whole catalog, one page after another: the database is a Nano. Nothing is saved until the last page arrives. */
 export async function downloadPosCatalog(api: ApiClient, storeId: string): Promise<PosCatalogSnapshot> {
-  const first = await api.pos(storeId).catalog();
+  const [first, rates] = await Promise.all([
+    api.pos(storeId).catalog(),
+    // Without a suggestion the cashier types the rate: it never stops the download.
+    api
+      .orders(storeId)
+      .paymentRates()
+      .catch(() => null),
+  ]);
   const items = [...first.items];
   let next = first.next;
   while (next) {
@@ -114,6 +135,7 @@ export async function downloadPosCatalog(api: ApiClient, storeId: string): Promi
     currency: first.currency,
     paymentMethods: first.paymentMethods ?? [],
     items,
+    rates,
     savedAt: new Date().toISOString(),
   };
 }

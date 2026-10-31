@@ -138,6 +138,100 @@ try {
     !!(await page.evaluate((k) => localStorage.getItem(k), key)),
   );
 
+  // Selling without a connection: the piece of the name, the cart and a payment in two currencies.
+  const readSales = () =>
+    page.evaluate(
+      () =>
+        new Promise((resolve, reject) => {
+          const open = indexedDB.open("kshop-pos");
+          open.onerror = reject;
+          open.onsuccess = () => {
+            const get = open.result.transaction("sales").objectStore("sales").getAll();
+            get.onsuccess = () => resolve(get.result);
+            get.onerror = reject;
+          };
+        }),
+    );
+  await page.goto(`${ADMIN}/admin/pos`);
+  await page.getByTestId("pos-search").waitFor({ timeout: 30000 });
+  await page.getByTestId("pos-search").fill("vestido");
+  const firstResult = page.getByTestId("pos-results").getByRole("button").first();
+  await firstResult.waitFor({ timeout: 10000 });
+  check(
+    "sell offline: finds by a piece of the name",
+    /vestido/i.test(await firstResult.innerText()),
+    await firstResult.innerText(),
+  );
+  await page.screenshot({ path: join(OUT, "fase4-busqueda.png") });
+  await firstResult.click();
+  await page.getByRole("button", { name: /Añadir uno de/ }).click();
+  check(
+    "sell offline: the search clears and the line goes to 2",
+    (await page.getByTestId("pos-quantity").innerText()) === "2",
+  );
+  const totalCup = Number(
+    (await page.getByTestId("pos-total").innerText()).replace(/[^\d,]/g, "").replace(",", "."),
+  );
+  await page.screenshot({ path: join(OUT, "fase4-carrito.png") });
+  await page.getByTestId("pos-charge").click();
+  await page.selectOption("#pos-currency", "USD");
+  await page.fill("#pos-rate", "320");
+  await page.fill("#pos-amount", String(Math.round((totalCup / 2 / 320) * 100) / 100));
+  await page.getByTestId("pos-preview").getByText("Faltan").waitFor({ timeout: 10000 });
+  await page.screenshot({ path: join(OUT, "fase4-cobro.png") });
+  await page.getByTestId("pos-submit").click();
+  await page.getByTestId("pos-payments").waitFor({ timeout: 10000 });
+  const rest = Number(await page.inputValue("#pos-amount"));
+  check("sell offline: proposes the rest", rest > 0 && rest < totalCup, rest);
+  await page.getByTestId("pos-submit").click();
+  await page.getByTestId("pos-saved").waitFor({ timeout: 10000 });
+  check(
+    "sell offline: the sale is saved and the cart is empty",
+    (await page.getByTestId("pos-cart").count()) === 0,
+  );
+  check(
+    "sell offline: one sale waits",
+    /: 1$/.test(await page.getByTestId("pos-pending").innerText()),
+    await page.getByTestId("pos-pending").innerText(),
+  );
+  await page.screenshot({ path: join(OUT, "fase4-guardada.png") });
+  await page.goto(`${ADMIN}/admin/pos`);
+  await page.getByTestId("pos-pending").waitFor({ timeout: 30000 });
+  const [queued] = await readSales();
+  check(
+    "sell offline: survives closing the app",
+    queued?.sale?.lines?.[0]?.quantity === 2 && queued.sale.payments.length === 2,
+    JSON.stringify(queued),
+  );
+  check(
+    "sell offline: the dollars keep their rate",
+    queued?.sale?.payments?.[0]?.currency === "USD" && queued.sale.payments[0].rate === 320,
+    JSON.stringify(queued?.sale?.payments),
+  );
+  // Too many dollars in one payment: change.
+  await page.getByTestId("pos-search").fill("vestido");
+  await page.getByTestId("pos-results").getByRole("button").first().click();
+  await page.getByTestId("pos-charge").click();
+  await page.selectOption("#pos-currency", "USD");
+  await page.fill("#pos-rate", "320");
+  await page.fill("#pos-amount", "50");
+  await page.getByTestId("pos-preview").getByText(/^Vuelto:/).waitFor({ timeout: 10000 });
+  check("sell offline: says the change", true);
+  await page.getByRole("button", { name: "Volver" }).click();
+  await page.evaluate(
+    () =>
+      new Promise((resolve, reject) => {
+        const open = indexedDB.open("kshop-pos");
+        open.onerror = reject;
+        open.onsuccess = () => {
+          const tx = open.result.transaction("sales", "readwrite");
+          tx.objectStore("sales").clear();
+          tx.oncomplete = () => resolve(null);
+          tx.onerror = reject;
+        };
+      }),
+  );
+
   // A sale in the queue survives closing the app.
   const storeId = await page.evaluate(
     () => JSON.parse(localStorage.getItem("kshop.offline.boot")).stores.find((s) => s.slug === "demo")?.id,

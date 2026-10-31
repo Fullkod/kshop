@@ -7,7 +7,7 @@ import {
   saveCachedAdminState,
   OrderDetail,
   OrderList,
-  PosStatus,
+  PosScreen,
   ProductEditor,
   ProductList,
   dayChange,
@@ -610,7 +610,7 @@ function Shell({ onSwitch }: { onSwitch?: () => void }) {
               path="/admin/pos"
               element={
                 <Screen>
-                  <PosStatus storeId={store.id} online={!offline} />
+                  <PosScreen storeId={store.id} online={!offline} />
                 </Screen>
               }
             />

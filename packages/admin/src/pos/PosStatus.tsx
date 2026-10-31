@@ -80,10 +80,21 @@ function catalogAge(savedAt: string): string {
   return `de hace ${days} días`;
 }
 
-/** What the phone holds for the counter (phase 3 of the POS; the selling screen comes on top of this). */
-export function PosStatus({ storeId, online }: { storeId: string; online: boolean }) {
+/** What the phone holds for the counter. */
+export function PosStatus({
+  catalog,
+  storeId,
+  online,
+  salesVersion,
+}: {
+  catalog: ReturnType<typeof usePosCatalog>;
+  storeId: string;
+  online: boolean;
+  /** Changes when a sale is saved. */
+  salesVersion: number;
+}) {
   const storage = usePosStorage();
-  const { snapshot, loaded, refreshing, failed, refresh } = usePosCatalog(storeId, online);
+  const { snapshot, loaded, refreshing, failed, refresh } = catalog;
   const [pending, setPending] = useState<number | null>(null);
 
   useEffect(() => {
@@ -95,7 +106,7 @@ export function PosStatus({ storeId, online }: { storeId: string; online: boolea
     return () => {
       cancelled = true;
     };
-  }, [storage, storeId]);
+  }, [storage, storeId, salesVersion]);
 
   const products = useMemo(() => snapshot?.items.length ?? 0, [snapshot]);
 

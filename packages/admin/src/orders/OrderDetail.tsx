@@ -11,6 +11,7 @@ import {
   ORDER_STATUS_LABELS,
   ORDER_TRANSITIONS,
   orderCode,
+  parseDecimal,
   PAYMENT_STATUS_LABELS,
   paymentPreview,
   quoteToOrderRate,
@@ -499,11 +500,11 @@ function PaymentsCard({
 
   const same = paidIn === currency;
   const { unit, per } = rateQuote(paidIn, currency);
-  const quoted = Number(quote);
+  const quoted = parseDecimal(quote);
   const rateToOrder = same ? 1 : quoted > 0 ? quoteToOrderRate(quoted, paidIn, currency) : null;
   const preview =
-    rateToOrder !== null && Number(amount) > 0
-      ? paymentPreview({ amount: Number(amount), rateToOrder, remaining, sameCurrency: same })
+    rateToOrder !== null && parseDecimal(amount) > 0
+      ? paymentPreview({ amount: parseDecimal(amount), rateToOrder, remaining, sameCurrency: same })
       : null;
   // Change too small for a cent of the paid currency can only go in the order currency.
   const changeCurrency = preview && preview.changeInPaid > 0 ? changeIn : currency;
@@ -550,7 +551,7 @@ function PaymentsCard({
             : preview.changeInPaid
           : 0;
       const ok = await onRecord({
-        amount: Number(amount),
+        amount: parseDecimal(amount),
         ...(same ? {} : { currency: paidIn, rate: rateToOrder }),
         ...(change > 0 ? { changeAmount: change, changeCurrency } : {}),
         paymentMethodId: String(data.get("method") ?? "") || undefined,
