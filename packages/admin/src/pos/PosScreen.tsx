@@ -20,6 +20,8 @@ import {
 import type { PosCatalogItem } from "@kshop/data";
 import { Alert, Badge, Button, Card, Dialog, Input, Label, Select, Minus, Plus, Search } from "@kshop/ui";
 import { useMemo, useRef, useState } from "react";
+import { PosDay } from "./PosDay";
+import { usePosSales } from "./pos-sync";
 import { PosStatus, usePosCatalog, usePosStorage } from "./PosStatus";
 import type { PosCatalogSnapshot } from "./storage";
 
@@ -37,7 +39,7 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
   const [cart, setCart] = useState<CartLine[]>([]);
   const [charging, setCharging] = useState(false);
   const [saved, setSaved] = useState<{ number: string; change: string | null } | null>(null);
-  const [salesVersion, setSalesVersion] = useState(0);
+  const queue = usePosSales(storeId, online);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const items = catalog.snapshot?.items;
@@ -79,7 +81,11 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
 
   return (
     <div className="flex flex-col gap-4 pb-28" data-testid="pos-screen">
-      <PosStatus catalog={catalog} storeId={storeId} online={online} salesVersion={salesVersion} />
+      <PosStatus
+        catalog={catalog}
+        online={online}
+        pending={queue.sales ? queue.sales.filter((s) => !s.uploaded).length : null}
+      />
 
       {saved && (
         <Alert data-testid="pos-saved">
@@ -190,6 +196,17 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
         </div>
       )}
 
+      {queue.sales && queue.sales.length > 0 && (
+        <PosDay
+          sales={queue.sales}
+          currency={currency}
+          syncing={queue.syncing}
+          canUpload={queue.canUpload}
+          onUpload={() => void queue.sync()}
+          onVoid={queue.voidSale}
+        />
+      )}
+
       {charging && catalog.snapshot && (
         <PosCheckout
           snapshot={catalog.snapshot}
@@ -226,7 +243,7 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
             });
             setCart([]);
             setCharging(false);
-            setSalesVersion((v) => v + 1);
+            void queue.saved();
             searchRef.current?.focus();
           }}
         />

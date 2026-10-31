@@ -41,7 +41,8 @@
 - [tienda-minimercado.md](project/tienda-minimercado.md) — Cliente real: portada y marca montadas sin catálogo; el superadmin ya puede subir a `store-media`
 - [pendiente-superadmin-importar-excel.md](project/pendiente-superadmin-importar-excel.md) — Hecho 2026-10-30: el superadmin importa Excel a cualquier tienda (`store-imports`, solo INSERT en `imports/`)
 - [pendiente-editar-categorias.md](project/pendiente-editar-categorias.md) — Hecho 2026-10-30: editar categorías daba 500 (trigger con `ltree` y `search_path` vacío); cuidado con operadores de extensiones
-- [2026-10-30-donde-quedamos.md](project/2026-10-30-donde-quedamos.md) — **Dónde quedamos** (2026-10-30): cobro mixto y POS fases 1-2 en producción, sin pantalla de caja aún; qué sigue (fase 3, token de elTOQUE)
+- [2026-10-31-donde-quedamos.md](project/2026-10-31-donde-quedamos.md) — **Dónde quedamos** (2026-10-31): POS fases 3-5 en `main` sin subir y sin Android real; siguen fases 6 y 7; redeploy pendiente para elTOQUE
+- [2026-10-30-donde-quedamos.md](project/2026-10-30-donde-quedamos.md) — Superado: cobro mixto y POS fases 1-2 en producción
 
 ## feedback/ — Correcciones y preferencias
 
@@ -74,4 +75,4 @@
 - `prp-r12-superadmin-v3.md` — R12: visibilidad del menú de cada tienda (Visible / Gestionado / Oculto) con bloqueo de escrituras en `assertStoreWritable`, tabla `store_section_settings`, lista de tiendas v3 (`platform_stores_overview`, búsqueda, filtros, acciones) y accesos directos en la ficha; D1–D10; preguntas respondidas: básicas siempre visibles, texto «Gestionado por admin», todas las columnas — **HECHO** 2026-10-28 (en `main`)
 - `prp-r13-formularios-en-dialogo.md` — R13: crear/editar del admin en `Dialog` (`<dialog>` nativo, hoja en móvil), 17 pantallas, `qa:dialogs` — **HECHO** 2026-10-28 (en `main`)
 - `prp-r14-confirmaciones-en-dialogo.md` — R14: `window.confirm`/`prompt` → `ConfirmDialog` + `useConfirm()` sobre el `Dialog` de R13 (13 llamadas), confirmar borrados y acciones del superadmin que hoy no preguntan, cancelar pedido y anular factura en diálogo, regla `no-alert`; **HECHO** 2026-10-29 (`qa:confirms` 32/32; en `main`)
-- `prp-pos-offline.md` — POS sin conexión en Kshop Admin (módulo `pos`), aprobado 2026-10-30: fases 1 (KSH0002) y 2 (servidor) **hechas y en producción**; sigue la fase 3 (arranque sin red y almacenamiento en el teléfono). Inventario en la etapa 2
+- `prp-pos-offline.md` — POS sin conexión en Kshop Admin (módulo `pos`), aprobado 2026-10-30: fases 1 y 2 en producción; 3, 4 y 5 hechas en local, sin subir y sin Android real; siguen la 6 (web del dueño) y la 7 (APK). Inventario en la etapa 2

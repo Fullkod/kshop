@@ -91,6 +91,45 @@ export function parseDecimal(text: string): number {
   return Number(text.trim().replace(",", "."));
 }
 
+/** What the phone sold today and what its till holds per currency, as charged and net of the change given. */
+export function posDaySummary(
+  sales: readonly {
+    sale: {
+      soldAt: string;
+      voided?: boolean;
+      payments: readonly {
+        amount: number;
+        currency?: string;
+        changeAmount?: number;
+        changeCurrency?: string;
+      }[];
+    };
+  }[],
+  baseCurrency: string,
+  now: Date = new Date(),
+): { count: number; cash: { currency: string; amount: number }[] } {
+  const today = now.toDateString();
+  const cents = new Map<string, number>();
+  const add = (currency: string, amount: number) =>
+    cents.set(currency, (cents.get(currency) ?? 0) + Math.round(amount * 100));
+  let count = 0;
+  for (const { sale } of sales) {
+    if (sale.voided || new Date(sale.soldAt).toDateString() !== today) continue;
+    count += 1;
+    for (const p of sale.payments) {
+      add(p.currency ?? baseCurrency, p.amount);
+      if (p.changeAmount && p.changeCurrency) add(p.changeCurrency, -p.changeAmount);
+    }
+  }
+  return {
+    count,
+    cash: [...cents]
+      .filter(([, value]) => value !== 0)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([currency, value]) => ({ currency, amount: value / 100 })),
+  };
+}
+
 /** Sum of the lines in cents, to avoid floating point drift. */
 export function posCartTotal(lines: readonly { unitPrice: number; quantity: number }[]): number {
   return lines.reduce((cents, l) => cents + Math.round(l.unitPrice * 100) * l.quantity, 0) / 100;

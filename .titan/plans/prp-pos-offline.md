@@ -1,6 +1,6 @@
 # PRP POS: punto de venta sin conexión en Kshop Admin
 
-> **Estado**: APROBADO por Roberto (2026-10-30): P1–P4, P6 y P7 según la recomendación; P5 cambia (ver tabla). **Fases 1 y 2 hechas y en producción (2026-10-30); sigue la fase 3**
+> **Estado**: APROBADO por Roberto (2026-10-30): P1–P4, P6 y P7 según la recomendación; P5 cambia (ver tabla). **Fases 1 y 2 en producción; fases 3, 4 y 5 hechas en local, en commits sin subir y sin probar en un Android real (2026-10-31); siguen la 6 y la 7**
 > **Fecha**: 2026-10-30
 > **Proyecto**: Kshop · **Tarea relacionada**: KSH0002 (Tasknic, «pagar una orden con diferentes monedas»)
 > **Primer caso real**: tienda `minimercado` (`project/tienda-minimercado.md`), abierta al público en físico.
@@ -207,7 +207,7 @@ cambian de saldo (comparación antes y después en prueba, incluida la tienda `k
 módulo, sin costo en la respuesta, cancelación devuelve stock); aislamiento entre tiendas en `supabase/tests/`; test de
 secciones; pantallas que leen el teléfono funcionando con null; medición del catálogo en la Tienda Demo.
 
-### Fase 3: Arranque sin conexión y almacenamiento
+### Fase 3: Arranque sin conexión y almacenamiento — HECHA (falta el Android real)
 **Antes de empezar**: P5 cambió (buscar por nombre con trozos consecutivos primero y luego fraccionados; afecta a la fase 4).
 **Objetivo**: Kshop Admin arranca sin red con sesión previa; catálogo y cola guardados de forma duradera, con avisos de sin
 conexión en las demás pantallas.
@@ -215,12 +215,12 @@ conexión en las demás pantallas.
 escritura y reiniciar sin perder ni corromper ventas; el token caducado sin red no cierra la sesión. Si el archivo por venta
 no aguanta, se revisa D7 antes de seguir.
 
-### Fase 4: Pantalla de caja
+### Fase 4: Pantalla de caja — HECHA (falta el Android real)
 **Objetivo**: buscar, añadir y cobrar sin red, con el mismo cobro mixto de la fase 1 y guardado antes de cerrar la venta.
 **Validación**: `qa:pos` con Playwright sin red (`setOffline`) a 390 px y en claro y oscuro; búsqueda fluida con 5 000
 variantes; el cálculo en `@kshop/core` con tests (redondeos, vuelto, un resto de centavos).
 
-### Fase 5: Cola de subida, retenidas y cierre del día
+### Fase 5: Cola de subida, retenidas y cierre del día — HECHA (falta el Android real)
 **Objetivo**: subida automática al volver la red, ventas retenidas con motivo, anulación, resumen por moneda y aviso al
 cerrar sesión con ventas pendientes.
 **Validación**: `e2e:pos` y `qa:pos` con red intermitente, respuesta perdida tras guardar, tienda suspendida y sesión
@@ -276,6 +276,17 @@ lector y, si hace falta, venta por peso.
   apagó los módulos. **Fix (solo en prueba):** apuntarla al Pro de ese proyecto. **Aplicar en:** `scripts/copy-demo-to-test.mjs` debería resolver el plan por código.
 - **Falta para la fase 6:** cancelar una venta de mostrador desde la pantalla (la API ya lo permite, el botón no aparece en `delivered`) y la etiqueta «Mostrador» en la lista.
 - **Sin probar:** el 403 de la API con el módulo apagado (la caché de módulos dura minutos); solo `requireModule` general y los derechos en SQL.
+
+### 2026-10-31: Fases 3, 4 y 5 (arranque sin red, caja, subida)
+- **Piezas:** `apps/admin-app/src/offline.ts` (último arranque confirmado, en almacenamiento nativo), `native.ts` (`createNativePosStorage`: un JSON por venta,
+  escrito aparte y renombrado; `useOnline`), `packages/admin/src/pos/` (`storage`, `PosStatus`, `PosScreen`, `pos-sync`, `PosDay`), `packages/core/src/pos/search.ts` (búsqueda de P5,
+  precio vigente, `parseDecimal`, `posDaySummary`).
+- **Decisiones técnicas:** sin red con el token caducado, `getSession` da sesión vacía y error reintentable: `authUnreachable` lo distingue de un cierre de sesión. Un rechazo del servidor (estado por debajo de 500) no abre con lo guardado; el silencio o un 5xx sí. Una venta subida se conserva 7 días para el resumen del día. La tasa sugerida se guarda con el catálogo.
+- **Medido:** `qa:pos-offline` 36/36 con la red cortada en el navegador, incluida la respuesta perdida tras guardar (un solo pedido), el rechazo con motivo y la anulación. Búsqueda: 6 consultas sobre 5 000 variantes por debajo de 300 ms en el PC, no en un teléfono.
+- **Sin probar:** archivos nativos, `@capacitor/network`, matar la app y reiniciar: el navegador usa IndexedDB. Requiere APK y un Android real (fase 7). Tampoco el tema oscuro.
+- **Error:** Vite sirvió módulos viejos tras añadir un `export *` y la app quedó en blanco (`does not provide an export named`). **Fix:** reiniciar Vite. **Aplicar en:** cualquier cambio de exports con el dev de las apps corriendo.
+- **Error:** el teclado español del móvil puede escribir coma: `Number("12,5")` da NaN y el formulario no calculaba. **Fix:** `parseDecimal`, también en `PaymentsCard`. **Aplicar en:** todo campo de dinero nuevo.
+- **Falta para la fase 6:** etiqueta y filtro «Mostrador» en Pedidos, botón de cancelar en una venta entregada, anotaciones (`pos_sales.flags`) a la vista del dueño y página del módulo en el panel (`availableInPhase: 9` provisional).
 
 ---
 

@@ -4,6 +4,7 @@
 //
 //   pnpm dev + pnpm --filter @kshop/admin-app dev, then: pnpm qa:pos-offline   (QA_BASE_URL, QA_ADMIN_APP_URL)
 
+import { createClient } from "@supabase/supabase-js";
 import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,6 +22,12 @@ const API = env.QA_BASE_URL ?? "http://localhost:3000";
 const SUPABASE = env.NEXT_PUBLIC_SUPABASE_URL;
 const OUT = join(root, ".titan/qa/pos");
 mkdirSync(OUT, { recursive: true });
+
+const service = createClient(SUPABASE, env.SUPABASE_SECRET_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
+/** Counter sales this run left in the Tienda Demo; cancelled at the end, which puts the stock back. */
+const created = new Set();
 
 const results = [];
 function check(name, ok, detail) {
@@ -215,62 +222,140 @@ try {
   await page.selectOption("#pos-currency", "USD");
   await page.fill("#pos-rate", "320");
   await page.fill("#pos-amount", "50");
-  await page.getByTestId("pos-preview").getByText(/^Vuelto:/).waitFor({ timeout: 10000 });
+  await page
+    .getByTestId("pos-preview")
+    .getByText(/^Vuelto:/)
+    .waitFor({ timeout: 10000 });
   check("sell offline: says the change", true);
   await page.getByRole("button", { name: "Volver" }).click();
-  await page.evaluate(
-    () =>
-      new Promise((resolve, reject) => {
-        const open = indexedDB.open("kshop-pos");
-        open.onerror = reject;
-        open.onsuccess = () => {
-          const tx = open.result.transaction("sales", "readwrite");
-          tx.objectStore("sales").clear();
-          tx.oncomplete = () => resolve(null);
-          tx.onerror = reject;
-        };
-      }),
-  );
+  await page.getByRole("button", { name: /Quitar uno de/ }).click();
 
-  // A sale in the queue survives closing the app.
   const storeId = await page.evaluate(
     () => JSON.parse(localStorage.getItem("kshop.offline.boot")).stores.find((s) => s.slug === "demo")?.id,
   );
-  const saleKey = `${storeId}/qa-offline-sale`;
-  await page.evaluate(
-    ([k]) =>
-      new Promise((resolve, reject) => {
-        const open = indexedDB.open("kshop-pos");
-        open.onerror = reject;
-        open.onsuccess = () => {
-          const tx = open.result.transaction("sales", "readwrite");
-          tx.objectStore("sales").put({ sale: { id: "qa-offline-sale" } }, k);
-          tx.oncomplete = () => resolve(null);
-          tx.onerror = reject;
-        };
-      }),
-    [saleKey],
-  );
-  await page.goto(`${ADMIN}/admin/pos`);
-  await page.getByTestId("pos-pending").waitFor({ timeout: 30000 });
+  const pendingCount = async () =>
+    Number((await page.getByTestId("pos-pending").innerText()).match(/(\d+)$/)?.[1]);
+  const waitPending = async (expected) => {
+    for (let i = 0; i < 60; i++) {
+      if ((await pendingCount()) === expected) return true;
+      await page.waitForTimeout(500);
+    }
+    return false;
+  };
+  const orderOf = async (id) => {
+    const { data } = await service
+      .from("orders")
+      .select("id, number, status, channel, customer_phone, notify_customer")
+      .eq("store_id", storeId)
+      .eq("idempotency_key", `pos:${id}`);
+    for (const o of data ?? []) created.add(o.id);
+    return data ?? [];
+  };
+  const sellOne = async () => {
+    await page.getByTestId("pos-search").fill("vestido");
+    await page.getByTestId("pos-results").getByRole("button").first().click();
+    await page.getByTestId("pos-charge").click();
+    await page.getByTestId("pos-submit").click();
+    await page.getByTestId("pos-saved").waitFor({ timeout: 10000 });
+  };
+
   check(
-    "a saved sale is still there after closing",
-    /: 1$/.test(await page.getByTestId("pos-pending").innerText()),
+    "day: says what the phone charged, per currency",
+    /USD/.test(await page.getByTestId("pos-day-summary").innerText()) &&
+      /CUP/.test(await page.getByTestId("pos-day-summary").innerText()),
+    await page.getByTestId("pos-day-summary").innerText(),
   );
-  await page.evaluate(
-    ([k]) =>
-      new Promise((resolve, reject) => {
-        const open = indexedDB.open("kshop-pos");
-        open.onerror = reject;
-        open.onsuccess = () => {
-          const tx = open.result.transaction("sales", "readwrite");
-          tx.objectStore("sales").delete(k);
-          tx.oncomplete = () => resolve(null);
-          tx.onerror = reject;
-        };
+  await page.screenshot({ path: join(OUT, "fase5-dia-sin-red.png"), fullPage: true });
+
+  // The answer is lost after the server saved the sale: the next try must not create another order.
+  const saleId = (await readSales())[0].sale.id;
+  let lost = 0;
+  let inFlight = false;
+  await context.route(`${API}/api/v1/stores/*/pos/sales`, async (route) => {
+    if (lost === 0 && !inFlight) {
+      inFlight = true;
+      await route.fetch().catch(() => {});
+      lost += 1;
+      return route.abort("connectionreset");
+    }
+    return route.continue();
+  });
+  await setConnection(true);
+  await page.goto(`${ADMIN}/admin/pos`);
+  await page.getByTestId("pos-pending").waitFor({ timeout: 60000 });
+  for (let i = 0; i < 60 && lost === 0; i++) await page.waitForTimeout(500);
+  check(
+    "answer lost: the sale stays in the queue",
+    lost === 1 && (await pendingCount()) === 1,
+    await pendingCount(),
+  );
+  check("answer lost: the server did save it", (await orderOf(saleId)).length === 1);
+  await page.getByTestId("pos-upload").click();
+  check("answer lost: the retry empties the queue", await waitPending(0), await pendingCount());
+  const [uploaded, ...twin] = await orderOf(saleId);
+  check("answer lost: one order, not two", !!uploaded && twin.length === 0, twin.length);
+  check(
+    "upload: a counter sale, delivered, without phone or notices",
+    uploaded?.channel === "pos" &&
+      uploaded.status === "delivered" &&
+      uploaded.customer_phone === null &&
+      uploaded.notify_customer === false,
+    JSON.stringify(uploaded),
+  );
+  await page.getByTestId("pos-day-list").getByText(`Pedido ${uploaded?.number}`).waitFor({ timeout: 10000 });
+  check("upload: the phone shows the real number", true);
+  await context.unroute(`${API}/api/v1/stores/*/pos/sales`);
+
+  // Refused by the server: kept, with the reason in view, and it goes up when that is solved.
+  await context.route(`${API}/api/v1/stores/*/pos/sales`, (route) =>
+    route.fulfill({
+      status: 403,
+      contentType: "application/json",
+      body: JSON.stringify({
+        error: { code: "section_managed", message: "La caja está gestionada por el administrador." },
       }),
-    [saleKey],
+    }),
   );
+  await sellOne();
+  await page.getByTestId("pos-held").waitFor({ timeout: 30000 });
+  check(
+    "refused: held with the reason",
+    /gestionada/.test(await page.getByTestId("pos-held").innerText()),
+    await page.getByTestId("pos-held").innerText(),
+  );
+  check("refused: nothing is lost", (await pendingCount()) === 1);
+  await page.screenshot({ path: join(OUT, "fase5-retenida.png"), fullPage: true });
+  await context.unroute(`${API}/api/v1/stores/*/pos/sales`);
+  await page.getByTestId("pos-upload").click();
+  check("refused: goes up when it is solved", await waitPending(0), await pendingCount());
+  check("refused: no longer held", (await page.getByTestId("pos-held").count()) === 0);
+
+  // Voided before uploading: it arrives cancelled, without money or stock.
+  await setConnection(false);
+  await page.goto(`${ADMIN}/admin/pos`);
+  await page.getByTestId("pos-search").waitFor({ timeout: 30000 });
+  await sellOne();
+  const voidedId = (await readSales()).find((q) => !q.uploaded).sale.id;
+  await page.getByTestId("pos-day-list").getByRole("button", { name: "Anular" }).first().click();
+  await page.getByRole("button", { name: "Anular venta" }).click();
+  await page.getByTestId("pos-day-list").getByText("Anulada").waitFor({ timeout: 10000 });
+  check("void: marked on the phone", true);
+
+  // Signing out with sales waiting asks first.
+  await page.getByRole("link", { name: "Más", exact: true }).click();
+  await page.getByTestId("sign-out").click();
+  await page.getByText(/1 venta sin subir/).waitFor({ timeout: 10000 });
+  check("sign out with sales waiting: asks first", true);
+  await page.getByRole("button", { name: "Cancelar" }).click();
+  await page.getByRole("link", { name: "Caja", exact: true }).click();
+
+  await setConnection(true);
+  await page.goto(`${ADMIN}/admin/pos`);
+  await page.getByTestId("pos-pending").waitFor({ timeout: 60000 });
+  check("void: uploads by itself when the connection returns", await waitPending(0), await pendingCount());
+  const [voided] = await orderOf(voidedId);
+  check("void: the owner sees it cancelled", voided?.status === "cancelled", JSON.stringify(voided));
+  await setConnection(false);
 
   // A week without the server confirming the access.
   const oldBoot = await page.evaluate(() => localStorage.getItem("kshop.offline.boot"));
@@ -323,6 +408,15 @@ try {
 
   check("no errors in the page", pageErrors.length === 0, pageErrors.join(" | "));
 } finally {
+  const { data: demo } = await service.from("stores").select("id").eq("slug", "demo").single();
+  for (const id of created) {
+    await service.rpc("order_cancel", {
+      p_store_id: demo.id,
+      p_order_id: id,
+      p_reason: "QA",
+      p_user_id: null,
+    });
+  }
   await browser.close();
 }
 

@@ -1,5 +1,7 @@
 # Dónde quedamos (2026-10-30)
 
+> Superado por `2026-10-31-donde-quedamos.md`.
+
 ## En producción y en `main` (`origin/main` al día; lo subió el agente con permiso de Roberto)
 - **KSH0002, cobro en varias monedas:** tasa por pago, lo que falta, vuelto en cualquiera de las dos monedas, cancelar por moneda,
   Finanzas y Ventas de hoy por moneda. Sin total todavía (envío a convenir), calcula sobre el subtotal.

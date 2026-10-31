@@ -16,6 +16,7 @@ import {
   StaffLoginForm,
   useAdmin,
   useAdminHome,
+  usePosStorage,
   useSession,
   useStoreVersion,
   type AdminConfig,
@@ -71,6 +72,7 @@ import {
   Users,
   Wallet,
   ConfirmProvider,
+  useConfirm,
 } from "@kshop/ui";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
@@ -1035,7 +1037,28 @@ function MoreList({ items }: { items: MoreItem[] }) {
 function MoreScreen({ onSwitch }: { onSwitch?: () => void }) {
   const admin = useAdmin();
   const { session } = useSession();
+  const store = useStore();
+  const storage = usePosStorage();
+  const { confirm } = useConfirm();
   const signOut = useSignOut();
+  // The sales stay on the phone, but only someone of this store signed in here can upload them.
+  async function askSignOut() {
+    const sales = await storage.listSales(store.id).catch(() => []);
+    const pending = sales.filter((s) => !s.uploaded).length;
+    if (
+      pending > 0 &&
+      !(await confirm({
+        title: `Hay ${pending === 1 ? "1 venta" : `${pending} ventas`} sin subir`,
+        description:
+          "Se quedan guardadas en este teléfono, pero no se subirán hasta que alguien de la tienda vuelva a entrar aquí.",
+        confirmLabel: "Cerrar sesión igualmente",
+        tone: "destructive",
+      }))
+    ) {
+      return;
+    }
+    await signOut();
+  }
   const manager = admin.role === "owner" || admin.role === "admin" || admin.isSuperadmin;
   return (
     <Screen title="Más">
@@ -1082,7 +1105,7 @@ function MoreScreen({ onSwitch }: { onSwitch?: () => void }) {
               Cambiar de tienda
             </Button>
           )}
-          <Button variant="ghost" onClick={signOut} data-testid="sign-out">
+          <Button variant="ghost" onClick={() => void askSignOut()} data-testid="sign-out">
             <LogOut size={16} aria-hidden />
             Cerrar sesión
           </Button>

@@ -18,3 +18,5 @@ export * from "./LoadError";
 export * from "./pos/storage";
 export * from "./pos/PosStatus";
 export * from "./pos/PosScreen";
+export * from "./pos/pos-sync";
+export * from "./pos/PosDay";

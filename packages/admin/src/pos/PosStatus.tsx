@@ -83,30 +83,15 @@ function catalogAge(savedAt: string): string {
 /** What the phone holds for the counter. */
 export function PosStatus({
   catalog,
-  storeId,
   online,
-  salesVersion,
+  pending,
 }: {
   catalog: ReturnType<typeof usePosCatalog>;
-  storeId: string;
   online: boolean;
-  /** Changes when a sale is saved. */
-  salesVersion: number;
+  /** Sales on the phone that the server does not have yet. */
+  pending: number | null;
 }) {
-  const storage = usePosStorage();
   const { snapshot, loaded, refreshing, failed, refresh } = catalog;
-  const [pending, setPending] = useState<number | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    void storage.listSales(storeId).then(
-      (sales) => !cancelled && setPending(sales.length),
-      () => !cancelled && setPending(null),
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [storage, storeId, salesVersion]);
 
   const products = useMemo(() => snapshot?.items.length ?? 0, [snapshot]);
 

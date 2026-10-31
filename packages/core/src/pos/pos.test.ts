@@ -3,6 +3,7 @@ import {
   normalizeSearch,
   parseDecimal,
   posCartTotal,
+  posDaySummary,
   posItemPrice,
   posSaleSchema,
   posSearchIndex,
@@ -95,6 +96,46 @@ describe("price and money at the counter", () => {
     expect(parseDecimal("12,5")).toBe(12.5);
     expect(parseDecimal(" 3.25 ")).toBe(3.25);
     expect(parseDecimal("abc")).toBeNaN();
+  });
+});
+
+describe("summary of the day", () => {
+  const now = new Date("2026-10-31T15:00:00");
+  const sold = (
+    extra = {},
+    payments: { amount: number; currency?: string; changeAmount?: number; changeCurrency?: string }[] = [
+      { amount: 100 },
+    ],
+  ) => ({
+    sale: { soldAt: "2026-10-31T10:00:00", payments, ...extra },
+  });
+
+  it("per currency, as charged and net of the change", () => {
+    const summary = posDaySummary(
+      [
+        sold(),
+        sold({}, [{ amount: 50, currency: "USD", changeAmount: 1000, changeCurrency: "CUP" }]),
+        sold({}, [{ amount: 900.5 }]),
+      ],
+      "CUP",
+      now,
+    );
+    expect(summary).toEqual({
+      count: 3,
+      cash: [
+        { currency: "CUP", amount: 0.5 },
+        { currency: "USD", amount: 50 },
+      ],
+    });
+  });
+
+  it("voided sales and other days do not count", () => {
+    expect(
+      posDaySummary([sold({ voided: true }), sold({ soldAt: "2026-10-30T10:00:00" })], "CUP", now),
+    ).toEqual({
+      count: 0,
+      cash: [],
+    });
   });
 });
 
