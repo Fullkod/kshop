@@ -11,6 +11,9 @@ de esta actualización de memoria.
 - KSH0006: páginas legibles, botones y preguntas plegables, barra y vista previa (`2026-11-01-ksh0006-paginas.md`).
 - KSH0006 y KSH0007 subidos y desplegados juntos con permiso de Roberto (`47d862b`).
 - SKU automático al dejarlo vacío (`2026-11-01-sku-automatico.md`), subido por Roberto y desplegado.
+- Landing afinada contra `fullkod.com/es/projects/kshop`: 12 funciones con su plan (Caja de mostrador, Excel y calculadora,
+  moneda del cliente en Pro, ofertas y cupones, ayuda «?» y Kshop Admin, app y marca), aviso de la app «desde el plan Base»
+  y cierre «te la dejamos lista». Pendiente de push.
 - El estado de cada tarea se consulta en Tasknic (KSH0002–KSH0007); aquí solo van los códigos.
 
 ## Qué sigue

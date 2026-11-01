@@ -9,9 +9,12 @@ import {
   Check,
   ClipboardList,
   Coins,
+  FileSpreadsheet,
   MessageCircle,
   Package,
   Smartphone,
+  Store,
+  Tag,
   TrendingUp,
   Truck,
   Warehouse,
@@ -49,23 +52,47 @@ const FEATURES: {
   {
     icon: MessageCircle,
     title: "Vende las 24 horas",
-    text: "Tu catálogo siempre abierto. El cliente compra cuando quiere y el pedido te llega completo por WhatsApp: productos, dirección, entrega y pago. Sin repetir precios ni mandar fotos una a una.",
+    text: "Tu catálogo siempre abierto, con fotos, precios, tallas y colores. El cliente compra cuando quiere y el pedido te llega completo por WhatsApp: productos, dirección, entrega y pago. Sin repetir precios ni mandar fotos una a una.",
     module: "storefront",
     card: "bg-primary text-primary-foreground",
     box: "bg-white/15 text-gold",
   },
   {
-    icon: Package,
-    title: "Inventario al día",
-    text: "Cada pedido aparta sus unidades, así no vendes lo que no tienes. Ves lo disponible y lo reservado por talla y color, lo que se acaba y cuánto vale tu mercancía. Todo el catálogo se sube desde Excel.",
+    icon: Store,
+    title: "Vende en el mostrador",
+    text: "Busca por nombre o código, toca para sumar al ticket y cobra. El stock baja al instante. En Kshop Admin sigue vendiendo aunque se vaya internet: las ventas se guardan en el teléfono y se suben solas al volver la conexión.",
+    module: "pos",
     card: "bg-surface",
     box: "bg-accent-soft text-primary",
   },
   {
-    icon: Warehouse,
-    title: "Varios almacenes",
-    text: "Stock por local o almacén, cuál sirve cada zona, puntos de recogida y traspasos con el historial de cada movimiento.",
-    module: "multi_warehouse",
+    icon: Package,
+    title: "Inventario al día",
+    text: "Cada pedido aparta sus unidades, así no vendes lo que no tienes. Ves lo disponible y lo reservado por talla y color, lo que se está acabando y cuánto vale tu mercancía.",
+    card: "bg-surface",
+    box: "bg-accent-soft text-primary",
+  },
+  {
+    icon: FileSpreadsheet,
+    title: "Tu catálogo desde Excel",
+    text: "Descarga la plantilla, rellénala, revisa la vista previa y súbela: cientos de productos de una vez, y luego actualizas precios y stock igual. La calculadora del editor reparte el costo del paquete y te propone el precio con el margen que quieras. El cliente nunca ve tu costo.",
+    module: "excel_import",
+    card: "bg-surface",
+    box: "bg-accent-soft text-primary",
+  },
+  {
+    icon: Coins,
+    title: "Cobra en la moneda del cliente",
+    text: "Precios en CUP, USD o EUR con la tasa que tú pones (Kshop te sugiere la del día). Cobra en una moneda o reparte el pago en dos, con el vuelto calculado. Efectivo, transferencia o lo que uses.",
+    module: "multi_currency",
+    card: "bg-surface",
+    box: "bg-accent-soft text-primary",
+  },
+  {
+    icon: Tag,
+    title: "Ofertas y cupones",
+    text: "Rebajas programadas con el precio tachado y cuenta atrás, y descuento a mano al tomar un pedido. Con el Pro, cupones con su límite de usos para premiar a tus clientes.",
+    module: "discounts",
     card: "bg-surface",
     box: "bg-accent-soft text-primary",
   },
@@ -86,16 +113,17 @@ const FEATURES: {
     box: "bg-success-soft text-whatsapp",
   },
   {
-    icon: Coins,
-    title: "Cobra como ya cobras",
-    text: "Efectivo, transferencia o lo que uses, en CUP, USD o EUR con la tasa del día. Sabes qué está cobrado y qué falta por cobrar.",
+    icon: Warehouse,
+    title: "Varios almacenes",
+    text: "Stock por local o almacén, cuál sirve cada zona, puntos de recogida y traspasos con el historial de cada movimiento.",
+    module: "multi_warehouse",
     card: "bg-surface",
     box: "bg-accent-soft text-primary",
   },
   {
     icon: TrendingUp,
     title: "Sabe cuánto ganas",
-    text: "Ventas del día y del mes por moneda, costo de lo vendido, margen, gastos y ganancia neta, con el cierre del día para cuadrar la caja.",
+    text: "Vendido, cobrado y pendiente por moneda, costo de lo vendido, margen por producto, gastos y ganancia neta, con el cierre de cada día y todo exportable a Excel. Los demás planes traen «Ventas de hoy».",
     module: "finance",
     card: "bg-night text-white",
     box: "bg-white/10 text-gold",
@@ -103,15 +131,16 @@ const FEATURES: {
   {
     icon: ClipboardList,
     title: "Todo en un solo panel",
-    text: "Pedidos de la web, de la app, los que tomas por teléfono y lo que vendes en el mostrador con la caja, aunque se vaya internet. Cada uno con su cliente e historial, y tu equipo con sus propios permisos.",
+    text: "Pedidos de la web, de la app, los que tomas por teléfono y las ventas del mostrador, cada uno con su cliente e historial. Tu equipo entra con sus propios permisos, también desde el móvil con Kshop Admin, y cada pantalla trae su «?» con guías paso a paso.",
     card: "bg-surface",
     box: "bg-accent-soft text-primary",
   },
   {
     id: "app",
     icon: Smartphone,
-    title: "Clientes que vuelven",
-    text: "Tu app Android con tu logo en su móvil, ofertas con cuenta atrás y cupones. Y Kshop Admin para llevar el negocio desde el tuyo.",
+    title: "Tu app y tu marca",
+    text: "Tu app Android con tu logo en el móvil de tus clientes. Con el Pro, además, tu propio dominio y tu portada, colores, banners y menús. Te dejamos la tienda montada con tu marca.",
+    module: "mobile_app",
     card: "bg-gold text-night",
     box: "bg-night/10 text-night",
   },
@@ -195,6 +224,7 @@ export default async function PlatformHome() {
     module && !data.plans[0]?.modules.includes(module)
       ? data.plans.find((p) => p.modules.includes(module))?.name
       : undefined;
+  const appPlan = data.plans.find((p) => p.modules.includes("mobile_app"))?.name;
 
   return (
     <main className="flex min-h-dvh flex-col bg-background text-foreground [container-type:inline-size]">
@@ -236,7 +266,7 @@ export default async function PlatformHome() {
               <span className="rounded-full bg-gold px-2 py-[3px] text-[11px] font-extrabold text-night">
                 NUEVO
               </span>
-              Tu propia app Android, incluida en el plan
+              {appPlan ? `Tu propia app Android, incluida desde el plan ${appPlan}` : "Tu propia app Android"}
             </span>
             <h1 className="font-display text-[clamp(40px,5.4cqw,68px)] leading-[1.02] font-extrabold tracking-[-0.03em] text-balance">
               Tu tienda online, con tu dirección y tus pedidos por <span className="text-gold">WhatsApp</span>
@@ -421,7 +451,10 @@ export default async function PlatformHome() {
             <h2 className="font-display text-[clamp(28px,3.4cqw,44px)] leading-[1.08] font-extrabold tracking-[-0.02em] text-balance">
               Abre tu tienda hoy y recibe el primer pedido esta semana
             </h2>
-            <p className="text-white/85">Te ayudamos a subir tu catálogo desde Excel.</p>
+            <p className="text-white/85">
+              Te la dejamos lista: tu catálogo desde Excel, tu portada, tus banners y tus menús. Y te
+              respondemos nosotros mismos por WhatsApp.
+            </p>
           </div>
           {talkUrl && (
             <a
