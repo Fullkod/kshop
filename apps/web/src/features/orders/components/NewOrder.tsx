@@ -210,7 +210,7 @@ export function NewOrder() {
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="5123 4567"
+              placeholder="5 123 4567"
               required
             />
           </div>

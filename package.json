@@ -51,6 +51,7 @@
     "qa:sections": "node scripts/db-env.mjs node scripts/qa-sections.mjs",
     "qa:dialogs": "node scripts/db-env.mjs node scripts/qa-dialogs.mjs",
     "qa:confirms": "node scripts/db-env.mjs node scripts/qa-confirms.mjs",
+    "qa:price-calculator": "node scripts/db-env.mjs node scripts/qa-price-calculator.mjs",
     "qa:orders": "node scripts/db-env.mjs node scripts/qa-orders.mjs",
     "qa:payments": "node scripts/db-env.mjs node scripts/qa-payments.mjs",
     "qa:pos": "node scripts/db-env.mjs node scripts/qa-pos.mjs",

@@ -253,9 +253,9 @@ try {
   await phone.fill("#password", PASSWORD);
   await phone.click("button[type=submit]");
   await phone.waitForURL(`${APP}/account`, { timeout: 30000 });
-  await phone.getByText("+53 5999 0701").first().waitFor({ timeout: 15000 });
+  await phone.getByText("+53 5 999 0701").first().waitFor({ timeout: 15000 });
   await phone.reload();
-  await phone.getByText("+53 5999 0701").first().waitFor({ timeout: 15000 });
+  await phone.getByText("+53 5 999 0701").first().waitFor({ timeout: 15000 });
   check("account: signs up and the session survives a restart", true);
   await shot(phone, "06-app-cuenta-390");
 

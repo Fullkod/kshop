@@ -5,6 +5,7 @@ import {
   formatMoney,
   hasMinRole,
   isoToLocal,
+  formatPhone,
   localToIso,
   orderCode,
   rewardLabel,
@@ -791,7 +792,7 @@ export function VouchersPage() {
                           ) : (
                             "—"
                           )}{" "}
-                          · {u.order?.customerName ?? u.phone}
+                          · {u.order?.customerName ?? formatPhone(u.phone)}
                           {u.released && (
                             <span className="text-muted-foreground"> (cancelado, uso devuelto)</span>
                           )}

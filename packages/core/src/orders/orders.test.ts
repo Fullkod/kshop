@@ -8,6 +8,7 @@ import {
   canTransition,
   checkoutSchema,
   customerRegisterSchema,
+  formatPhone,
   isStalePending,
   needsShippingCost,
   normalizePhone,
@@ -43,6 +44,22 @@ describe("normalizePhone", () => {
     ).toBe(
       customerRegisterSchema.parse({ firstName: "Ana", phone: "+53 51234567", password: "secreta123" }).phone,
     );
+  });
+});
+
+describe("formatPhone", () => {
+  it.each([
+    ["+5352564206", "+53 5 256 4206"],
+    ["+5378383412", "+53 7 838 3412"],
+    ["+5322623456", "+53 22 62 3456"],
+    ["+13055550100", "+13055550100"],
+  ])("%s -> %s", (phone, expected) => {
+    expect(formatPhone(phone)).toBe(expected);
+  });
+
+  it("what is shown normalizes back to the same number", () => {
+    expect(normalizePhone(formatPhone("+5352564206"))).toBe("+5352564206");
+    expect(normalizePhone(formatPhone("+5322623456"))).toBe("+5322623456");
   });
 });
 

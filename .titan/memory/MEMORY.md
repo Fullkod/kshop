@@ -41,7 +41,9 @@
 - [tienda-minimercado.md](project/tienda-minimercado.md) — Cliente real: portada y marca montadas sin catálogo; el superadmin ya puede subir a `store-media`
 - [pendiente-superadmin-importar-excel.md](project/pendiente-superadmin-importar-excel.md) — Hecho 2026-10-30: el superadmin importa Excel a cualquier tienda (`store-imports`, solo INSERT en `imports/`)
 - [pendiente-editar-categorias.md](project/pendiente-editar-categorias.md) — Hecho 2026-10-30: editar categorías daba 500 (trigger con `ltree` y `search_path` vacío); cuidado con operadores de extensiones
+- [2026-11-01-dominio-klaushop.md](project/2026-11-01-dominio-klaushop.md) — **Corte 8.7 hecho:** `klaushop.fullkod.com` sirve la tienda `klau` (fila `custom` en `store_domains`, Vercel por Roberto); falta `--delta` y verify final
 - [2026-10-31-donde-quedamos.md](project/2026-10-31-donde-quedamos.md) — **Dónde quedamos** (2026-10-31): POS fases 1-6 en producción, venta también en la web, APK publicados y la web adaptada al teléfono (2 rondas, tema claro/oscuro); falta probar en un Android y un iPhone reales. `main` al día en `origin`
+- [2026-10-31-ksh0003-calculadora-precio.md](project/2026-10-31-ksh0003-calculadora-precio.md) — KSH0003: calculadora de costo unitario + margen en el editor de producto (diálogo, web y Kshop Admin), `unitCost`/`priceFromCost` en core, teléfonos cubanos como `+53 5 256 4206`; `pnpm qa:price-calculator`
 - [2026-10-30-donde-quedamos.md](project/2026-10-30-donde-quedamos.md) — Superado: cobro mixto y POS fases 1-2 en producción
 
 ## feedback/ — Correcciones y preferencias

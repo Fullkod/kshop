@@ -27,10 +27,16 @@ export function normalizePhone(input: string, defaultCountryCode = "53"): string
   return E164_PATTERN.test(phone) ? phone : null;
 }
 
-/** "+5351234567" -> "+53 5123 4567" (other countries: just the E.164 number). */
+/**
+ * Cuban numbers grouped as they are written in Cuba: "+53 5 123 4567" (mobile), "+53 7 838 3412" (Havana) and
+ * "+53 22 62 3456" (the other provinces, two-digit area code). Other countries: just the E.164 number.
+ */
 export function formatPhone(phone: string): string {
-  const cuba = /^\+53(\d{4})(\d{4})$/.exec(phone);
-  return cuba ? `+53 ${cuba[1]} ${cuba[2]}` : phone;
+  const cuba = /^\+53(\d{8})$/.exec(phone);
+  if (!cuba) return phone;
+  const national = cuba[1]!;
+  const area = /^[57]/.test(national) ? 1 : 2;
+  return `+53 ${national.slice(0, area)} ${national.slice(area, 4)} ${national.slice(4)}`;
 }
 
 export const phoneSchema = z

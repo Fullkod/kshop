@@ -33,6 +33,7 @@ import {
   type CatalogStructure,
 } from "./use-catalog";
 import { STATUS_LABELS } from "./ProductList";
+import { PriceCalculatorDialog, type CalculatedPrice } from "./PriceCalculatorDialog";
 
 type ProductNode = NonNullable<
   ResultOf<typeof ProductDetailQuery>["productsCollection"]
@@ -219,6 +220,8 @@ export function ProductEditor({ productId }: { productId?: string }) {
   const [fetched, setFetched] = useState<ProductNode | null>(null);
   const [productError, setProductError] = useState<string | null>(null);
   const [productVersion, setProductVersion] = useState(0);
+  // KSH0003: the cost and price calculator, for one variant (its index) or for all of them.
+  const [calculator, setCalculator] = useState<number | "all" | null>(null);
 
   const baseCurrency = (structure?.currencies.find((c) => c.isBase)?.currency ??
     store.baseCurrency) as CurrencyCode;
@@ -358,6 +361,11 @@ export function ProductEditor({ productId }: { productId?: string }) {
 
   function applyToAll(field: "price" | "compareAtPrice" | "cost" | "costCurrency" | "stock", value: string) {
     set({ variants: form!.variants.map((v) => ({ ...v, [field]: value })) });
+  }
+
+  function applyCalculated(result: CalculatedPrice) {
+    if (calculator === "all") set({ variants: form!.variants.map((v) => ({ ...v, ...result })) });
+    else if (calculator != null) setVariant(calculator, result);
   }
 
   function buildInput(): ProductInput {
@@ -556,6 +564,16 @@ export function ProductEditor({ productId }: { productId?: string }) {
                 <option key={c}>{c}</option>
               ))}
             </select>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-auto min-h-9 shrink-0"
+              aria-label={`Calcular costo y precio ${v.name}`}
+              onClick={() => setCalculator(i)}
+            >
+              Calcular
+            </Button>
           </div>
           {num(v.cost) != null && !costRate && (
             <p className="mt-1 text-xs text-destructive">
@@ -856,6 +874,17 @@ export function ProductEditor({ productId }: { productId?: string }) {
                   placeholder="Stock"
                   onBlur={(e) => e.target.value && applyToAll("stock", e.target.value)}
                 />
+                {seesCosts && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-fit sm:col-span-4"
+                    onClick={() => setCalculator("all")}
+                  >
+                    Calcular costo y precio para todas
+                  </Button>
+                )}
               </div>
             )}
 
@@ -1154,6 +1183,21 @@ export function ProductEditor({ productId }: { productId?: string }) {
             Borrar producto
           </Button>
         </div>
+      )}
+
+      {seesCosts && (
+        <PriceCalculatorDialog
+          open={calculator !== null}
+          onClose={() => setCalculator(null)}
+          target={
+            calculator === "all"
+              ? "Para todas las variantes"
+              : (calculator != null && form.variants[calculator]?.name) || form.name || "Este producto"
+          }
+          baseCurrency={baseCurrency}
+          rate={rate}
+          onApply={applyCalculated}
+        />
       )}
     </div>
   );

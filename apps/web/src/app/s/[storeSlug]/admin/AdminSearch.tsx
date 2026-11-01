@@ -1,6 +1,12 @@
 "use client";
 
-import { formatMoney, ORDER_STATUS_LABELS, type CurrencyCode, type OrderStatus } from "@kshop/core";
+import {
+  formatMoney,
+  formatPhone,
+  ORDER_STATUS_LABELS,
+  type CurrencyCode,
+  type OrderStatus,
+} from "@kshop/core";
 import { asResult } from "@kshop/data";
 import { cn, type LucideIcon, Package, Search, ShoppingBag, UserRound, X } from "@kshop/ui";
 import { useStore } from "@kshop/storefront";
@@ -124,8 +130,8 @@ export function AdminSearch({
           key: `c-${node.id}`,
           href: `/admin/orders?q=${encodeURIComponent(node.phone)}`,
           icon: UserRound,
-          title: [node.firstName, node.lastName].filter(Boolean).join(" ") || node.phone,
-          detail: `${node.phone} · ver sus pedidos`,
+          title: [node.firstName, node.lastName].filter(Boolean).join(" ") || formatPhone(node.phone),
+          detail: `${formatPhone(node.phone)} · ver sus pedidos`,
           group: "Clientes",
         })),
       ];

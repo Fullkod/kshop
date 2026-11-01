@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { excelRowSchema, IMPORT_MAX_IMAGES } from "./excel";
-import { convertFromBase, convertToBase, marginPercent } from "./pricing";
+import { convertFromBase, convertToBase, marginPercent, priceFromCost, unitCost } from "./pricing";
 import { productInputSchema, productTypeInputSchema } from "./schemas";
 import {
   catalogSlug,
@@ -81,6 +81,25 @@ describe("pricing", () => {
     expect(convertToBase(5, 200)).toBe(1000);
     expect(marginPercent(1500, 1000)).toBe(33.3);
     expect(marginPercent(1500, null)).toBeNull();
+  });
+
+  it("computes the cost of one unit of a lot", () => {
+    // A bag of 160 candies for 250 CUP
+    expect(unitCost(250, 160)).toBe(1.56);
+    expect(unitCost(1200, 1)).toBe(1200);
+    expect(() => unitCost(250, 0)).toThrow();
+  });
+
+  it("computes the sale price from the cost and the margin", () => {
+    expect(priceFromCost(100, 30, "cost")).toBe(130);
+    expect(priceFromCost(100, 30, "price")).toBe(142.86);
+    expect(marginPercent(142.86, 100)).toBe(30);
+    expect(priceFromCost(100, 0, "cost")).toBe(100);
+    // Rounded up to a multiple: 1.56 at 30 % -> 2.03 -> 5 CUP
+    expect(priceFromCost(1.56, 30, "cost", 5)).toBe(5);
+    expect(priceFromCost(1.56, 30, "cost", 1)).toBe(3);
+    expect(() => priceFromCost(100, 100, "price")).toThrow();
+    expect(() => priceFromCost(100, -1, "cost")).toThrow();
   });
 });
 

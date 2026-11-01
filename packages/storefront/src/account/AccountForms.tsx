@@ -66,7 +66,7 @@ const PhoneInput = ({ invalid }: { invalid?: boolean }) => (
     type="tel"
     inputMode="tel"
     autoComplete="tel"
-    placeholder="5123 4567"
+    placeholder="5 123 4567"
     required
     aria-invalid={invalid || undefined}
   />
@@ -212,7 +212,7 @@ export function CustomerRecoverForm() {
           type="tel"
           inputMode="tel"
           autoComplete="tel"
-          placeholder="5123 4567"
+          placeholder="5 123 4567"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           required

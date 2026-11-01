@@ -151,7 +151,7 @@ export function CheckoutView() {
               type="tel"
               inputMode="tel"
               autoComplete="tel"
-              placeholder="5123 4567"
+              placeholder="5 123 4567"
               defaultValue={customer ? formatPhone(customer.phone) : ""}
               required
             />
