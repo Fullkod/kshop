@@ -107,13 +107,24 @@ export function readCachedAdminState(userId: string, storeId: string): AdminStat
   try {
     const raw = window.localStorage.getItem(`${CACHE_PREFIX}${userId}.${storeId}`);
     if (!raw) return null;
-    const cached = JSON.parse(raw) as CachedAdminState;
-    if (Date.now() - cached.savedAt > CACHE_MAX_AGE_MS) return null;
+    const cached = JSON.parse(raw) as Partial<CachedAdminState>;
+    if (typeof cached.savedAt !== "number" || Date.now() - cached.savedAt > CACHE_MAX_AGE_MS) return null;
+    if (!Array.isArray(cached.enabledModules)) return null;
     const { savedAt: _savedAt, ...state } = cached;
+    // A copy saved by an older deploy may lack fields added since (KSH0004 added `upgrades` and the menu crashed on
+    // it): every collection gets its empty default, and /me replaces the whole state right after.
     return {
-      ...state,
-      enabledModules: new Set(state.enabledModules.filter(isModuleCode)),
+      role: state.role ?? null,
+      isSuperadmin: state.isSuperadmin ?? false,
+      subscription: state.subscription ?? null,
+      storeStatus: state.storeStatus ?? "active",
+      toConfirm: state.toConfirm ?? 0,
+      limits: state.limits ?? {},
+      addonPrices: state.addonPrices ?? {},
+      upgrades: state.upgrades ?? {},
+      stores: state.stores ?? [],
       sections: state.sections ?? {},
+      enabledModules: new Set(cached.enabledModules.filter(isModuleCode)),
     };
   } catch {
     return null;
