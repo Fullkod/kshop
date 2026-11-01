@@ -8,6 +8,18 @@
  * touch: a finger instead of a mouse (coarse pointer), or a phone-wide screen, which is a phone in practice even when
  * the browser does not say so. Bigger targets and 16 px fields live under it.
  */
+/* dark: the system's dark unless light was chosen here, or dark chosen here (the data-theme of theme.tsx). */
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:not(:where([data-theme="light"], [data-theme="light"] *)) {
+      @slot;
+    }
+  }
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+}
+
 @custom-variant touch {
   @media (pointer: coarse), (width < 48rem) {
     @slot;
@@ -114,8 +126,9 @@
   color-scheme: light;
 }
 
+/* Dark by the system, unless this browser chose light; and dark by choice (data-theme, see @kshop/ui theme.tsx). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #120a28;
     --fg: #f1edfa;
     --surface: #1c1238;
@@ -136,6 +149,27 @@
     --bad-bg: #3a1a1e;
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #120a28;
+  --fg: #f1edfa;
+  --surface: #1c1238;
+  --surface-2: #241947;
+  --muted: #a79fc2;
+  --line: #2f2353;
+  --accent: #b79cff;
+  --accent-hover: #c9b5ff;
+  --accent-fg: #120a28;
+  --accent-soft: #261a4a;
+  --ink: #0b0618;
+  --ink-muted: #a79fc2;
+  --ok: #6fd39c;
+  --ok-bg: #17321f;
+  --warn: #f5c451;
+  --warn-bg: #3a2e12;
+  --bad: #ff8f95;
+  --bad-bg: #3a1a1e;
+  color-scheme: dark;
 }
 
 /*

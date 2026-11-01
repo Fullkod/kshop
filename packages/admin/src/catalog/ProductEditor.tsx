@@ -17,11 +17,12 @@ import {
   type ProductStatus,
 } from "@kshop/core";
 import { asResult, type ProductDetailQuery, type ProductMedia, type ResultOf } from "@kshop/data";
-import { Alert, Badge, Button, Card, FieldError, Input, Label, Select, useConfirm } from "@kshop/ui";
+import { Alert, Badge, Button, Card, FieldError, Input, Label, Select, useConfirm, X } from "@kshop/ui";
 import { useEffect, useMemo, useState } from "react";
 import { uploadProductImage } from "../images";
 import { LoadError } from "../LoadError";
 import { useSession } from "../session";
+import { useMediaQuery } from "../use-media-query";
 import { useRouter, useStore } from "@kshop/storefront";
 import {
   categoryOptions,
@@ -209,6 +210,8 @@ export function ProductEditor({ productId }: { productId?: string }) {
   const { catalog, seesCosts, canDelete, has } = useCatalogApi();
   const action = useApiAction();
   const { confirm } = useConfirm();
+  // Below md the variants are cards, not a table.
+  const wide = useMediaQuery("(min-width: 48rem)");
   const [loadedForm, setForm] = useState<Form | null>(null);
   const [mediaEdits, setMediaEdits] = useState<ProductMedia[] | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -304,32 +307,53 @@ export function ProductEditor({ productId }: { productId?: string }) {
     });
   }
 
-  /** Builds the variant matrix from the selected values, keeping data of variants that already exist. */
-  function generateVariants() {
+  /** The combinations of the selected values that are not in the list yet. */
+  function missingCombinations() {
+    if (!form) return [];
     const axes = selectionAttributes.map((a) => ({
       attributeId: a.id,
-      values: a.values.filter((v) => (form!.axes[a.id] ?? []).includes(v.id)),
+      values: a.values.filter((v) => (form.axes[a.id] ?? []).includes(v.id)),
     }));
-    const existing = new Map(form!.variants.map((v) => [v.key, v]));
+    const existing = new Set(form.variants.map((v) => v.key));
+    return variantMatrix(axes)
+      .map((combo) => {
+        const attributeValues = combo.map((c) => ({ attributeId: c.attributeId, valueId: c.value.id }));
+        return { combo, attributeValues, key: combinationKey(attributeValues) };
+      })
+      .filter((c) => !existing.has(c.key));
+  }
+
+  /** Adds the missing variants to the list; what exists stays as it is (a row is taken out with «Quitar»). */
+  function generateVariants() {
     const template = form!.variants[0] ?? emptyVariant(baseCurrency);
-    const variants = variantMatrix(axes).map((combo) => {
-      const attributeValues = combo.map((c) => ({ attributeId: c.attributeId, valueId: c.value.id }));
-      const key = combinationKey(attributeValues);
-      return (
-        existing.get(key) ?? {
-          ...emptyVariant(baseCurrency),
-          key,
-          name: variantName(combo),
-          sku: suggestSku(form!.name || "SKU", combo),
-          price: template.price,
-          compareAtPrice: template.compareAtPrice,
-          cost: template.cost,
-          costCurrency: template.costCurrency,
-          attributeValues,
-        }
-      );
-    });
-    set({ variants });
+    const added = missingCombinations().map(({ combo, attributeValues, key }) => ({
+      ...emptyVariant(baseCurrency),
+      key,
+      name: variantName(combo),
+      sku: suggestSku(form!.name || "SKU", combo),
+      price: template.price,
+      compareAtPrice: template.compareAtPrice,
+      cost: template.cost,
+      costCurrency: template.costCurrency,
+      attributeValues,
+    }));
+    set({ variants: [...form!.variants, ...added] });
+  }
+
+  /** Out of the list; the server deletes it on save (past orders keep what they sold). */
+  async function removeVariant(index: number) {
+    const variant = form!.variants[index]!;
+    if (
+      variant.id &&
+      !(await confirm({
+        title: `¿Quitar la variante ${variant.name || variant.sku}?`,
+        description: "Desaparece de la tienda al guardar. Los pedidos ya hechos conservan lo que se vendió.",
+        confirmLabel: "Quitar",
+        tone: "destructive",
+      }))
+    )
+      return;
+    set({ variants: form!.variants.filter((_, i) => i !== index) });
   }
 
   function applyToAll(field: "price" | "compareAtPrice" | "cost" | "costCurrency" | "stock", value: string) {
@@ -477,6 +501,124 @@ export function ProductEditor({ productId }: { productId?: string }) {
 
   const rate = (currency: CurrencyCode) =>
     currency === baseCurrency ? 1 : structure.currencies.find((c) => c.currency === currency)?.rateToBase;
+  const missing = missingCombinations();
+
+  const variantFields = {
+    sku: (v: VariantRow, i: number) => (
+      <Input
+        aria-label={`SKU ${v.name}`}
+        value={v.sku}
+        onChange={(e) => setVariant(i, { sku: e.target.value })}
+        className="w-full min-w-48"
+      />
+    ),
+    price: (v: VariantRow, i: number) => (
+      <Input
+        aria-label={`Precio ${v.name}`}
+        inputMode="decimal"
+        value={v.price}
+        onChange={(e) => setVariant(i, { price: e.target.value })}
+        className="min-w-24"
+      />
+    ),
+    compareAtPrice: (v: VariantRow, i: number) => (
+      <Input
+        aria-label={`Precio anterior ${v.name}`}
+        inputMode="decimal"
+        value={v.compareAtPrice}
+        onChange={(e) => setVariant(i, { compareAtPrice: e.target.value })}
+        className="min-w-24"
+      />
+    ),
+    cost: (v: VariantRow, i: number) => {
+      const costRate = rate(v.costCurrency);
+      const margin =
+        num(v.cost) != null && costRate
+          ? marginPercent(num(v.price) ?? 0, convertToBase(num(v.cost)!, costRate))
+          : null;
+      return (
+        <>
+          <div className="flex gap-1">
+            <Input
+              aria-label={`Costo ${v.name}`}
+              inputMode="decimal"
+              value={v.cost}
+              onChange={(e) => setVariant(i, { cost: e.target.value })}
+              className="w-24 min-w-0 flex-1"
+            />
+            <select
+              aria-label={`Moneda del costo ${v.name}`}
+              value={v.costCurrency}
+              onChange={(e) => setVariant(i, { costCurrency: e.target.value as CurrencyCode })}
+              className="rounded-md border bg-background px-1 text-sm"
+            >
+              {CURRENCY_CODES.map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+          {num(v.cost) != null && !costRate && (
+            <p className="mt-1 text-xs text-destructive">
+              Falta la tasa de {v.costCurrency} (pestaña Monedas)
+            </p>
+          )}
+          {margin != null && <p className="mt-1 text-xs text-muted-foreground">Margen {margin}%</p>}
+        </>
+      );
+    },
+    stock: (v: VariantRow, i: number) => (
+      <>
+        {v.trackInventory ? (
+          <Input
+            aria-label={`Stock ${v.name}`}
+            inputMode="numeric"
+            value={v.stock}
+            onChange={(e) => setVariant(i, { stock: e.target.value })}
+            className="w-24"
+          />
+        ) : (
+          <Badge variant="muted">Sin control</Badge>
+        )}
+        <label className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={!v.trackInventory}
+            onChange={(e) => setVariant(i, { trackInventory: !e.target.checked })}
+          />
+          No controlar stock
+        </label>
+      </>
+    ),
+    image: (v: VariantRow, i: number) => (
+      <select
+        aria-label={`Imagen de ${v.name || "la variante"}`}
+        value={v.mediaId}
+        onChange={(e) => setVariant(i, { mediaId: e.target.value })}
+        className="rounded-md border bg-background px-1 py-1 text-sm"
+      >
+        <option value="">—</option>
+        {media.map((m, mi) => (
+          <option key={m.id} value={m.id}>
+            Imagen {mi + 1}
+          </option>
+        ))}
+      </select>
+    ),
+    remove: (v: VariantRow, i: number) => (
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        aria-label={`Quitar ${v.name || v.sku || "la variante"}`}
+        title="Quitar"
+        disabled={form.variants.length === 1}
+        onClick={() => void removeVariant(i)}
+        data-testid="remove-variant"
+      >
+        <X size={16} aria-hidden />
+      </Button>
+    ),
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -670,182 +812,139 @@ export function ProductEditor({ productId }: { productId?: string }) {
                 </div>
               </div>
             ))}
-            {selectionAttributes.length > 0 && (
+            {missing.length > 0 && (
               <Button type="button" variant="outline" className="self-start" onClick={generateVariants}>
-                Generar variantes (
-                {selectionAttributes.reduce((n, a) => n * Math.max((form.axes[a.id] ?? []).length, 1), 1)})
+                {form.variants.length === 0
+                  ? `Generar variantes (${missing.length})`
+                  : missing.length === 1
+                    ? "Generar la variante que falta"
+                    : `Generar las ${missing.length} variantes que faltan`}
               </Button>
             )}
           </div>
         )}
 
         {form.variants.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm" data-testid="variants-table">
-              <thead className="text-muted-foreground">
-                <tr>
-                  {type?.hasVariants && <th className="py-2 pr-2 font-medium">Variante</th>}
-                  <th className="py-2 pr-2 font-medium">SKU</th>
-                  <th className="py-2 pr-2 font-medium">Precio ({baseCurrency})</th>
-                  <th className="py-2 pr-2 font-medium">Antes</th>
-                  {seesCosts && <th className="py-2 pr-2 font-medium">Costo</th>}
-                  <th className="py-2 pr-2 font-medium">
-                    Stock
-                    {extraWarehouses.length > 0 && has("multi_warehouse") && ` (${defaultWarehouse?.name})`}
-                  </th>
-                  {media.length > 0 && <th className="py-2 pr-2 font-medium">Imagen</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {form.variants.length > 1 && (
-                  <tr className="bg-surface">
-                    {type?.hasVariants && (
-                      <td className="py-1 pr-2 text-xs text-muted-foreground">Para todas →</td>
-                    )}
-                    <td />
-                    <td className="py-1 pr-2">
-                      <Input
-                        aria-label="Precio para todas"
-                        placeholder="Precio"
-                        onBlur={(e) => e.target.value && applyToAll("price", e.target.value)}
-                      />
-                    </td>
-                    <td className="py-1 pr-2">
-                      <Input
-                        aria-label="Precio anterior para todas"
-                        onBlur={(e) => e.target.value && applyToAll("compareAtPrice", e.target.value)}
-                      />
-                    </td>
-                    {seesCosts && (
-                      <td className="py-1 pr-2">
-                        <Input
-                          aria-label="Costo para todas"
-                          placeholder="Costo"
-                          onBlur={(e) => e.target.value && applyToAll("cost", e.target.value)}
-                        />
-                      </td>
-                    )}
-                    <td className="py-1 pr-2">
-                      <Input
-                        aria-label="Stock para todas"
-                        onBlur={(e) => e.target.value && applyToAll("stock", e.target.value)}
-                      />
-                    </td>
-                    {media.length > 0 && <td />}
-                  </tr>
+          <div className="flex flex-col gap-3">
+            {form.variants.length > 1 && (
+              <div
+                className="grid gap-2 rounded-md bg-surface p-3 sm:grid-cols-4"
+                data-testid="variants-apply-all"
+              >
+                <p className="text-xs text-muted-foreground sm:col-span-4">
+                  Para todas las variantes (se aplica al salir del campo)
+                </p>
+                <Input
+                  aria-label="Precio para todas"
+                  placeholder="Precio"
+                  onBlur={(e) => e.target.value && applyToAll("price", e.target.value)}
+                />
+                <Input
+                  aria-label="Precio anterior para todas"
+                  placeholder="Precio anterior"
+                  onBlur={(e) => e.target.value && applyToAll("compareAtPrice", e.target.value)}
+                />
+                {seesCosts && (
+                  <Input
+                    aria-label="Costo para todas"
+                    placeholder="Costo"
+                    onBlur={(e) => e.target.value && applyToAll("cost", e.target.value)}
+                  />
                 )}
-                {form.variants.map((v, i) => {
-                  const costRate = rate(v.costCurrency);
-                  const margin =
-                    num(v.cost) != null && costRate
-                      ? marginPercent(num(v.price) ?? 0, convertToBase(num(v.cost)!, costRate))
-                      : null;
-                  return (
-                    <tr key={v.id ?? v.key} className="border-t align-top">
-                      {type?.hasVariants && <td className="py-2 pr-2 whitespace-nowrap">{v.name}</td>}
-                      <td className="py-2 pr-2">
-                        <Input
-                          aria-label={`SKU ${v.name}`}
-                          value={v.sku}
-                          onChange={(e) => setVariant(i, { sku: e.target.value })}
-                          className="w-56"
-                        />
-                      </td>
-                      <td className="py-2 pr-2">
-                        <Input
-                          aria-label={`Precio ${v.name}`}
-                          inputMode="decimal"
-                          value={v.price}
-                          onChange={(e) => setVariant(i, { price: e.target.value })}
-                        />
-                      </td>
-                      <td className="py-2 pr-2">
-                        <Input
-                          aria-label={`Precio anterior ${v.name}`}
-                          inputMode="decimal"
-                          value={v.compareAtPrice}
-                          onChange={(e) => setVariant(i, { compareAtPrice: e.target.value })}
-                        />
-                      </td>
-                      {seesCosts && (
-                        <td className="py-2 pr-2">
-                          <div className="flex gap-1">
-                            <Input
-                              aria-label={`Costo ${v.name}`}
-                              inputMode="decimal"
-                              value={v.cost}
-                              onChange={(e) => setVariant(i, { cost: e.target.value })}
-                              className="w-24"
-                            />
-                            <select
-                              aria-label={`Moneda del costo ${v.name}`}
-                              value={v.costCurrency}
-                              onChange={(e) =>
-                                setVariant(i, { costCurrency: e.target.value as CurrencyCode })
-                              }
-                              className="rounded-md border bg-background px-1 text-sm"
-                            >
-                              {CURRENCY_CODES.map((c) => (
-                                <option key={c}>{c}</option>
-                              ))}
-                            </select>
-                          </div>
-                          {num(v.cost) != null && !costRate && (
-                            <p className="mt-1 text-xs text-destructive">
-                              Falta la tasa de {v.costCurrency} (pestaña Monedas)
-                            </p>
-                          )}
-                          {margin != null && (
-                            <p className="mt-1 text-xs text-muted-foreground">Margen {margin}%</p>
-                          )}
-                        </td>
-                      )}
-                      <td className="py-2 pr-2">
-                        {v.trackInventory ? (
-                          <Input
-                            aria-label={`Stock ${v.name}`}
-                            inputMode="numeric"
-                            value={v.stock}
-                            onChange={(e) => setVariant(i, { stock: e.target.value })}
-                            className="w-20"
-                          />
-                        ) : (
-                          <Badge variant="muted">Sin control</Badge>
-                        )}
-                        <label className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                          <input
-                            type="checkbox"
-                            checked={!v.trackInventory}
-                            onChange={(e) => setVariant(i, { trackInventory: !e.target.checked })}
-                          />
-                          No controlar stock
-                        </label>
-                      </td>
-                      {media.length > 0 && (
-                        <td className="py-2 pr-2">
-                          <select
-                            aria-label={`Imagen de ${v.name || "la variante"}`}
-                            value={v.mediaId}
-                            onChange={(e) => setVariant(i, { mediaId: e.target.value })}
-                            className="rounded-md border bg-background px-1 py-1 text-sm"
-                          >
-                            <option value="">—</option>
-                            {media.map((m, mi) => (
-                              <option key={m.id} value={m.id}>
-                                Imagen {mi + 1}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                      )}
+                <Input
+                  aria-label="Stock para todas"
+                  placeholder="Stock"
+                  onBlur={(e) => e.target.value && applyToAll("stock", e.target.value)}
+                />
+              </div>
+            )}
+
+            {wide ? (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[760px] text-left text-sm" data-testid="variants-table">
+                  <thead className="text-muted-foreground">
+                    <tr>
+                      {type?.hasVariants && <th className="py-2 pr-2 font-medium">Variante</th>}
+                      <th className="py-2 pr-2 font-medium">SKU</th>
+                      <th className="py-2 pr-2 font-medium">Precio ({baseCurrency})</th>
+                      <th className="py-2 pr-2 font-medium">Antes</th>
+                      {seesCosts && <th className="py-2 pr-2 font-medium">Costo</th>}
+                      <th className="py-2 pr-2 font-medium">
+                        Stock
+                        {extraWarehouses.length > 0 &&
+                          has("multi_warehouse") &&
+                          ` (${defaultWarehouse?.name})`}
+                      </th>
+                      {media.length > 0 && <th className="py-2 pr-2 font-medium">Imagen</th>}
+                      {type?.hasVariants && <th className="py-2" />}
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {form.variants.map((v, i) => (
+                      <tr key={v.id ?? v.key} className="border-t align-top">
+                        {type?.hasVariants && <td className="py-2 pr-2 whitespace-nowrap">{v.name}</td>}
+                        <td className="py-2 pr-2">{variantFields.sku(v, i)}</td>
+                        <td className="py-2 pr-2">{variantFields.price(v, i)}</td>
+                        <td className="py-2 pr-2">{variantFields.compareAtPrice(v, i)}</td>
+                        {seesCosts && <td className="py-2 pr-2">{variantFields.cost(v, i)}</td>}
+                        <td className="py-2 pr-2">{variantFields.stock(v, i)}</td>
+                        {media.length > 0 && <td className="py-2 pr-2">{variantFields.image(v, i)}</td>}
+                        {type?.hasVariants && <td className="py-1">{variantFields.remove(v, i)}</td>}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              // On a phone each variant is a card: no table to scroll sideways.
+              <ul className="flex flex-col gap-3" data-testid="variants-list">
+                {form.variants.map((v, i) => (
+                  <li key={v.id ?? v.key} className="flex flex-col gap-2 rounded-md border p-3">
+                    {type?.hasVariants && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium">{v.name}</span>
+                        {variantFields.remove(v, i)}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-x-2 gap-y-3 text-xs text-muted-foreground">
+                      <div className="col-span-2 flex flex-col gap-1">
+                        SKU
+                        {variantFields.sku(v, i)}
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        Precio ({baseCurrency}){variantFields.price(v, i)}
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        Antes
+                        {variantFields.compareAtPrice(v, i)}
+                      </div>
+                      {seesCosts && (
+                        <div className="col-span-2 flex flex-col gap-1">
+                          Costo
+                          {variantFields.cost(v, i)}
+                        </div>
+                      )}
+                      <div className="flex flex-col gap-1">
+                        Stock
+                        {extraWarehouses.length > 0 &&
+                          has("multi_warehouse") &&
+                          ` (${defaultWarehouse?.name})`}
+                        {variantFields.stock(v, i)}
+                      </div>
+                      {media.length > 0 && (
+                        <div className="flex flex-col gap-1">
+                          Imagen
+                          {variantFields.image(v, i)}
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
             <FieldError>{action.fieldErrors.variants ?? action.fieldErrors.sku}</FieldError>
             {form.variants.some((v) => num(v.price)) && (
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Desde {formatMoney(Math.min(...form.variants.map((v) => num(v.price) ?? 0)), baseCurrency)}
               </p>
             )}

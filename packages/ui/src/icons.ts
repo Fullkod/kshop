@@ -2,6 +2,9 @@
 // would clash with our components, and one place shows which icons the UI uses.
 export type { LucideIcon, LucideProps } from "lucide-react";
 export {
+  Monitor,
+  Moon,
+  Sun,
   ArrowLeft,
   ArrowRight,
   Banknote,

@@ -31,7 +31,9 @@ const service = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_K
 const results = [];
 function check(name, ok, detail) {
   results.push(ok);
-  console.log(`${ok ? "ok" : "not ok"} - ${name}${ok || detail === undefined ? "" : ` (${String(detail).slice(0, 400)})`}`);
+  console.log(
+    `${ok ? "ok" : "not ok"} - ${name}${ok || detail === undefined ? "" : ` (${String(detail).slice(0, 400)})`}`,
+  );
 }
 
 function chromiumPath() {
@@ -40,18 +42,27 @@ function chromiumPath() {
   const dirs = existsSync(cache) ? readdirSync(cache).filter((d) => /^chromium-\d+$/.test(d)) : [];
   dirs.sort((a, b) => Number(b.split("-")[1]) - Number(a.split("-")[1]));
   for (const dir of dirs) {
-    for (const exe of ["chrome-win64/chrome.exe", "chrome-linux/chrome", "chrome-mac/Chromium.app/Contents/MacOS/Chromium"]) {
+    for (const exe of [
+      "chrome-win64/chrome.exe",
+      "chrome-linux/chrome",
+      "chrome-mac/Chromium.app/Contents/MacOS/Chromium",
+    ]) {
       if (existsSync(join(cache, dir, exe))) return join(cache, dir, exe);
     }
   }
-  throw new Error(`No Chromium in ${cache}; install one (npx playwright install chromium) or set QA_CHROMIUM_PATH`);
+  throw new Error(
+    `No Chromium in ${cache}; install one (npx playwright install chromium) or set QA_CHROMIUM_PATH`,
+  );
 }
 
 const { data: store } = await service.from("stores").select("id").eq("slug", "demo").single();
 const auth = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
-const { data: session, error } = await auth.auth.signInWithPassword({ email: EMAIL, password: env.DEMO_OWNER_PASSWORD });
+const { data: session, error } = await auth.auth.signInWithPassword({
+  email: EMAIL,
+  password: env.DEMO_OWNER_PASSWORD,
+});
 if (error) throw error;
 const api = async (method, path, body) => {
   const res = await fetch(`http://localhost:${port}/api/v1/stores/${store.id}${path}`, {
@@ -87,7 +98,9 @@ const upload = await api("POST", "/pos/sales", {
       deviceId: randomUUID(),
       localNumber: "C-QA",
       soldAt: new Date().toISOString(),
-      lines: [{ variantId: first.variantId, quantity: 1, unitPrice: first.price, productName: first.productName }],
+      lines: [
+        { variantId: first.variantId, quantity: 1, unitPrice: first.price, productName: first.productName },
+      ],
       payments: [{ amount: first.price }],
     },
   ],
@@ -103,7 +116,14 @@ const flaggedUpload = await api("POST", "/pos/sales", {
       deviceId: randomUUID(),
       localNumber: "C-QA2",
       soldAt: new Date().toISOString(),
-      lines: [{ variantId: first.variantId, quantity: 1, unitPrice: first.price + 100, productName: first.productName }],
+      lines: [
+        {
+          variantId: first.variantId,
+          quantity: 1,
+          unitPrice: first.price + 100,
+          productName: first.productName,
+        },
+      ],
       payments: [{ amount: 1, currency: "USD", rate: first.price + 100 }],
     },
   ],
@@ -133,7 +153,10 @@ try {
 
   await page.goto(`${BASE}/admin/orders/${orderId}`);
   await page.getByText("Mostrador").first().waitFor({ timeout: 20000 });
-  check("Pedido: no WhatsApp to a customer that does not exist", (await page.getByText("WhatsApp al cliente").count()) === 0);
+  check(
+    "Pedido: no WhatsApp to a customer that does not exist",
+    (await page.getByText("WhatsApp al cliente").count()) === 0,
+  );
   await page.screenshot({ path: join(OUT, "mostrador-pedido.png"), fullPage: true });
 
   // What the owner sees: the counter tab, the page of the module, the note and the rate.
@@ -142,17 +165,40 @@ try {
   await page.getByTestId("orders-list").getByText("Mostrador").first().waitFor({ timeout: 20000 });
   await page.waitForTimeout(1000);
   const rowCount = await page.getByTestId("orders-list").locator("li").count();
-  const counterRows = await page.getByTestId("orders-list").locator("li").filter({ hasText: "Mostrador" }).count();
-  check("Pedidos: the tab shows only counter sales", rowCount > 0 && rowCount === counterRows, `${counterRows}/${rowCount}`);
+  const counterRows = await page
+    .getByTestId("orders-list")
+    .locator("li")
+    .filter({ hasText: "Mostrador" })
+    .count();
+  check(
+    "Pedidos: the tab shows only counter sales",
+    rowCount > 0 && rowCount === counterRows,
+    `${counterRows}/${rowCount}`,
+  );
   await page.screenshot({ path: join(OUT, "fase6-pestana-mostrador.png"), fullPage: true });
 
   await page.goto(`${BASE}/admin/pos`);
   await page.getByRole("tab", { name: "Resumen" }).click();
   await page.getByTestId("pos-overview").waitFor({ timeout: 20000 });
-  check("Caja: says the sales of today", /\d+ ventas?/.test(await page.getByTestId("pos-overview").innerText()));
-  check("Caja: the till per currency", /USD/.test(await page.getByTestId("pos-cash").innerText()), await page.getByTestId("pos-cash").innerText());
-  check("Caja: the rate used", /1 USD =/.test(await page.getByTestId("pos-rates").innerText()), await page.getByTestId("pos-rates").innerText());
-  check("Caja: what needs a look", /se cobró a/.test(await page.getByTestId("pos-flagged").innerText()), await page.getByTestId("pos-flagged").innerText());
+  check(
+    "Caja: says the sales of today",
+    /\d+ ventas?/.test(await page.getByTestId("pos-overview").innerText()),
+  );
+  check(
+    "Caja: the till per currency",
+    /USD/.test(await page.getByTestId("pos-cash").innerText()),
+    await page.getByTestId("pos-cash").innerText(),
+  );
+  check(
+    "Caja: the rate used",
+    /1 USD =/.test(await page.getByTestId("pos-rates").innerText()),
+    await page.getByTestId("pos-rates").innerText(),
+  );
+  check(
+    "Caja: what needs a look",
+    /se cobró a/.test(await page.getByTestId("pos-flagged").innerText()),
+    await page.getByTestId("pos-flagged").innerText(),
+  );
   check("Caja: no costs", !/costo/i.test(await page.locator("main").innerText()));
   await page.screenshot({ path: join(OUT, "fase6-caja.png"), fullPage: true });
   await page.getByRole("link", { name: "Ver las ventas de mostrador" }).click();
@@ -162,28 +208,55 @@ try {
 
   await page.goto(`${BASE}/admin/orders/${flaggedId}`);
   await page.getByTestId("counter-flags").waitFor({ timeout: 20000 });
-  check("Pedido: the note in plain words", /se cobró a/.test(await page.getByTestId("counter-flags").innerText()));
+  check(
+    "Pedido: the note in plain words",
+    /se cobró a/.test(await page.getByTestId("counter-flags").innerText()),
+  );
   check("Pedido: the rate of the payment", (await page.getByText(/1 USD =/).count()) > 0);
-  check("Pedido: no delivery nor customer of a counter sale", (await page.getByRole("heading", { name: "Entrega", exact: true }).count()) === 0 && (await page.getByRole("heading", { name: "Cliente", exact: true }).count()) === 0);
+  check(
+    "Pedido: no delivery nor customer of a counter sale",
+    (await page.getByRole("heading", { name: "Entrega", exact: true }).count()) === 0 &&
+      (await page.getByRole("heading", { name: "Cliente", exact: true }).count()) === 0,
+  );
   await page.screenshot({ path: join(OUT, "fase6-venta-anotada.png"), fullPage: true });
 
   // Cancelling a delivered counter sale from the screen.
   await page.getByRole("button", { name: "Cancelar venta" }).click();
   await page.getByRole("button", { name: "Volver" }).click();
-  check("Pedido: backing out cancels nothing", (await page.getByRole("button", { name: "Cancelar venta" }).count()) === 1);
+  check(
+    "Pedido: backing out cancels nothing",
+    (await page.getByRole("button", { name: "Cancelar venta" }).count()) === 1,
+  );
   await page.getByRole("button", { name: "Cancelar venta" }).click();
   await page.getByRole("button", { name: "Confirmar cancelación" }).click();
   await page.getByText("Reembolso").first().waitFor({ timeout: 20000 });
-  const { data: cancelled } = await service.from("orders").select("status, paid_total").eq("id", flaggedId).single();
-  check("Pedido: cancelled, the balance at 0", cancelled.status === "cancelled" && Number(cancelled.paid_total) === 0, JSON.stringify(cancelled));
-  check("Pedido: no cancel button anymore", (await page.getByRole("button", { name: "Cancelar venta" }).count()) === 0);
+  const { data: cancelled } = await service
+    .from("orders")
+    .select("status, paid_total")
+    .eq("id", flaggedId)
+    .single();
+  check(
+    "Pedido: cancelled, the balance at 0",
+    cancelled.status === "cancelled" && Number(cancelled.paid_total) === 0,
+    JSON.stringify(cancelled),
+  );
+  check(
+    "Pedido: no cancel button anymore",
+    (await page.getByRole("button", { name: "Cancelar venta" }).count()) === 0,
+  );
 
-  const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 }, storageState: await page.context().storageState() });
+  const mobileContext = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    storageState: await page.context().storageState(),
+  });
   const mobile = await mobileContext.newPage();
   await mobile.goto(`${BASE}/admin/pos`);
   await mobile.getByRole("tab", { name: "Resumen" }).click();
   await mobile.getByTestId("pos-overview").waitFor({ timeout: 20000 });
-  check("Caja: fits a phone", await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+  check(
+    "Caja: fits a phone",
+    await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+  );
   await mobile.screenshot({ path: join(OUT, "fase6-caja-movil.png"), fullPage: true });
 
   // Selling from the web page, as someone with an iPhone would.
@@ -200,7 +273,12 @@ try {
     const row = target.getByTestId("pos-day-list").locator("li").first();
     await row.getByText(/^Pedido \d+$/).waitFor({ timeout: 40000 });
     const number = Number((await row.getByText(/^Pedido \d+$/).innerText()).replace(/\D/g, ""));
-    const { data } = await service.from("orders").select("id, channel, customer_id").eq("store_id", store.id).eq("number", number).single();
+    const { data } = await service
+      .from("orders")
+      .select("id, channel, customer_id")
+      .eq("store_id", store.id)
+      .eq("number", number)
+      .single();
     webOrders.push(data.id);
     return data;
   };
@@ -208,22 +286,43 @@ try {
   await mobile.getByRole("tab", { name: "Vender" }).click();
   await mobile.getByTestId("pos-search").waitFor({ timeout: 60000 });
   const form = await mobile.locator("main").innerText();
-  check("Web, iPhone size: sells without customer nor delivery", !/Cliente|Entrega|Envío|Dirección/.test(form), form);
+  check(
+    "Web, iPhone size: sells without customer nor delivery",
+    !/Cliente|Entrega|Envío|Dirección/.test(form),
+    form,
+  );
   await mobile.getByTestId("pos-search").fill(first.productName);
   await mobile.getByTestId("pos-results").getByRole("button").first().click();
   const bar = await mobile.getByTestId("pos-charge").boundingBox();
-  check("Web, iPhone size: the charge button at the bottom edge", bar && bar.y + bar.height > 844 - 80 && bar.y + bar.height <= 844, JSON.stringify(bar));
+  check(
+    "Web, iPhone size: the charge button at the bottom edge",
+    bar && bar.y + bar.height > 844 - 80 && bar.y + bar.height <= 844,
+    JSON.stringify(bar),
+  );
   await mobile.getByRole("tab", { name: "Resumen" }).click();
   await mobile.getByRole("tab", { name: "Vender" }).click();
-  check("Web: the summary does not lose the sale in progress", (await mobile.getByTestId("pos-quantity").innerText()) === "1");
-  check("Web, iPhone size: fits with the cart", await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+  check(
+    "Web: the summary does not lose the sale in progress",
+    (await mobile.getByTestId("pos-quantity").inputValue()) === "1",
+  );
+  check(
+    "Web, iPhone size: fits with the cart",
+    await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+  );
   await mobile.screenshot({ path: join(OUT, "web-vender-movil.png"), fullPage: true });
   await mobile.getByTestId("pos-charge").click();
   await mobile.getByTestId("pos-submit").click();
   await mobile.getByTestId("pos-saved").waitFor({ timeout: 20000 });
-  check("Web: the sale says it is in this browser", /navegador/.test(await mobile.getByTestId("pos-saved").innerText()));
+  check(
+    "Web: the sale says it is in this browser",
+    /navegador/.test(await mobile.getByTestId("pos-saved").innerText()),
+  );
   const webOrder = await uploadedOrder(mobile);
-  check("Web: the sale reaches the server by itself, without a customer", webOrder.channel === "pos" && webOrder.customer_id === null, JSON.stringify(webOrder));
+  check(
+    "Web: the sale reaches the server by itself, without a customer",
+    webOrder.channel === "pos" && webOrder.customer_id === null,
+    JSON.stringify(webOrder),
+  );
   await mobile.screenshot({ path: join(OUT, "web-vendida-movil.png"), fullPage: true });
 
   // Losing the connection with the page open: it keeps selling, says not to reload and uploads when it comes back.
@@ -240,9 +339,16 @@ try {
   await uploadedOrder(page);
   await page.context().setOffline(true);
   await page.getByTestId("pos-offline").waitFor({ timeout: 10000 });
-  check("Web, no connection: says not to reload", /no recargues/.test(await page.getByTestId("pos-offline").innerText()));
+  check(
+    "Web, no connection: says not to reload",
+    /no recargues/.test(await page.getByTestId("pos-offline").innerText()),
+  );
   check("Web, no connection: sells", await sell(page, "navegador"));
-  check("Web, no connection: the sale waits", /: 1$/.test(await page.getByTestId("pos-pending").innerText()), await page.getByTestId("pos-pending").innerText());
+  check(
+    "Web, no connection: the sale waits",
+    /: 1$/.test(await page.getByTestId("pos-pending").innerText()),
+    await page.getByTestId("pos-pending").innerText(),
+  );
   await page.screenshot({ path: join(OUT, "web-sin-conexion.png"), fullPage: true });
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
   await page.getByText("Hay 1 venta sin subir").waitFor({ timeout: 10000 });
@@ -250,15 +356,25 @@ try {
   check("Web: signing out with a sale to upload asks first", page.url().endsWith("/admin/pos"));
   await page.context().setOffline(false);
   await uploadedOrder(page);
-  check("Web: the connection back uploads the sale", /: 0$/.test(await page.getByTestId("pos-pending").innerText()), await page.getByTestId("pos-pending").innerText());
+  check(
+    "Web: the connection back uploads the sale",
+    /: 0$/.test(await page.getByTestId("pos-pending").innerText()),
+    await page.getByTestId("pos-pending").innerText(),
+  );
 
   // A managed section is read-only for the staff.
-  const { error: managedError } = await service.from("store_section_settings").upsert({ store_id: store.id, section: "pos", visibility: "managed" });
+  const { error: managedError } = await service
+    .from("store_section_settings")
+    .upsert({ store_id: store.id, section: "pos", visibility: "managed" });
   check("section can be set as managed", !managedError, managedError?.message);
   await page.goto(`${BASE}/admin/pos`);
   await page.getByTestId("pos-overview").waitFor({ timeout: 30000 });
   await page.getByTestId("section-notice").waitFor({ timeout: 30000 });
-  check("Web, managed section: the staff does not sell", (await page.getByRole("tab", { name: "Vender" }).count()) === 0 && (await page.getByTestId("pos-screen").count()) === 0);
+  check(
+    "Web, managed section: the staff does not sell",
+    (await page.getByRole("tab", { name: "Vender" }).count()) === 0 &&
+      (await page.getByTestId("pos-screen").count()) === 0,
+  );
 
   check("no errors in the page", errors.length === 0, errors.join(" | "));
 } finally {

@@ -169,9 +169,19 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
                 >
                   <Minus size={16} aria-hidden />
                 </Button>
-                <span className="w-7 text-center font-semibold" data-testid="pos-quantity">
-                  {line.quantity}
-                </span>
+                <input
+                  aria-label={`Cantidad de ${itemLabel(line.item)}`}
+                  inputMode="numeric"
+                  value={line.quantity}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => {
+                    // Typed over the selected number; an empty or zero field keeps what it had (− removes the line).
+                    const n = parseInt(e.target.value.replace(/\D/g, ""), 10);
+                    if (n >= 1) setQuantity(line.item.variantId, n);
+                  }}
+                  className="h-10 w-12 rounded-md border bg-background text-center font-semibold"
+                  data-testid="pos-quantity"
+                />
                 <Button
                   size="sm"
                   variant="outline"

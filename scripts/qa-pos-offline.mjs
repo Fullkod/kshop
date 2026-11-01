@@ -174,7 +174,7 @@ try {
   await page.getByRole("button", { name: /Añadir uno de/ }).click();
   check(
     "sell offline: the search clears and the line goes to 2",
-    (await page.getByTestId("pos-quantity").innerText()) === "2",
+    (await page.getByTestId("pos-quantity").inputValue()) === "2",
   );
   const totalCup = Number(
     (await page.getByTestId("pos-total").innerText()).replace(/[^\d,]/g, "").replace(",", "."),

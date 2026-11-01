@@ -26,6 +26,16 @@ Medido con `pnpm qa:mobile` (61 páginas a 390 px: admin, tienda y superadmin), 
   (`hidden md:table-cell`) para que el nombre tenga sitio.
 - `viewportFit: "cover"` en el layout: los `env(safe-area-inset-*)` valen algo en un iPhone.
 
+- **Tema claro / oscuro / sistema** (Roberto, 2026-10-31): `ThemeSwitch` de `@kshop/ui` en la barra lateral del admin
+  y del superadmin y en «Más» de Kshop Admin. La elección va a `localStorage` (`kshop-theme`) y a `data-theme` en
+  `<html>` por un script inline antes de pintar (`THEME_BOOT_SCRIPT` en el layout y en `apps/admin-app/index.html`);
+  `styles.css` y la variante `dark:` leen el sistema salvo que haya elección. Es por navegador, no por cuenta.
+- **Tablas de edición en el teléfono**: las variantes del producto son tarjetas por debajo de `md`
+  (`useMediaQuery` de `@kshop/admin`; un solo DOM, nada duplicado para Playwright). Un `<pre>` o un `<textarea>`
+  dentro de una tarjeta lleva `min-w-0` y `[overflow-wrap:anywhere]`: un enlace largo no tiene por dónde partirse.
+- **Variantes**: «Generar» solo añade las combinaciones que faltan (y dice cuántas); cada fila se quita con «×»
+  (se borra al guardar; los pedidos hechos conservan su snapshot). La caja deja escribir la cantidad.
+
 ## Cómo medir
 
 `pnpm qa:mobile` (con `pnpm dev`; `QA_PAGES=admin,store,super`, `QA_VIEWS=catalog,orders/new`). Informe en

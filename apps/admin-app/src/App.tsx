@@ -40,6 +40,7 @@ import {
   type PublicStore,
 } from "@kshop/storefront";
 import {
+  ThemeSwitch,
   Alert,
   Bell,
   Button,
@@ -1093,6 +1094,10 @@ function MoreScreen({ onSwitch }: { onSwitch?: () => void }) {
               : []),
           ]}
         />
+        <div className="flex items-center gap-3 text-sm">
+          <span>Tema</span>
+          <ThemeSwitch />
+        </div>
         <div className="flex flex-col gap-1 text-sm text-muted-foreground">
           <span>Sesión: {session?.user.email}</span>
           <span>

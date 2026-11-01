@@ -146,9 +146,24 @@ export function CategoriesPage() {
               const category = byId.get(o.id)!;
               return (
                 <li key={o.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
-                  <span style={{ paddingLeft: `${(o.depth - 1) * 1.25}rem` }}>
+                  <span
+                    className="flex min-w-0 items-center gap-3"
+                    style={{ paddingLeft: `${(o.depth - 1) * 1.25}rem` }}
+                  >
                     {o.depth > 1 && <span className="text-muted-foreground">└ </span>}
-                    {category.name}
+                    {/* The photo of the home's «Categorías» section, or an empty square when there is none. */}
+                    {category.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- a 40 px thumbnail from Storage
+                      <img
+                        src={category.imageUrl}
+                        alt=""
+                        className="size-10 shrink-0 rounded-md object-cover"
+                        data-testid="category-thumb"
+                      />
+                    ) : (
+                      <span className="size-10 shrink-0 rounded-md bg-surface" aria-hidden />
+                    )}
+                    <span className="truncate">{category.name}</span>
                   </span>
                   {canManageStructure && (
                     <div className="flex gap-2">

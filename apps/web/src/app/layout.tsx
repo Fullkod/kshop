@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Inter, JetBrains_Mono, Lora, Outfit, Playfair_Display, Poppins } from "next/font/google";
 import type { ReactNode } from "react";
+import { THEME_BOOT_SCRIPT } from "@kshop/ui";
 import "./globals.css";
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -47,10 +48,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="es"
+      // data-theme is set by the script below, before React: not a mismatch to warn about.
+      suppressHydrationWarning
       className={[outfit, dmSans, jetbrainsMono, inter, poppins, lora, playfair]
         .map((f) => f.variable)
         .join(" ")}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+      </head>
       <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );

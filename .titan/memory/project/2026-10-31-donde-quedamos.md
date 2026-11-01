@@ -5,7 +5,7 @@ Supera a `2026-10-30-donde-quedamos.md`.
 ## Estado
 - **En producción:** cobro en varias monedas y POS fases 1 a 6, con venta desde la web (Admin › Caja › Vender) y elTOQUE funcionando.
 - **APK publicados:** Kshop Admin 1.0.9, Minimercado 1.0.10, Tienda Demo 1.0.11, Klau's Shop 1.0.12 (primera vez visible en su `/app`; se oculta en Superadmin › Apps).
-- **La web en el teléfono (iPhone/Android sin app):** revisada y corregida en común el 2026-10-31 (`reference/web-en-el-telefono.md`, `pnpm qa:mobile`). Sin probar en teléfonos reales.
+- **La web en el teléfono (iPhone/Android sin app):** revisada y corregida en común el 2026-10-31 (`reference/web-en-el-telefono.md`, `pnpm qa:mobile`). Segunda ronda con lo que Roberto vio en su teléfono: variantes en tarjetas (generar las que faltan, quitar), avisos sin desbordar, cantidad escrita en la caja, tema claro/oscuro y miniatura en categorías. Sin probar en teléfonos reales.
 - `qa:pos-offline` 36/36, `qa:pos` 35/35 y `qa:apps` 28/28 en navegador. **No probado en un iPhone real ni en un Android real:** archivos nativos, red nativa, matar la app, reiniciar.
 
 ## Qué sigue

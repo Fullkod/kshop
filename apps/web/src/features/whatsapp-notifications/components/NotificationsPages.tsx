@@ -401,7 +401,7 @@ function TemplateEditor({
 
   return (
     <div className="grid gap-3 lg:grid-cols-2">
-      <div className="flex flex-col gap-2">
+      <div className="flex min-w-0 flex-col gap-2">
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
@@ -409,7 +409,7 @@ function TemplateEditor({
           maxLength={1500}
           readOnly={!canEdit}
           aria-label="Texto del aviso"
-          className="rounded-md border bg-background px-3 py-2 font-mono text-sm"
+          className="w-full min-w-0 rounded-md border bg-background px-3 py-2 font-mono text-sm"
         />
         <FieldError>{action.fieldErrors.body}</FieldError>
         <details className="text-xs text-muted-foreground">
@@ -461,9 +461,13 @@ function TemplateEditor({
           </>
         )}
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex min-w-0 flex-col gap-1">
         <span className="text-xs text-muted-foreground">Vista previa (con datos de ejemplo)</span>
-        <pre className="whitespace-pre-wrap rounded-md bg-surface p-3 text-sm" data-testid="template-preview">
+        {/* A link in the text has no space to break at: anywhere, so it never pushes the card. */}
+        <pre
+          className="min-w-0 rounded-md bg-surface p-3 text-sm whitespace-pre-wrap [overflow-wrap:anywhere]"
+          data-testid="template-preview"
+        >
           {preview ?? "…"}
         </pre>
       </div>
@@ -544,7 +548,9 @@ function LogList({ rows, reload, showOrder }: { rows: LogRow[]; reload: () => vo
             </div>
             <details>
               <summary className="cursor-pointer text-xs text-muted-foreground">Ver mensaje</summary>
-              <pre className="mt-1 whitespace-pre-wrap rounded-md bg-surface p-2 text-xs">{n.message}</pre>
+              <pre className="mt-1 min-w-0 rounded-md bg-surface p-2 text-xs whitespace-pre-wrap [overflow-wrap:anywhere]">
+                {n.message}
+              </pre>
             </details>
             {n.error && (
               // A sent notice can carry a note (OpenWA answers 500 and delivers): only failures are red.

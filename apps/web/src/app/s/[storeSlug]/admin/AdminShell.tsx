@@ -21,6 +21,7 @@ import {
   CreditCard,
   Users,
   ConfirmProvider,
+  ThemeSwitch,
   useConfirm,
 } from "@kshop/ui";
 import Link from "next/link";
@@ -286,7 +287,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
           ) : null,
         )}
       </nav>
-      <div className="mt-auto flex items-center gap-2.5 rounded-xl bg-white/6 px-2.5 py-3">
+      <ThemeSwitch tone="night" className="mt-auto self-start" />
+      <div className="flex items-center gap-2.5 rounded-xl bg-white/6 px-2.5 py-3">
         <span className="font-display flex size-8 shrink-0 items-center justify-center rounded-full bg-[#5B21B6] text-sm font-bold">
           {(email[0] ?? "?").toUpperCase()}
         </span>
