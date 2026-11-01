@@ -8,10 +8,13 @@
     "./admin-context": "./src/admin-context.ts",
     "./images": "./src/images.ts",
     "./catalog/use-catalog": "./src/catalog/use-catalog.ts",
-    "./orders/use-orders": "./src/orders/use-orders.ts"
+    "./orders/use-orders": "./src/orders/use-orders.ts",
+    "./help": "./src/help/index.ts",
+    "./help/content": "./src/help/content/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "test": "vitest run"
   },
   "dependencies": {
     "@kshop/core": "workspace:*",
@@ -19,13 +22,15 @@
     "@kshop/storefront": "workspace:*",
     "@kshop/ui": "workspace:*",
     "@supabase/supabase-js": "^2.118.0",
-    "@urql/core": "^6.0.3"
+    "@urql/core": "^6.0.3",
+    "zod": "^4.6.0"
   },
   "peerDependencies": {
     "react": "^19.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.0",
-    "react": "^19.3.1"
+    "react": "^19.3.1",
+    "vitest": "^5.0.0"
   }
 }

@@ -1,6 +1,7 @@
 # PRP KSH0005: ayuda en la app, como la de Tasknic
 
-> **Estado**: PENDIENTE de «ok» de Roberto (2026-11-01). Decisiones ya tomadas por Roberto: admin de tienda (web y
+> **Estado**: APROBADO por Roberto (2026-11-01). **Fase 1 hecha** (2026-11-01): modelo, Zod, generadores, 9 guías,
+> primer día, glosario y FAQ en `packages/admin/src/help/`, 10 tests. Sigue la fase 2 (interfaz). Decisiones ya tomadas por Roberto: admin de tienda (web y
 > Kshop Admin) **y** superadmin; **todas** las piezas de Tasknic (guías por tarea con capturas reales, «Tu primer día»,
 > glosario, preguntas frecuentes, buscador, PDF y Markdown); audiencias **dueño/admin** y **empleado** con filtro.
 > **Proyecto**: Kshop · Tarea: Tasknic **KSH0005** («quiero una ayuda como mismo la tiene el tasknic, cada vista que
@@ -126,4 +127,20 @@ las de WhatsApp del día a día.
 
 ## 🧠 Aprendizajes (Self-Annealing)
 
-_(se rellena durante la implementación)_
+### 2026-11-01: el detector de voseo marcaba «Subí un producto…»
+- **Error**: la lista de Tasknic incluye imperativos de -ir (`subí`, `elegí`, `abrí`), que también son el pretérito de
+  «yo»; la pregunta frecuente «Subí un producto y no sale» rompía la validación.
+- **Fix**: fuera de `VOSEO` las formas ambiguas; un test comprueba que «Subí un producto» pasa.
+- **Aplicar en**: cualquier lista de voseo que se copie de Tasknic.
+
+### 2026-11-01: prettier reescribe `[̀-ͯ]` como caracteres combinantes
+- **Error**: tras `prettier --write`, el rango de acentos del buscador quedó con caracteres invisibles.
+- **Fix**: `/\p{M}/gu` (marcas Unicode), que prettier deja igual.
+- **Aplicar en**: cualquier regex con rangos `\u` en el repo.
+
+### Notas de la fase 1
+- Contextos: el PRP decía `pos-sell`; la pestaña «Vender» es la propia `/admin/pos`, así que el contexto es `pos` y
+  la otra pestaña `pos-summary`. Los del superadmin llevan prefijo `superadmin-` (no chocan con `billing`, `whatsapp`).
+- `@kshop/admin/help` no importa Zod (va en el bundle); `@kshop/admin/help/content` valida (tests y exportador).
+- Cada afirmación de las guías se comprobó en el código (botones, cancelar devuelve stock solo antes de «Enviado»,
+  solo el dueño invita administradores, campos de «Nueva tienda»).
