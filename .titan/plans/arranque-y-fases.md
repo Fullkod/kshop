@@ -88,9 +88,9 @@ Proyecto Supabase **nuevo y propio** (nunca el de klauShop), con entorno de desa
 | Web en el teléfono | Hecha 2026-10-31: 61 páginas medidas con `qa:mobile` y corregidas en común (variante `touch:`, «Volver», `AdminSubNav`, `FilterBar`, variantes en tarjetas, tema claro/oscuro). **Pendiente**: prueba en un iPhone real | `memory/reference/web-en-el-telefono.md` | `379fa5d`, `b5a51b7` |
 | 8. Migrar klauShop | 8.1–8.5 hechas 2026-10-28 (tienda `klau`; `klaushop:verify` 21/22). Corte de dominio (8.7) hecho 2026-11-01: `klaushop.fullkod.com` sirve la tienda `klau`, con sus páginas y su pie. **Pendiente**: `--delta` de pedidos y clientes desde el 2026-10-28, `klaushop:verify` final y 8.6 (QA en navegador y medición) | `prp-fase-8-klaushop.md`, `project/2026-11-01-dominio-klaushop.md` | ver PRP |
 | Tareas de Tasknic | Hechas y desplegadas: KSH0002 (cobro en varias monedas), KSH0003 (calculadora de precio), KSH0004 (plan Caja), KSH0005 (ayuda), KSH0006 (páginas) y KSH0007 (columnas del pie). El estado de cada una se consulta en Tasknic | `prp-ksh0004-plan-caja.md`, `prp-ksh0005-ayuda.md`, `project/2026-11-01-*.md` | `47d862b` |
-| SKU automático | Hecho 2026-11-01 (sin tarea de Tasknic, a petición de Roberto): un SKU vacío se crea del nombre del producto. Commit local, **sin push** | `project/2026-11-01-sku-automatico.md` | `9f2779a` |
+| SKU automático | Hecho 2026-11-01 (sin tarea de Tasknic, a petición de Roberto): un SKU vacío se crea del nombre del producto. Subido por Roberto y desplegado en Vercel | `project/2026-11-01-sku-automatico.md` | `9f2779a` |
 
-El remoto `origin` (`Fullkod/kshop`) se sube solo con permiso de Roberto. Al 2026-11-01 está en `47d862b` (KSH0006 y KSH0007 desplegados); el SKU automático (`9f2779a`) está solo en local.
+El remoto `origin` (`Fullkod/kshop`) se sube solo con permiso de Roberto. Al 2026-11-01 está en `9f2779a` (KSH0006, KSH0007 y el SKU automático desplegados).
 
 ## Fases (cada una se detalla en su PRP)
 | Fase | Alcance | Verificación |

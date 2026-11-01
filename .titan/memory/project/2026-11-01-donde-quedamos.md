@@ -1,7 +1,7 @@
 # Dónde quedamos (2026-11-01)
 
-Supera a `2026-10-31-donde-quedamos.md`. `origin/main` en `47d862b` (desplegado en Vercel); en local hay un commit más sin
-push, `9f2779a` (SKU automático), y el de esta actualización de memoria.
+Supera a `2026-10-31-donde-quedamos.md`. `origin/main` en `9f2779a` (desplegado en Vercel); en local solo queda el commit
+de esta actualización de memoria.
 
 ## Hecho hoy
 - KSH0004 (plan Caja) y KSH0005 (ayuda) desplegados; el plan Caja ya es visible.
@@ -10,15 +10,14 @@ push, `9f2779a` (SKU automático), y el de esta actualización de memoria.
 - KSH0007: columnas del pie editables (`2026-11-01-ksh0007-menu-pie.md`).
 - KSH0006: páginas legibles, botones y preguntas plegables, barra y vista previa (`2026-11-01-ksh0006-paginas.md`).
 - KSH0006 y KSH0007 subidos y desplegados juntos con permiso de Roberto (`47d862b`).
-- SKU automático al dejarlo vacío (`2026-11-01-sku-automatico.md`), **sin push**.
+- SKU automático al dejarlo vacío (`2026-11-01-sku-automatico.md`), subido por Roberto y desplegado.
 - El estado de cada tarea se consulta en Tasknic (KSH0002–KSH0007); aquí solo van los códigos.
 
 ## Qué sigue
-1. Push de `9f2779a` cuando Roberto lo diga (se despliega solo).
-2. **Reloj del PC una hora adelantado**: los `e2e:*` largos dan 401 en local hasta sincronizar la hora de Windows; luego
+1. **Reloj del PC una hora adelantado**: los `e2e:*` largos dan 401 en local hasta sincronizar la hora de Windows; luego
    correr `pnpm e2e:catalog` entero (tiene los casos nuevos de SKU).
-3. klauShop: `--delta` de pedidos y clientes desde el 2026-10-28 y `klaushop:verify` final; 8.6.
-4. Lo que seguía del 31: Roberto prueba los APK en un Android (modo avión) y la web en un iPhone; inventario desde la caja
+2. klauShop: `--delta` de pedidos y clientes desde el 2026-10-28 y `klaushop:verify` final; 8.6.
+3. Lo que seguía del 31: Roberto prueba los APK en un Android (modo avión) y la web en un iPhone; inventario desde la caja
    (etapa 2 del POS) cuando lo pida; `credito-fullkod.md`.
 
 ## Para retomar

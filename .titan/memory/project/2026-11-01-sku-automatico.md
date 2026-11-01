@@ -1,7 +1,7 @@
 # SKU automático al crear un producto (2026-11-01)
 
 Pedido por Roberto en la sesión («haz q si se deja vacío se genere solo siguiendo las reglas de los excel»), sin tarea de
-Tasknic. Commit `9f2779a`.
+Tasknic. Commit `9f2779a`, subido por Roberto el mismo día y desplegado en Vercel.
 
 ## Qué hace
 - Una variante guardada con el SKU vacío recibe uno en el servidor (`withSkus` en `apps/web/src/server/catalog/products.ts`),
