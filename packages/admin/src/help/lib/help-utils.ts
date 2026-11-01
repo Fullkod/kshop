@@ -1,4 +1,10 @@
+import type { StoreRole } from "@kshop/core";
 import type { HelpAudience, HelpContext } from "../types";
+
+/** Owners and administrators read the owner's help; a superadmin inside a store too. */
+export function helpViewerForRole(role: StoreRole | null | undefined): HelpAudience {
+  return role === "staff" ? "staff" : "owner";
+}
 
 /** Filter value on the Ayuda page: everything or one audience. */
 export type HelpAudienceFilter = "all" | HelpAudience;
@@ -12,13 +18,12 @@ export const HELP_CONTEXT_LABEL: Record<HelpContext, string> = {
   customers: "Clientes",
   "payment-methods": "Métodos de pago",
   shipping: "Entregas",
-  discounts: "Promociones",
+  discounts: "Ofertas",
   vouchers: "Cupones",
-  whatsapp: "Avisos por WhatsApp",
-  "whatsapp-templates": "Plantillas de WhatsApp",
+  whatsapp: "Avisos WhatsApp",
+  "whatsapp-templates": "Mensajes de WhatsApp",
   "whatsapp-log": "Historial de WhatsApp",
   pos: "Caja",
-  "pos-summary": "Resumen de la caja",
   products: "Productos",
   product: "Producto",
   categories: "Categorías",
@@ -29,10 +34,10 @@ export const HELP_CONTEXT_LABEL: Record<HelpContext, string> = {
   warehouses: "Almacenes",
   currencies: "Monedas",
   "excel-import": "Importar Excel",
-  "multi-warehouse": "Varios almacenes",
+  "multi-warehouse": "Almacenes",
   "multi-warehouse-movements": "Movimientos de stock",
-  "multi-warehouse-transfer": "Traslados",
-  "multi-currency": "Tasas de cambio",
+  "multi-warehouse-transfer": "Traspasar stock",
+  "multi-currency": "Monedas",
   themes: "Apariencia",
   "themes-home": "Portada",
   "themes-banners": "Banners",
@@ -65,6 +70,22 @@ export function screenshotUrl(slug: string, base = ""): string {
 
 export function matchesAudience(audiences: HelpAudience[], filter: HelpAudienceFilter): boolean {
   return filter === "all" || audiences.includes(filter);
+}
+
+/** What a reader is shown by default: an owner also sees the staff's guides; the staff only theirs. */
+export function visibleTo(audiences: HelpAudience[], viewer: HelpAudience): boolean {
+  return viewer === "owner"
+    ? audiences.includes("owner") || audiences.includes("staff")
+    : audiences.includes(viewer);
+}
+
+/** Store admin help (owners and staff) or the superadmin's: each one only lists its own content. */
+export type HelpScope = "store" | "superadmin";
+
+export function inScope(audiences: HelpAudience[], scope: HelpScope): boolean {
+  return scope === "superadmin"
+    ? audiences.includes("superadmin")
+    : audiences.includes("owner") || audiences.includes("staff");
 }
 
 /** Section anchors shared by the page, the Markdown export and the search index. */

@@ -1,7 +1,8 @@
 # PRP KSH0005: ayuda en la app, como la de Tasknic
 
 > **Estado**: APROBADO por Roberto (2026-11-01). **Fase 1 hecha** (2026-11-01): modelo, Zod, generadores, 9 guías,
-> primer día, glosario y FAQ en `packages/admin/src/help/`, 10 tests. Sigue la fase 2 (interfaz). Decisiones ya tomadas por Roberto: admin de tienda (web y
+> primer día, glosario y FAQ en `packages/admin/src/help/`, 10 tests. **Fase 2 hecha**: «?» en admin, superadmin y
+> Kshop Admin, páginas Ayuda, `pnpm qa:help`. Sigue la fase 3 (capturas y exportación). Decisiones ya tomadas por Roberto: admin de tienda (web y
 > Kshop Admin) **y** superadmin; **todas** las piezas de Tasknic (guías por tarea con capturas reales, «Tu primer día»,
 > glosario, preguntas frecuentes, buscador, PDF y Markdown); audiencias **dueño/admin** y **empleado** con filtro.
 > **Proyecto**: Kshop · Tarea: Tasknic **KSH0005** («quiero una ayuda como mismo la tiene el tasknic, cada vista que
@@ -137,6 +138,26 @@ las de WhatsApp del día a día.
 - **Error**: tras `prettier --write`, el rango de acentos del buscador quedó con caracteres invisibles.
 - **Fix**: `/\p{M}/gu` (marcas Unicode), que prettier deja igual.
 - **Aplicar en**: cualquier regex con rangos `\u` en el repo.
+
+### 2026-11-01: un script de QA se quedaba sin sesión a mitad
+- **Error**: `addInitScript` vuelve a poner la sesión original en cada carga; la app ya había renovado el token y
+  Supabase revoca el refresh token reutilizado → login a las ~10 páginas. Un segundo contexto con la misma sesión, igual.
+- **Fix**: poner la sesión solo si no hay ninguna, e iniciar sesión de nuevo por cada contexto del navegador; reintento
+  de 60 s ante «Request rate limit reached».
+- **Aplicar en**: cualquier `qa:*` nuevo que recorra muchas páginas o abra varios contextos.
+
+### 2026-11-01: Kshop Admin en 5174 daba 500 tras `pnpm install`
+- **Error**: el Vite ya arrancado no reoptimiza dependencias si cambia el lockfile; otro puerto no vale porque el CORS de
+  `/api/v1` solo admite 5173 y 5174 (`proxy.ts`).
+- **Fix**: reiniciar el Vite de 5174 tras instalar dependencias.
+
+### Notas de la fase 2
+- La Caja guarda su pestaña en estado local: «Vender» y «Resumen» comparten el contexto `pos` (se quitó
+  `pos-summary`). El contexto sale de la ruta con `helpContextForPath` (mismas rutas en la web y en Kshop Admin).
+- Progreso del primer día, filtro y `#hash` por `useSyncExternalStore` (el lint prohíbe `setState` en efectos).
+- Títulos del diálogo con las etiquetas del menú («Ofertas», «Avisos WhatsApp», «Monedas»).
+- `pnpm qa:help`: 46/47 en la web (el fallo, 429 de Auth por repetir la QA); la parte de Kshop Admin queda pendiente
+  de reiniciar su Vite.
 
 ### Notas de la fase 1
 - Contextos: el PRP decía `pos-sell`; la pestaña «Vender» es la propia `/admin/pos`, así que el contexto es `pos` y

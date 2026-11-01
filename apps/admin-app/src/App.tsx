@@ -23,6 +23,7 @@ import {
   type AdminHome,
   type AdminState,
 } from "@kshop/admin";
+import { HelpButton, HelpCenter, helpContextForPath, helpViewerForRole } from "@kshop/admin/help";
 import {
   formatMoney,
   resolveTheme,
@@ -46,6 +47,7 @@ import {
   Button,
   Card,
   ChevronRight,
+  CircleHelp,
   ClipboardList,
   cn,
   Coins,
@@ -619,6 +621,7 @@ function Shell({ onSwitch }: { onSwitch?: () => void }) {
             />
           )}
           <Route path="/admin/more" element={<MoreScreen onSwitch={onSwitch} />} />
+          <Route path="/admin/help" element={<HelpScreen />} />
           <Route path="/" element={<Navigate to="/admin" replace />} />
           <Route
             path="*"
@@ -668,17 +671,51 @@ function Shell({ onSwitch }: { onSwitch?: () => void }) {
   );
 }
 
-/** White header with the screen title, over the content of the list screens. */
-function Screen({ title, children }: { title?: string; children: ReactNode }) {
+// Help screenshots are served by the web platform (KSH0005).
+const PLATFORM_ORIGIN = `${appConfig.protocol}://${appConfig.platformDomain}`;
+
+/** «?» of the current screen: the same guides as the web panel. */
+function AppHelpButton({ className }: { className?: string }) {
+  const { pathname } = useLocation();
+  const admin = useAdmin();
+  return (
+    <HelpButton
+      context={helpContextForPath(pathname)}
+      viewer={helpViewerForRole(admin.role)}
+      helpHref="/admin/help"
+      screenshotBase={PLATFORM_ORIGIN}
+      linkAs={Link}
+      className={className}
+    />
+  );
+}
+
+/** White header with the screen title (and its «?»), over the content of the list screens. */
+function Screen({ title, help = true, children }: { title?: string; help?: boolean; children: ReactNode }) {
   return (
     <div className="flex flex-col">
-      {title && (
-        <header className="bg-background px-4 pt-5 pb-3">
-          <h1 className="font-display text-2xl font-bold">{title}</h1>
+      {(title || help) && (
+        <header className={cn("flex items-center gap-3 bg-background px-4", title ? "pt-5 pb-3" : "pt-3")}>
+          {title && <h1 className="font-display flex-1 text-2xl font-bold">{title}</h1>}
+          {help && <AppHelpButton className="ml-auto" />}
         </header>
       )}
       <div className="px-4 pt-4">{children}</div>
     </div>
+  );
+}
+
+function HelpScreen() {
+  const admin = useAdmin();
+  return (
+    <Screen help={false}>
+      <HelpCenter
+        scope="store"
+        viewer={helpViewerForRole(admin.role)}
+        screenshotBase={PLATFORM_ORIGIN}
+        linkAs={Link}
+      />
+    </Screen>
   );
 }
 
@@ -751,6 +788,7 @@ function HomeScreen({ home }: { home: AdminHome }) {
               {now.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" })}
             </p>
           </div>
+          <AppHelpButton className="ml-auto size-11 rounded-xl border-0 bg-white/8 hover:bg-white/12" />
           <RouterLink
             to="/admin/orders"
             aria-label="Pedidos por confirmar"
@@ -1073,6 +1111,15 @@ function MoreScreen({ onSwitch }: { onSwitch?: () => void }) {
             Ventas de hoy y de la semana
           </RouterLink>
         )}
+        <RouterLink
+          to="/admin/help"
+          className="flex h-14 items-center gap-3 rounded-[14px] border bg-background px-4 text-sm font-medium"
+          data-testid="more-help"
+        >
+          <CircleHelp size={19} aria-hidden className="text-primary" />
+          <span className="flex-1">Ayuda</span>
+          <ChevronRight size={16} aria-hidden className="text-muted-foreground" />
+        </RouterLink>
         <MoreList
           items={[
             { code: "themes", label: "Apariencia", icon: Palette, path: "/admin/themes" },

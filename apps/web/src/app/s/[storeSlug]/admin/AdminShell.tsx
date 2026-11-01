@@ -8,6 +8,7 @@ import {
   Button,
   buttonVariants,
   ChevronsUpDown,
+  CircleHelp,
   cn,
   ExternalLink,
   House,
@@ -35,6 +36,7 @@ import { ADMIN_GROUPS, type AdminGroup } from "@/features/types";
 import { useStorePathname } from "@/lib/navigation";
 import { useSession } from "@/lib/session";
 import { ORDER_TABLES, usePosStorage, useStoreVersion } from "@kshop/admin";
+import { HelpButton, helpContextForPath, helpViewerForRole } from "@kshop/admin/help";
 import { useStore } from "@kshop/storefront";
 import {
   AdminContext,
@@ -291,7 +293,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
           ) : null,
         )}
       </nav>
-      <ThemeSwitch tone="night" className="mt-auto self-start" />
+      <div className="mt-auto flex flex-col gap-2">
+        <NavLink
+          item={{ key: "help", href: "/admin/help", label: "Ayuda", icon: CircleHelp, testId: "nav-help" }}
+          active={pathname === "/admin/help"}
+        />
+        <ThemeSwitch tone="night" className="self-start" />
+      </div>
       <div className="flex items-center gap-2.5 rounded-xl bg-white/6 px-2.5 py-3">
         <span className="font-display flex size-8 shrink-0 items-center justify-center rounded-full bg-[#5B21B6] text-sm font-bold">
           {(email[0] ?? "?").toUpperCase()}
@@ -381,6 +389,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   Ver tienda
                   <ExternalLink size={15} aria-hidden />
                 </a>
+                <HelpButton
+                  context={helpContextForPath(pathname)}
+                  viewer={helpViewerForRole(admin.role)}
+                  helpHref="/admin/help"
+                  linkAs={Link}
+                />
                 {ordersOn && (
                   <Link
                     href="/admin/orders"

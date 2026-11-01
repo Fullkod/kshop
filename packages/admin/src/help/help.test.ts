@@ -3,7 +3,8 @@ import { helpContent } from "./content";
 import { helpContentRaw } from "./content/raw";
 import { helpToMarkdown } from "./generators/markdown";
 import { helpToIndex, searchHelp } from "./generators/search-index";
-import { articleAnchor } from "./lib/help-utils";
+import { helpContextForPath } from "./lib/context";
+import { articleAnchor, inScope, visibleTo } from "./lib/help-utils";
 import { VOSEO, validateHelpContent } from "./schemas/help";
 import type { HelpContent } from "./types";
 
@@ -53,6 +54,43 @@ describe("help content", () => {
     const c = clone();
     c.faq[0]!.answer = "Mirá el estado del producto.";
     expect(() => validateHelpContent(c)).toThrow(/voseo/);
+  });
+});
+
+describe("help context and audiences", () => {
+  it("maps each screen path to its context", () => {
+    const cases: [string, string][] = [
+      ["/admin", "home"],
+      ["/admin/orders", "orders"],
+      ["/admin/orders/3f1c2b9a-1111-4222-8333-444455556666", "order"],
+      ["/admin/orders/new", "order-new"],
+      ["/admin/orders/customers", "customers"],
+      ["/admin/catalog", "products"],
+      ["/admin/catalog/products/new", "product"],
+      ["/admin/catalog/product-types", "product-types"],
+      ["/admin/themes/banners", "themes-banners"],
+      ["/admin/themes", "themes"],
+      ["/admin/finance/margin", "finance-margin"],
+      ["/admin/discounts/vouchers", "vouchers"],
+      ["/admin/whatsapp-notifications/log", "whatsapp-log"],
+      ["/admin/pos", "pos"],
+      ["/admin/sales", "sales-today"],
+      ["/admin/more", "home"],
+      ["/admin/team/", "team"],
+      ["/superadmin", "superadmin-stores"],
+      ["/superadmin/stores/new", "superadmin-store-new"],
+      ["/superadmin/stores/abc", "superadmin-store"],
+      ["/superadmin/plans", "superadmin-plans"],
+    ];
+    for (const [path, context] of cases) expect([path, helpContextForPath(path)]).toEqual([path, context]);
+  });
+
+  it("shows owners the staff's guides, but not the other way round", () => {
+    expect(visibleTo(["staff"], "owner")).toBe(true);
+    expect(visibleTo(["owner"], "staff")).toBe(false);
+    expect(visibleTo(["owner", "staff"], "superadmin")).toBe(false);
+    expect(inScope(["superadmin"], "store")).toBe(false);
+    expect(inScope(["owner"], "superadmin")).toBe(false);
   });
 });
 

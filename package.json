@@ -51,6 +51,7 @@
     "qa:sections": "node scripts/db-env.mjs node scripts/qa-sections.mjs",
     "qa:dialogs": "node scripts/db-env.mjs node scripts/qa-dialogs.mjs",
     "qa:confirms": "node scripts/db-env.mjs node scripts/qa-confirms.mjs",
+    "qa:help": "node scripts/db-env.mjs node scripts/qa-help.mjs",
     "qa:price-calculator": "node scripts/db-env.mjs node scripts/qa-price-calculator.mjs",
     "e2e:plan-caja": "node scripts/db-env.mjs node scripts/e2e-plan-caja.mjs",
     "qa:plan-caja": "node scripts/db-env.mjs node scripts/qa-plan-caja.mjs",

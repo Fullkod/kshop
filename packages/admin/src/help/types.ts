@@ -23,7 +23,6 @@ export const HELP_CONTEXTS = [
   "whatsapp-templates",
   "whatsapp-log",
   "pos",
-  "pos-summary",
   "products",
   "product",
   "categories",

@@ -3,6 +3,10 @@
 export * from "./types";
 export * from "./lib/help-utils";
 export * from "./lib/first-day-progress";
+export * from "./lib/context";
+export * from "./components/HelpButton";
+export * from "./components/HelpCenter";
+export type { HelpLinkComponent } from "./components/HelpLink";
 export * from "./generators/markdown";
 export * from "./generators/search-index";
 export { helpContentRaw, HELP_VERSION } from "./content/raw";

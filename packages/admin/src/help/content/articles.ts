@@ -151,7 +151,7 @@ export const articles: HelpArticle[] = [
       "La Caja es para lo que vendes en persona: buscas, cobras y el stock baja al momento. Funciona en la web y en Kshop Admin, también sin conexión.",
     audiences: ["owner", "staff"],
     keywords: ["caja", "mostrador", "vender", "pos", "cobrar", "vuelto", "sin conexión", "local"],
-    contexts: ["pos", "pos-summary", "sales-today"],
+    contexts: ["pos", "sales-today"],
     steps: [
       {
         text: "Abre Caja › Vender. Busca por nombre o código y toca cada producto para sumarlo al ticket; cambia la cantidad si hace falta.",

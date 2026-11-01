@@ -1,7 +1,9 @@
 "use client";
 
+import { HelpButton, helpContextForPath } from "@kshop/admin/help";
 import {
   ArrowLeft,
+  CircleHelp,
   ThemeSwitch,
   Alert,
   buttonVariants,
@@ -51,6 +53,26 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
   { label: "Plataforma", items: [{ href: "/superadmin/whatsapp", label: "WhatsApp", icon: MessageCircle }] },
 ];
 
+const HELP_ITEM: NavItem = { href: "/superadmin/help", label: "Ayuda", icon: CircleHelp };
+
+function navLink(item: NavItem, active: boolean) {
+  const Icon = item.icon;
+  return (
+    <Link
+      key={item.href}
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex h-9 items-center gap-2.5 rounded-[9px] px-2.5 text-[13.5px] whitespace-nowrap transition-colors",
+        active ? "bg-[#5B21B6] font-semibold text-white" : "text-[#D9D3EA] hover:bg-white/8 hover:text-white",
+      )}
+    >
+      <Icon size={17} aria-hidden className="shrink-0" />
+      <span className="flex-1 truncate">{item.label}</span>
+    </Link>
+  );
+}
+
 /**
  * Superadmin panel (redesign R8, the same language as the store admin of R6): night sidebar with Kshop and the
  * groups, user card, a menu on phones, and a topbar with «Ver la web» and «Nueva tienda».
@@ -90,30 +112,14 @@ export function SuperadminShell({ children }: { children: ReactNode }) {
             <p className="px-2.5 pt-3 pb-1 text-[10.5px] font-bold tracking-[.1em] text-[#9C93B8] uppercase">
               {g.label}
             </p>
-            {g.items.map((item) => {
-              const Icon = item.icon;
-              const active = activeHref === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "flex h-9 items-center gap-2.5 rounded-[9px] px-2.5 text-[13.5px] whitespace-nowrap transition-colors",
-                    active
-                      ? "bg-[#5B21B6] font-semibold text-white"
-                      : "text-[#D9D3EA] hover:bg-white/8 hover:text-white",
-                  )}
-                >
-                  <Icon size={17} aria-hidden className="shrink-0" />
-                  <span className="flex-1 truncate">{item.label}</span>
-                </Link>
-              );
-            })}
+            {g.items.map((item) => navLink(item, activeHref === item.href))}
           </div>
         ))}
       </nav>
-      <ThemeSwitch tone="night" className="mt-auto self-start" />
+      <div className="mt-auto flex flex-col gap-2">
+        {navLink(HELP_ITEM, pathname === HELP_ITEM.href)}
+        <ThemeSwitch tone="night" className="self-start" />
+      </div>
       <div className="flex items-center gap-2.5 rounded-xl bg-white/6 px-2.5 py-3">
         <span className="font-display flex size-8 shrink-0 items-center justify-center rounded-full bg-[#5B21B6] text-sm font-bold">
           {(email[0] ?? "?").toUpperCase()}
@@ -180,6 +186,12 @@ export function SuperadminShell({ children }: { children: ReactNode }) {
           )}
           <span className="font-display truncate font-bold md:hidden">Superadmin</span>
           <div className="ml-auto flex items-center gap-2">
+            <HelpButton
+              context={helpContextForPath(pathname)}
+              viewer="superadmin"
+              helpHref="/superadmin/help"
+              linkAs={Link}
+            />
             <a
               href="/"
               target="_blank"
