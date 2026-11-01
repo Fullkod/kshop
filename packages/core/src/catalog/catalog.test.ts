@@ -5,6 +5,8 @@ import { productInputSchema, productTypeInputSchema } from "./schemas";
 import {
   catalogSlug,
   combinationKey,
+  fillMissingSkus,
+  skuBase,
   suggestSku,
   variantMatrix,
   variantName,
@@ -46,6 +48,47 @@ describe("SKU and slugs", () => {
     const combo = variantMatrix([talla, color])[0]!;
     expect(suggestSku("Vestido Ñandú", combo)).toBe("VESTIDO-NANDU-S-ROJO");
     expect(suggestSku("Gorra")).toBe("GORRA");
+  });
+
+  it("makes the missing SKUs from the product and variant names, unique in the store", () => {
+    expect(skuBase("Vestido Ñandú", "S / Rojo")).toBe("VESTIDO-NANDU-S-ROJO");
+    expect(skuBase("Gorra")).toBe("GORRA");
+    expect(skuBase("¡¡!!")).toBe("SKU");
+    const filled = fillMissingSkus(
+      "Gorra",
+      [
+        { sku: "", name: "" },
+        { sku: "MIO-1", name: "" },
+        { sku: "", name: "" },
+      ],
+      ["gorra", "GORRA-2"],
+    );
+    expect(filled.map((v) => v.sku)).toEqual(["GORRA-3", "MIO-1", "GORRA-4"]);
+    expect(filled.every((v) => /^[A-Za-z0-9][A-Za-z0-9._/-]{0,63}$/.test(v.sku))).toBe(true);
+    expect(
+      fillMissingSkus("x".repeat(200), [{ sku: "", name: "y".repeat(200) }], [])[0]!.sku.length,
+    ).toBeLessThanOrEqual(64);
+  });
+
+  it("accepts an empty SKU in a product and still rejects repeated ones", () => {
+    const base = {
+      productTypeId: "00000000-0000-4000-8000-000000000001",
+      name: "Gorra",
+      slug: "gorra",
+      variants: [
+        { sku: "", price: 1 },
+        { sku: "", price: 2 },
+      ],
+    };
+    expect(productInputSchema.safeParse(base).success).toBe(true);
+    const repeated = {
+      ...base,
+      variants: [
+        { sku: "A1", price: 1 },
+        { sku: "a1", price: 2 },
+      ],
+    };
+    expect(productInputSchema.safeParse(repeated).success).toBe(false);
   });
 
   it("matches combinations regardless of order", () => {

@@ -179,7 +179,9 @@ async function run() {
   check("category with children cannot be deleted -> 409", r.status === 409, r);
 
   // Editing and moving a branch: every update sets parent_id, which fires categories_move_descendants.
-  const childCat = (await service.from("categories").select("id").eq("store_id", storeA.id).eq("name", "Vestidos").single()).data.id;
+  const childCat = (
+    await service.from("categories").select("id").eq("store_id", storeA.id).eq("name", "Vestidos").single()
+  ).data.id;
   r = await ownerA("PATCH", `${A}/categories/${childCat}`, { name: "Vestidos largos", parentId: catId });
   check("edit a category -> 200", r.status === 200, r);
   r = await ownerA("POST", `${A}/categories`, { name: "Ropa" });
@@ -188,7 +190,11 @@ async function run() {
   check("move a branch -> 200", r.status === 200, r);
   const { data: moved } = await service.from("categories").select("depth, path").eq("id", childCat).single();
   const { data: rootRow } = await service.from("categories").select("path").eq("id", rootCat).single();
-  check("move a branch: the child goes with it", moved.depth === 3 && moved.path.startsWith(`${rootRow.path}.`), moved);
+  check(
+    "move a branch: the child goes with it",
+    moved.depth === 3 && moved.path.startsWith(`${rootRow.path}.`),
+    moved,
+  );
   r = await ownerA("PATCH", `${A}/categories/${catId}`, { name: "Mujer", parentId: null });
   check("move a branch back to the root -> 200", r.status === 200, r);
   const { data: back } = await service.from("categories").select("depth").eq("id", childCat).single();
@@ -198,26 +204,43 @@ async function run() {
   await ownerA("DELETE", `${A}/categories/${rootCat}`);
 
   // The Excel import from the platform: the file goes straight to store-imports with the superadmin's session.
-  const superadminStorage = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
-    auth: { persistSession: false },
-    global: { headers: { Authorization: `Bearer ${await token(USERS.superadmin)}` } },
-  }).storage;
+  const superadminStorage = createClient(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: { persistSession: false },
+      global: { headers: { Authorization: `Bearer ${await token(USERS.superadmin)}` } },
+    },
+  ).storage;
   const importBook = new ExcelJS.Workbook();
-  importBook.addWorksheet("Productos").addRows([["SKU", "Nombre", "Precio"], ["IMP-1", "Producto", 100]]);
+  importBook.addWorksheet("Productos").addRows([
+    ["SKU", "Nombre", "Precio"],
+    ["IMP-1", "Producto", 100],
+  ]);
   const importFile = Buffer.from(await importBook.xlsx.writeBuffer());
   const importKey = `stores/${storeA.id}/imports/${randomBytes(6).toString("hex")}.xlsx`;
   const xlsx = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-  let upload = await superadminStorage.from("store-imports").upload(importKey, importFile, { contentType: xlsx });
+  let upload = await superadminStorage
+    .from("store-imports")
+    .upload(importKey, importFile, { contentType: xlsx });
   check("superadmin: uploads an import to any store", !upload.error, upload.error);
-  upload = await superadminStorage.from("store-imports").upload(`stores/${storeA.id}/other/x.xlsx`, importFile, { contentType: xlsx });
+  upload = await superadminStorage
+    .from("store-imports")
+    .upload(`stores/${storeA.id}/other/x.xlsx`, importFile, { contentType: xlsx });
   check("superadmin: an import only goes in the imports folder", !!upload.error, upload.data);
   const ownerBStorage = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
     auth: { persistSession: false },
     global: { headers: { Authorization: `Bearer ${await token(USERS.ownerB)}` } },
   }).storage;
-  upload = await ownerBStorage.from("store-imports").upload(`stores/${storeA.id}/imports/intruso.xlsx`, importFile, { contentType: xlsx });
+  upload = await ownerBStorage
+    .from("store-imports")
+    .upload(`stores/${storeA.id}/imports/intruso.xlsx`, importFile, { contentType: xlsx });
   check("owner of B: cannot upload an import to A", !!upload.error, upload.data);
-  r = await superadmin("POST", `${A}/imports`, { fileKey: importKey, fileName: "plataforma.xlsx", productTypeId: typeId });
+  r = await superadmin("POST", `${A}/imports`, {
+    fileKey: importKey,
+    fileName: "plataforma.xlsx",
+    productTypeId: typeId,
+  });
   check("superadmin: the import of that file starts", r.status === 201, r);
 
   const product = (sku, status = "draft") => ({
@@ -264,6 +287,40 @@ async function run() {
     .select("id", { count: "exact", head: true })
     .eq("product_id", productId);
   check("removed variant is gone", count === 1, count);
+
+  // An empty SKU is made from the product name, unique in the store; a saved variant sent empty keeps its own.
+  const noSku = (slug) => {
+    const p = product("V2");
+    return { ...p, slug, variants: p.variants.map((v) => ({ ...v, sku: "" })) };
+  };
+  const skusOf = async (id) =>
+    (await service.from("product_variants").select("sku").eq("product_id", id).order("sort_order")).data.map(
+      (v) => v.sku,
+    );
+  r = await ownerA("POST", `${A}/products`, noSku("vestido-v2"));
+  check("empty SKUs -> 201", r.status === 201, r);
+  const autoId = r.body.id;
+  let skus = await skusOf(autoId);
+  check("empty SKUs are made from the name", skus.join(",") === "VESTIDO-V2,VESTIDO-V2-2", skus);
+  r = await ownerA("POST", `${A}/products`, noSku("vestido-v2-otro"));
+  const otherSkus = await skusOf(r.body.id);
+  check(
+    "same name in another product: the next free codes",
+    r.status === 201 && otherSkus.join(",") === "VESTIDO-V2-3,VESTIDO-V2-4",
+    otherSkus,
+  );
+  const autoVariants = (
+    await service.from("product_variants").select("id").eq("product_id", autoId).order("sort_order")
+  ).data;
+  const resend = noSku("vestido-v2");
+  resend.variants = resend.variants.map((v, i) => ({ ...v, id: autoVariants[i].id }));
+  r = await ownerA("PUT", `${A}/products/${autoId}`, resend);
+  skus = await skusOf(autoId);
+  check(
+    "a saved variant sent without SKU keeps its own",
+    r.status === 200 && skus.join(",") === "VESTIDO-V2,VESTIDO-V2-2",
+    skus,
+  );
 
   const { data: whA } = await service.from("warehouses").select("id").eq("store_id", storeA.id).single();
   const { data: whB } = await service.from("warehouses").select("id").eq("store_id", storeB.id).single();

@@ -145,10 +145,12 @@ export type CurrencyInput = z.infer<typeof currencyInputSchema>;
 
 export const variantInputSchema = z.object({
   id: uuid.optional(),
+  /** Empty: the server makes one from the product and variant names (fillMissingSkus). */
   sku: z
     .string()
     .trim()
-    .regex(/^[A-Za-z0-9][A-Za-z0-9._/-]{0,63}$/, "SKU: letras, números, . _ / - (máx. 64)."),
+    .regex(/^([A-Za-z0-9][A-Za-z0-9._/-]{0,63})?$/, "SKU: letras, números, . _ / - (máx. 64).")
+    .default(""),
   name: z.string().trim().max(120).default(""),
   price: money,
   compareAtPrice: money.nullable().optional(),
@@ -196,10 +198,16 @@ export const productInputSchema = z
     attributes: z.array(productAttributeInputSchema).max(50).default([]),
     variants: z.array(variantInputSchema).min(1, "Añade al menos una variante.").max(300),
   })
-  .refine((p) => new Set(p.variants.map((v) => v.sku.toUpperCase())).size === p.variants.length, {
-    message: "Hay SKU repetidos.",
-    path: ["variants"],
-  });
+  .refine(
+    (p) => {
+      const skus = p.variants.map((v) => v.sku.toUpperCase()).filter(Boolean);
+      return new Set(skus).size === skus.length;
+    },
+    {
+      message: "Hay SKU repetidos.",
+      path: ["variants"],
+    },
+  );
 export type ProductInput = z.infer<typeof productInputSchema>;
 
 export const productStatusBulkInputSchema = z.object({

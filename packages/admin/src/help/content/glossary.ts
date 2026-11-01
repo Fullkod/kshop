@@ -34,7 +34,7 @@ export const glossary: GlossaryEntry[] = [
   {
     term: "SKU",
     definition:
-      "Código único de cada variante en tu tienda. Sirve para buscar en la Caja y para que el Excel sepa qué producto actualizar.",
+      "Código único de cada variante en tu tienda. Sirve para buscar en la Caja y para que el Excel sepa qué producto actualizar. Si lo dejas vacío al crear un producto, Kshop lo crea con su nombre (por ejemplo, GORRA o VESTIDO-S-ROJO).",
     audiences: ["owner", "staff"],
     related: ["excel-catalog"],
   },

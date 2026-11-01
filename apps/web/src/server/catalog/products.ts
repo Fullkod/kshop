@@ -1,5 +1,5 @@
 import "server-only";
-import type { ProductInput } from "@kshop/core";
+import { fillMissingSkus, skuBase, type ProductInput } from "@kshop/core";
 import { mapDbError } from "../db-errors";
 import { getServiceClient } from "../supabase";
 
@@ -52,6 +52,46 @@ function toSaveProductPayload(input: ProductInput, productId?: string) {
   };
 }
 
+/**
+ * Variants sent without a SKU get one from the product and variant names ("VESTIDO-NANDU-S-ROJO"), with "-2", "-3"…
+ * when the store already uses it. A race with another save on the same code ends in the usual duplicate SKU error.
+ */
+async function withSkus(storeId: string, input: ProductInput): Promise<ProductInput> {
+  if (input.variants.every((v) => v.sku)) return input;
+  // A saved variant sent without a SKU (the editor kept the empty field) keeps the one it has.
+  const ids = input.variants.filter((v) => !v.sku && v.id).map((v) => v.id!);
+  if (ids.length) {
+    const { data, error } = await getServiceClient()
+      .from("product_variants")
+      .select("id, sku")
+      .eq("store_id", storeId)
+      .in("id", ids);
+    if (error) mapDbError(error, "El producto");
+    const current = new Map((data ?? []).map((r: { id: string; sku: string }) => [r.id, r.sku]));
+    input = {
+      ...input,
+      variants: input.variants.map((v) =>
+        !v.sku && v.id && current.has(v.id) ? { ...v, sku: current.get(v.id)! } : v,
+      ),
+    };
+  }
+  const missing = input.variants.filter((v) => !v.sku);
+  if (!missing.length) return input;
+  const bases = [...new Set(missing.map((v) => skuBase(input.name, v.name)))];
+  const taken: string[] = [];
+  for (const base of bases) {
+    // Every SKU of the store that starts with the base (a base is A-Z, 0-9 and "-": no ilike wildcards in it).
+    const { data, error } = await getServiceClient()
+      .from("product_variants")
+      .select("sku")
+      .eq("store_id", storeId)
+      .ilike("sku", `${base}%`);
+    if (error) mapDbError(error, "El producto");
+    taken.push(...(data ?? []).map((r: { sku: string }) => r.sku));
+  }
+  return { ...input, variants: fillMissingSkus(input.name, input.variants, taken) };
+}
+
 /** Saves the whole product in one transaction (public.save_product). Returns its id. */
 export async function saveProduct(
   storeId: string,
@@ -61,7 +101,7 @@ export async function saveProduct(
 ): Promise<string> {
   const { data, error } = await getServiceClient().rpc("save_product", {
     p_store_id: storeId,
-    p_input: toSaveProductPayload(input, productId),
+    p_input: toSaveProductPayload(await withSkus(storeId, input), productId),
     p_user_id: userId,
   });
   if (error) mapDbError(error, "El producto");

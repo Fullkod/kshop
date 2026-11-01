@@ -60,3 +60,12 @@ Detalle de cada error en la sección «Aprendizajes» de los PRP de las fases 1 
   aunque el archivo ya cambió (p. ej. la API aceptaba cupones en Base y el carrito no traía campos nuevos). Pasa tras
   `pnpm build` con el dev corriendo y a veces sin él; editar el archivo no siempre basta. Síntoma: un E2E que
   pasaba falla con un comportamiento «imposible». Fix: reiniciar `pnpm dev` (parar el `next dev` del puerto 3000).
+
+## Reloj de Windows adelantado = 401 en local (2026-11-01)
+- Si la API local responde 401 «Inicia sesión para continuar.» a mitad de un `e2e:*` y en puntos distintos cada vez,
+  mira la hora: el 2026-11-01 el reloj del PC iba **una hora adelantado** (19:32 local contra 18:32 del `Date` de
+  Supabase). `getClaims` verifica el JWT con la hora local y lo da por caducado («JWT has expired») unos segundos
+  después de emitirlo. Producción no se ve afectada.
+- Comprobarlo: comparar `new Date()` con la cabecera `date` de `<SUPABASE_URL>/auth/v1/health`. Arreglo: sincronizar la
+  hora de Windows (lo decide Roberto, es un cambio del sistema).
+- `next dev` solo admite un servidor por carpeta; su log está en `apps/web/.next/dev/logs/next-development.log`.

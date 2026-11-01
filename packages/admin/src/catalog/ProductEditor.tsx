@@ -455,6 +455,11 @@ export function ProductEditor({ productId }: { productId?: string }) {
       router.replace(`/admin/catalog/products/${result.id}`);
       return;
     }
+    // A variant saved without a SKU got one on the server: read the product again to show it.
+    if (form!.variants.some((v) => !v.sku.trim())) {
+      setForm(null);
+      setProductVersion((n) => n + 1);
+    }
     setSaved(true);
   }
 
@@ -516,6 +521,8 @@ export function ProductEditor({ productId }: { productId?: string }) {
       <Input
         aria-label={`SKU ${v.name}`}
         value={v.sku}
+        placeholder="Vacío: se crea solo"
+        title="Si lo dejas vacío, se crea con el nombre del producto al guardar"
         onChange={(e) => setVariant(i, { sku: e.target.value })}
         className="w-full min-w-48"
       />
