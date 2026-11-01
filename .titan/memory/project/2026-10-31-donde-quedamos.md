@@ -23,6 +23,9 @@ Supera a `2026-10-30-donde-quedamos.md`. `main` y `origin/main` están al día (
 - **KSH0003** (misma noche): calculadora de costo unitario y margen en el editor de producto y teléfonos con la
   separación cubana (`2026-10-31-ksh0003-calculadora-precio.md`); `qa:price-calculator` 23/23.
 
+- **KSH0004** («ajustar planes»): PRP del plan «Caja» escrito y propuesto en Tasknic (`prp-ksh0004-plan-caja.md`);
+  espera las respuestas de Roberto (P1–P7) antes de implementar.
+
 ## Qué sigue
 1. **Roberto prueba los APK** (Kshop Admin en modo avión: vender, cerrar a la fuerza, reiniciar, subir al volver la
    red) y la web desde su iPhone. Lo que salga se corrige antes de dar por cerrada la fase 7 del PRP del POS.
