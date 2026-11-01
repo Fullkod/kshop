@@ -110,10 +110,10 @@ async function newPage(session, { width = 1280, height = 900, dark = false } = {
   const page = await context.newPage();
   page.on("console", (m) => {
     // Not errors: the dev-only «instant navigation» notice of Next, Realtime reconnects and the screenshots that
-    // are not shot yet (help-shots, phase 3).
+    // are not shot yet (help-shots, phase 3). A 429 is the Auth sign-in limit hit by this script's own sign-ins.
     if (
       m.type() === "error" &&
-      !/instant navigation|WebSocket|realtime|help\/screens|status of 404/i.test(m.text())
+      !/instant navigation|WebSocket|realtime|help\/screens|status of 404|status of 429/i.test(m.text())
     ) {
       consoleErrors.push(`${page.url()}: ${m.text().slice(0, 200)}`);
     }
@@ -158,7 +158,7 @@ const OWNER_SCREENS = [
   ["/admin/pos", "Ayuda · Caja", "Quiero vender en el mostrador"],
   ["/admin/team", "Ayuda · Equipo", "Quiero que mi empleado entre al admin"],
   ["/admin/billing", "Ayuda · Plan y facturación", "Quiero ver mi plan y cómo pago"],
-  ["/admin/shipping", "Ayuda · Entregas", null],
+  ["/admin/shipping", "Ayuda · Entregas", "Quiero organizar las entregas"],
 ];
 
 try {
