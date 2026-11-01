@@ -23,3 +23,15 @@ Desde el 2026-11-01 el dominio público de Klau's Shop apunta a Kshop (tienda `k
 **Why:** cierra la fase 8.7; el proxy y `private.store_public_url` ya usan el dominio en avisos y enlaces de pedido.
 **How to apply:** para quitar el dominio, borrar la fila `custom` de `store_domains` (o apagar el módulo `custom_domain`)
 y la tienda vuelve al subdominio sola; no tocar Vercel sin permiso de Roberto.
+
+## Páginas y pie traídos de klauShop (2026-11-01, mismo día)
+- Páginas publicadas en la tienda `klau` (Markdown restringido, editables en Admin › Apariencia › Páginas):
+  `/page/sobre-nosotros` («Sobre nosotros») y `/page/encargos` («Encargos»: Shein, Temu y Amazon, pasos, FAQ, botones
+  a WhatsApp con `wa.me`). Texto de `klauShop/src/app/(store)/{about-us,special-orders}/page.tsx`; sin iconos ni tarjetas.
+- Menú del pie (Admin › Apariencia › Menús): columnas «Categorías» (las 7 raíz, tipo `category`), «Servicios» (Encargos,
+  Mis pedidos `/account/orders`, Favoritos `/favorites`) e «Información» (Sobre nosotros, Descargar la app `/app`).
+  Sin menú de cabecera a propósito: Kshop ya pone «Productos» y las categorías.
+- Descripción del pie: «Tu tienda online de ropa y accesorios. Envíos a domicilio en Santa Clara, Placetas, Encrucijada
+  y Calabazar de Sagua.»
+- Escrito directo en la BD con `SUPABASE_SECRET_KEY` (igual que la API, sin `invalidateContent`): la caché del escaparate
+  («minutes») lo mostró en pocos minutos. No se migran reseñas ni comentarios (decisión de la fase 8).
