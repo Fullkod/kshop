@@ -75,6 +75,36 @@ export const screenshots: ScreenshotSpec[] = [
     viewport: "desktop",
   },
   {
+    slug: "discounts",
+    description: "Ofertas › Promociones con la lista de promociones y «Nueva promoción»",
+    route: "/admin/discounts",
+    viewport: "desktop",
+  },
+  {
+    slug: "whatsapp-templates",
+    description: "Avisos WhatsApp › Mensajes con los avisos y sus textos",
+    route: "/admin/whatsapp-notifications/templates",
+    viewport: "desktop",
+  },
+  {
+    slug: "themes-home",
+    description: "Apariencia › Portada con sus secciones y «Añadir sección»",
+    route: "/admin/themes/home",
+    viewport: "desktop",
+  },
+  {
+    slug: "finance",
+    description: "Finanzas › Resumen del mes: vendido, cobrado, margen y ganancia",
+    route: "/admin/finance",
+    viewport: "desktop",
+  },
+  {
+    slug: "superadmin-plans",
+    description: "Superadmin › Planes y módulos con los precios de cada plan",
+    route: "/superadmin/plans",
+    viewport: "desktop",
+  },
+  {
     slug: "superadmin-store-new",
     description: "Superadmin › Nueva tienda con el formulario vacío",
     route: "/superadmin/stores/new",

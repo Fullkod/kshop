@@ -37,6 +37,27 @@ export const faq: FaqEntry[] = [
     related: ["my-plan"],
   },
   {
+    question: "¿Cómo hago envío gratis?",
+    answer:
+      "Crea un cupón que se descuente del envío con porcentaje 100, o un método de entrega con precio 0 para la zona que quieras.",
+    audiences: ["owner"],
+    related: ["voucher", "shipping"],
+  },
+  {
+    question: "No me llegan los avisos de pedidos nuevos por WhatsApp.",
+    answer:
+      "Revisa que tu teléfono esté en Avisos WhatsApp › Contactos y que el aviso «Pedido nuevo» no esté desactivado en «Mensajes». En «Historial» ves si se envió o falló.",
+    audiences: ["owner"],
+    related: ["whatsapp-notices"],
+  },
+  {
+    question: "¿Puedo cobrar en USD aunque mis precios estén en CUP?",
+    answer:
+      "Sí, con el plan Pro: activa «Vender en USD» en Monedas y pon la tasa. Al cobrar eliges la moneda que entrega el cliente y Kshop convierte.",
+    audiences: ["owner", "staff"],
+    related: ["multi-currency", "counter-sale"],
+  },
+  {
     question: "Mi empleado no puede entrar a Equipo ni a Plan y facturación.",
     answer: "Es lo normal: esas secciones son solo del dueño y los administradores.",
     audiences: ["owner", "staff"],

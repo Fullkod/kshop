@@ -6,13 +6,18 @@ import { helpToIndex, searchHelp } from "./generators/search-index";
 import { helpContextForPath } from "./lib/context";
 import { articleAnchor, inScope, visibleTo } from "./lib/help-utils";
 import { VOSEO, validateHelpContent } from "./schemas/help";
-import type { HelpContent } from "./types";
+import { HELP_CONTEXTS, type HelpContent } from "./types";
 
 const clone = (): HelpContent => structuredClone(helpContentRaw);
 
 describe("help content", () => {
   it("is valid as written", () => {
-    expect(helpContent.articles.length).toBeGreaterThanOrEqual(8);
+    expect(helpContent.articles.length).toBeGreaterThanOrEqual(20);
+  });
+
+  it("has at least one guide for every screen with a «?»", () => {
+    const covered = new Set(helpContent.articles.flatMap((a) => a.contexts ?? []));
+    expect(HELP_CONTEXTS.filter((c) => !covered.has(c))).toEqual([]);
   });
 
   it("covers the three audiences", () => {

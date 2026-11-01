@@ -58,7 +58,7 @@ export const helpContentSchema = z.object({
   version: text,
   screenshots: z.array(screenshotSpecSchema),
   firstDay: z.array(firstDayStepSchema).min(1),
-  articles: z.array(helpArticleSchema).min(8, "la ayuda tiene al menos 8 guías"),
+  articles: z.array(helpArticleSchema).min(20, "la ayuda tiene al menos 20 guías"),
   glossary: z.array(glossaryEntrySchema).min(1),
   faq: z.array(faqEntrySchema).min(1),
 });

@@ -45,6 +45,49 @@ export const glossary: GlossaryEntry[] = [
     audiences: ["owner"],
   },
   {
+    term: "Reservadas",
+    definition:
+      "Unidades apartadas por pedidos que aún no se han entregado. No se pueden vender a otro cliente; vuelven al stock si el pedido se cancela.",
+    audiences: ["owner", "staff"],
+    related: ["warehouses"],
+  },
+  {
+    term: "Punto de recogida",
+    definition:
+      "Almacén o local donde el cliente puede pasar a recoger su pedido en vez de recibirlo en casa.",
+    audiences: ["owner", "staff"],
+    related: ["shipping"],
+  },
+  {
+    term: "A convenir",
+    definition:
+      "Método de entrega sin precio fijo: lo hablas con el cliente y lo pones en el pedido antes de confirmarlo.",
+    audiences: ["owner", "staff"],
+    related: ["shipping", "new-order-arrived"],
+  },
+  {
+    term: "Promoción y cupón",
+    definition:
+      "La promoción baja el precio sola (precio tachado); el cupón es un código que el cliente escribe en el carrito.",
+    audiences: ["owner", "staff"],
+    related: ["promotion", "voucher"],
+  },
+  {
+    term: "Tasa",
+    definition:
+      "Cuántos CUP (o tu moneda principal) vale una unidad de otra moneda. La pones tú y Kshop la usa para convertir precios y pagos.",
+    audiences: ["owner", "staff"],
+    related: ["multi-currency"],
+  },
+  {
+    term: "Simulado",
+    badge: "Simulado",
+    definition:
+      "Modo del WhatsApp de la plataforma en que los avisos se generan y se ven en el historial, pero no se envían.",
+    audiences: ["superadmin"],
+    related: ["superadmin-whatsapp"],
+  },
+  {
     term: "Gestionado por admin",
     badge: "Admin",
     definition: "Sección que Kshop configura por ti: tu equipo puede consultarla pero no cambiarla.",

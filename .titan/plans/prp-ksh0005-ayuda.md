@@ -3,7 +3,9 @@
 > **Estado**: APROBADO por Roberto (2026-11-01). **Fase 1 hecha** (2026-11-01): modelo, Zod, generadores, 9 guías,
 > primer día, glosario y FAQ en `packages/admin/src/help/`, 10 tests. **Fase 2 hecha**: «?» en admin, superadmin y
 > Kshop Admin, páginas Ayuda, `pnpm qa:help`. **Fase 3 hecha**: `help:shots` (11 capturas), Markdown por ruta
-> estática, `/help/print` + `help:pdf`, descargas en la página. Sigue la fase 4 (contenido completo). Decisiones ya tomadas por Roberto: admin de tienda (web y
+> estática, `/help/print` + `help:pdf`, descargas en la página. **Fase 4 hecha**: 26 guías (19 de tienda, 7 del
+> superadmin), 16 capturas, glosario y FAQ ampliados; tests «cada contexto tiene guía» y «cada módulo tiene contexto».
+> Sigue la fase 5 (validación final). Decisiones ya tomadas por Roberto: admin de tienda (web y
 > Kshop Admin) **y** superadmin; **todas** las piezas de Tasknic (guías por tarea con capturas reales, «Tu primer día»,
 > glosario, preguntas frecuentes, buscador, PDF y Markdown); audiencias **dueño/admin** y **empleado** con filtro.
 > **Proyecto**: Kshop · Tarea: Tasknic **KSH0005** («quiero una ayuda como mismo la tiene el tasknic, cada vista que
@@ -151,6 +153,14 @@ las de WhatsApp del día a día.
 - **Error**: el Vite ya arrancado no reoptimiza dependencias si cambia el lockfile; otro puerto no vale porque el CORS de
   `/api/v1` solo admite 5173 y 5174 (`proxy.ts`).
 - **Fix**: reiniciar el Vite de 5174 tras instalar dependencias.
+
+### Notas de la fase 4
+- Guías por tarea que agrupan contextos (p. ej. «Quiero ordenar mi catálogo» cubre categorías, marcas, colecciones y
+  atributos). `help.test.ts` exige guía en cada `HELP_CONTEXTS`; `apps/web/src/features/help-contexts.test.ts` exige
+  que cada módulo de `ADMIN_MODULES` tenga contexto propio (un módulo nuevo sin guía rompe `pnpm test`).
+- Revisar las capturas contra el texto encontró 4 errores de las guías (prioridad de las promociones, «Editar» en los
+  mensajes, «Tipo» + «Añadir sección» en la portada, guardar por plan): escribir la guía y mirar la captura antes de
+  darla por buena.
 
 ### Notas de la fase 3 (cambios sobre el plan)
 - **Sin `help-export.ts` ni `index.json`**: el repo no tiene `tsx`; el Markdown lo sirve una ruta estática
