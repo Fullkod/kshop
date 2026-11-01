@@ -198,11 +198,12 @@ function AvailableModule({
   plan: string;
   link: string | null;
 }) {
+  // The cheapest plan that includes it: Base for a «Caja» store, else Pro.
+  const includedIn =
+    module.inBase && plan === "caja" ? "Base" : module.inPro && plan !== "pro" ? "Pro" : null;
   const price = [
-    module.inPro && plan !== "pro" ? "Incluido en Pro" : null,
-    module.addonPrice != null
-      ? `${module.inPro && plan !== "pro" ? "o " : ""}${formatUsd(module.addonPrice)}/mes suelto`
-      : null,
+    includedIn ? `Incluido en ${includedIn}` : null,
+    module.addonPrice != null ? `${includedIn ? "o " : ""}${formatUsd(module.addonPrice)}/mes suelto` : null,
   ]
     .filter(Boolean)
     .join(" ");

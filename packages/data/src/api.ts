@@ -117,6 +117,8 @@ export type AdminBootstrap = {
   storeStatus: string | null;
   /** USD/month of the modules sold alone. */
   addonPrices: Record<string, number>;
+  /** Cheapest public plan that includes each module (the locks name it; KSH0004). Absent in older boots. */
+  upgrades?: Record<string, string>;
   /** Orders waiting for confirmation (the bell). */
   toConfirm: number;
   /** R12: admin menu sections that are not visible (no entry = visible). Absent in boots cached before R12. */
@@ -535,6 +537,8 @@ export type BillingModuleState = BillingModule & {
   source: "plan" | "addon" | "grant" | null;
   /** Included in the Pro plan (to sell the upgrade). */
   inPro: boolean;
+  /** Included in the Base plan (the upgrade from «Caja», KSH0004). */
+  inBase: boolean;
   endsAt: string | null;
 };
 

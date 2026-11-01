@@ -76,7 +76,8 @@ Los textos de ejemplo (productos, testimonios) son inventados.
 ## Reglas que no cambian
 - El checkout sigue siendo **por WhatsApp**; no se añade ninguna pasarela.
 - Cada «Pedir por WhatsApp» reutiliza `components/whatsapp.ts`.
-- Lo que ya no está en el plan se ve con el candado **PRO** y lleva a Plan y facturación, igual que hoy.
+- Lo que ya no está en el plan se ve con un candado con el nombre del plan que lo desbloquea (**BASE** o **PRO**, desde
+  KSH0004) y lleva a Plan y facturación, igual que hoy.
 - La apariencia no está en el plan Base: el editor sigue detrás del módulo.
 - Accesibilidad: zonas táctiles de al menos 44 px en móvil, contraste AA validado por `themeContrastIssues()` y foco visible
   (`--ring`, sombra de 4 px).

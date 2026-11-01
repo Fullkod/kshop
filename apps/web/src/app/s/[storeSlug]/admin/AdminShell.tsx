@@ -62,6 +62,8 @@ type NavItem = {
   testId: string;
   /** Locked module: links to the plan, with its price in the title. */
   locked?: string;
+  /** Name of the plan that unlocks it (the badge). */
+  lockedPlan?: string;
   count?: number;
   /** R12: «Admin» for a managed section; the superadmin also sees «Oculta» on the hidden ones. */
   badge?: string;
@@ -200,6 +202,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     // «Apariencia» outside the plan opens its page, which says the platform sets it up (D6).
     const open = admin.enabledModules.has(mod.code) || (mod.code === "themes" && visibility === "managed");
     const price = admin.addonPrices[mod.code];
+    const plan = admin.upgrades[mod.code] ?? "Pro";
     groups[mod.group].push({
       key: mod.code,
       href: open ? mod.adminPath : "/admin/billing",
@@ -209,8 +212,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
       locked: open
         ? undefined
         : price != null
-          ? `Incluido en Pro, o ${formatUsd(price)}/mes suelto`
-          : "Incluido en el plan Pro",
+          ? `Incluido en ${plan}, o ${formatUsd(price)}/mes suelto`
+          : `Incluido en el plan ${plan}`,
+      lockedPlan: open ? undefined : plan,
       count: mod.code === "orders" && toConfirm > 0 ? toConfirm : undefined,
       badge:
         visibility === "managed" || setting === "managed"
@@ -520,7 +524,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
       {item.locked && (
         <span className="flex items-center gap-1 rounded-md bg-gold/16 px-1.5 py-0.5 text-[10px] font-bold text-gold">
           <Lock size={10} aria-hidden />
-          PRO
+          {(item.lockedPlan ?? "Pro").toUpperCase()}
         </span>
       )}
     </Link>

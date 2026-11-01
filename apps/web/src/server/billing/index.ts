@@ -411,6 +411,7 @@ export async function getStoreBilling(
     new Date(m.starts_at).getTime() <= now + 60_000 &&
     (!m.ends_at || new Date(m.ends_at).getTime() > now);
   const pro = catalog.plans.find((p) => p.code === "pro");
+  const base = catalog.plans.find((p) => p.code === "base");
 
   const usageOut: StoreUsage = {
     maxProducts: { limit: usage.max_products.limit, used: num(usage.max_products.used) },
@@ -447,6 +448,7 @@ export async function getStoreBilling(
         ...m,
         source: best?.source ?? null,
         inPro: !!pro?.modules.includes(m.code),
+        inBase: !!base?.modules.includes(m.code),
         endsAt: best?.ends_at ?? null,
       };
     }),

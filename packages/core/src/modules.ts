@@ -2,6 +2,7 @@
 export const MODULE_CODES = [
   "catalog",
   "orders",
+  "storefront",
   "shipping",
   "discounts",
   "vouchers",
@@ -18,6 +19,9 @@ export const MODULE_CODES = [
 ] as const;
 
 export type ModuleCode = (typeof MODULE_CODES)[number];
+
+/** Modules without a screen of their own in the admin (KSH0004: the online store is the public web, not a section). */
+export const HEADLESS_MODULES: readonly ModuleCode[] = ["storefront"];
 
 export function isModuleCode(value: string): value is ModuleCode {
   return (MODULE_CODES as readonly string[]).includes(value);

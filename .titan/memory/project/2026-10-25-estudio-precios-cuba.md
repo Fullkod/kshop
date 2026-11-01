@@ -19,6 +19,7 @@ efectivo y en persona al dueño del negocio (sin comprobantes). Editables luego 
 ## Propuesta (aplicada como valores iniciales)
 | Plan | USD/mes | Anual (2 meses gratis) | Límites |
 |------|---------|------------------------|---------|
+| Caja (2026-11-01, KSH0004) | **3** | 30 | 300 productos, 2 de equipo; sin tienda online |
 | Base | **5** | 50 | 300 productos, 2 de equipo |
 | Pro  | **12** | 120 | sin límite de productos, 10 de equipo |
 

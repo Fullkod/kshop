@@ -38,6 +38,10 @@ Cada módulo vive en su carpeta (`features/finance`, `features/warehouses`…) c
 El core no importa nada de un módulo opcional; los módulos sí pueden usar el core.
 
 ## Reparto (v2 — 2026-10-24, ajustado por Roberto: "el inicial estaba un poco fuerte")
+> **2026-11-01 (KSH0004):** hay un tercer plan por debajo, **Caja** (3 USD): catálogo, caja, pedidos, ventas de hoy y
+> Excel, sin tienda online. La tienda online es el módulo `storefront` de Base y Pro, no se vende suelto. Ver
+> `2026-11-01-ksh0004-plan-caja.md`.
+
 Dos planes + módulos sueltos:
 
 | Base | Pro (incluye todo lo de Base +) | Módulos sueltos |

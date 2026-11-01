@@ -5,8 +5,10 @@ import { storeSlugSchema } from "./slug";
 export const STORE_STATUSES = ["active", "suspended", "archived"] as const;
 export type StoreStatus = (typeof STORE_STATUSES)[number];
 
-export const PLAN_CODES = ["base", "pro"] as const;
+// Cheapest first (KSH0004: «Caja» sells at the counter without an online store).
+export const PLAN_CODES = ["caja", "base", "pro"] as const;
 export type PlanCode = (typeof PLAN_CODES)[number];
+export const PLAN_NAMES: Record<PlanCode, string> = { caja: "Caja", base: "Base", pro: "Pro" };
 
 const phoneSchema = z
   .string()

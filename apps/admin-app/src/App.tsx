@@ -1022,7 +1022,7 @@ function MoreList({ items }: { items: MoreItem[] }) {
               {locked ? (
                 <span className="flex items-center gap-1 rounded-md bg-gold/16 px-1.5 py-0.5 text-[10px] font-bold text-[#8A5A00]">
                   <Lock size={10} aria-hidden />
-                  PRO
+                  {(admin.upgrades[item.code!] ?? "Pro").toUpperCase()}
                 </span>
               ) : (
                 <ExternalLink size={15} aria-hidden className="text-muted-foreground" />

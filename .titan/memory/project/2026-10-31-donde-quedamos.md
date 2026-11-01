@@ -23,10 +23,12 @@ Supera a `2026-10-30-donde-quedamos.md`. `main` y `origin/main` están al día (
 - **KSH0003** (misma noche): calculadora de costo unitario y margen en el editor de producto y teléfonos con la
   separación cubana (`2026-10-31-ksh0003-calculadora-precio.md`); `qa:price-calculator` 23/23.
 
-- **KSH0004** («ajustar planes»): PRP del plan «Caja» escrito y propuesto en Tasknic (`prp-ksh0004-plan-caja.md`);
-  espera las respuestas de Roberto (P1–P7) antes de implementar.
+- **KSH0004** («ajustar planes»): plan «Caja» hecho (`2026-11-01-ksh0004-plan-caja.md`): migraciones en prueba y
+  producción, `e2e:plan-caja` 23/23, `qa:plan-caja` 30/30. En producción el plan queda **oculto hasta el deploy**; luego
+  marcarlo «Visible» en Superadmin › Planes.
 
 ## Qué sigue
+0. **Deploy en Vercel** (KSH0003 y KSH0004 están en `main` local) y, tras él, poner el plan Caja «Visible».
 1. **Roberto prueba los APK** (Kshop Admin en modo avión: vender, cerrar a la fuerza, reiniciar, subir al volver la
    red) y la web desde su iPhone. Lo que salga se corrige antes de dar por cerrada la fase 7 del PRP del POS.
 2. **KSH0002 en Tasknic** sigue «En revisión»; cerrarla cuando Roberto dé el visto bueno al cobro.

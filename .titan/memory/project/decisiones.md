@@ -103,6 +103,10 @@
 28. **Tema claro / oscuro por elección** en la interfaz (admin, superadmin y Kshop Admin), además del sistema.
 29. **Variantes:** «Generar» solo añade las combinaciones que faltan y lo dice; cada variante se puede quitar.
     En la caja la cantidad se escribe, no solo con + y −. El listado de categorías muestra la miniatura.
+30. **Plan «Caja»** (2026-11-01, KSH0004): 3 USD/mes (30/año), para quien solo lleva inventario y vende en el mostrador:
+    catálogo, caja, pedidos, ventas de hoy y Excel; 300 productos y 2 de equipo; **sin tienda online** (su subdominio
+    enseña una tarjeta del local). La tienda online es un módulo (`storefront`) de Base y Pro que **no se vende suelto**.
+    El margen de la calculadora de precio (KSH0003) es «sobre el costo» por defecto.
 
 ## Preguntas abiertas
 - [x] DNS: `kshop.fullkod.com` y `*.kshop.fullkod.com` funcionan en Vercel (Roberto, 2026-10-26: configurado y probado).

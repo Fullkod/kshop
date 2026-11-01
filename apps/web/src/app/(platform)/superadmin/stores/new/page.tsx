@@ -4,6 +4,7 @@ import {
   CURRENCY_CODES,
   createStoreInputSchema,
   PLAN_CODES,
+  PLAN_NAMES,
   slugify,
   type CreateStoreInput,
 } from "@kshop/core";
@@ -214,7 +215,7 @@ export default function NewStorePage() {
           <Select id="planCode" name="planCode" defaultValue="base">
             {PLAN_CODES.map((p) => (
               <option key={p} value={p}>
-                {p === "base" ? "Base" : "Pro"}
+                {PLAN_NAMES[p]}
               </option>
             ))}
           </Select>

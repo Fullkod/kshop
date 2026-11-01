@@ -1,6 +1,7 @@
 import { PRODUCT_SORTS } from "@kshop/core";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { requireModule } from "@/server/auth";
 import { apiHandler, notFound, uuidParam } from "@/server/http";
 import { getFacets, getHome, getPage, getProduct, getProducts } from "@/server/storefront/catalog";
 import { getStorefrontShell } from "@/server/storefront/data";
@@ -55,6 +56,7 @@ export const GET = apiHandler(
     const storeId = uuidParam.parse((await ctx.params).storeId);
     const store = await getStoreById(storeId);
     if (!store || store.status !== "active") throw notFound("Tienda");
+    await requireModule(storeId, "storefront");
     const q = parseQuery(new URL(request.url));
 
     let body: unknown;

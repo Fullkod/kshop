@@ -50,6 +50,7 @@ const FEATURES: {
     icon: MessageCircle,
     title: "Vende las 24 horas",
     text: "Tu catálogo siempre abierto. El cliente compra cuando quiere y el pedido te llega completo por WhatsApp: productos, dirección, entrega y pago. Sin repetir precios ni mandar fotos una a una.",
+    module: "storefront",
     card: "bg-primary text-primary-foreground",
     box: "bg-white/15 text-gold",
   },
@@ -72,6 +73,7 @@ const FEATURES: {
     icon: Truck,
     title: "Entregas en orden",
     text: "Zonas con su precio y plazo, envío gratis desde un importe o recogida en tienda. Cada pedido avanza de «por confirmar» a «entregado» y nadie pierde el hilo.",
+    module: "shipping",
     card: "bg-surface",
     box: "bg-accent-soft text-primary",
   },
@@ -101,7 +103,7 @@ const FEATURES: {
   {
     icon: ClipboardList,
     title: "Todo en un solo panel",
-    text: "Pedidos de la web, de la app y los que tomas en el local o por teléfono, con su cliente e historial. Tu equipo entra con sus propios permisos.",
+    text: "Pedidos de la web, de la app, los que tomas por teléfono y lo que vendes en el mostrador con la caja, aunque se vaya internet. Cada uno con su cliente e historial, y tu equipo con sus propios permisos.",
     card: "bg-surface",
     box: "bg-accent-soft text-primary",
   },
@@ -124,7 +126,8 @@ const steps = (trialDays: number, trialPlan: string) => [
 /** What each module means to a shop owner (null: always there, not worth a line). */
 const MODULE_PITCH: Record<ModuleCode, string | null> = {
   catalog: null,
-  orders: "Pedidos por WhatsApp",
+  orders: null,
+  storefront: "Tienda online y pedidos por WhatsApp",
   shipping: "Envíos y recogida",
   discounts: "Ofertas visibles (-20 %)",
   vouchers: "Cupones",
@@ -185,6 +188,9 @@ export default async function PlatformHome() {
   // The trial gives the top public plan (decision of the pricing study).
   const trialPlan = data.plans.at(-1)?.name ?? "Pro";
   const moduleOrder = data.modules.map((m) => m.code);
+  // KSH0004: the plan without the online store, and the first one with it (add-ons are sold over it).
+  const counterPlan = data.plans.find((p) => !p.modules.includes("storefront"));
+  const basePlan = data.plans.find((p) => p.modules.includes("storefront"));
   const planOf = (module: ModuleCode | undefined) =>
     module && !data.plans[0]?.modules.includes(module)
       ? data.plans.find((p) => p.modules.includes(module))?.name
@@ -236,8 +242,9 @@ export default async function PlatformHome() {
               Tu tienda online, con tu dirección y tus pedidos por <span className="text-gold">WhatsApp</span>
             </h1>
             <p className="max-w-[520px] text-[clamp(16px,1.5cqw,19px)] text-pretty text-white/80">
-              Recibe pedidos las 24 horas, controla tu inventario y tus almacenes, organiza las entregas y sabe
-              cada día cuánto ganas. En CUP, USD o EUR, y lista en una tarde.
+              Recibe pedidos las 24 horas, cobra en el mostrador con la caja aunque se vaya internet, controla
+              tu inventario y organiza las entregas. Sabe cada día cuánto ganas, en CUP, USD o EUR, y lista en
+              una tarde.
             </p>
             <div className="flex flex-wrap gap-3">
               <a
@@ -364,7 +371,7 @@ export default async function PlatformHome() {
           </p>
         </div>
         <div
-          className="grid w-full max-w-[880px] grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-4"
+          className="grid w-full max-w-[1100px] grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-4"
           data-testid="landing-plans"
         >
           {data.plans.map((plan, i) => (
@@ -384,10 +391,20 @@ export default async function PlatformHome() {
             />
           ))}
         </div>
+        {counterPlan && basePlan && (
+          <p
+            className="max-w-[640px] text-center text-sm text-muted-foreground"
+            data-testid="landing-counter-plan"
+          >
+            ¿Solo vendes en tu local? El plan <b className="text-foreground">{counterPlan.name}</b> lleva tu
+            catálogo, tu inventario y tu caja, sin tienda online. Cuando quieras vender por internet, pasas al{" "}
+            {basePlan.name}.
+          </p>
+        )}
         <p className="max-w-[640px] text-center text-sm text-muted-foreground">
           {data.minAddonPrice != null && (
             <>
-              Módulos sueltos sobre el {data.plans[0]?.name ?? "Base"} desde {amount(data.minAddonPrice)}{" "}
+              Módulos sueltos sobre el {basePlan?.name ?? "Base"} desde {amount(data.minAddonPrice)}{" "}
               USD/mes.{" "}
             </>
           )}

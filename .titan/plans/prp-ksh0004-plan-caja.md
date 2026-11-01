@@ -1,6 +1,10 @@
 # PRP KSH0004: plan «Caja» (vender en el mostrador sin tienda online)
 
-> **Estado**: PENDIENTE — propuesta para Roberto (2026-11-01). No se implementa hasta que responda P1–P7.
+> **Estado**: HECHO (2026-11-01). Roberto aprobó P1–P7 como se proponían («Caja», 3 USD/30, catálogo + caja + pedidos +
+> ventas de hoy + Excel, 300 productos y 2 de equipo, página del local, tienda online solo subiendo al Base, ya).
+> Migraciones en prueba y producción (`test:rls` 775/775 en las dos); `e2e:plan-caja` 23/23, `qa:plan-caja` 30/30.
+> **Pendiente de Roberto**: deploy en Vercel y, después, marcar el plan Caja «Visible» en Superadmin › Planes
+> (está oculto en producción hasta entonces). Memoria: `project/2026-11-01-ksh0004-plan-caja.md`.
 > **Proyecto**: Kshop · **Sigue a**: Fase 5 (`prp-fase-5-suscripciones-y-modulos.md`), POS (`prp-pos-offline.md`).
 > Memoria: `project/modulos-y-planes.md`, `project/2026-10-25-estudio-precios-cuba.md`. Tarea: Tasknic **KSH0004**.
 
@@ -108,4 +112,19 @@ que suba a Base la tienda aparece ahí mismo.
 
 ## 🧠 Aprendizajes (Self-Annealing)
 
-_(se rellena durante la implementación)_
+- **Lo público vive en cuatro helpers, no en uno**: `store_is_public`, `public_store_ids` y también `public_product_ids`
+  y `public_variant_ids` (R10/R11) tenían inlined «la tienda está activa». El test 20 lo cazó (anon veía las variantes
+  de una tienda Caja). Al cambiar qué es público, buscar `s.status = 'active'` en todos los helpers de `private`.
+- **Cada módulo nuevo mueve los conteos** de `01_platform_isolation` y `07_billing_isolation` (8 → 9, 15 → 16) y el test
+  de `MODULE_CODES` contra las migraciones (`insert into public.modules … values ('<code>'` en su propia línea).
+- **Un módulo sin pantalla** rompía el test del registro del admin: `HEADLESS_MODULES` en core es la lista de los que no
+  tienen sección.
+- **`fetch` de Node tira la cabecera `Host`** (lo prohíbe la especificación): para pedir el subdominio de una tienda
+  desde un e2e hay que usar `node:http`, o Chromium (que resuelve `*.localhost`).
+- **`$$` dentro de comillas dobles en bash es el PID**: un `do $$ … $$` o un `create function` pasado por `pnpm
+  db:query "…"` llega roto. Pasar el SQL por un archivo (o por un script de Python con `subprocess`, sin shell), y
+  `->` sin comillas es una redirección (creó un archivo `upgrades` en la raíz).
+- **Migrar producción antes del deploy** dejaba la landing vieja pintando mal el plan nuevo: ocultarlo (`is_public`)
+  hasta desplegar es el interruptor limpio.
+- **El candado «PRO» era un texto fijo** en los dos admins: con tres planes el boot tiene que decir qué plan desbloquea
+  cada módulo (`admin_bootstrap.upgrades`).

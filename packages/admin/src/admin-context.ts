@@ -22,6 +22,8 @@ export type AdminState = {
   storeStatus: string;
   /** USD/month of the modules sold alone (locked menu items show it). */
   addonPrices: Partial<Record<ModuleCode, number>>;
+  /** Name of the cheapest plan with each module (a locked item names it; «Pro» when unknown). */
+  upgrades: Partial<Record<ModuleCode, string>>;
   /** Stores of the user (the store switcher lists them when there are several). */
   stores: { id: string; slug: string; name: string }[];
   /** Orders waiting for confirmation when the admin booted (the bell starts from it). */
@@ -55,6 +57,10 @@ export async function loadAdminState(api: ApiClient, storeId: string): Promise<A
   for (const [code, price] of Object.entries(boot.addonPrices)) {
     if (isModuleCode(code)) addonPrices[code] = Number(price);
   }
+  const upgrades: AdminState["upgrades"] = {};
+  for (const [code, plan] of Object.entries(boot.upgrades ?? {})) {
+    if (isModuleCode(code)) upgrades[code] = plan;
+  }
   return {
     role: membership?.role ?? null,
     enabledModules: new Set<ModuleCode>(codes),
@@ -63,6 +69,7 @@ export async function loadAdminState(api: ApiClient, storeId: string): Promise<A
     subscription: boot.subscription,
     storeStatus: boot.storeStatus ?? "active",
     addonPrices,
+    upgrades,
     stores: me.stores.map(({ id, slug, name }) => ({ id, slug, name })),
     toConfirm: boot.toConfirm,
     sections: boot.sections ?? {},
