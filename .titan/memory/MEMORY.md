@@ -42,11 +42,13 @@
 - [pendiente-superadmin-importar-excel.md](project/pendiente-superadmin-importar-excel.md) — Hecho 2026-10-30: el superadmin importa Excel a cualquier tienda (`store-imports`, solo INSERT en `imports/`)
 - [pendiente-editar-categorias.md](project/pendiente-editar-categorias.md) — Hecho 2026-10-30: editar categorías daba 500 (trigger con `ltree` y `search_path` vacío); cuidado con operadores de extensiones
 - [2026-11-01-dominio-klaushop.md](project/2026-11-01-dominio-klaushop.md) — **Corte 8.7 hecho:** `klaushop.fullkod.com` sirve la tienda `klau` (fila `custom` en `store_domains`, Vercel por Roberto); falta `--delta` y verify final
-- [2026-10-31-donde-quedamos.md](project/2026-10-31-donde-quedamos.md) — **Dónde quedamos** (2026-10-31): POS fases 1-6 en producción, venta también en la web, APK publicados y la web adaptada al teléfono (2 rondas, tema claro/oscuro); falta probar en un Android y un iPhone reales. `main` al día en `origin`
-- [2026-11-01-ksh0004-plan-caja.md](project/2026-11-01-ksh0004-plan-caja.md) — KSH0004 hecho: plan «Caja» (3 USD, mostrador sin tienda online), módulo `storefront` en 3 capas, candados BASE/PRO por `admin_bootstrap.upgrades`, landing con 3 planes; **en producción el plan está oculto hasta el deploy**
+- [2026-11-01-donde-quedamos.md](project/2026-11-01-donde-quedamos.md) — **Dónde quedamos** (2026-11-01): KSH0004–KSH0007 desplegados (`47d862b`), corte de dominio de klauShop, SKU automático sin push, reloj del PC adelantado (401 en local); qué sigue
+- [2026-10-31-donde-quedamos.md](project/2026-10-31-donde-quedamos.md) — Superado. **Dónde quedamos** (2026-10-31): POS fases 1-6 en producción, venta también en la web, APK publicados y la web adaptada al teléfono (2 rondas, tema claro/oscuro); falta probar en un Android y un iPhone reales. `main` al día en `origin`
+- [2026-11-01-ksh0004-plan-caja.md](project/2026-11-01-ksh0004-plan-caja.md) — KSH0004 hecho y desplegado: plan «Caja» (3 USD, mostrador sin tienda online), módulo `storefront` en 3 capas, candados BASE/PRO por `admin_bootstrap.upgrades`, landing con 3 planes (plan visible en producción)
 - [2026-11-01-ksh0005-ayuda.md](project/2026-11-01-ksh0005-ayuda.md) — KSH0005 hecho: ayuda en la app («?» por vista, página Ayuda, primer día, glosario, FAQ, PDF/MD) en admin, superadmin y Kshop Admin; contenido en `packages/admin/src/help/`; regla: cambiar la UI ⇒ actualizar guía, `help:shots` y `help:pdf`
-- [2026-11-01-ksh0006-paginas.md](project/2026-11-01-ksh0006-paginas.md) — KSH0006: `.sf-prose` no tenía CSS (por eso las páginas se veían apretadas), saltos de línea, botones y preguntas plegables desde Markdown, barra y vista previa en el editor; `pnpm qa:pages`
-- [2026-11-01-ksh0007-menu-pie.md](project/2026-11-01-ksh0007-menu-pie.md) — KSH0007: el editor de menús muestra y edita los enlaces de cada columna del pie (solo UI), `pnpm qa:menus`; aprendizaje sobre sesiones en scripts de QA
+- [2026-11-01-ksh0006-paginas.md](project/2026-11-01-ksh0006-paginas.md) — KSH0006 (desplegado): `.sf-prose` no tenía CSS (por eso las páginas se veían apretadas), saltos de línea, botones y preguntas plegables desde Markdown, barra y vista previa en el editor; `pnpm qa:pages`
+- [2026-11-01-ksh0007-menu-pie.md](project/2026-11-01-ksh0007-menu-pie.md) — KSH0007 (desplegado): el editor de menús muestra y edita los enlaces de cada columna del pie (solo UI), `pnpm qa:menus`; aprendizaje sobre sesiones en scripts de QA
+- [2026-11-01-sku-automatico.md](project/2026-11-01-sku-automatico.md) — Un SKU vacío se crea en el servidor del nombre del producto (`skuBase`/`fillMissingSkus`), único en la tienda; el Excel sigue exigiéndolo
 - [2026-10-31-ksh0003-calculadora-precio.md](project/2026-10-31-ksh0003-calculadora-precio.md) — KSH0003: calculadora de costo unitario + margen en el editor de producto (diálogo, web y Kshop Admin), `unitCost`/`priceFromCost` en core, teléfonos cubanos como `+53 5 256 4206`; `pnpm qa:price-calculator`
 - [2026-10-30-donde-quedamos.md](project/2026-10-30-donde-quedamos.md) — Superado: cobro mixto y POS fases 1-2 en producción
 
@@ -63,7 +65,7 @@
 
 ## Planes (`.titan/plans/`)
 
-- `arranque-y-fases.md` — Paso 0, convenciones, fases 0a–8 y tabla de estado (al 2026-10-28: 0a–7, v2 y R8–R14 hechas; Fase 8 en 8.6)
+- `arranque-y-fases.md` — Paso 0, convenciones, fases 0a–8 y tabla de estado (al 2026-11-01: 0a–7, v2, R8–R14, POS 1–6 y KSH0002–KSH0007 hechas; Fase 8 con el corte de dominio hecho y pendientes `--delta`, verify y 8.6)
 - `prp-base.md` — Plantilla de PRP
 - `prp-fase-0b-cimientos.md` — Fase 0b: monorepo, esquema de plataforma + RLS + tests A/B, host → tienda, superadmin (COMPLETADO 2026-10-24, commit 9fcd43f)
 - `prp-fase-1-catalogo.md` — Fase 1: catálogo (tipos, atributos, variantes, costo privado, monedas, categorías, colecciones, marcas, medias, almacenes/stock, Excel) (COMPLETADO 2026-10-25, commits hasta d6f1507)
@@ -82,6 +84,6 @@
 - `prp-r12-superadmin-v3.md` — R12: visibilidad del menú de cada tienda (Visible / Gestionado / Oculto) con bloqueo de escrituras en `assertStoreWritable`, tabla `store_section_settings`, lista de tiendas v3 (`platform_stores_overview`, búsqueda, filtros, acciones) y accesos directos en la ficha; D1–D10; preguntas respondidas: básicas siempre visibles, texto «Gestionado por admin», todas las columnas — **HECHO** 2026-10-28 (en `main`)
 - `prp-r13-formularios-en-dialogo.md` — R13: crear/editar del admin en `Dialog` (`<dialog>` nativo, hoja en móvil), 17 pantallas, `qa:dialogs` — **HECHO** 2026-10-28 (en `main`)
 - `prp-r14-confirmaciones-en-dialogo.md` — R14: `window.confirm`/`prompt` → `ConfirmDialog` + `useConfirm()` sobre el `Dialog` de R13 (13 llamadas), confirmar borrados y acciones del superadmin que hoy no preguntan, cancelar pedido y anular factura en diálogo, regla `no-alert`; **HECHO** 2026-10-29 (`qa:confirms` 32/32; en `main`)
-- `prp-ksh0004-plan-caja.md` — KSH0004: plan «Caja» (mostrador sin tienda online) con módulo nuevo `storefront` que apaga la web pública; P1–P7 aprobados y **HECHO** 2026-11-01 (falta deploy y marcar el plan visible en producción)
+- `prp-ksh0004-plan-caja.md` — KSH0004: plan «Caja» (mostrador sin tienda online) con módulo nuevo `storefront` que apaga la web pública; P1–P7 aprobados y **HECHO** y desplegado 2026-11-01 (plan visible en producción)
 - `prp-ksh0005-ayuda.md` — KSH0005: ayuda en la app como la de Tasknic («?» por vista, página Ayuda, primer día, glosario, FAQ, capturas por script, PDF/MD) en admin, Kshop Admin y superadmin; decisiones de Roberto del 2026-11-01; **HECHO** y desplegado 2026-11-01 (5 fases, `qa:help` 55/55 con Kshop Admin; aprendizajes del deploy dentro)
 - `prp-pos-offline.md` — POS sin conexión en Kshop Admin (módulo `pos`), aprobado 2026-10-30: fases 1 a 6 en producción y APK publicados; falta probar en un Android real. Inventario en la etapa 2

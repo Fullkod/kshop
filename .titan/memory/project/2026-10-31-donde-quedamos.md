@@ -1,5 +1,7 @@
 # Dónde quedamos (2026-10-31)
 
+> Superado por `2026-11-01-donde-quedamos.md`.
+
 Supera a `2026-10-30-donde-quedamos.md`. `main` y `origin/main` están al día (`b5a51b7`), deploy de Vercel correcto.
 
 ## Estado
