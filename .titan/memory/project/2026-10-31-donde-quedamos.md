@@ -27,8 +27,15 @@ Supera a `2026-10-30-donde-quedamos.md`. `main` y `origin/main` están al día (
   producción, `e2e:plan-caja` 23/23, `qa:plan-caja` 30/30. En producción el plan queda **oculto hasta el deploy**; luego
   marcarlo «Visible» en Superadmin › Planes.
 
+- **Deploy hecho (2026-11-01, Roberto por push):** KSH0003 y KSH0004 en producción (`b30ce02`, registrado en Tasknic);
+  el plan Caja ya está **visible** en la landing de producción.
+- **KSH0005 (ayuda)**: Roberto respondió las preguntas (admin + Kshop Admin + superadmin, todo como Tasknic, dueño/
+  empleado con filtro, antes que KSH0006/7) y el PRP está escrito (`prp-ksh0005-ayuda.md`, commit `58eb4d6`), pero
+  **pidió esperar para limpiar el contexto** antes de arrancar: la próxima sesión empieza pidiéndole el «ok» y va a la
+  fase 1. Quedan KSH0006 (páginas estáticas) y KSH0007 (enlaces de las columnas del pie, bien definida) en Por hacer.
+
 ## Qué sigue
-0. **Deploy en Vercel** (KSH0003 y KSH0004 están en `main` local) y, tras él, poner el plan Caja «Visible».
+0. **KSH0005**: «ok» de Roberto al PRP → fase 1 (modelo, validación y 8 guías).
 1. **Roberto prueba los APK** (Kshop Admin en modo avión: vender, cerrar a la fuerza, reiniciar, subir al volver la
    red) y la web desde su iPhone. Lo que salga se corrige antes de dar por cerrada la fase 7 del PRP del POS.
 2. **KSH0002 en Tasknic** sigue «En revisión»; cerrarla cuando Roberto dé el visto bueno al cobro.
