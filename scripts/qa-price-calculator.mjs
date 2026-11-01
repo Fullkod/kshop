@@ -139,6 +139,13 @@ try {
     "«Usar» waits for the numbers",
     await dialog(page).getByRole("button", { name: "Usar" }).isDisabled(),
   );
+  await dialog(page).getByRole("button", { name: "Qué es el margen comercial" }).click();
+  const help = dialog(page).getByTestId("margin-help");
+  const helpText = (await help.textContent().catch(() => "")) ?? "";
+  check(
+    "the help explains the two margins",
+    /Sobre el costo/.test(helpText) && /Sobre el precio/.test(helpText),
+  );
   await fillCalculator(page, { paid: "250", units: "160", margin: "30", rounding: "5" });
   const summary = dialog(page).locator("[aria-live]");
   await summary.getByText(money("1,56", "CUP")).waitFor({ timeout: 5000 });
@@ -150,6 +157,8 @@ try {
   );
   check("shows the resulting margin over the price", /margen sobre el precio 68[.,]8 %/.test(text), text);
   await page.screenshot({ path: join(OUT, "calculadora-1280.png") });
+  await dialog(page).getByRole("button", { name: "Qué es el margen comercial" }).click();
+  check("the help closes again", (await help.count()) === 0);
   await dialog(page).getByRole("button", { name: "Usar" }).click();
   await dialog(page)
     .waitFor({ state: "detached", timeout: 5000 })

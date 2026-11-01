@@ -10,7 +10,7 @@ import {
   type CurrencyCode,
   type MarginBasis,
 } from "@kshop/core";
-import { Button, Dialog, Input, Label, Segmented, Select } from "@kshop/ui";
+import { Button, CircleHelp, Dialog, Input, Label, Segmented, Select } from "@kshop/ui";
 import { useId, useState } from "react";
 
 export type CalculatedPrice = { cost: string; costCurrency: CurrencyCode; price: string };
@@ -68,6 +68,7 @@ function CalculatorForm({
   const [margin, setMargin] = useState("");
   const [basis, setBasis] = useState<MarginBasis>("cost");
   const [rounding, setRounding] = useState("");
+  const [help, setHelp] = useState(false);
 
   const lotCostN = num(lotCost);
   const unitsN = num(units);
@@ -133,7 +134,19 @@ function CalculatorForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${id}-margin`}>Margen comercial (%)</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor={`${id}-margin`}>Margen comercial (%)</Label>
+          <button
+            type="button"
+            aria-label="Qué es el margen comercial"
+            aria-expanded={help}
+            aria-controls={`${id}-help`}
+            onClick={() => setHelp(!help)}
+            className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-surface hover:text-foreground touch:size-10"
+          >
+            <CircleHelp size={18} aria-hidden />
+          </button>
+        </div>
         <Input
           id={`${id}-margin`}
           inputMode="decimal"
@@ -156,6 +169,32 @@ function CalculatorForm({
             : "Es la parte del precio que te queda: 100 al 30 % se vende a 142,86."}
         </p>
       </div>
+      {help && (
+        <div
+          id={`${id}-help`}
+          className="rounded-md border border-dashed p-3 text-sm sm:col-span-2"
+          data-testid="margin-help"
+        >
+          <p>
+            <strong>El margen comercial</strong> es lo que ganas en cada venta: la diferencia entre lo que te
+            costó una unidad y el precio al que la vendes. Se puede contar de dos maneras:
+          </p>
+          <ul className="mt-2 flex list-disc flex-col gap-1 pl-5">
+            <li>
+              <strong>Sobre el costo</strong>: el porcentaje se suma a lo que pagaste. Costó 100 y pones 30 %
+              → se vende a 130: ganas 30 por cada 100 que invertiste.
+            </li>
+            <li>
+              <strong>Sobre el precio</strong>: el porcentaje es la parte del precio que te queda. Costó 100 y
+              pones 30 % → se vende a 142,86: de cada 100 que cobras, 30 son ganancia. Es el «Margen» que
+              enseña cada variante.
+            </li>
+          </ul>
+          <p className="mt-2 text-muted-foreground">
+            El mismo número da precios distintos: 30 % sobre el costo equivale a 23,1 % sobre el precio.
+          </p>
+        </div>
+      )}
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${id}-rounding`}>Redondear el precio hacia arriba</Label>

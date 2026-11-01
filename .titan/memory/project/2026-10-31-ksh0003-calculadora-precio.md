@@ -12,6 +12,8 @@ crear o editar el producto. En la misma sesión Roberto pidió además mostrar l
   que es el «Margen» que enseña la fila) y redondeo hacia arriba (centavo, 1, 5, 10, 50 de la moneda base). Enseña el
   costo por unidad (y su valor en la moneda base si se compró en otra) y el precio de venta con el margen resultante
   sobre el precio; «Usar» rellena costo, moneda del costo y precio de la variante (o de todas) sin guardar.
+  Un botón «?» junto a «Margen comercial» explica qué es el margen y la diferencia entre las dos formas (Roberto,
+  2026-10-31: «que se explique»).
 - **Core** (`packages/core/src/catalog/pricing.ts`): `unitCost(lotCost, units)` (al centavo, como `variant_costs`),
   `priceFromCost(cost, margin, basis, rounding)`, `MarginBasis`; `roundPrice` compartido con `convertFromBase`.
 - **Teléfonos** (`packages/core/src/orders/phone.ts`): `formatPhone` agrupa los cubanos como se escriben aquí:

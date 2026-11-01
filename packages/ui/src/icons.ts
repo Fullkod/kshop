@@ -16,6 +16,7 @@ export {
   ClipboardList,
   Check,
   CircleCheck,
+  CircleHelp,
   CirclePause,
   Clock,
   Coins,
