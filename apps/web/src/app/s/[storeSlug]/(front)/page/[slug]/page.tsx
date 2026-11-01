@@ -34,11 +34,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function StaticPage({ params }: Props) {
   const { page } = await load({ params });
+  // KSH0006: a header band across the page (title and its Google description as the subtitle), then the text in a
+  // comfortable reading width.
   return (
-    <article className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
-      <Breadcrumbs crumbs={[{ label: page.title }]} />
-      <h1 className="text-3xl font-semibold">{page.title}</h1>
-      <Markdown>{page.content}</Markdown>
+    <article>
+      <header className="bg-surface px-[clamp(16px,4.4cqw,56px)] pt-6 pb-[clamp(32px,4.4cqw,56px)]">
+        <div className="mx-auto flex max-w-[820px] flex-col gap-4">
+          <Breadcrumbs crumbs={[{ label: page.title }]} />
+          <h1 className="sf-heading text-[clamp(30px,4cqw,46px)] leading-[1.1] font-bold text-balance">
+            {page.title}
+          </h1>
+          {page.seoDescription && (
+            <p className="max-w-2xl text-lg leading-relaxed text-pretty text-muted-foreground">
+              {page.seoDescription}
+            </p>
+          )}
+        </div>
+      </header>
+      <div className="px-[clamp(16px,4.4cqw,56px)] py-[clamp(32px,4.4cqw,56px)]">
+        <div className="mx-auto max-w-[820px]">
+          <Markdown>{page.content}</Markdown>
+        </div>
+      </div>
     </article>
   );
 }

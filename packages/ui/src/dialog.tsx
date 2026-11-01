@@ -25,7 +25,7 @@ export function Dialog({
   onClose: () => void;
   title: ReactNode;
   description?: ReactNode;
-  size?: "md" | "lg";
+  size?: "md" | "lg" | "xl";
   children: ReactNode;
   className?: string;
   /** Element focused on opening (showModal focuses the first focusable one, the close button, otherwise). */
@@ -56,7 +56,7 @@ export function Dialog({
         compact ? "h-fit max-h-[90dvh] rounded-t-xl" : "h-dvh max-h-none",
         "backdrop:bg-[color-mix(in_srgb,var(--ink)_55%,transparent)]",
         "sm:m-auto sm:h-fit sm:max-h-[90dvh] sm:w-[calc(100%-2rem)] sm:rounded-xl sm:border",
-        size === "md" ? "sm:max-w-xl" : "sm:max-w-3xl",
+        size === "md" ? "sm:max-w-xl" : size === "lg" ? "sm:max-w-3xl" : "sm:max-w-6xl",
         className,
       )}
     >

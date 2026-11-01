@@ -540,7 +540,7 @@ export const articles: HelpArticle[] = [
         text: "El pie va en columnas: en «Menú del pie» pulsa «Añadir columna o enlace», escribe el título y añade sus enlaces con «Añadir enlace a la columna». Un enlace sin nada debajo sale en la columna «Tienda».",
       },
       {
-        text: "En «Páginas» pulsa «Nueva página» para textos fijos: quiénes somos, envíos, devoluciones. Luego añádelas al menú del pie.",
+        text: "En «Páginas» pulsa «Nueva página» para textos fijos: quiénes somos, envíos, devoluciones. Da formato con la barra (Negrita, Título, Lista, Enlace, Botón) y mira a la derecha cómo queda. Luego añádelas al menú del pie.",
       },
       {
         text: "Pulsa «Ver la tienda ↗» para ver el resultado.",
@@ -548,6 +548,7 @@ export const articles: HelpArticle[] = [
     ],
     tips: [
       "Si Apariencia lleva la marca «Admin», Kshop la configura por ti: pídele los cambios por WhatsApp.",
+      "En una página, un enlace solo en su párrafo se ve como botón (verde si es de WhatsApp) y, bajo un título «Preguntas frecuentes», cada subtítulo es una pregunta que se abre y se cierra.",
     ],
     related: ["organize-catalog", "custom-domain"],
   },

@@ -6,6 +6,7 @@ import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label, useConfir
 import { useState } from "react";
 import { useApiAction } from "@/features/catalog/use-catalog";
 import type { AdminContent, AdminPage } from "../use-content";
+import { PageContentField } from "./PageContentField";
 
 type Draft = PageInput & { id?: string; slugEdited: boolean };
 
@@ -72,7 +73,7 @@ export function PagesEditor({
         open={draft !== null}
         onClose={() => setDraft(null)}
         title={draft?.id ? `Editar «${draft.title}»` : "Nueva página"}
-        size="lg"
+        size="xl"
       >
         {draft && (
           <div className="grid gap-4 sm:grid-cols-2" data-testid="page-form">
@@ -99,18 +100,12 @@ export function PagesEditor({
               />
               <FieldError>{action.fieldErrors.slug}</FieldError>
             </div>
-            <div className="flex flex-col gap-1 sm:col-span-2">
-              <Label htmlFor="page-content">Contenido</Label>
-              <textarea
-                id="page-content"
-                rows={12}
+            <div className="sm:col-span-2">
+              <PageContentField
                 value={draft.content}
-                onChange={(e) => setDraft({ ...draft, content: e.target.value })}
-                className="rounded-md border bg-background px-3 py-2 font-mono text-sm"
+                onChange={(value) => setDraft({ ...draft, content: value })}
+                theme={content.theme}
               />
-              <p className="text-xs text-muted-foreground">
-                **negrita**, *cursiva*, ## Título, - listas y [enlaces](https://…).
-              </p>
             </div>
             <div className="flex flex-col gap-1">
               <Label htmlFor="page-seo-title">Título para Google (opcional)</Label>
@@ -122,7 +117,7 @@ export function PagesEditor({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="page-seo-description">Descripción para Google (opcional)</Label>
+              <Label htmlFor="page-seo-description">Resumen: bajo el título y en Google (opcional)</Label>
               <Input
                 id="page-seo-description"
                 maxLength={160}

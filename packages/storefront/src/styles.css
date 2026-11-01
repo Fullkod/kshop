@@ -55,3 +55,136 @@
 .sf-root .sf-scroller > * {
   scroll-snap-align: start;
 }
+
+/* Store-written Markdown (pages and the rich text section of the home), KSH0006. Tailwind's preflight resets
+   every margin, size and list marker, so the text needs its own rhythm; colors and fonts come from the theme. */
+.sf-root .sf-prose {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  overflow-wrap: break-word;
+}
+.sf-root .sf-prose > * + * {
+  margin-top: 1em;
+}
+.sf-root .sf-prose h2 {
+  margin-top: 2.2em;
+  font-size: clamp(1.4rem, 1.15rem + 1cqw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--fg);
+}
+.sf-root .sf-prose h3 {
+  margin-top: 1.8em;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--fg);
+}
+.sf-root .sf-prose h4 {
+  margin-top: 1.5em;
+  font-weight: 700;
+  color: var(--fg);
+}
+.sf-root .sf-prose > :first-child {
+  margin-top: 0;
+}
+.sf-root .sf-prose h2 + *,
+.sf-root .sf-prose h3 + *,
+.sf-root .sf-prose h4 + * {
+  margin-top: 0.6em;
+}
+.sf-root .sf-prose strong {
+  font-weight: 700;
+  color: var(--fg);
+}
+.sf-root .sf-prose a:not(.sf-btn) {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.sf-root .sf-prose a:not(.sf-btn):hover {
+  color: var(--accent-hover);
+}
+.sf-root .sf-prose ul,
+.sf-root .sf-prose ol {
+  padding-left: 1.4em;
+}
+.sf-root .sf-prose ul {
+  list-style: disc;
+}
+.sf-root .sf-prose ol {
+  list-style: decimal;
+}
+.sf-root .sf-prose li + li {
+  margin-top: 0.45em;
+}
+.sf-root .sf-prose li::marker {
+  color: var(--accent);
+  font-weight: 700;
+}
+.sf-root .sf-prose blockquote {
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--sf-radius-sm) var(--sf-radius-sm) 0;
+  background: var(--accent-soft);
+  padding: 0.8em 1.1em;
+}
+.sf-root .sf-prose hr {
+  margin: 2.2em 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+/* A paragraph of links only: a row of buttons (Markdown.tsx, markButtons). */
+.sf-root .sf-prose .sf-prose-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5em;
+}
+.sf-root .sf-prose .sf-prose-actions + * {
+  margin-top: 1.5em;
+}
+.sf-root .sf-prose .sf-btn {
+  text-decoration: none;
+}
+/* Folding questions under «Preguntas frecuentes» (Markdown.tsx, foldQuestions). */
+.sf-root .sf-prose details {
+  border: 1px solid var(--line);
+  border-radius: var(--sf-radius);
+  background: var(--bg);
+  padding: 0 1.1em;
+}
+.sf-root .sf-prose details + details {
+  margin-top: 0.6em;
+}
+.sf-root .sf-prose summary {
+  display: flex;
+  min-height: 3.25rem;
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 0.7em 0;
+  font-weight: 700;
+  color: var(--fg);
+}
+.sf-root .sf-prose summary::-webkit-details-marker {
+  display: none;
+}
+.sf-root .sf-prose summary::after {
+  content: "+";
+  flex-shrink: 0;
+  font-size: 1.4em;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--accent);
+  transition: transform 0.2s;
+}
+.sf-root .sf-prose details[open] summary::after {
+  transform: rotate(45deg);
+}
+.sf-root .sf-prose details > :not(summary) {
+  margin: 0 0 1em;
+}

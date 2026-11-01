@@ -16,7 +16,8 @@
     "@kshop/data": "workspace:*",
     "@kshop/ui": "workspace:*",
     "@supabase/supabase-js": "^2.118.0",
-    "react-markdown": "^10.1.0"
+    "react-markdown": "^10.1.0",
+    "remark-breaks": "^4.0.0"
   },
   "peerDependencies": {
     "react": "^19.0.0"
