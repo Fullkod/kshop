@@ -24,3 +24,15 @@ el superadmin recibía 403. Arreglado en `20261108100900_store_media_superadmin_
 
 La sesión del superadmin no pasa a `{slug}.kshop…` (cada host guarda la suya): para trabajar en una tienda sin su login,
 la API `/api/v1/stores/{id}/content/*` acepta el token del superadmin desde `kshop.fullkod.com`.
+
+## Pie y «Sobre nosotros» (2026-11-01)
+Pedido por Roberto: un pie como el de Klau's Shop, solo con lo que le encaja. Escrito en producción con `SUPABASE_SECRET_KEY`
+(como el de Klau); la caché de la tienda lo mostró en menos de un minuto.
+- Página `/page/sobre-nosotros`: el texto de su sección «Sobre nosotros» de la portada (sin inventar nada), resumen «Tu
+  tienda de barrio, en tu móvil.» y los botones «Ver productos» y WhatsApp.
+- Menú del pie: «Categorías» (Salsas y condimentos, Galletas y snacks, Dulces y confituras, Conservas, Granos y pastas,
+  Limpieza, Hogar y «Todas las categorías»; fuera Bebidas y Tabaco, sin productos publicados), «Tu cuenta» (Mis pedidos,
+  Favoritos) e «Información» (Sobre nosotros, Descargar la app; su APK está publicada).
+- No se copió «Encargos» (no lo ofrecen) ni zonas de entrega (aún sin envíos configurados). Sin envíos, el checkout
+  sigue funcionando con la entrega «a convenir».
+- Se edita en Admin › Apariencia › Menús y Páginas.
