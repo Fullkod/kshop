@@ -10,7 +10,7 @@
 ## project/ — Proyectos y decisiones activas
 
 - [identidad-kshop.md](project/identidad-kshop.md) — Nombre, dominio kshop.fullkod.com, qué es, índice de los documentos de diseño
-- [decisiones.md](project/decisiones.md) — Decisiones tomadas (0–24, hasta 2026-10-25), recomendaciones confirmadas y preguntas abiertas. LEER ANTES DE CADA FASE
+- [decisiones.md](project/decisiones.md) — Decisiones tomadas (0–24, hasta 2026-10-25; 25–29 del 2026-10-31), recomendaciones confirmadas y preguntas abiertas. LEER ANTES DE CADA FASE
 - [2026-10-24-estudio-klaushop-vs-dcabellos.md](project/2026-10-24-estudio-klaushop-vs-dcabellos.md) — Qué se adopta de cada uno y qué no
 - [modelo-de-datos.md](project/modelo-de-datos.md) — Esquema v0: plataforma, clientes, catálogo Saleor, monedas, carrito, órdenes, descuentos, temas, entregas, WhatsApp, Excel
 - [tenancy-dominios-auth.md](project/tenancy-dominios-auth.md) — Tienda por host, wildcard Vercel, email sintético por tienda, alta de tienda, storage
@@ -41,7 +41,7 @@
 - [tienda-minimercado.md](project/tienda-minimercado.md) — Cliente real: portada y marca montadas sin catálogo; el superadmin ya puede subir a `store-media`
 - [pendiente-superadmin-importar-excel.md](project/pendiente-superadmin-importar-excel.md) — Hecho 2026-10-30: el superadmin importa Excel a cualquier tienda (`store-imports`, solo INSERT en `imports/`)
 - [pendiente-editar-categorias.md](project/pendiente-editar-categorias.md) — Hecho 2026-10-30: editar categorías daba 500 (trigger con `ltree` y `search_path` vacío); cuidado con operadores de extensiones
-- [2026-10-31-donde-quedamos.md](project/2026-10-31-donde-quedamos.md) — **Dónde quedamos** (2026-10-31): POS fases 1-6 en producción, venta también en la web y APK publicados; falta probar en Android e iPhone reales
+- [2026-10-31-donde-quedamos.md](project/2026-10-31-donde-quedamos.md) — **Dónde quedamos** (2026-10-31): POS fases 1-6 en producción, venta también en la web, APK publicados y la web adaptada al teléfono (2 rondas, tema claro/oscuro); falta probar en un Android y un iPhone reales. `main` al día en `origin`
 - [2026-10-30-donde-quedamos.md](project/2026-10-30-donde-quedamos.md) — Superado: cobro mixto y POS fases 1-2 en producción
 
 ## feedback/ — Correcciones y preferencias
@@ -52,7 +52,7 @@
 
 - [trucos-entorno-y-next.md](reference/trucos-entorno-y-next.md) — Cache Components, pg_graphql y trucos del entorno de Roberto (puertos, *.localhost, Playwright, Lighthouse)
 - [fuentes.md](reference/fuentes.md) — Rutas de materiales, klauShop, dcabellos, apululu y Saleor, y para qué sirve cada uno
-- [web-en-el-telefono.md](reference/web-en-el-telefono.md) — La web abierta desde un iPhone/Android: variante `touch:`, campos a 16 px, «Volver» en la barra, `AdminSubNav`, `FilterBar`, barras fijas, `pnpm qa:mobile` (2026-10-31)
+- [web-en-el-telefono.md](reference/web-en-el-telefono.md) — La web abierta desde un iPhone/Android: variante `touch:`, campos a 16 px, «Volver» en la barra, `AdminSubNav`, `FilterBar`, barras fijas, variantes en tarjetas, tema por elección, `pnpm qa:mobile` (2026-10-31)
 - [Correo de Fullkod](reference/correo-fullkod-resend.md) — @fullkod.com va por Resend (contact@, support@), sin reenvío; cada proyecto decide cómo avisar de sus formularios; Kshop envía por Resend los enlaces de acceso del personal (noreply@)
 
 ## Planes (`.titan/plans/`)

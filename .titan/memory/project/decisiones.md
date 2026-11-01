@@ -93,6 +93,17 @@
 - Stock por variante y por almacén (un almacén por defecto por tienda).
 - Temas por **tokens** (colores, fuentes, logo, secciones de home), no código por tienda.
 
+## Decisiones del 2026-10-31 (Roberto)
+25. **La caja también en la web** (Admin › Caja › Vender): quien tiene iPhone no tiene app todavía y debe poder
+    vender desde el navegador, aunque sin garantías sin conexión. Lo de sin conexión sigue siendo Kshop Admin.
+26. **APK para todos los negocios y publicados** para probarlos: Kshop Admin es un solo APK para todas las tiendas
+    (cada uno entra con su cuenta); la app de tienda es una por negocio, para los clientes.
+27. **La web debe poder usarse entera desde un teléfono** (iPhone o Android sin app): botones de volver, filtros
+    ocultables, objetivos del tamaño de un dedo, nada que se desborde. Reglas en `reference/web-en-el-telefono.md`.
+28. **Tema claro / oscuro por elección** en la interfaz (admin, superadmin y Kshop Admin), además del sistema.
+29. **Variantes:** «Generar» solo añade las combinaciones que faltan y lo dice; cada variante se puede quitar.
+    En la caja la cantidad se escribe, no solo con + y −. El listado de categorías muestra la miniatura.
+
 ## Preguntas abiertas
 - [x] DNS: `kshop.fullkod.com` y `*.kshop.fullkod.com` funcionan en Vercel (Roberto, 2026-10-26: configurado y probado).
 - [x] Dominio propio por tienda: módulo `custom_domain` (Pro o suelto); lo pide el dueño y la tienda paga su dominio (Fase 6).
