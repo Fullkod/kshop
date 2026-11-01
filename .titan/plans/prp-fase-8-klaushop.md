@@ -5,6 +5,7 @@
 > enlaces antiguos caducan, D5 y D9 confirmadas. 8.1–8.5 ejecutadas el 2026-10-28 (ver Aprendizajes).
 > `klaushop:verify` en producción (2026-10-28): 21/22 ok (57 productos, 82 variantes, 83 imágenes, 21 pedidos,
 > importes 69 730 / 61 330 cobrados); el único «not ok» son los 42 avisos del incidente ya documentado. Faltan 8.6 y 8.7.
+> **8.7 (dominio) hecho el 2026-11-01**: `klaushop.fullkod.com` apunta a la tienda `klau` (ver `memory/project/2026-11-01-dominio-klaushop.md`); falta el `--delta` y el verify final.
 > **Fecha**: 2026-10-27
 > **Proyecto**: Kshop (`C:\Local-Disc-D\Project\Fullkod\kshop`)
 > **Sigue a**: R10 (`prp-r10-deuda-lecturas.md`). Memoria: `project/2026-10-24-estudio-klaushop-vs-dcabellos.md`,
