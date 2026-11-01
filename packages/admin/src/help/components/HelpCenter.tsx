@@ -1,10 +1,14 @@
-import { Input, Search, Segmented } from "@kshop/ui";
+"use client";
+
+import { buttonVariants, cn, Download, Input, Search, Segmented } from "@kshop/ui";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { helpContentRaw } from "../content/raw";
 import { helpToIndex, searchHelp } from "../generators/search-index";
 import { loadHelpAudience, saveHelpAudience, subscribeHelpStorage } from "../lib/first-day-progress";
 import {
   HELP_ANCHORS,
+  HELP_MARKDOWN_FILES,
+  HELP_PDF_FILE,
   articleAnchor,
   inScope,
   matchesAudience,
@@ -70,6 +74,14 @@ export function HelpCenter({
   const titles = useMemo(() => new Map(helpContentRaw.articles.map((a) => [a.slug, a.title])), []);
   const index = useMemo(() => helpToIndex(helpContentRaw), []);
   const results = query.trim() ? searchHelp(index, query, 20).filter((e) => show(e.audiences)) : null;
+
+  const base = (screenshotBase ?? "").replace(/\/$/, "");
+  const downloads = [
+    ...(scope === "store" ? [{ file: HELP_PDF_FILE, label: "PDF" }] : []),
+    ...Object.entries(HELP_MARKDOWN_FILES)
+      .filter(([, f]) => f.scope === scope)
+      .map(([file, f]) => ({ file, label: f.label })),
+  ];
 
   function pickFilter(value: HelpAudienceFilter) {
     setPicked(value);
@@ -199,6 +211,29 @@ export function HelpCenter({
           </div>
         </section>
       )}
+
+      <section className="flex flex-col gap-3" aria-labelledby="help-downloads">
+        <h2 id="help-downloads" className="font-display text-xl font-bold">
+          Descargar
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Toda la ayuda en un archivo, para imprimirla o pasársela a quien empieza.
+        </p>
+        <div className="flex flex-wrap gap-2" data-testid="help-downloads">
+          {downloads.map((d) => (
+            <a
+              key={d.file}
+              href={`${base}/help/${d.file}`}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch:min-h-10")}
+            >
+              <Download size={16} aria-hidden />
+              {d.label}
+            </a>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

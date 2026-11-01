@@ -1,3 +1,5 @@
+"use client";
+
 import { ChevronDown } from "@kshop/ui";
 import { articleAnchor, screenshotUrl } from "../lib/help-utils";
 import type { HelpArticle } from "../types";

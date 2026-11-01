@@ -88,6 +88,18 @@ export function inScope(audiences: HelpAudience[], scope: HelpScope): boolean {
     : audiences.includes("owner") || audiences.includes("staff");
 }
 
+/** Downloads served by the web under `/help/` (Markdown by a static route, the PDF by `help:pdf`). */
+export const HELP_MARKDOWN_FILES: Record<
+  string,
+  { scope: HelpScope; audience?: HelpAudience; label: string }
+> = {
+  "kshop-ayuda.md": { scope: "store", label: "Markdown (todo)" },
+  "kshop-ayuda-dueno.md": { scope: "store", audience: "owner", label: "Markdown (dueño)" },
+  "kshop-ayuda-empleado.md": { scope: "store", audience: "staff", label: "Markdown (empleado)" },
+  "kshop-ayuda-superadmin.md": { scope: "superadmin", label: "Markdown (superadmin)" },
+};
+export const HELP_PDF_FILE = "kshop-ayuda.pdf";
+
 /** Section anchors shared by the page, the Markdown export and the search index. */
 export const HELP_ANCHORS = {
   firstDay: "primer-dia",

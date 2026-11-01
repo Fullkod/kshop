@@ -21,6 +21,7 @@ export {
   Clock,
   Coins,
   CreditCard,
+  Download,
   ExternalLink,
   Ellipsis,
   Eye,

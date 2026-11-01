@@ -1,3 +1,5 @@
+"use client";
+
 import { Check, cn } from "@kshop/ui";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import {

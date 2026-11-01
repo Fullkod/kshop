@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, buttonVariants, CircleHelp, cn, Dialog } from "@kshop/ui";
 import { useMemo, useState } from "react";
 import { helpContentRaw } from "../content/raw";

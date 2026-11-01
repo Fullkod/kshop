@@ -66,7 +66,7 @@ export const articles: HelpArticle[] = [
         text: "Rellena la plantilla en Excel o en Google Sheets (guárdala como .xlsx). Una fila por variante; repite el código de producto en las filas del mismo producto.",
       },
       {
-        text: "Súbela en «Archivo Excel (.xlsx)». Elige qué hacer con los productos que ya existen (mismo SKU): dejarlos como están o actualizarlos con los datos del Excel.",
+        text: "Súbela en «Archivo Excel (.xlsx)». Elige qué hacer con los productos que ya existen (mismo SKU): dejarlos como están o actualizarlos con los datos del Excel. Pulsa «Revisar archivo».",
       },
       {
         text: "Revisa la «Vista previa». Las filas con error no se importan: corrígelas en el Excel y vuelve a subirlo. Cuando todo esté bien, confirma la importación y pulsa «Ver productos».",
@@ -227,7 +227,7 @@ export const articles: HelpArticle[] = [
         text: "Arriba ves tu plan y la próxima factura. En «Cómo pagar» están las formas de pago; pulsa «Escribir a Kshop por WhatsApp» si tienes dudas o para avisar de que pagaste.",
       },
       {
-        text: "«Uso del plan» dice cuántos productos y personas del equipo llevas. Para cambiar de plan o añadir un módulo suelto, pulsa «Solicitar» en el que quieras.",
+        text: "«Uso del plan» dice cuántos productos y personas del equipo llevas. Para cambiar de plan o añadir un módulo suelto, pulsa «Solicitar» en el que quieras: se abre WhatsApp con el mensaje para Kshop ya escrito.",
       },
     ],
     related: ["missing-section", "my-team"],

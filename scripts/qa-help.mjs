@@ -248,6 +248,26 @@ try {
     (await page.getByTestId("first-day-look-around").getAttribute("aria-checked")) === "true",
   );
   await page.evaluate(() => localStorage.removeItem("kshop:help-first-day"));
+
+  // Downloads: the PDF and the Markdown answer on the store host (paths with an extension skip the proxy).
+  const links = await page
+    .getByTestId("help-downloads")
+    .locator("a")
+    .evaluateAll((as) => as.map((a) => a.href));
+  check("the Ayuda page offers the PDF and three Markdown files", links.length === 4, links.join(" "));
+  for (const href of links) {
+    // From the page: Node does not resolve *.localhost subdomains on Windows, Chromium does.
+    const got = await page.evaluate(async (url) => {
+      const res = await fetch(url);
+      return { status: res.status, head: (await res.text()).slice(0, 20) };
+    }, href);
+    check(
+      `download ${new URL(href).pathname} answers 200`,
+      got.status === 200 &&
+        (href.endsWith(".pdf") ? got.head.startsWith("%PDF") : got.head.startsWith("# Ayuda de Kshop")),
+      JSON.stringify(got),
+    );
+  }
   await shot(page, "02-ayuda-pagina-1280");
   await page.context().close();
 

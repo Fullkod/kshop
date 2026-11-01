@@ -97,12 +97,20 @@ describe("help context and audiences", () => {
 describe("help generators", () => {
   it("writes every guide with its anchor, and filters by audience", () => {
     const all = helpToMarkdown(helpContent);
-    for (const a of helpContent.articles) expect(all).toContain(`<a id="${articleAnchor(a.slug)}"></a>`);
+    for (const a of helpContent.articles.filter((x) => inScope(x.audiences, "store")))
+      expect(all).toContain(`<a id="${articleAnchor(a.slug)}"></a>`);
+
+    expect(all).not.toContain("Quiero dar de alta una tienda");
 
     const staff = helpToMarkdown(helpContent, { audience: "staff" });
     expect(staff).toContain("# Ayuda de Kshop: Empleado");
-    expect(staff).not.toContain("Quiero dar de alta una tienda");
+    expect(staff).not.toContain("Tengo el catálogo en un Excel");
     expect(staff).toContain("Quiero vender en el mostrador");
+
+    const root = helpToMarkdown(helpContent, { scope: "superadmin" });
+    expect(root).toContain("Quiero dar de alta una tienda");
+    expect(root).not.toContain("Quiero vender en el mostrador");
+    expect(root).not.toContain("Tu primer día");
   });
 
   it("prefixes screenshots with the given base", () => {

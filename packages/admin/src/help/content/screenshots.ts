@@ -2,7 +2,8 @@ import type { ScreenshotSpec } from "../types";
 
 /**
  * Every screenshot the help uses, as a contract for `scripts/help-shots.mjs`: it opens `route` in the Tienda Demo
- * (as the owner) or the superadmin panel, runs `setup` and saves `apps/web/public/help/screens/<slug>.png`.
+ * (as the owner) or the superadmin panel, runs the step it has for `setup` (by slug) and saves
+ * `apps/web/public/help/screens/<slug>.png`.
  */
 export const screenshots: ScreenshotSpec[] = [
   {
@@ -20,9 +21,10 @@ export const screenshots: ScreenshotSpec[] = [
   {
     slug: "product-editor",
     description: "Editor de un producto con variantes: precio, costo, stock y «Generar variantes»",
-    route: "/admin/catalog",
+    // :product = a published product with variants of the Tienda Demo (help-shots picks it).
+    route: "/admin/catalog/products/:product",
     viewport: "desktop",
-    setup: ["Abrir el primer producto con variantes de la lista"],
+    setup: ["Bajar hasta la tabla de variantes"],
   },
   {
     slug: "excel-import",
@@ -35,13 +37,15 @@ export const screenshots: ScreenshotSpec[] = [
     description: "Pedidos en la pestaña Pendientes, con el filtro y el buscador",
     route: "/admin/orders",
     viewport: "desktop",
+    setup: ["Clientes de prueba mostrados como «Laura Pérez»"],
   },
   {
     slug: "order-detail",
     description: "Ficha de un pedido con los botones de estado, «WhatsApp al cliente» y «Registrar pago»",
-    route: "/admin/orders",
+    // :order = the latest web order of the Tienda Demo (help-shots picks it).
+    route: "/admin/orders/:order",
     viewport: "desktop",
-    setup: ["Abrir el primer pedido de la lista que no sea de mostrador"],
+    setup: ["Cliente, teléfono y dirección de ejemplo (los de la Demo son de scripts de prueba)"],
   },
   {
     slug: "order-new",

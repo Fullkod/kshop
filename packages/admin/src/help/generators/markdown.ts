@@ -1,9 +1,11 @@
-import { HELP_ANCHORS, articleAnchor } from "../lib/help-utils";
+import { HELP_ANCHORS, articleAnchor, inScope, type HelpScope } from "../lib/help-utils";
 import type { HelpArticle, HelpAudience, HelpContent } from "../types";
 import { HELP_AUDIENCE_LABEL } from "../types";
 
 export interface MarkdownOptions {
-  /** Only content for this audience; omit for everything. */
+  /** Store help (owners and staff, the default) or the superadmin's. */
+  scope?: HelpScope;
+  /** Only content for this audience; omit for everything in the scope. */
   audience?: HelpAudience;
   /** Prefix for screenshot paths (e.g. the platform URL); default: relative to the site root. */
   screenshotBase?: string;
@@ -11,8 +13,12 @@ export interface MarkdownOptions {
   generatedOn?: string;
 }
 
-function forAudience<T extends { audiences: HelpAudience[] }>(items: T[], audience?: HelpAudience): T[] {
-  return audience ? items.filter((i) => i.audiences.includes(audience)) : items;
+function select<T extends { audiences: HelpAudience[] }>(
+  items: T[],
+  scope: HelpScope,
+  audience?: HelpAudience,
+): T[] {
+  return items.filter((i) => inScope(i.audiences, scope) && (!audience || i.audiences.includes(audience)));
 }
 
 function shot(slug: string | undefined, base: string): string {
@@ -37,7 +43,8 @@ function articleMarkdown(a: HelpArticle, base: string, byAudience: boolean): str
 /** The whole help as one Markdown document (what people download or print). */
 export function helpToMarkdown(content: HelpContent, opts: MarkdownOptions = {}): string {
   const base = (opts.screenshotBase ?? "").replace(/\/$/, "");
-  const aud = opts.audience;
+  const scope = opts.scope ?? "store";
+  const aud = opts.audience ?? (scope === "superadmin" ? "superadmin" : undefined);
   const out: string[] = [];
   out.push(`# ${aud ? `Ayuda de Kshop: ${HELP_AUDIENCE_LABEL[aud]}` : "Ayuda de Kshop"}`);
   out.push(
@@ -45,7 +52,7 @@ export function helpToMarkdown(content: HelpContent, opts: MarkdownOptions = {})
       "Sale del mismo contenido que la ayuda del admin (menú › Ayuda o el botón «?» de cada pantalla).",
   );
 
-  const firstDay = forAudience(content.firstDay, aud);
+  const firstDay = select(content.firstDay, scope, aud);
   if (firstDay.length) {
     out.push(heading("##", "Tu primer día", HELP_ANCHORS.firstDay));
     out.push("Haz estos pasos el primer día y la tienda queda lista para vender.");
@@ -59,14 +66,14 @@ export function helpToMarkdown(content: HelpContent, opts: MarkdownOptions = {})
     );
   }
 
-  const articles = forAudience(content.articles, aud);
+  const articles = select(content.articles, scope, aud);
   if (articles.length) {
     out.push(heading("##", "Guías", HELP_ANCHORS.guides));
     out.push(articles.map((a) => `- [${a.title}](#${articleAnchor(a.slug)})`).join("\n"));
     for (const a of articles) out.push(articleMarkdown(a, base, !!aud));
   }
 
-  const glossary = forAudience(content.glossary, aud);
+  const glossary = select(content.glossary, scope, aud);
   if (glossary.length) {
     out.push(heading("##", "Glosario", HELP_ANCHORS.glossary));
     out.push(
@@ -79,7 +86,7 @@ export function helpToMarkdown(content: HelpContent, opts: MarkdownOptions = {})
     );
   }
 
-  const faq = forAudience(content.faq, aud);
+  const faq = select(content.faq, scope, aud);
   if (faq.length) {
     out.push(heading("##", "Preguntas frecuentes", HELP_ANCHORS.faq));
     out.push(faq.map((f) => `**${f.question}**\n\n${f.answer}`).join("\n\n"));

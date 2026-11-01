@@ -2,7 +2,8 @@
 
 > **Estado**: APROBADO por Roberto (2026-11-01). **Fase 1 hecha** (2026-11-01): modelo, Zod, generadores, 9 guías,
 > primer día, glosario y FAQ en `packages/admin/src/help/`, 10 tests. **Fase 2 hecha**: «?» en admin, superadmin y
-> Kshop Admin, páginas Ayuda, `pnpm qa:help`. Sigue la fase 3 (capturas y exportación). Decisiones ya tomadas por Roberto: admin de tienda (web y
+> Kshop Admin, páginas Ayuda, `pnpm qa:help`. **Fase 3 hecha**: `help:shots` (11 capturas), Markdown por ruta
+> estática, `/help/print` + `help:pdf`, descargas en la página. Sigue la fase 4 (contenido completo). Decisiones ya tomadas por Roberto: admin de tienda (web y
 > Kshop Admin) **y** superadmin; **todas** las piezas de Tasknic (guías por tarea con capturas reales, «Tu primer día»,
 > glosario, preguntas frecuentes, buscador, PDF y Markdown); audiencias **dueño/admin** y **empleado** con filtro.
 > **Proyecto**: Kshop · Tarea: Tasknic **KSH0005** («quiero una ayuda como mismo la tiene el tasknic, cada vista que
@@ -150,6 +151,23 @@ las de WhatsApp del día a día.
 - **Error**: el Vite ya arrancado no reoptimiza dependencias si cambia el lockfile; otro puerto no vale porque el CORS de
   `/api/v1` solo admite 5173 y 5174 (`proxy.ts`).
 - **Fix**: reiniciar el Vite de 5174 tras instalar dependencias.
+
+### Notas de la fase 3 (cambios sobre el plan)
+- **Sin `help-export.ts` ni `index.json`**: el repo no tiene `tsx`; el Markdown lo sirve una ruta estática
+  (`(platform)/help/[file]/route.ts`, `generateStaticParams`) desde el contenido validado, así que un contenido inválido
+  rompe el build y no hay archivos generados que commitear. El buscador arma su índice en memoria. Los `.md` llevan
+  las capturas con URL absoluta de la plataforma. Las rutas con extensión se saltan el proxy: `/help/…` responde en la
+  plataforma y en cada tienda.
+- Capturas (`pnpm help:shots [slug…]`): Node 24 importa `screenshots.ts` quitando tipos. Rutas con `:product`/`:order`
+  que el script resuelve en la Demo de **prueba**. La Demo de prueba solo tiene pedidos de scripts (clientes «test»,
+  «Prueba WhatsApp Kshop» con el teléfono real de Roberto, direcciones «Calle QA»): el script los cambia en pantalla
+  por «Laura Pérez», +53 5 123 4567 y «Calle 10 #45» antes de capturar, y elige productos sin «Excel/QA/e2e» en el
+  nombre. Nunca publicar una captura con datos de prueba sin revisarla.
+- El test `apps/web/src/help-assets.test.ts` exige el PNG de cada captura declarada y el PDF.
+- «Solicitar» (Plan y facturación) solo aparece si la plataforma tiene WhatsApp de contacto; en prueba no sale.
+- Windows no resuelve `*.localhost` fuera de Chromium: comprobar descargas con `fetch` desde la página o con la
+  cabecera `Host` contra 127.0.0.1.
+- No se corrió `pnpm build` (iría contra la base de producción y la regla R11 lo pide sin la web en uso).
 
 ### Notas de la fase 2
 - La Caja guarda su pestaña en estado local: «Vender» y «Resumen» comparten el contexto `pos` (se quitó
