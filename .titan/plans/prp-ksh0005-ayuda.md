@@ -6,8 +6,8 @@
 > estática, `/help/print` + `help:pdf`, descargas en la página. **Fase 4 hecha**: 26 guías (19 de tienda, 7 del
 > superadmin), 16 capturas, glosario y FAQ ampliados; tests «cada contexto tiene guía» y «cada módulo tiene contexto».
 > **Fase 5 hecha — PRP HECHO** (2026-11-01): typecheck, lint, test, `qa:help` 52/52, `qa:mobile` de las dos páginas
-> de Ayuda sin nada que arreglar, regla en `AGENTS.md`, memoria. Falta: `qa:help` con Kshop Admin (reiniciar su Vite)
-> y `pnpm build` cuando no haya nadie usando la web. Decisiones ya tomadas por Roberto: admin de tienda (web y
+> de Ayuda sin nada que arreglar, regla en `AGENTS.md`, memoria. **Cerrado** (2026-11-01): `qa:help` 55/55 con Kshop
+> Admin, build contra la base de prueba en verde, push y deploy de Roberto, Roberto la dio por buena. Decisiones ya tomadas por Roberto: admin de tienda (web y
 > Kshop Admin) **y** superadmin; **todas** las piezas de Tasknic (guías por tarea con capturas reales, «Tu primer día»,
 > glosario, preguntas frecuentes, buscador, PDF y Markdown); audiencias **dueño/admin** y **empleado** con filtro.
 > **Proyecto**: Kshop · Tarea: Tasknic **KSH0005** («quiero una ayuda como mismo la tiene el tasknic, cada vista que
@@ -154,7 +154,23 @@ las de WhatsApp del día a día.
 ### 2026-11-01: Kshop Admin en 5174 daba 500 tras `pnpm install`
 - **Error**: el Vite ya arrancado no reoptimiza dependencias si cambia el lockfile; otro puerto no vale porque el CORS de
   `/api/v1` solo admite 5173 y 5174 (`proxy.ts`).
-- **Fix**: reiniciar el Vite de 5174 tras instalar dependencias.
+- **Fix**: reiniciar el Vite de 5174 tras instalar dependencias (con `--force` reoptimiza al arrancar).
+
+### 2026-11-01: `qa:help` con expectativas de la fase 2 y 429 de Auth
+- **Error**: el script esperaba que Entregas no tuviera guías (la fase 4 le añadió una) y contaba como error de consola
+  el 429 de Supabase Auth que provocan sus propios inicios de sesión.
+- **Fix**: Entregas espera «Quiero organizar las entregas»; los 429 se ignoran como los 404 de capturas.
+- **Aplicar en**: al añadir guías a un contexto, revisar la tabla de vistas de `qa-help.mjs`.
+
+### 2026-11-01: `pnpm build` sin tocar producción
+- `node scripts/db-env.mjs pnpm build` hace el build completo contra la base de **prueba** (las variables reales ganan
+  a `.env.local`): valida el build antes de un push sin cargar la Nano de producción.
+
+### 2026-11-01: el admin de Minimercado no cargaba tras el deploy (venía de KSH0004)
+- **Error**: «This page couldn't load», `Cannot read properties of undefined (reading 'orders')`: la copia del arranque
+  en `localStorage` era de antes de KSH0004 y no tenía `upgrades`; el menú leía `upgrades.orders` antes de que llegara `/me`.
+- **Fix**: `readCachedAdminState` da su valor vacío a cada campo que falte e ignora copias mal formadas (`2cc96d0`, con test).
+- **Aplicar en**: todo campo nuevo de `AdminState` necesita su valor por defecto ahí.
 
 ### Notas de la fase 4
 - Guías por tarea que agrupan contextos (p. ej. «Quiero ordenar mi catálogo» cubre categorías, marcas, colecciones y
