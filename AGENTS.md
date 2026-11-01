@@ -102,6 +102,11 @@
 - **Teléfono:** lo que se toca mide 40 px o más bajo la variante `touch:` (dedo o pantalla estrecha), los campos van a 16 px solos; pestañas de módulo con `AdminSubNav`, filtros de lista con `FilterBar`, «Volver» lo pone la barra del móvil (ver `.titan/memory/reference/web-en-el-telefono.md`).
 - Confirmaciones con `useConfirm()` de `@kshop/ui` (R14), nunca `window.confirm`/`prompt`/`alert` (lint `no-alert`); todo
   borrado y toda acción que cambie la factura o suspenda una tienda pregunta antes.
+- **Ayuda en la app (KSH0005):** el contenido vive en `packages/admin/src/help/content/` (guías por tarea, primer día,
+  glosario, FAQ) y lo usan el «?» de cada pantalla, `/admin/help`, `/superadmin/help`, Kshop Admin, el PDF y el Markdown.
+  **Si una tarea cambia la interfaz** (botones, pestañas, pasos), actualiza en el mismo commit las guías que la describen,
+  `pnpm help:shots <slug…>` de sus capturas (revísalas: sin datos de prueba ni teléfonos reales) y `pnpm help:pdf`.
+  Un módulo o pantalla nueva necesita su contexto en `helpContextForPath` y al menos una guía (los tests lo exigen).
 - Validar con **Zod** toda entrada (route handlers, funciones). Escrituras críticas con
   `requireStoreRole(storeId, role)` explícito en servidor.
 - Operaciones de stock/órdenes en transacción con `for update`.
@@ -140,6 +145,7 @@
 | `pnpm e2e:plan-caja` | KSH0004: API del plan «Caja» en una tienda temporal (sin tienda online: lecturas públicas, carrito, checkout y cuentas de clientes dan 403 `module_not_enabled`, el subdominio enseña la tarjeta del local, la caja vende; subir a Base enciende la web y volver la apaga sin perder nada), con `pnpm dev` corriendo (`E2E_APP_URL` para otro puerto) |
 | `pnpm qa:price-calculator` | KSH0003: QA en navegador de la calculadora de costo y precio del editor de producto (una variante y todas, redondeo, margen sobre el costo o el precio, costo en USD, Esc) y del formato cubano de los teléfonos en Pedidos y Clientes, en la Tienda Demo sin guardar nada; capturas en `.titan/qa/ksh0003-calculadora/`, con `pnpm dev` corriendo (`QA_BASE_URL` para otro puerto) |
 | `pnpm qa:confirms` | R14: QA en navegador de las confirmaciones (Tienda Demo como dueño y tienda temporal como superadmin): cancelar no escribe nada, confirmar hace lo de siempre, ninguna caja del navegador; capturas en `.titan/qa/r14-confirmaciones/`, con `pnpm dev` corriendo (`QA_BASE_URL` para otro puerto) |
+| `pnpm help:shots [slug…]` · `pnpm help:pdf` · `pnpm qa:help` | KSH0005: capturas de la ayuda en la Tienda Demo de prueba (`apps/web/public/help/screens/`, clientes de prueba mostrados como «Laura Pérez»), PDF desde `/help/print` (`apps/web/public/help/kshop-ayuda.pdf`; el Markdown lo sirve `/help/kshop-ayuda*.md`) y QA en navegador del «?», la página Ayuda (buscador, filtro, primer día, descargas) como dueño, empleado y superadmin, y Kshop Admin si responde en 5174; capturas en `.titan/qa/ksh0005-ayuda/`, con `pnpm dev` corriendo (`QA_BASE_URL`, `QA_PLATFORM_URL`, `QA_ADMIN_APP_URL`) |
 | `pnpm app:config <slug>` · `pnpm app:build <slug\|admin>` · `pnpm app:publish <slug\|admin>` · `pnpm app:keystore <slug\|admin>` | Fase 7: config de la app de tienda; proyecto Android con iconos (`--assemble` compila y firma; en la práctica lo hace el workflow «Android app» de GitHub Actions); sube el APK del artefacto a `store-apps` y lo registra oculto; crea la clave de firma fuera del repo (`--github`: secretos de Actions). Ver `docs/APPS.md` |
 | `pnpm qa:apps` | QA en navegador de la app de tienda, Kshop Admin y la distribución (`/app`, Admin › App móvil, Superadmin › Apps), con `pnpm dev` y los Vite de las apps (5173, 5174) corriendo; capturas en `.titan/qa/fase-7/` |
 | `pnpm demo:seed` | Crea/repara la tienda de pruebas permanente «Tienda Demo» (`demo.kshop.localhost:3000`) |

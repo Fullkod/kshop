@@ -110,6 +110,7 @@ const ADMIN_VIEWS = [
   "mobile-app",
   "custom-domain",
   "pos",
+  "help",
 ].filter((v) => v !== null && v !== undefined);
 const STORE_VIEWS = [
   "",
@@ -134,6 +135,7 @@ const SUPER_VIEWS = [
   "apps",
   "whatsapp",
   "domains",
+  "help",
 ];
 
 /** What a phone would suffer on this page. */

@@ -5,7 +5,9 @@
 > Kshop Admin, páginas Ayuda, `pnpm qa:help`. **Fase 3 hecha**: `help:shots` (11 capturas), Markdown por ruta
 > estática, `/help/print` + `help:pdf`, descargas en la página. **Fase 4 hecha**: 26 guías (19 de tienda, 7 del
 > superadmin), 16 capturas, glosario y FAQ ampliados; tests «cada contexto tiene guía» y «cada módulo tiene contexto».
-> Sigue la fase 5 (validación final). Decisiones ya tomadas por Roberto: admin de tienda (web y
+> **Fase 5 hecha — PRP HECHO** (2026-11-01): typecheck, lint, test, `qa:help` 52/52, `qa:mobile` de las dos páginas
+> de Ayuda sin nada que arreglar, regla en `AGENTS.md`, memoria. Falta: `qa:help` con Kshop Admin (reiniciar su Vite)
+> y `pnpm build` cuando no haya nadie usando la web. Decisiones ya tomadas por Roberto: admin de tienda (web y
 > Kshop Admin) **y** superadmin; **todas** las piezas de Tasknic (guías por tarea con capturas reales, «Tu primer día»,
 > glosario, preguntas frecuentes, buscador, PDF y Markdown); audiencias **dueño/admin** y **empleado** con filtro.
 > **Proyecto**: Kshop · Tarea: Tasknic **KSH0005** («quiero una ayuda como mismo la tiene el tasknic, cada vista que
