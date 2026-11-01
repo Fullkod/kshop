@@ -38,9 +38,8 @@ Supera a `2026-10-30-donde-quedamos.md`. `main` y `origin/main` están al día (
   «?» en cada pantalla de admin, superadmin y Kshop Admin, página Ayuda, PDF y Markdown; `qa:help` 52/52 en la web.
 
 ## Qué sigue
-0. **KSH0005**: Roberto lo revisa (en Tasknic «En revisión») y decide el push/deploy. Antes de darlo por cerrado,
-   reiniciar el Vite de Kshop Admin en 5174 (caché vieja tras `pnpm install`) y pasar `pnpm qa:help` con la app.
-   No repetir `qa:*` seguidos: Auth limita los inicios de sesión.
+0. **KSH0005**: verificado (`qa:help` 55/55 con Kshop Admin, build contra prueba en verde); Roberto lo revisa en
+   local y decide el push/deploy. No repetir `qa:*` seguidos: Auth limita los inicios de sesión.
 1. **Roberto prueba los APK** (Kshop Admin en modo avión: vender, cerrar a la fuerza, reiniciar, subir al volver la
    red) y la web desde su iPhone. Lo que salga se corrige antes de dar por cerrada la fase 7 del PRP del POS.
 2. **KSH0002 en Tasknic** sigue «En revisión»; cerrarla cuando Roberto dé el visto bueno al cobro.
