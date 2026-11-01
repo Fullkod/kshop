@@ -50,6 +50,7 @@
     "e2e:sections": "node scripts/db-env.mjs node scripts/e2e-sections.mjs",
     "qa:sections": "node scripts/db-env.mjs node scripts/qa-sections.mjs",
     "qa:dialogs": "node scripts/db-env.mjs node scripts/qa-dialogs.mjs",
+    "qa:menus": "node scripts/db-env.mjs node scripts/qa-menus.mjs",
     "qa:confirms": "node scripts/db-env.mjs node scripts/qa-confirms.mjs",
     "qa:help": "node scripts/db-env.mjs node scripts/qa-help.mjs",
     "help:shots": "node scripts/db-env.mjs node scripts/help-shots.mjs",
