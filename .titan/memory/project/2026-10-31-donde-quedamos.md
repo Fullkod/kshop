@@ -34,8 +34,14 @@ Supera a `2026-10-30-donde-quedamos.md`. `main` y `origin/main` están al día (
   **pidió esperar para limpiar el contexto** antes de arrancar: la próxima sesión empieza pidiéndole el «ok» y va a la
   fase 1. Quedan KSH0006 (páginas estáticas) y KSH0007 (enlaces de las columnas del pie, bien definida) en Por hacer.
 
+- **KSH0005 en marcha (2026-11-01):** Roberto dio el ok. Fases 1 y 2 hechas (`444364c`, `1ba4247`, sin push): contenido
+  en `packages/admin/src/help/` (9 guías, primer día, glosario, FAQ, validado con Zod), «?» en cada pantalla del admin,
+  del superadmin y de Kshop Admin, páginas `/admin/help` y `/superadmin/help`, `pnpm qa:help` 46/47 en la web.
+
 ## Qué sigue
-0. **KSH0005**: «ok» de Roberto al PRP → fase 1 (modelo, validación y 8 guías).
+0. **KSH0005**: fase 3 (`help-shots.mjs`, `help-export`, `/help/print`, PDF y descargas), luego 4 (todas las guías) y 5
+   (validación final, regla en `AGENTS.md`, Tasknic). Antes: reiniciar el Vite de Kshop Admin en 5174 (caché de
+   dependencias vieja tras `pnpm install`) y pasar `qa:help` con la app; no repetir `qa:*` seguidos (límite de Auth).
 1. **Roberto prueba los APK** (Kshop Admin en modo avión: vender, cerrar a la fuerza, reiniciar, subir al volver la
    red) y la web desde su iPhone. Lo que salga se corrige antes de dar por cerrada la fase 7 del PRP del POS.
 2. **KSH0002 en Tasknic** sigue «En revisión»; cerrarla cuando Roberto dé el visto bueno al cobro.
