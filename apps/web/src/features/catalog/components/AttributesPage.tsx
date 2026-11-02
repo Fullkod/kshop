@@ -1,6 +1,6 @@
 "use client";
 
-import { ATTRIBUTE_INPUT_TYPES, VALUE_LIST_TYPES, type AttributeInputType } from "@kshop/core";
+import { ATTRIBUTE_INPUT_TYPES, catalogSlug, VALUE_LIST_TYPES, type AttributeInputType } from "@kshop/core";
 import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label, Select, useConfirm } from "@kshop/ui";
 import { useState } from "react";
 import { useApiAction, useCatalogApi, useCatalogStructure, type Attribute } from "../use-catalog";
@@ -15,9 +15,20 @@ export const INPUT_TYPE_LABELS: Record<AttributeInputType, string> = {
   date: "Fecha",
 };
 
+/** Name plus code when another attribute shares the name (e.g. "Talla · talla-calzado"). */
+export function attributeLabel(a: Pick<Attribute, "name" | "slug">, all: Pick<Attribute, "name" | "slug">[]) {
+  const shared = all.some(
+    (b) => b.slug !== a.slug && b.name.trim().toLowerCase() === a.name.trim().toLowerCase(),
+  );
+  return shared ? `${a.name} · ${a.slug}` : a.name;
+}
+
 type Draft = {
   id?: string;
   name: string;
+  /** Unique code in the store (Saleor's "attribute code"); used by the storefront filters in the URL. */
+  slug: string;
+  slugEdited: boolean;
   inputType: AttributeInputType;
   unit: string;
   filterableInStorefront: boolean;
@@ -26,6 +37,8 @@ type Draft = {
 
 const emptyDraft: Draft = {
   name: "",
+  slug: "",
+  slugEdited: false,
   inputType: "dropdown",
   unit: "",
   filterableInStorefront: true,
@@ -47,6 +60,8 @@ export function AttributesPage() {
     setDraft({
       id: a.id,
       name: a.name,
+      slug: a.slug,
+      slugEdited: true,
       inputType: a.inputType,
       unit: a.unit ?? "",
       filterableInStorefront: a.filterableInStorefront,
@@ -73,6 +88,7 @@ export function AttributesPage() {
     if (!draft) return;
     const input = {
       name: draft.name,
+      slug: draft.slug.trim() || catalogSlug(draft.name),
       inputType: draft.inputType,
       unit: draft.unit,
       valueRequired: false,
@@ -135,9 +151,29 @@ export function AttributesPage() {
                 <Input
                   id="attr-name"
                   value={draft.name}
-                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                  onChange={(e) =>
+                    setDraft({
+                      ...draft,
+                      name: e.target.value,
+                      ...(draft.slugEdited ? {} : { slug: catalogSlug(e.target.value) }),
+                    })
+                  }
                 />
-                <FieldError>{action.fieldErrors.name ?? action.fieldErrors.slug}</FieldError>
+                <FieldError>{action.fieldErrors.name}</FieldError>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="attr-slug">Código</Label>
+                <Input
+                  id="attr-slug"
+                  value={draft.slug}
+                  placeholder="talla-ropa"
+                  onChange={(e) => setDraft({ ...draft, slug: e.target.value, slugEdited: true })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Único en la tienda. Dos atributos pueden llamarse igual («Talla») con códigos distintos
+                  (talla-ropa, talla-calzado).
+                </p>
+                <FieldError>{action.fieldErrors.slug}</FieldError>
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="attr-type">Tipo</Label>
@@ -255,6 +291,7 @@ export function AttributesPage() {
                   <span className="font-medium">
                     {a.name} <Badge variant="muted">{INPUT_TYPE_LABELS[a.inputType]}</Badge>
                   </span>
+                  <span className="text-xs text-muted-foreground">Código: {a.slug}</span>
                   {a.values.length > 0 && (
                     <span className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
                       {a.values.map((v) => (

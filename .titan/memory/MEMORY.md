@@ -49,6 +49,7 @@
 - [2026-11-01-ksh0006-paginas.md](project/2026-11-01-ksh0006-paginas.md) — KSH0006 (desplegado): `.sf-prose` no tenía CSS (por eso las páginas se veían apretadas), saltos de línea, botones y preguntas plegables desde Markdown, barra y vista previa en el editor; `pnpm qa:pages`
 - [2026-11-01-ksh0007-menu-pie.md](project/2026-11-01-ksh0007-menu-pie.md) — KSH0007 (desplegado): el editor de menús muestra y edita los enlaces de cada columna del pie (solo UI), `pnpm qa:menus`; aprendizaje sobre sesiones en scripts de QA
 - [2026-11-01-sku-automatico.md](project/2026-11-01-sku-automatico.md) — Un SKU vacío se crea en el servidor del nombre del producto (`skuBase`/`fillMissingSkus`), único en la tienda; el Excel sigue exigiéndolo
+- [2026-11-02-codigo-de-atributo.md](project/2026-11-02-codigo-de-atributo.md) — Campo «Código» del atributo (como Saleor): dos «Talla» (ropa, calzado) con códigos distintos; error claro si se repite
 - [2026-10-31-ksh0003-calculadora-precio.md](project/2026-10-31-ksh0003-calculadora-precio.md) — KSH0003: calculadora de costo unitario + margen en el editor de producto (diálogo, web y Kshop Admin), `unitCost`/`priceFromCost` en core, teléfonos cubanos como `+53 5 256 4206`; `pnpm qa:price-calculator`
 - [2026-10-30-donde-quedamos.md](project/2026-10-30-donde-quedamos.md) — Superado: cobro mixto y POS fases 1-2 en producción
 

@@ -46,6 +46,7 @@ export const articles: HelpArticle[] = [
     tips: [
       "«Calcular» abre la calculadora: le das lo que te costó el paquete y cuántas unidades trae, y te propone el precio con el margen que quieras.",
       "Para ocultar un producto sin perderlo, ponlo en «Archivado»: desaparece de la tienda y los pedidos viejos lo conservan.",
+      "¿Vendes ropa y zapatos? Crea dos atributos llamados «Talla» con distinto «Código» (talla-ropa y talla-calzado) y pon cada uno en su tipo de producto: así cada producto ofrece solo sus tallas.",
     ],
     related: ["excel-catalog", "missing-section"],
   },

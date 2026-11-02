@@ -3,6 +3,7 @@
 import { Alert, Badge, Button, Card, Dialog, FieldError, Input, Label, useConfirm } from "@kshop/ui";
 import { useState } from "react";
 import { useApiAction, useCatalogApi, useCatalogStructure, type ProductType } from "../use-catalog";
+import { attributeLabel } from "./AttributesPage";
 
 type Role = "none" | "product" | "variant-selection" | "variant";
 type Draft = {
@@ -30,7 +31,7 @@ export function ProductTypesPage() {
   if (error) return <Alert variant="destructive">{error}</Alert>;
   if (!data) return <p className="text-muted-foreground">Cargando…</p>;
 
-  const attrName = new Map(data.attributes.map((a) => [a.id, a.name]));
+  const attrName = new Map(data.attributes.map((a) => [a.id, attributeLabel(a, data.attributes)]));
 
   const edit = (t: ProductType) =>
     setDraft({
@@ -143,9 +144,9 @@ export function ProductTypesPage() {
                   key={a.id}
                   className="flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2"
                 >
-                  <span className="text-sm">{a.name}</span>
+                  <span className="text-sm">{attrName.get(a.id)}</span>
                   <select
-                    aria-label={`Uso de ${a.name}`}
+                    aria-label={`Uso de ${attrName.get(a.id)}`}
                     className="rounded-md border bg-background px-2 py-1 text-sm"
                     value={draft.roles[a.id] ?? "none"}
                     onChange={(e) =>
