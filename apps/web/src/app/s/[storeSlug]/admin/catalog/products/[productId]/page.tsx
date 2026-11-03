@@ -1,9 +1,9 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import { ProductEditor } from "@kshop/admin";
+import { useRouteParam } from "@/lib/use-route-param";
 
 export default function EditProductPage() {
-  const { productId } = useParams<{ productId: string }>();
+  const productId = useRouteParam("productId");
   return <ProductEditor key={productId} productId={productId} />;
 }

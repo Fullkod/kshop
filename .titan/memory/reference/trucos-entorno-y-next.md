@@ -9,6 +9,13 @@ Detalle de cada error en la sección «Aprendizajes» de los PRP de las fases 1 
 - Rutas con params: o `generateStaticParams` (nunca vacío) + `await params` fuera de `<Suspense>` (ISR), o todo
   dentro de `<Suspense>`. `searchParams`, `cookies` y `headers` siempre dentro de `<Suspense>`.
 - Admin y superadmin son apps de cliente: su layout envuelve todo en `<Suspense>`.
+- **Params en páginas de cliente (bug del 2026-11-03):** al navegar en el cliente a una URL que no se precargó
+  (`router.replace` al producto recién creado), Next pinta el shell estático de la ruta y `useParams()` da un marcador
+  opaco (`%%drp:productId:…%%`), no el id; `admin_product` daba 400 y salía «No se pudo cargar el producto.». Solo pasa
+  en build de producción. Usar `useRouteParam(name)` de `apps/web/src/lib/use-route-param.ts` (cae al último segmento
+  de la URL). Buscar en los logs de Postgres `drp:` para detectarlo. `pnpm qa:new-product` lo comprueba.
+- **Las páginas no se desmontan al salir** (`<Activity>`, hasta 3 rutas): un formulario de alta conserva lo escrito al
+  volver. Tras crear, vaciar el estado antes de navegar (ver `save()` de `ProductEditor`).
 - En la tienda, leer `--fg/--bg/--ok…` directamente: los `--color-*` de `@theme inline` se resuelven en `:root`
   (paleta del admin, cambia con el modo oscuro del sistema).
 

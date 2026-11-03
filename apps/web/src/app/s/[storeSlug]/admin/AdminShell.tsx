@@ -410,7 +410,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   </Link>
                 )}
                 {action && (
-                  <Link href={action.href} className={cn(buttonVariants({ size: "sm" }), "h-10")}>
+                  <Link
+                    href={action.href}
+                    aria-label={action.label}
+                    className={cn(buttonVariants({ size: "sm" }), "h-10")}
+                  >
                     <Plus size={16} aria-hidden />
                     <span className="hidden sm:inline">{action.label}</span>
                   </Link>

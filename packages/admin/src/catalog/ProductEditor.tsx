@@ -450,11 +450,14 @@ export function ProductEditor({ productId }: { productId?: string }) {
       return saved;
     });
     if (!result) return;
-    set({ variants: form!.variants.map((v) => ({ ...v, savedWarehouseStock: { ...v.warehouseStock } })) });
     if (!productId) {
+      // Cache Components keeps «Nuevo producto» mounted (hidden) after leaving it: empty it for the next one.
+      setForm(null);
+      setMediaEdits(null);
       router.replace(`/admin/catalog/products/${result.id}`);
       return;
     }
+    set({ variants: form!.variants.map((v) => ({ ...v, savedWarehouseStock: { ...v.warehouseStock } })) });
     // A variant saved without a SKU got one on the server: read the product again to show it.
     if (form!.variants.some((v) => !v.sku.trim())) {
       setForm(null);

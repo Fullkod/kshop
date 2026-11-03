@@ -13,7 +13,6 @@ import {
 import { ApiError, type PlatformSubscription } from "@kshop/data";
 import { Alert, Badge, Button, Card, FieldError, Input, Label, Select, useConfirm } from "@kshop/ui";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { InvoiceActions } from "@/features/billing/components/InvoiceActions";
 import { InvoiceCard, LinesTable, UsageMeter } from "@/features/billing/components/BillingParts";
@@ -21,6 +20,7 @@ import { formatDate, STORE_STATUS_LABELS, storeUrl, SUBSCRIPTION_STATUS_LABELS }
 import { OwnerAccess } from "../../OwnerAccess";
 import { StoreMenu } from "./StoreMenu";
 import { useSession } from "@/lib/session";
+import { useRouteParam } from "@/lib/use-route-param";
 
 // Superadmin › Tienda › Suscripción: plan, next invoice, modules (plan / add-on / gift), gifts, own price and
 // limits, invoices with cash payments. Every action returns the fresh subscription.
@@ -29,7 +29,7 @@ const dateInput = (iso: string | null) => (iso ? iso.slice(0, 10) : "");
 const isoFromDate = (value: string) => (value ? new Date(`${value}T23:59:00`).toISOString() : null);
 
 export default function SuperadminStoreSubscriptionPage() {
-  const { storeId } = useParams<{ storeId: string }>();
+  const storeId = useRouteParam("storeId");
   const { api } = useSession();
   const { confirm, prompt } = useConfirm();
   const sub = api.platform.subscription(storeId);
