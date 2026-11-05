@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Card } from "@kshop/ui";
+import { Alert, Button, RefreshCcw } from "@kshop/ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "../session";
 import {
@@ -85,7 +85,7 @@ function catalogAge(savedAt: string): string {
   return `de hace ${days} días`;
 }
 
-/** What the phone holds for the counter. */
+/** What the phone holds for the counter, inside the Caja options sheet: catalog, pending sales and the refresh. */
 export function PosStatus({
   catalog,
   online,
@@ -102,15 +102,7 @@ export function PosStatus({
   const products = useMemo(() => snapshot?.items.length ?? 0, [snapshot]);
 
   return (
-    <Card className="flex flex-col gap-3" data-testid="pos-status">
-      {place === "teléfono" && <h2 className="text-lg font-semibold">Caja</h2>}
-      {!online && (
-        <Alert data-testid="pos-offline">
-          {place === "teléfono"
-            ? "Sin conexión. Lo guardado en este teléfono sigue disponible."
-            : "Sin conexión. Puedes seguir vendiendo, pero no recargues ni cierres esta página: sin internet no vuelve a abrirse."}
-        </Alert>
-      )}
+    <div className="flex flex-col gap-3" data-testid="pos-status">
       {!loaded ? (
         <p className="text-sm text-muted-foreground">Leyendo el {place}…</p>
       ) : snapshot ? (
@@ -118,10 +110,7 @@ export function PosStatus({
           Catálogo {catalogAge(snapshot.savedAt)}: {products} productos.
         </p>
       ) : (
-        <Alert variant="destructive" data-testid="pos-no-catalog">
-          Este {place} aún no tiene el catálogo.{" "}
-          {online ? "Descárgalo para vender." : "Conéctalo a internet una vez."}
-        </Alert>
+        <p className="text-sm">Este {place} aún no tiene el catálogo.</p>
       )}
       {failed && <Alert variant="destructive">No se pudo actualizar el catálogo. Sigue el anterior.</Alert>}
       {pending !== null && (
@@ -135,8 +124,9 @@ export function PosStatus({
         disabled={!online || refreshing}
         onClick={() => void refresh()}
       >
+        <RefreshCcw size={16} aria-hidden />
         {refreshing ? "Actualizando…" : "Actualizar catálogo"}
       </Button>
-    </Card>
+    </div>
   );
 }

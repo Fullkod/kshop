@@ -80,12 +80,27 @@ async function setConnection(up) {
   await page.evaluate((flag) => sessionStorage.setItem("qa-offline", flag), up ? "0" : "1");
 }
 
-const catalogText = () => page.getByTestId("pos-catalog").innerText();
+const catalogText = async () => {
+  await openPosMenu(page);
+  return page.getByTestId("pos-catalog").innerText();
+};
 const count = (text) => Number(text.match(/(\d+) productos/)?.[1] ?? -1);
 const authKey = () =>
   page.evaluate(() =>
     Object.keys(localStorage).find((k) => k.startsWith("sb-") && k.endsWith("-auth-token")),
   );
+
+// The catalog and the day's sales are behind «⋯» in the Caja (2026-11-05).
+async function openPosMenu(target) {
+  if (await target.getByTestId("pos-status").isVisible()) return;
+  await target.getByTestId("pos-menu").click({ timeout: 60000 });
+  await target.getByTestId("pos-status").waitFor({ timeout: 10000 });
+}
+async function closePosMenu(target) {
+  if (!(await target.getByTestId("pos-status").isVisible())) return;
+  await target.getByRole("dialog").getByRole("button", { name: "Cerrar", exact: true }).click();
+  await target.getByTestId("pos-status").waitFor({ state: "detached", timeout: 10000 });
+}
 
 try {
   // With a connection: sign in and download.
@@ -110,7 +125,7 @@ try {
   check("Ventas is reachable from Más", true);
 
   await page.getByRole("link", { name: "Caja", exact: true }).click();
-  await page.getByTestId("pos-catalog").waitFor({ timeout: 60000 });
+  await page.getByTestId("pos-search").waitFor({ timeout: 60000 });
   const downloaded = count(await catalogText());
   check("the catalog downloads", downloaded > 0, await catalogText());
   await page.screenshot({ path: join(OUT, "fase3-caja-con-red.png") });
@@ -135,7 +150,7 @@ try {
     localStorage.setItem(k, JSON.stringify(session));
   }, key);
   await page.goto(`${ADMIN}/admin/pos`);
-  await page.getByTestId("pos-status").waitFor({ timeout: 30000 });
+  await page.getByTestId("pos-screen").waitFor({ timeout: 30000 });
   check(
     "expired token: still in, without asking to sign in",
     (await page.locator("#password").count()) === 0,
@@ -161,6 +176,7 @@ try {
     );
   await page.goto(`${ADMIN}/admin/pos`);
   await page.getByTestId("pos-search").waitFor({ timeout: 30000 });
+  await closePosMenu(page);
   await page.getByTestId("pos-search").fill("vestido");
   const firstResult = page.getByTestId("pos-results").getByRole("button").first();
   await firstResult.waitFor({ timeout: 10000 });
@@ -196,6 +212,7 @@ try {
     "sell offline: the sale is saved and the cart is empty",
     (await page.getByTestId("pos-cart").count()) === 0,
   );
+  await openPosMenu(page);
   check(
     "sell offline: one sale waits",
     /: 1$/.test(await page.getByTestId("pos-pending").innerText()),
@@ -203,6 +220,7 @@ try {
   );
   await page.screenshot({ path: join(OUT, "fase4-guardada.png") });
   await page.goto(`${ADMIN}/admin/pos`);
+  await openPosMenu(page);
   await page.getByTestId("pos-pending").waitFor({ timeout: 30000 });
   const [queued] = await readSales();
   check(
@@ -216,6 +234,7 @@ try {
     JSON.stringify(queued?.sale?.payments),
   );
   // Too many dollars in one payment: change.
+  await closePosMenu(page);
   await page.getByTestId("pos-search").fill("vestido");
   await page.getByTestId("pos-results").getByRole("button").first().click();
   await page.getByTestId("pos-charge").click();
@@ -233,8 +252,10 @@ try {
   const storeId = await page.evaluate(
     () => JSON.parse(localStorage.getItem("kshop.offline.boot")).stores.find((s) => s.slug === "demo")?.id,
   );
-  const pendingCount = async () =>
-    Number((await page.getByTestId("pos-pending").innerText()).match(/(\d+)$/)?.[1]);
+  const pendingCount = async () => {
+    await openPosMenu(page);
+    return Number((await page.getByTestId("pos-pending").innerText()).match(/(\d+)$/)?.[1]);
+  };
   const waitPending = async (expected) => {
     for (let i = 0; i < 60; i++) {
       if ((await pendingCount()) === expected) return true;
@@ -252,6 +273,7 @@ try {
     return data ?? [];
   };
   const sellOne = async () => {
+    await closePosMenu(page);
     await page.getByTestId("pos-search").fill("vestido");
     await page.getByTestId("pos-results").getByRole("button").first().click();
     await page.getByTestId("pos-charge").click();
@@ -259,6 +281,7 @@ try {
     await page.getByTestId("pos-saved").waitFor({ timeout: 10000 });
   };
 
+  await openPosMenu(page);
   check(
     "day: says what the phone charged, per currency",
     /USD/.test(await page.getByTestId("pos-day-summary").innerText()) &&
@@ -282,6 +305,7 @@ try {
   });
   await setConnection(true);
   await page.goto(`${ADMIN}/admin/pos`);
+  await openPosMenu(page);
   await page.getByTestId("pos-pending").waitFor({ timeout: 60000 });
   for (let i = 0; i < 60 && lost === 0; i++) await page.waitForTimeout(500);
   check(
@@ -317,6 +341,7 @@ try {
     }),
   );
   await sellOne();
+  await openPosMenu(page);
   await page.getByTestId("pos-held").waitFor({ timeout: 30000 });
   check(
     "refused: held with the reason",
@@ -336,10 +361,12 @@ try {
   await page.getByTestId("pos-search").waitFor({ timeout: 30000 });
   await sellOne();
   const voidedId = (await readSales()).find((q) => !q.uploaded).sale.id;
+  await openPosMenu(page);
   await page.getByTestId("pos-day-list").getByRole("button", { name: "Anular" }).first().click();
   await page.getByRole("button", { name: "Anular venta" }).click();
   await page.getByTestId("pos-day-list").getByText("Anulada").waitFor({ timeout: 10000 });
   check("void: marked on the phone", true);
+  await closePosMenu(page);
 
   // Signing out with sales waiting asks first.
   await page.getByRole("link", { name: "Más", exact: true }).click();
@@ -351,6 +378,7 @@ try {
 
   await setConnection(true);
   await page.goto(`${ADMIN}/admin/pos`);
+  await openPosMenu(page);
   await page.getByTestId("pos-pending").waitFor({ timeout: 60000 });
   check("void: uploads by itself when the connection returns", await waitPending(0), await pendingCount());
   const [voided] = await orderOf(voidedId);
@@ -378,7 +406,7 @@ try {
     (await page.locator("#password").count()) === 0,
   );
   await page.goto(`${ADMIN}/admin/pos`);
-  await page.getByTestId("pos-status").waitFor({ timeout: 30000 });
+  await page.getByTestId("pos-screen").waitFor({ timeout: 30000 });
   check("back online: no offline notice", (await page.getByTestId("pos-offline").count()) === 0);
 
   // A refusal is not a lack of connection: what is saved does not open the store.
@@ -393,7 +421,7 @@ try {
   await page.getByRole("button", { name: "Reintentar" }).waitFor({ timeout: 30000 });
   check(
     "refused by the server: the saved access does not open it",
-    (await page.getByTestId("pos-status").count()) === 0,
+    (await page.getByTestId("pos-screen").count()) === 0,
   );
   await context.unroute(`${API}/api/v1/me**`);
 

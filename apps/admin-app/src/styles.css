@@ -22,3 +22,7 @@ body {
 .app-tabs {
   padding-bottom: env(safe-area-inset-bottom);
 }
+/* Caja: while the search has the keyboard up, the tabs leave the little screen left to the results. */
+body:has([data-pos-typing]) .app-tabs {
+  display: none;
+}

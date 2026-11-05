@@ -143,7 +143,7 @@ try {
   await page.fill("#pay-rate", "320");
   await page.fill("#pay-amount", other === "USD" ? String(Math.round((total / 2 / 320) * 100) / 100) : String(total * 160));
   await page.getByRole("button", { name: "Guardar pago" }).click();
-  await page.getByText(/aplica/).first().waitFor({ timeout: 15000 });
+  await page.getByText(/equivale a/).first().waitFor({ timeout: 15000 });
   check("the payment shows what it applied", true);
 
   await page.getByRole("button", { name: "Registrar pago" }).click();
@@ -154,7 +154,7 @@ try {
   const { data: paid } = await service.from("orders").select("paid_total, payment_status").eq("id", orderId).single();
   check("the order ends paid", paid.payment_status === "paid" && Number(paid.paid_total) === total, JSON.stringify(paid));
   await page.reload();
-  await page.getByText(/aplica/).first().waitFor({ timeout: 15000 });
+  await page.getByText(/equivale a/).first().waitFor({ timeout: 15000 });
   const history = await page.getByRole("heading", { name: "Historial" }).locator("..").innerText();
   check(`the history shows the payment in ${other}`, new RegExp(`Pago registrado[^\\n]*${other}`).test(history), history);
   await page.screenshot({ path: join(OUT, "cobro-mixto-pagado.png"), fullPage: true });

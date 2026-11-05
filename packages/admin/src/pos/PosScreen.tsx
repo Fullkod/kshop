@@ -18,7 +18,22 @@ import {
   type PosSaleInput,
 } from "@kshop/core";
 import type { PosCatalogItem } from "@kshop/data";
-import { Alert, Badge, Button, Card, Dialog, Input, Label, Select, Minus, Plus, Search } from "@kshop/ui";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  CircleCheck,
+  Dialog,
+  Ellipsis,
+  Input,
+  Label,
+  Select,
+  Minus,
+  Plus,
+  Search,
+  cn,
+} from "@kshop/ui";
 import { useMemo, useRef, useState } from "react";
 import { PosDay } from "./PosDay";
 import { usePosSales } from "./pos-sync";
@@ -28,17 +43,31 @@ import type { PosCatalogSnapshot } from "./storage";
 type CartLine = { item: PosCatalogItem; quantity: number; unitPrice: number };
 type Paid = NonNullable<PosSaleInput["payments"]>[number] & { applied: number };
 
+/** The ticket in progress outlives leaving the Caja (to open a sale's order, say) until the app or page closes. */
+const drafts = new Map<string, CartLine[]>();
+
 const itemLabel = (item: PosCatalogItem) =>
   item.variantName ? `${item.productName} · ${item.variantName}` : item.productName;
 
-/** Selling at the counter, with or without a connection: search, add, charge. The sale is saved on the phone first. */
+/** Selling at the counter, with or without a connection: search, add, charge. The sale is saved on the phone first.
+ * The ticket is the screen; the catalog and the day's sales live in a sheet behind «⋯» (Roberto, 2026-11-05). */
 export function PosScreen({ storeId, online }: { storeId: string; online: boolean }) {
   const storage = usePosStorage();
   const place = usePosPlace();
   const catalog = usePosCatalog(storeId, online);
   const [query, setQuery] = useState("");
-  const [cart, setCart] = useState<CartLine[]>([]);
+  const [cart, setCartState] = useState<CartLine[]>(() => drafts.get(storeId) ?? []);
+  function setCart(next: CartLine[] | ((lines: CartLine[]) => CartLine[])) {
+    setCartState((lines) => {
+      const value = typeof next === "function" ? next(lines) : next;
+      drafts.set(storeId, value);
+      return value;
+    });
+  }
   const [charging, setCharging] = useState(false);
+  const [menu, setMenu] = useState(false);
+  // While the search has the focus the on-screen keyboard is up: the bottom bars step aside.
+  const [typing, setTyping] = useState(false);
   const [saved, setSaved] = useState<{ number: string; change: string | null } | null>(null);
   const queue = usePosSales(storeId, online);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -48,8 +77,12 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
   const results = useMemo(() => searchPosCatalog(index, query), [index, query]);
   const currency = (catalog.snapshot?.currency ?? "CUP") as CurrencyCode;
   const total = posCartTotal(cart);
+  const units = cart.reduce((sum, l) => sum + l.quantity, 0);
+  const pending = queue.sales ? queue.sales.filter((s) => !s.uploaded).length : null;
+  const held = queue.sales ? queue.sales.some((s) => s.held && !s.uploaded) : false;
 
-  function add(item: PosCatalogItem) {
+  /** A tap closes the keyboard to show the ticket; a code reader (Enter) keeps the search ready for the next code. */
+  function add(item: PosCatalogItem, keepTyping = false) {
     setSaved(null);
     setCart((lines) => {
       const found = lines.find((l) => l.item.variantId === item.variantId);
@@ -59,7 +92,8 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
       return [...lines, { item, quantity: 1, unitPrice: posItemPrice(item) }];
     });
     setQuery("");
-    searchRef.current?.focus();
+    if (keepTyping) searchRef.current?.focus();
+    else searchRef.current?.blur();
   }
 
   function setQuantity(variantId: string, quantity: number) {
@@ -77,55 +111,108 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
     const code = query.trim().toLowerCase();
     const exact = results.find((r) => r.sku.toLowerCase() === code);
     const only = results.length === 1 ? results[0] : undefined;
-    if (exact ?? only) add((exact ?? only) as PosCatalogItem);
+    if (exact ?? only) add((exact ?? only) as PosCatalogItem, true);
   }
 
   return (
-    <div className="flex flex-col gap-4 pb-28" data-testid="pos-screen">
-      <PosStatus
-        catalog={catalog}
-        online={online}
-        pending={queue.sales ? queue.sales.filter((s) => !s.uploaded).length : null}
-      />
+    <div
+      className={cn("flex flex-col gap-3", typing ? "pb-4" : "pb-28")}
+      data-testid="pos-screen"
+      data-pos-typing={typing || undefined}
+    >
+      {!online && (
+        <p className="rounded-md bg-muted px-3 py-2 text-sm" role="status" data-testid="pos-offline">
+          {place === "teléfono"
+            ? "Sin conexión. Lo guardado en este teléfono sigue disponible."
+            : "Sin conexión. Puedes seguir vendiendo, pero no recargues ni cierres esta página: sin internet no vuelve a abrirse."}
+        </p>
+      )}
 
-      {saved && (
+      {catalog.loaded && !catalog.snapshot && (
+        <Alert variant="destructive" data-testid="pos-no-catalog">
+          <span className="flex flex-col items-start gap-2">
+            <span>
+              Este {place} aún no tiene el catálogo.{" "}
+              {online ? "Descárgalo para vender." : "Conéctalo a internet una vez."}
+            </span>
+            {online && (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={catalog.refreshing}
+                onClick={() => void catalog.refresh()}
+              >
+                {catalog.refreshing ? "Descargando…" : "Descargar catálogo"}
+              </Button>
+            )}
+          </span>
+        </Alert>
+      )}
+
+      {catalog.snapshot && (
+        <div className="sticky top-0 z-10 -mx-4 flex items-center gap-2 bg-surface px-4 py-2">
+          <div className="relative flex-1">
+            <Search
+              size={18}
+              aria-hidden
+              className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              ref={searchRef}
+              enterKeyHint="search"
+              className="pl-10"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setTyping(true)}
+              onBlur={() => setTyping(false)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  onEnter();
+                }
+              }}
+              placeholder="Buscar por nombre o código"
+              aria-label="Buscar producto"
+              data-testid="pos-search"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => setMenu(true)}
+            aria-label={`Catálogo y ventas de hoy${pending ? ` (${pending} sin subir)` : ""}`}
+            className="relative flex size-11 shrink-0 items-center justify-center rounded-lg border bg-background text-muted-foreground"
+            data-testid="pos-menu"
+          >
+            <Ellipsis size={20} aria-hidden />
+            {!!pending && (
+              <span
+                className={cn(
+                  "absolute -top-1.5 -right-1.5 min-w-5 rounded-full px-1 text-center text-[11px] leading-5 font-bold text-white",
+                  held ? "bg-destructive" : "bg-primary",
+                )}
+              >
+                {pending}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {saved && query.trim() === "" && (
         <Alert data-testid="pos-saved">
           Venta {saved.number} guardada en este {place}.{saved.change ? ` Vuelto: ${saved.change}.` : ""}
         </Alert>
       )}
 
-      {catalog.snapshot && (
-        <div className="relative">
-          <Search
-            size={18}
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            ref={searchRef}
-            className="pl-10"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                onEnter();
-              }
-            }}
-            placeholder="Buscar por nombre o código"
-            aria-label="Buscar producto"
-            data-testid="pos-search"
-          />
-        </div>
-      )}
-
-      {query.trim() !== "" && (
+      {query.trim() !== "" ? (
         <ul className="flex flex-col gap-1" data-testid="pos-results">
           {results.length === 0 && <li className="p-3 text-sm text-muted-foreground">Sin resultados.</li>}
           {results.map((item) => (
             <li key={item.variantId}>
               <button
                 type="button"
+                // The search keeps the focus until the tap lands, so the list does not jump under the finger.
+                onPointerDown={(e) => e.preventDefault()}
                 onClick={() => add(item)}
                 className="flex min-h-12 w-full items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2 text-left"
               >
@@ -143,16 +230,15 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
             </li>
           ))}
         </ul>
-      )}
-
-      {cart.length > 0 && (
-        <Card className="flex flex-col gap-3" data-testid="pos-cart">
+      ) : cart.length > 0 ? (
+        <Card className="flex flex-col divide-y p-0" data-testid="pos-cart">
           {cart.map((line) => (
-            <div key={line.item.variantId} className="flex items-center justify-between gap-3">
+            <div key={line.item.variantId} className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
                 <p className="font-medium">{itemLabel(line.item)}</p>
                 <p className="text-sm text-muted-foreground">
                   {formatMoney(line.unitPrice, currency)}
+                  {line.quantity > 1 && ` · ${formatMoney(line.unitPrice * line.quantity, currency)}`}
                   {line.item.trackInventory && line.quantity > line.item.stock && (
                     <Badge variant="muted" className="ml-2">
                       Stock {line.item.stock}
@@ -160,7 +246,7 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
                   )}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-1.5">
                 <Button
                   size="sm"
                   variant="outline"
@@ -179,7 +265,7 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
                     const n = parseInt(e.target.value.replace(/\D/g, ""), 10);
                     if (n >= 1) setQuantity(line.item.variantId, n);
                   }}
-                  className="h-10 w-12 rounded-md border bg-background text-center font-semibold"
+                  className="h-10 w-11 rounded-md border bg-background text-center text-base font-semibold"
                   data-testid="pos-quantity"
                 />
                 <Button
@@ -194,12 +280,24 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
             </div>
           ))}
         </Card>
+      ) : (
+        catalog.snapshot &&
+        !saved && (
+          <p className="px-1 py-6 text-center text-sm text-muted-foreground">
+            Busca un producto o escanea su código para empezar la venta.
+          </p>
+        )
       )}
 
-      {cart.length > 0 && (
+      {cart.length > 0 && !typing && (
         <div className="fixed right-0 left-[var(--app-sidebar-width,0px)] bottom-[calc(var(--app-tabs-height,4rem)+env(safe-area-inset-bottom))] z-10 flex items-center justify-between gap-3 border-t bg-background px-4 py-3">
-          <span className="text-lg font-semibold" data-testid="pos-total">
-            {formatMoney(total, currency)}
+          <span className="flex flex-col">
+            <span className="text-xs text-muted-foreground">
+              {units} {units === 1 ? "producto" : "productos"}
+            </span>
+            <span className="text-lg font-semibold" data-testid="pos-total">
+              {formatMoney(total, currency)}
+            </span>
           </span>
           <Button onClick={() => setCharging(true)} data-testid="pos-charge">
             Cobrar
@@ -207,16 +305,21 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
         </div>
       )}
 
-      {queue.sales && queue.sales.length > 0 && (
-        <PosDay
-          sales={queue.sales}
-          currency={currency}
-          syncing={queue.syncing}
-          canUpload={queue.canUpload}
-          onUpload={() => void queue.sync()}
-          onVoid={queue.voidSale}
-        />
-      )}
+      <Dialog open={menu} onClose={() => setMenu(false)} title={`Caja en este ${place}`} compact>
+        <div className="flex flex-col gap-4">
+          <PosStatus catalog={catalog} online={online} pending={pending} />
+          {queue.sales && queue.sales.length > 0 && (
+            <PosDay
+              sales={queue.sales}
+              currency={currency}
+              syncing={queue.syncing}
+              canUpload={queue.canUpload}
+              onUpload={() => void queue.sync()}
+              onVoid={queue.voidSale}
+            />
+          )}
+        </div>
+      </Dialog>
 
       {charging && catalog.snapshot && (
         <PosCheckout
@@ -255,7 +358,6 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
             setCart([]);
             setCharging(false);
             void queue.saved();
-            searchRef.current?.focus();
           }}
         />
       )}
@@ -360,12 +462,24 @@ function PosCheckout({
     <Dialog open onClose={onClose} title={`Cobrar ${formatMoney(total, currency)}`}>
       <div className="flex flex-col gap-3" data-testid="pos-checkout">
         {payments.length > 0 && (
-          <ul className="flex flex-col gap-1 text-sm" data-testid="pos-payments">
+          <ul className="flex flex-col gap-2" data-testid="pos-payments">
             {payments.map((p, i) => (
-              <li key={i} className="flex items-center justify-between gap-2">
-                <span>
-                  {formatMoney(p.amount, p.currency ?? currency)}
-                  {p.currency && ` · aplica ${formatMoney(p.applied, currency)}`}
+              <li
+                key={i}
+                className="flex items-center justify-between gap-2 rounded-lg border border-success/30 bg-success-soft px-3 py-2"
+              >
+                <span className="flex min-w-0 items-start gap-2">
+                  <CircleCheck size={18} aria-hidden className="mt-0.5 shrink-0 text-success" />
+                  <span className="flex flex-col">
+                    <span className="font-semibold">
+                      Cobrado: {formatMoney(p.amount, p.currency ?? currency)}
+                    </span>
+                    {p.currency && (
+                      <span className="text-sm text-muted-foreground">
+                        Equivale a {formatMoney(p.applied, currency)}
+                      </span>
+                    )}
+                  </span>
                 </span>
                 <Button
                   size="sm"
@@ -383,7 +497,12 @@ function PosCheckout({
             ))}
           </ul>
         )}
-        <div className="grid grid-cols-2 gap-3">
+        {payments.length > 0 && remaining > 0 && (
+          <p className="font-semibold" data-testid="pos-remaining">
+            Falta por cobrar: {formatMoney(remaining, currency)}
+          </p>
+        )}
+        <div className="grid grid-cols-2 items-end gap-3">
           <div className="flex flex-col gap-1">
             <Label htmlFor="pos-currency">Moneda que entrega</Label>
             <Select
@@ -399,7 +518,7 @@ function PosCheckout({
             </Select>
           </div>
           <div className="flex flex-col gap-1">
-            <Label htmlFor="pos-amount">Monto ({paidIn})</Label>
+            <Label htmlFor="pos-amount">Cantidad que entrega ({paidIn})</Label>
             <Input
               id="pos-amount"
               inputMode="decimal"
@@ -450,7 +569,7 @@ function PosCheckout({
             role="status"
             data-testid="pos-preview"
           >
-            {!same && <p>Aplica {formatMoney(preview.applied, currency)}.</p>}
+            {!same && <p>Equivale a {formatMoney(preview.applied, currency)}.</p>}
             {preview.missing > 0 && (
               <p className="font-medium">Faltan {formatMoney(preview.missing, currency)}.</p>
             )}

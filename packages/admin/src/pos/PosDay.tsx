@@ -1,7 +1,8 @@
 "use client";
 
 import { formatMoney, posCartTotal, posDaySummary, type CurrencyCode } from "@kshop/core";
-import { Alert, Badge, Button, Card, useConfirm } from "@kshop/ui";
+import { Link } from "@kshop/storefront";
+import { Alert, Badge, Button, ChevronRight, useConfirm } from "@kshop/ui";
 import { usePosPlace } from "./PosStatus";
 import type { QueuedSale } from "./storage";
 
@@ -42,7 +43,7 @@ export function PosDay({
   }
 
   return (
-    <Card className="flex flex-col gap-3" data-testid="pos-day">
+    <section className="flex flex-col gap-3 border-t pt-4" data-testid="pos-day">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="font-semibold">Hoy en este {place}</h2>
@@ -80,11 +81,8 @@ export function PosDay({
 
       {todays.length > 0 && (
         <ul className="flex flex-col gap-2" data-testid="pos-day-list">
-          {todays.map((queued) => (
-            <li
-              key={queued.sale.id}
-              className="flex items-center justify-between gap-2 border-t pt-2 text-sm"
-            >
+          {todays.map((queued) => {
+            const summary = (
               <span className="min-w-0">
                 <span className="font-medium">{queued.sale.localNumber}</span>
                 {" · "}
@@ -99,15 +97,33 @@ export function PosDay({
                   <Badge variant="muted">Sin subir</Badge>
                 )}
               </span>
-              {!queued.uploaded && !queued.sale.voided && (
-                <Button size="sm" variant="ghost" onClick={() => void askVoid(queued)}>
-                  Anular
-                </Button>
-              )}
-            </li>
-          ))}
+            );
+            return (
+              <li key={queued.sale.id} className="border-t pt-2 text-sm">
+                {queued.uploaded ? (
+                  // Once uploaded the sale is an order: the row opens it (Roberto, 2026-11-05).
+                  <Link
+                    href={`/admin/orders/${queued.uploaded.orderId}`}
+                    className="-mx-2 flex min-h-10 items-center justify-between gap-2 rounded-md px-2 hover:bg-surface"
+                  >
+                    {summary}
+                    <ChevronRight size={16} aria-hidden className="shrink-0 text-muted-foreground" />
+                  </Link>
+                ) : (
+                  <span className="flex min-h-10 items-center justify-between gap-2">
+                    {summary}
+                    {!queued.sale.voided && (
+                      <Button size="sm" variant="ghost" onClick={() => void askVoid(queued)}>
+                        Anular
+                      </Button>
+                    )}
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
-    </Card>
+    </section>
   );
 }

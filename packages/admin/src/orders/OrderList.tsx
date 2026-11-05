@@ -180,8 +180,10 @@ export function OrderList({ initialTab = "pending" }: { initialTab?: ListTab }) 
           className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]"
         >
           {[
-            ...ORDER_TABS,
+            // «Mostrador» right after «Pendientes», within reach without scrolling the tabs (Roberto, 2026-11-05).
+            ...ORDER_TABS.slice(0, 1),
             ...(admin.enabledModules.has("pos") ? [{ key: "counter" as const, label: "Mostrador" }] : []),
+            ...ORDER_TABS.slice(1),
           ].map((t) => (
             <button
               key={t.key}

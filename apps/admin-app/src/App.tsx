@@ -614,7 +614,7 @@ function Shell({ onSwitch }: { onSwitch?: () => void }) {
             <Route
               path="/admin/pos"
               element={
-                <Screen>
+                <Screen title="Caja">
                   <PosScreen storeId={store.id} online={!offline} />
                 </Screen>
               }

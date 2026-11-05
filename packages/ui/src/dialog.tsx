@@ -53,9 +53,12 @@ export function Dialog({
       onClose={() => open && onClose()}
       className={cn(
         "m-0 mt-auto w-full max-w-none overflow-hidden bg-background p-0 text-foreground shadow-sf-lg",
-        compact ? "h-fit max-h-[90dvh] rounded-t-xl" : "h-dvh max-h-none",
+        // The native dialog lives outside the app's safe areas: on a phone it keeps clear of the status and gesture bars.
+        compact
+          ? "h-fit max-h-[90dvh] rounded-t-xl pb-[env(safe-area-inset-bottom)]"
+          : "h-dvh max-h-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]",
         "backdrop:bg-[color-mix(in_srgb,var(--ink)_55%,transparent)]",
-        "sm:m-auto sm:h-fit sm:max-h-[90dvh] sm:w-[calc(100%-2rem)] sm:rounded-xl sm:border",
+        "sm:m-auto sm:h-fit sm:max-h-[90dvh] sm:w-[calc(100%-2rem)] sm:rounded-xl sm:border sm:py-0",
         size === "md" ? "sm:max-w-xl" : size === "lg" ? "sm:max-w-3xl" : "sm:max-w-6xl",
         className,
       )}

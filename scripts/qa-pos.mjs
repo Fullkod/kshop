@@ -133,6 +133,18 @@ check("upload: a sale at another price", !!flaggedId, JSON.stringify(flaggedUplo
 
 const webOrders = [];
 const browser = await chromium.launch({ executablePath: chromiumPath(), headless: true });
+// The catalog and the day's sales are behind «⋯» in the Caja (2026-11-05).
+async function openPosMenu(target) {
+  if (await target.getByTestId("pos-status").isVisible()) return;
+  await target.getByTestId("pos-menu").click({ timeout: 60000 });
+  await target.getByTestId("pos-status").waitFor({ timeout: 10000 });
+}
+async function closePosMenu(target) {
+  if (!(await target.getByTestId("pos-status").isVisible())) return;
+  await target.getByRole("dialog").getByRole("button", { name: "Cerrar", exact: true }).click();
+  await target.getByTestId("pos-status").waitFor({ state: "detached", timeout: 10000 });
+}
+
 try {
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
   const errors = [];
@@ -261,6 +273,7 @@ try {
 
   // Selling from the web page, as someone with an iPhone would.
   const sell = async (target, label) => {
+    await closePosMenu(target);
     await target.getByTestId("pos-search").fill(first.productName);
     await target.getByTestId("pos-results").getByRole("button").first().click();
     await target.getByTestId("pos-charge").click();
@@ -270,9 +283,11 @@ try {
   };
   // The number of the order an uploaded sale became, to cancel it at the end.
   const uploadedOrder = async (target) => {
+    await openPosMenu(target);
     const row = target.getByTestId("pos-day-list").locator("li").first();
     await row.getByText(/^Pedido \d+$/).waitFor({ timeout: 40000 });
     const number = Number((await row.getByText(/^Pedido \d+$/).innerText()).replace(/\D/g, ""));
+    await closePosMenu(target);
     const { data } = await service
       .from("orders")
       .select("id, channel, customer_id")
@@ -344,18 +359,21 @@ try {
     /no recargues/.test(await page.getByTestId("pos-offline").innerText()),
   );
   check("Web, no connection: sells", await sell(page, "navegador"));
+  await openPosMenu(page);
   check(
     "Web, no connection: the sale waits",
     /: 1$/.test(await page.getByTestId("pos-pending").innerText()),
     await page.getByTestId("pos-pending").innerText(),
   );
   await page.screenshot({ path: join(OUT, "web-sin-conexion.png"), fullPage: true });
+  await closePosMenu(page);
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
   await page.getByText("Hay 1 venta sin subir").waitFor({ timeout: 10000 });
   await page.getByRole("button", { name: "Cancelar" }).click();
   check("Web: signing out with a sale to upload asks first", page.url().endsWith("/admin/pos"));
   await page.context().setOffline(false);
   await uploadedOrder(page);
+  await openPosMenu(page);
   check(
     "Web: the connection back uploads the sale",
     /: 0$/.test(await page.getByTestId("pos-pending").innerText()),

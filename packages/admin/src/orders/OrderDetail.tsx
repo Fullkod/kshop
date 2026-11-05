@@ -646,7 +646,7 @@ function PaymentsCard({
               {p.currency !== currency && Number(p.appliedAmount) > 0 && (
                 <span className="text-muted-foreground">
                   {" "}
-                  · {formatRate(Number(p.rateToOrder), p.currency as CurrencyCode, currency)} · aplica{" "}
+                  · {formatRate(Number(p.rateToOrder), p.currency as CurrencyCode, currency)} · equivale a{" "}
                   {formatMoney(Number(p.appliedAmount), currency)}
                 </span>
               )}
@@ -689,7 +689,7 @@ function PaymentsCard({
             </Select>
           </div>
           <div className="flex flex-col gap-1">
-            <Label htmlFor="pay-amount">Monto ({paidIn})</Label>
+            <Label htmlFor="pay-amount">Cantidad que entrega ({paidIn})</Label>
             <Input
               id="pay-amount"
               name="amount"
@@ -726,7 +726,7 @@ function PaymentsCard({
           {preview && remaining > 0 && (
             <div className="flex flex-col gap-2 rounded-md bg-muted p-3 text-sm sm:col-span-2" role="status">
               {shippingPending && <p>Envío por definir: se calcula sobre el subtotal.</p>}
-              {!same && <p>Aplica {formatMoney(preview.applied, currency)} al pedido.</p>}
+              {!same && <p>Equivale a {formatMoney(preview.applied, currency)}.</p>}
               {preview.missing > 0 && (
                 <p className="font-medium">Faltan {formatMoney(preview.missing, currency)}.</p>
               )}

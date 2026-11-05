@@ -159,7 +159,7 @@ export const articles: HelpArticle[] = [
         screenshot: "pos-sell-mobile",
       },
       {
-        text: "Pulsa «Cobrar». Elige la «Moneda que entrega» el cliente y escribe el monto. Si paga en otra moneda, Kshop sugiere la tasa (puedes cambiarla) y te dice el vuelto; si da menos, «Añadir pago» suma otro pago, por ejemplo una parte en USD y otra en CUP.",
+        text: "Pulsa «Cobrar». Elige la «Moneda que entrega» el cliente y escribe la «Cantidad que entrega». Si paga en otra moneda, Kshop sugiere la tasa (puedes cambiarla) y te dice el vuelto; si da menos, «Añadir pago» suma otro pago, por ejemplo una parte en USD y otra en CUP.",
       },
       {
         text: "Pulsa «Confirmar venta». Queda como pedido de «Mostrador», ya entregado, y aparece en Ventas de hoy y en Caja › Resumen.",
@@ -170,6 +170,7 @@ export const articles: HelpArticle[] = [
     ],
     tips: [
       "Con Kshop Admin instalada en el teléfono puedes vender sin internet: las ventas se guardan y se suben solas cuando vuelve la conexión.",
+      "El botón «⋯» junto al buscador muestra de cuándo es el catálogo (y lo actualiza), las ventas de hoy en ese teléfono y las que faltan por subir; el número sobre él son las ventas sin subir. Toca una venta ya subida para abrir su pedido: el ticket que estés cobrando te espera al volver.",
       "La venta no necesita teléfono del cliente.",
     ],
     related: ["new-order-arrived", "missing-section"],

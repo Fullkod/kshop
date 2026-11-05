@@ -51,6 +51,7 @@
 - [2026-11-01-sku-automatico.md](project/2026-11-01-sku-automatico.md) — Un SKU vacío se crea en el servidor del nombre del producto (`skuBase`/`fillMissingSkus`), único en la tienda; el Excel sigue exigiéndolo
 - [2026-11-02-codigo-de-atributo.md](project/2026-11-02-codigo-de-atributo.md) — Campo «Código» del atributo (como Saleor): dos «Talla» (ropa, calzado) con códigos distintos; error claro si se repite
 - [2026-10-31-ksh0003-calculadora-precio.md](project/2026-10-31-ksh0003-calculadora-precio.md) — KSH0003: calculadora de costo unitario + margen en el editor de producto (diálogo, web y Kshop Admin), `unitCost`/`priceFromCost` en core, teléfonos cubanos como `+53 5 256 4206`; `pnpm qa:price-calculator`
+- [2026-11-05-caja-v2.md](project/2026-11-05-caja-v2.md) — Caja v2 en el teléfono: ticket como pantalla, «⋯» con catálogo y ventas del día (abren su pedido), teclado sin barras, «Equivale a», pagos hechos en verde, safe area en `Dialog`, «Mostrador» segundo en Pedidos
 - [2026-10-30-donde-quedamos.md](project/2026-10-30-donde-quedamos.md) — Superado: cobro mixto y POS fases 1-2 en producción
 
 ## feedback/ — Correcciones y preferencias
