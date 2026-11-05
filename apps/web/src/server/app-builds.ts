@@ -119,17 +119,27 @@ export async function listPlatformApps(): Promise<PlatformAppsResponse> {
   };
 }
 
-/** Publish or hide a build; publishing a store build answers that store's request. */
+/**
+ * Publish or hide a build; publishing a store build answers that store's request. Publishing also deletes the older
+ * builds of the same app (row and APK): installed apps only look for the latest one, and old APKs only take space.
+ * Newer builds still hidden (being tested) stay.
+ */
 export async function setAppBuildPublished(id: string, published: boolean): Promise<void> {
   const db = getServiceClient();
   const { data, error } = await db
     .from("store_app_builds")
     .update({ published })
     .eq("id", id)
-    .select("store_id, stores (slug)")
-    .maybeSingle<{ store_id: string | null; stores: { slug: string } | null }>();
+    .select("store_id, app_id, version_code, stores (slug)")
+    .maybeSingle<{
+      store_id: string | null;
+      app_id: string;
+      version_code: number;
+      stores: { slug: string } | null;
+    }>();
   if (error) throw error;
   if (!data) throw notFound("Versión");
+  if (published) await deleteOlderBuilds(data.app_id, data.version_code);
   if (data.store_id && data.stores) {
     if (published) {
       const { error: requestError } = await db
@@ -142,4 +152,20 @@ export async function setAppBuildPublished(id: string, published: boolean): Prom
     // expired entry would block the storefront render.
     revalidateTag(storeAppCacheTag(data.stores.slug), "max");
   }
+}
+
+/** Rows first (nothing can offer a deleted APK), then the files; a file left behind is only wasted space. */
+async function deleteOlderBuilds(appId: string, versionCode: number): Promise<void> {
+  const db = getServiceClient();
+  const { data, error } = await db
+    .from("store_app_builds")
+    .delete()
+    .eq("app_id", appId)
+    .lt("version_code", versionCode)
+    .select("apk_path");
+  if (error) throw error;
+  const paths = (data ?? []).map((b) => b.apk_path as string);
+  if (!paths.length) return;
+  const { error: storageError } = await db.storage.from("store-apps").remove(paths);
+  if (storageError) console.error("store-apps: older APKs not removed", paths, storageError);
 }

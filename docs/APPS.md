@@ -54,6 +54,8 @@ pnpm app:keystore <slug|admin> --github
      petición del dueño.
    - Las apps ya instaladas muestran «Actualizar».
    - Kshop Admin aparece para descargar en Admin › App móvil.
+   - Se borran las versiones anteriores de esa app (registro y APK del bucket). Las más nuevas que sigan ocultas
+     se quedan. Por eso hay que probar antes de publicar: «Ocultar» la versión publicada deja la app sin descarga.
 
 ## Icono y splash
 

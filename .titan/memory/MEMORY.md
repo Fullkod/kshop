@@ -38,7 +38,7 @@
 - [2026-10-29-donde-quedamos.md](project/2026-10-29-donde-quedamos.md) — **Dónde quedamos** (pausa 2026-10-29): R12–R14 hechos y en `main`, qué sigue (8.6, 8.7, logs R11) y cómo retomar
 - [credito-fullkod.md](project/credito-fullkod.md) — Crédito «Un producto de Fullkod» en plataforma, superadmin, admin y pie de todas las tiendas; **próximo:** ajuste en el admin para mostrarlo u ocultarlo en la tienda
 - [tienda-demo.md](project/tienda-demo.md) — Tienda de pruebas permanente «Tienda Demo» (demo.kshop), plan Pro, dueño y empleado; credenciales en Tasknic y .env.local
-- [tienda-minimercado.md](project/tienda-minimercado.md) — Cliente real: portada y marca montadas sin catálogo; el superadmin ya puede subir a `store-media`
+- [tienda-minimercado.md](project/tienda-minimercado.md) — Cliente real: portada y marca montadas sin catálogo; el superadmin ya puede subir a `store-media`; 2026-11-04: 2 empleados y Excel de la agenda de precios por revisar
 - [pendiente-superadmin-importar-excel.md](project/pendiente-superadmin-importar-excel.md) — Hecho 2026-10-30: el superadmin importa Excel a cualquier tienda (`store-imports`, solo INSERT en `imports/`)
 - [pendiente-editar-categorias.md](project/pendiente-editar-categorias.md) — Hecho 2026-10-30: editar categorías daba 500 (trigger con `ltree` y `search_path` vacío); cuidado con operadores de extensiones
 - [2026-11-01-dominio-klaushop.md](project/2026-11-01-dominio-klaushop.md) — **Corte 8.7 hecho:** `klaushop.fullkod.com` sirve la tienda `klau` (fila `custom` en `store_domains`, Vercel por Roberto); falta `--delta` y verify final

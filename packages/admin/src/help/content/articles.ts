@@ -748,10 +748,13 @@ export const articles: HelpArticle[] = [
         text: "Genera el APK con el workflow «Android app» de GitHub Actions y súbelo con pnpm app:publish (ver docs/APPS.md). La versión aparece «Oculta».",
       },
       {
+        text: "Instala la versión oculta y pruébala antes de publicarla: al pulsar «Publicar» las versiones anteriores de esa app se borran.",
+      },
+      {
         text: "En Apps, revisa la versión (número y tamaño) y pulsa «Publicar»: desde ese momento es la que descargan los clientes o el equipo.",
       },
       {
-        text: "Si una versión da problemas, pulsa «Ocultar» para retirarla de la descarga.",
+        text: "Si una versión publicada da problemas, «Ocultar» la retira de la descarga y la app queda sin versión hasta que publiques una nueva.",
       },
     ],
     related: ["mobile-app"],

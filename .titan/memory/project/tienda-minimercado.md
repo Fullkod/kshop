@@ -36,3 +36,17 @@ Pedido por Roberto: un pie como el de Klau's Shop, solo con lo que le encaja. Es
 - No se copió «Encargos» (no lo ofrecen) ni zonas de entrega (aún sin envíos configurados). Sin envíos, el checkout
   sigue funcionando con la entrega «a convenir».
 - Se edita en Admin › Apariencia › Menús y Páginas.
+
+## Agenda de precios y equipo (2026-11-04)
+- **Equipo:** dos empleados (`staff`) creados en producción con correo ya confirmado y contraseña elegida por el negocio
+  (Auth admin + `store_member_add` con el dueño como actor). Las credenciales las tiene Roberto, no van aquí.
+- **Agenda:** fotos de la libreta y la pizarra de la nevera en `products/04-11-26/` (solo nombre y precio; la columna
+  «Costo» de la libreta está vacía). Generador `catalogo/_build/agenda_2026_11_04.py` → `catalogo/minimercado-agenda-2026-11-04.xlsx`:
+  hoja «Productos» para importar con «Actualizarlos con los datos del Excel» (cambios de precio, 27 nuevos en Borrador,
+  categoría a los 17 productos creados a mano que no tenían) y hoja «Revisión» con cada línea, su producto en Kshop y las
+  dudas. 2026-11-05: Roberto revisó «Productos» y respondió en «Revisión» (`_build/agenda_2026_11_04_casar.py` y
+  `_respuestas.py`): 106 filas (98 publicados, 6 archivados —duplicados—, 2 en borrador). Luego publicó también los 25
+  borradores que no salían en la agenda (`_publicar.py`): 130 filas, 126 publicados y 4 archivados, todas con categoría;
+  «Revisión» vacía. «La Florida (paquete blanco)» (MM-0172, duplicado de la levadura) se borró de la BD el 2026-11-05 con
+  sus imágenes. Falta importar con «Actualizarlos con los datos del Excel».
+- En la tienda hay duplicados creados a mano (café espresso, levadura La Florida, toallitas húmedas) y un SKU «1.» (Roberto lo cambió a `MM-0202`).
