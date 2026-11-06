@@ -27,6 +27,7 @@ const contactRow = (i: NotificationContactInput) => ({
   phone: i.phone,
   notify_new_order: i.notifyNewOrder,
   notify_payment_recorded: i.notifyPaymentRecorded,
+  notify_cash_closing: i.notifyCashClosing,
   show_to_customer: i.showToCustomer,
   is_active: i.isActive,
 });

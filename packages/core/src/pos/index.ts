@@ -44,6 +44,20 @@ export const posSaleSchema = z.object({
 });
 export type PosSaleInput = z.infer<typeof posSaleSchema>;
 
+/** Money per currency: {"CUP": 500}. */
+const moneyByCurrency = z.partialRecord(currencyCodeSchema, money);
+
+/** Closing the day at the counter (KSH0012): what was counted, the float of that day if it differs, a note. */
+export const posClosingSchema = z.object({
+  counted: moneyByCurrency,
+  float: moneyByCurrency.optional(),
+  note: z.string().trim().max(500).optional(),
+});
+export type PosClosingInput = z.infer<typeof posClosingSchema>;
+
+/** The float the till opens with every day, set by owner or admin. */
+export const posFloatSchema = z.object({ float: moneyByCurrency });
+
 /** Small batches, one after another: the database is a Nano. */
 export const POS_BATCH_SIZE = 20;
 export const posSalesSchema = z.object({ sales: z.array(posSaleSchema).min(1).max(POS_BATCH_SIZE) });

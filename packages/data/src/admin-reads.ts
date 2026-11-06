@@ -30,6 +30,26 @@ export type PosSaleInfo = {
   flags: PosFlag[];
 };
 
+export type PosClosing = {
+  id: string;
+  day: string;
+  sequence: number;
+  cashier: string | null;
+  float: Record<string, number>;
+  expected: {
+    sales: number;
+    voided: number;
+    cash: Record<string, number>;
+    expected_cash: Record<string, number>;
+    methods: { name: string; currency: string; amount: number }[];
+  };
+  counted: Record<string, number>;
+  note: string | null;
+  closedAt: string;
+  orders: { id: string; number: number; cancelled: boolean }[];
+};
+export type PosClosings = { float: Record<string, number>; closings: PosClosing[] };
+
 export type PosOverview = {
   count: number;
   cancelled: number;
@@ -117,6 +137,9 @@ export function createAdminReads(options: AdminReadsOptions) {
     order: (orderId: string) => rpc<ResultOf<typeof AdminOrderQuery>>("admin_order", { p_order_id: orderId }),
     /** Null when the order is not a counter sale. */
     posSale: (orderId: string) => rpc<PosSaleInfo | null>("admin_pos_sale", { p_order_id: orderId }),
+    /** KSH0012: closings of the last days (own for staff, all for owner and admin) and the float. */
+    posClosings: (storeId: string, days = 30) =>
+      rpc<PosClosings>("admin_pos_closings", { p_store_id: storeId, p_days: days }),
     posOverview: (storeId: string, days: number) =>
       rpc<PosOverview>("admin_pos_overview", { p_store_id: storeId, p_days: days }),
     checkoutSettings: (storeId: string) =>

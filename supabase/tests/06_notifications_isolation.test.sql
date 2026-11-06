@@ -172,7 +172,7 @@ select tests.eq('staff A: reads the log of A only',
 select tests.check('staff A: reads the log of A', (select count(*) from public.notification_log)::int >= 6);
 select tests.eq('staff A: platform defaults and its own template', (
   select count(*) filter (where store_id is null)::text || '+' || count(*) filter (where store_id is not null)
-  from public.whatsapp_templates), '11+1');
+  from public.whatsapp_templates), '12+1');
 select tests.eq('staff A: one contact (its own)', (select count(*) from public.store_notification_contacts)::int, 1);
 select tests.eq('staff A: cannot write contacts directly', tests.affected(format(
   $$insert into public.store_notification_contacts (store_id, name, phone) values (%L, 'X', '+5355555999')$$,

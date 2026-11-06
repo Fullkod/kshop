@@ -79,6 +79,7 @@ describe("help context and audiences", () => {
       ["/admin/discounts/vouchers", "vouchers"],
       ["/admin/whatsapp-notifications/log", "whatsapp-log"],
       ["/admin/pos", "pos"],
+      ["/admin/pos/closings", "pos-closings"],
       ["/admin/sales", "sales-today"],
       ["/admin/more", "home"],
       ["/admin/team/", "team"],

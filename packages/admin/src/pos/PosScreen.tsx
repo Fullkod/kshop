@@ -37,6 +37,7 @@ import {
 import { useMemo, useRef, useState } from "react";
 import { useAdmin } from "../admin-context";
 import { LinePriceDialog } from "../LinePriceDialog";
+import { PosCloseDay } from "./PosCloseDay";
 import { PosDay } from "./PosDay";
 import { usePosSales } from "./pos-sync";
 import { PosStatus, usePosCatalog, usePosPlace, usePosStorage } from "./PosStatus";
@@ -60,7 +61,16 @@ const itemLabel = (item: PosCatalogItem) =>
 
 /** Selling at the counter, with or without a connection: search, add, charge. The sale is saved on the phone first.
  * The ticket is the screen; the catalog and the day's sales live in a sheet behind «⋯» (Roberto, 2026-11-05). */
-export function PosScreen({ storeId, online }: { storeId: string; online: boolean }) {
+export function PosScreen({
+  storeId,
+  online,
+  closingsHref,
+}: {
+  storeId: string;
+  online: boolean;
+  /** Kshop Admin: its screen of closings (the web has the «Cierres» tab instead). */
+  closingsHref?: string;
+}) {
   const storage = usePosStorage();
   const place = usePosPlace();
   const catalog = usePosCatalog(storeId, online);
@@ -360,6 +370,16 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
               canUpload={queue.canUpload}
               onUpload={() => void queue.sync()}
               onVoid={queue.voidSale}
+            />
+          )}
+          {catalog.snapshot && (
+            <PosCloseDay
+              storeId={storeId}
+              currency={currency}
+              online={online}
+              pending={pending ?? 0}
+              onUpload={queue.sync}
+              closingsHref={closingsHref}
             />
           )}
         </div>

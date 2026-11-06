@@ -349,111 +349,111 @@ export const StorefrontFacetsQuery = graphql(`
 /** Everything the product page shows (also the featured product of the home, read by id). */
 export const StorefrontProductFullFragment = graphql(`
   fragment StorefrontProductFull on Products {
+    id
+    slug
+    name
+    description
+    descriptionPlain
+    seoTitle
+    seoDescription
+    minPrice
+    maxPrice
+    inStock
+    primaryMediaUrl
+    categoryId
+    brands {
+      name
+      slug
+    }
+    categories {
+      id
+      name
+      slug
+      parentId
+    }
+    productMediaCollection(orderBy: [{ sortOrder: AscNullsLast }], first: 30) {
+      edges {
+        node {
           id
-          slug
+          url
+          thumbUrl
+          alt
+        }
+      }
+    }
+    productAttributeValuesCollection(first: 50) {
+      edges {
+        node {
+          valueText
+          valueNumeric
+          valueBoolean
+          valueDate
+          attributes {
+            name
+            unit
+            visibleInStorefront
+            sortOrder
+          }
+          attributeValues {
+            name
+          }
+        }
+      }
+    }
+    productVariantsCollection(orderBy: [{ sortOrder: AscNullsLast }], first: 100) {
+      edges {
+        node {
+          id
+          sku
           name
-          description
-          descriptionPlain
-          seoTitle
-          seoDescription
-          minPrice
-          maxPrice
-          inStock
-          primaryMediaUrl
-          categoryId
-          brands {
-            name
-            slug
+          price
+          compareAtPrice
+          trackInventory
+          stockAvailable
+          variantPromotions {
+            promoPrice
+            reward
+            value
+            promotionName
           }
-          categories {
-            id
-            name
-            slug
-            parentId
-          }
-          productMediaCollection(orderBy: [{ sortOrder: AscNullsLast }], first: 30) {
+          variantPricesCollection(first: 3) {
             edges {
               node {
-                id
-                url
-                thumbUrl
-                alt
-              }
-            }
-          }
-          productAttributeValuesCollection(first: 50) {
-            edges {
-              node {
-                valueText
-                valueNumeric
-                valueBoolean
-                valueDate
-                attributes {
-                  name
-                  unit
-                  visibleInStorefront
-                  sortOrder
-                }
-                attributeValues {
-                  name
-                }
-              }
-            }
-          }
-          productVariantsCollection(orderBy: [{ sortOrder: AscNullsLast }], first: 100) {
-            edges {
-              node {
-                id
-                sku
-                name
+                currency
                 price
                 compareAtPrice
-                trackInventory
-                stockAvailable
-                variantPromotions {
-                  promoPrice
-                  reward
+              }
+            }
+          }
+          variantMediaCollection(first: 10) {
+            edges {
+              node {
+                mediaId
+              }
+            }
+          }
+          variantAttributeValuesCollection(first: 10) {
+            edges {
+              node {
+                attributeId
+                valueId
+                attributeValues {
+                  name
+                  slug
                   value
-                  promotionName
-                }
-                variantPricesCollection(first: 3) {
-                  edges {
-                    node {
-                      currency
-                      price
-                      compareAtPrice
-                    }
-                  }
-                }
-                variantMediaCollection(first: 10) {
-                  edges {
-                    node {
-                      mediaId
-                    }
-                  }
-                }
-                variantAttributeValuesCollection(first: 10) {
-                  edges {
-                    node {
-                      attributeId
-                      valueId
-                      attributeValues {
-                        name
-                        slug
-                        value
-                        sortOrder
-                        attributes {
-                          name
-                          slug
-                          sortOrder
-                        }
-                      }
-                    }
+                  sortOrder
+                  attributes {
+                    name
+                    slug
+                    sortOrder
                   }
                 }
               }
             }
           }
+        }
+      }
+    }
   }
 `);
 

@@ -40,6 +40,8 @@ const ADMIN_PREFIXES: [string, HelpContext][] = [
   ["/admin/sales-today", "sales-today"],
   // Kshop Admin's «Ventas» tab.
   ["/admin/sales", "sales-today"],
+  // Kshop Admin's screen of closings (the web shows them in a tab of the Caja).
+  ["/admin/pos/closings", "pos-closings"],
   ["/admin/pos", "pos"],
   ["/admin/billing", "billing"],
   ["/admin/team", "team"],

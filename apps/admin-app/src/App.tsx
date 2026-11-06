@@ -7,6 +7,7 @@ import {
   saveCachedAdminState,
   OrderDetail,
   OrderList,
+  PosClosings,
   PosScreen,
   ReceivedByMethod,
   ProductEditor,
@@ -619,7 +620,17 @@ function Shell({ onSwitch }: { onSwitch?: () => void }) {
               path="/admin/pos"
               element={
                 <Screen title="Caja">
-                  <PosScreen storeId={store.id} online={!offline} />
+                  <PosScreen storeId={store.id} online={!offline} closingsHref="/admin/pos/closings" />
+                </Screen>
+              }
+            />
+          )}
+          {pos && (
+            <Route
+              path="/admin/pos/closings"
+              element={
+                <Screen title="Cierres de caja">
+                  <PosClosings />
                 </Screen>
               }
             />

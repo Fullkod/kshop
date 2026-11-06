@@ -1,10 +1,18 @@
 "use client";
 
 import { formatMoney, formatRate, orderCode, posFlagText } from "@kshop/core";
-import { useCheckoutSettings, LoadError, ORDER_TABLES, PosScreen, useStoreVersion } from "@kshop/admin";
+import {
+  useCheckoutSettings,
+  LoadError,
+  ORDER_TABLES,
+  PosClosings,
+  PosScreen,
+  useStoreVersion,
+} from "@kshop/admin";
 import type { PosOverview } from "@kshop/data";
 import { Card, cn } from "@kshop/ui";
 import { Link, useStore } from "@kshop/storefront";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { menuSection, useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useSession } from "@/lib/session";
@@ -42,37 +50,36 @@ export function PosPage() {
   );
   // A managed section is read-only for the staff: the server would refuse their sales.
   const canSell = menuSection(admin, "pos").visibility !== "managed";
-  const [chosen, setChosen] = useState<"sell" | "summary">("sell");
-  const tab = canSell ? chosen : "summary";
+  // ?tab=closings: the link of the WhatsApp of a closing (KSH0012).
+  const initial = useSearchParams().get("tab") === "closings" ? "closings" : "sell";
+  const [chosen, setChosen] = useState<"sell" | "summary" | "closings">(initial);
+  const tab = canSell || chosen !== "sell" ? chosen : "summary";
 
   return (
     <div className="flex max-w-3xl flex-col gap-4">
       <h1 className="text-2xl font-semibold">Caja</h1>
-      {canSell && (
-        <div role="tablist" aria-label="Caja" className="flex gap-1.5">
-          {(
-            [
-              { key: "sell", label: "Vender" },
-              { key: "summary", label: "Resumen" },
-            ] as const
-          ).map((t) => (
-            <button
-              key={t.key}
-              role="tab"
-              aria-selected={tab === t.key}
-              onClick={() => setChosen(t.key)}
-              className={cn(
-                "h-[34px] rounded-full border px-3.5 text-sm whitespace-nowrap touch:h-10",
-                tab === t.key
-                  ? "border-night bg-night font-semibold text-white"
-                  : "bg-background hover:bg-surface",
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      )}
+      <div role="tablist" aria-label="Caja" className="flex gap-1.5">
+        {[
+          ...(canSell ? [{ key: "sell", label: "Vender" } as const] : []),
+          { key: "summary", label: "Resumen" } as const,
+          { key: "closings", label: "Cierres" } as const,
+        ].map((t) => (
+          <button
+            key={t.key}
+            role="tab"
+            aria-selected={tab === t.key}
+            onClick={() => setChosen(t.key)}
+            className={cn(
+              "h-[34px] rounded-full border px-3.5 text-sm whitespace-nowrap touch:h-10",
+              tab === t.key
+                ? "border-night bg-night font-semibold text-white"
+                : "bg-background hover:bg-surface",
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
       {/* Hidden, not unmounted: looking at the summary does not lose the sale in progress. */}
       {canSell && (
         <div hidden={tab !== "sell"} className="[--app-tabs-height:0px] md:[--app-sidebar-width:248px]">
@@ -80,6 +87,7 @@ export function PosPage() {
         </div>
       )}
       {tab === "summary" && <PosSummary />}
+      {tab === "closings" && <PosClosings />}
     </div>
   );
 }

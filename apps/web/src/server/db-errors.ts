@@ -83,6 +83,9 @@ export function mapDbError(error: unknown, entity = "El registro"): never {
       if (error.hint === "shipping_required")
         throw new HttpError(409, "shipping_required", error.message ?? "");
       if (error.hint === "store_inactive") throw new HttpError(404, "not_found", error.message ?? "");
+      // KSH0012: a second closing of the day with no sale after the first one.
+      if (error.hint === "nothing_to_close")
+        throw new HttpError(409, "nothing_to_close", error.message ?? "");
       // Phase 4: a voucher that does not apply (expired, no uses left, minimum not reached…).
       if (error.hint === "voucher_invalid") {
         throw new HttpError(422, "voucher_invalid", error.message ?? "", {

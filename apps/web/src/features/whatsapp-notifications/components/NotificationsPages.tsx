@@ -185,6 +185,7 @@ export function ContactsPage() {
                   {formatPhone(c.phone)}
                   {c.notifyNewOrder && " · pedidos nuevos"}
                   {c.notifyPaymentRecorded && " · pagos"}
+                  {c.notifyCashClosing && " · cierres de caja"}
                   {c.showToCustomer && " · visible al cliente"}
                 </span>
               </span>
@@ -236,6 +237,7 @@ function ContactForm({
   const [flags, setFlags] = useState({
     notifyNewOrder: contact?.notifyNewOrder ?? true,
     notifyPaymentRecorded: contact?.notifyPaymentRecorded ?? false,
+    notifyCashClosing: contact?.notifyCashClosing ?? true,
     showToCustomer: contact?.showToCustomer ?? true,
     isActive: contact?.isActive ?? true,
   });
@@ -288,6 +290,7 @@ function ContactForm({
       <div className="flex flex-col gap-1 sm:col-span-2">
         {toggle("notifyNewOrder", "Recibe los pedidos nuevos")}
         {toggle("notifyPaymentRecorded", "Recibe los pagos registrados")}
+        {toggle("notifyCashClosing", "Recibe el cierre de caja de cada día")}
         {toggle("showToCustomer", "El cliente lo ve como contacto de la tienda")}
         {toggle("isActive", "Activo")}
       </div>

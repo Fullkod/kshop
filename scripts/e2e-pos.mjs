@@ -321,6 +321,37 @@ async function run() {
   );
   await service.from("store_section_settings").delete().eq("store_id", storeA.id);
 
+  // KSH0012: closing the day.
+  r = await staffA("PATCH", `${A}/settings`, { float: { CUP: 500 } });
+  check("float: staff cannot set it -> 403", r.status === 403, r);
+  r = await ownerA("PATCH", `${A}/settings`, { float: { CUP: 500 } });
+  check("float: the owner sets it", r.status === 200 && r.body.float.CUP === 500, r);
+  r = await staffA("GET", `${A}/closings/preview`);
+  check(
+    "closing preview: the float is in what should be there",
+    r.status === 200 && r.body.float.CUP === 500 && r.body.expectedCash.CUP === 500 + (r.body.cash.CUP ?? 0),
+    r.body,
+  );
+  const expectedCup = r.body.expectedCash?.CUP ?? 0;
+  r = await ownerB("GET", `${A}/closings/preview`);
+  check("closing preview of A from B -> 403", r.status === 403, r);
+  r = await staffA("POST", `${A}/closings`, { counted: { CUP: -1 } });
+  check("closing: a negative count -> 400", r.status === 400, r);
+  r = await staffA("POST", `${A}/closings`, { counted: { CUP: expectedCup - 50 }, note: "e2e" });
+  check(
+    "closing: saved with what is missing",
+    r.status === 201 && r.body.sequence === 1 && r.body.difference.CUP === -50,
+    r,
+  );
+  r = await staffA("POST", `${A}/closings`, { counted: { CUP: 0 } });
+  check(
+    "closing again with no new sale -> 409",
+    r.status === 409 && r.body.error.code === "nothing_to_close",
+    r,
+  );
+  r = await ownerB("POST", `${A}/closings`, { counted: { CUP: 0 } });
+  check("closing of A from B -> 403", r.status === 403, r);
+
   await service.from("stores").update({ status: "suspended" }).eq("id", storeA.id);
   r = await staffA("POST", `${A}/sales`, { sales: [sale(variant.id, 1, 1000)] });
   check("suspended store: refused, the phone keeps the sale", r.status >= 400 && r.status < 500, r);

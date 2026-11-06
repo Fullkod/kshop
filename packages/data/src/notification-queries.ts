@@ -16,6 +16,7 @@ export const NotificationSettingsQuery = graphql(`
           phone
           notifyNewOrder
           notifyPaymentRecorded
+          notifyCashClosing
           showToCustomer
           isActive
         }

@@ -6,7 +6,14 @@ import { phoneSchema } from "../orders/phone";
 
 export const NOTIFICATION_AUDIENCES = ["store", "customer"] as const;
 export type NotificationAudience = (typeof NOTIFICATION_AUDIENCES)[number];
-export const NOTIFICATION_STATUSES = ["pending", "sending", "sent", "simulated", "failed", "skipped"] as const;
+export const NOTIFICATION_STATUSES = [
+  "pending",
+  "sending",
+  "sent",
+  "simulated",
+  "failed",
+  "skipped",
+] as const;
 export type NotificationStatus = (typeof NOTIFICATION_STATUSES)[number];
 export const WHATSAPP_MODES = ["off", "dry_run", "live"] as const;
 export type WhatsappMode = (typeof WHATSAPP_MODES)[number];
@@ -14,6 +21,7 @@ export type WhatsappMode = (typeof WHATSAPP_MODES)[number];
 export const NOTIFICATION_EVENTS = [
   { event: "order_created", audience: "store", label: "Pedido nuevo (a la tienda)" },
   { event: "payment_recorded", audience: "store", label: "Pago registrado (a la tienda)" },
+  { event: "cash_closing", audience: "store", label: "Cierre de caja (a la tienda)" },
   { event: "order_created", audience: "customer", label: "Pedido recibido" },
   { event: "pending_payment", audience: "customer", label: "Pedido confirmado, pendiente de pago" },
   { event: "paid", audience: "customer", label: "Pago recibido" },
@@ -60,6 +68,14 @@ export const TEMPLATE_VARIABLES = {
   enlace_pedido: "Enlace al pedido (cliente)",
   enlace_admin: "Enlace al pedido en el admin",
   codigo: "Código de recuperación",
+  empleado: "Quién cerró la caja",
+  dia: "Día del cierre",
+  esperado: "Efectivo que debe haber (con el fondo)",
+  contado: "Efectivo contado",
+  diferencia: "Si cuadra, sobra o falta",
+  otros_metodos: "Otros métodos a comprobar (transferencias…)",
+  ventas: "Ventas y anuladas del cierre",
+  nota: "Nota del cierre",
 } as const;
 
 const knownVariables = (body: string) =>
@@ -84,6 +100,7 @@ export const notificationContactSchema = z.object({
   phone: phoneSchema,
   notifyNewOrder: z.boolean().default(true),
   notifyPaymentRecorded: z.boolean().default(false),
+  notifyCashClosing: z.boolean().default(true),
   showToCustomer: z.boolean().default(true),
   isActive: z.boolean().default(true),
 });

@@ -1,6 +1,6 @@
 # PRP KSH0012: Cierre de caja
 
-> **Estado**: PENDIENTE (falta el OK de Roberto y la pregunta P1)
+> **Estado**: HECHO 2026-11-06 (aprobado por Roberto; P1 = ajuste fijo por tienda, «validamos en la práctica»).
 > **Fecha**: 2026-11-06
 > **Proyecto**: Kshop · Tasknic KSH0012
 
@@ -110,3 +110,18 @@ alter table public.pos_sales add column closing_id uuid references public.pos_cl
   Hay que añadirlo (Admin › Avisos WhatsApp) antes de usarlo.
 - WhatsApp está en «Real» en producción: los `e2e`/`qa` de esta fase van a la base de prueba (dry_run).
 - Ventas de la caja **web** (sin teléfono) también tienen `cashier_id`: entran en el cierre de quien las hizo.
+
+## Hecho (2026-11-06)
+- Migración `20261108102100_pos_closings.sql` (prueba y producción): `pos_closings`, `pos_sales.closing_id`,
+  `stores.pos_float`, `store_notification_contacts.notify_cash_closing`, `pos_closing_preview`, `pos_close_day`,
+  `admin_pos_closings`, plantilla `cash_closing`. Efectivo = pagos sin método o con método «Efectivo…»; el resto aparte.
+- API: `GET pos/closings/preview`, `POST pos/closings`, `PATCH pos/settings` (fondo, admin+).
+- UI: «⋯» › «Cerrar el día» (`PosCloseDay`), Caja › Cierres en la web y `/admin/pos/closings` en Kshop Admin
+  (`PosClosings`, con el fondo para dueño/admin), casilla «Recibe el cierre de caja» en los contactos.
+- Pruebas: suite `22_pos_closings_isolation` (818/818 en prueba y producción), `e2e:pos` 40/40, QA en navegador
+  (`.titan/qa/ksh0012-cierre/`). Minimercado: contacto «Dueño» +5355733684 solo para cierres.
+
+## Aprendizajes
+- `pnpm db:test:query "<sql>"` pasa por el shell de Windows: se pierden los saltos de línea y `>` redirige. Para
+  SQL de varias líneas, `pnpm db:test:query -f archivo.sql`.
+- En `p_input -> 'x'` un JSON `null` no es SQL `NULL`: `coalesce` no lo salta; comprobar `jsonb_typeof`.

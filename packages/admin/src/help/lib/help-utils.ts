@@ -24,6 +24,7 @@ export const HELP_CONTEXT_LABEL: Record<HelpContext, string> = {
   "whatsapp-templates": "Mensajes de WhatsApp",
   "whatsapp-log": "Historial de WhatsApp",
   pos: "Caja",
+  "pos-closings": "Cierres de caja",
   products: "Productos",
   product: "Producto",
   categories: "Categorías",

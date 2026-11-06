@@ -23,3 +23,5 @@ export * from "./pos/PosStatus";
 export * from "./pos/PosScreen";
 export * from "./pos/pos-sync";
 export * from "./pos/PosDay";
+export * from "./pos/PosCloseDay";
+export * from "./pos/PosClosings";

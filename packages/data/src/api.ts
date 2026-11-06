@@ -48,6 +48,7 @@ import type {
   CartUpdateInput,
   CheckoutInput,
   OrderPaymentInput,
+  PosClosingInput,
   PosSaleInput,
   PaymentMethodInput,
   ShippingMethodInput,
@@ -388,6 +389,31 @@ export type PosCatalogItem = {
   /** Unit cost in the base currency, only for owner and admin (KSH0011); absent for staff, null without a cost. */
   cost?: number | null;
 };
+/** KSH0012: the day of a cashier before counting. Amounts per currency. */
+export type PosClosingPreview = {
+  day: string;
+  float: Record<string, number>;
+  /** Cash taken (payments in cash or «Efectivo…», less change and refunds), without the float. */
+  cash: Record<string, number>;
+  expectedCash: Record<string, number>;
+  /** Every other method, to check apart (Transferencia…). */
+  methods: { name: string; currency: string; amount: number }[];
+  sales: number;
+  voided: number;
+  closedToday: number;
+  /** Sales of the last days that nobody closed (not in this closing). */
+  olderOpen: number;
+};
+export type PosClosingResult = {
+  id: string;
+  day: string;
+  sequence: number;
+  expectedCash: Record<string, number>;
+  counted: Record<string, number>;
+  /** counted − expected; empty when it squares. */
+  difference: Record<string, number>;
+};
+
 export type PosCatalogPage = {
   currency: CurrencyCode;
   /** Only on the first page. */
@@ -1067,6 +1093,11 @@ export function createApiClient(options: ApiClientOptions) {
           request<PosCatalogPage>("GET", `${base}/catalog${after ? `?after=${after}` : ""}`),
         uploadSales: (sales: PosSaleInput[]) =>
           request<{ results: PosSaleResult[] }>("POST", `${base}/sales`, { sales }),
+        /** KSH0012: what the signed-in cashier should have today, and closing the day. */
+        closingPreview: () => request<PosClosingPreview>("GET", `${base}/closings/preview`),
+        closeDay: (input: PosClosingInput) => request<PosClosingResult>("POST", `${base}/closings`, input),
+        setFloat: (float: Record<string, number>) =>
+          request<{ float: Record<string, number> }>("PATCH", `${base}/settings`, { float }),
       };
     },
     /** Admin: promotions and vouchers (module discounts, admin+). */
