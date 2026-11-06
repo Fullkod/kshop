@@ -105,7 +105,8 @@ function blankForm(structure: CatalogStructure, currency: CurrencyCode): Form {
     slug: "",
     slugEdited: false,
     description: "",
-    status: "draft",
+    // A new product is usually meant to sell right away (KSH0009); «Borrador» is still one tap away.
+    status: "published",
     categoryId: "",
     brandId: "",
     collectionIds: [],

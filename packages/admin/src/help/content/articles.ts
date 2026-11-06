@@ -37,7 +37,7 @@ export const articles: HelpArticle[] = [
         screenshot: "product-editor",
       },
       {
-        text: "Elige el estado: «Borrador» para terminarlo después o «Publicado» para que salga ya en la tienda. Pulsa «Guardar».",
+        text: "Un producto nuevo empieza «Publicado»: sale en la tienda en cuanto lo guardas. Si quieres terminarlo después, cámbialo a «Borrador». Pulsa «Guardar».",
       },
       {
         text: "Con el producto guardado aparece «Imágenes»: sube las fotos (o «Tomar foto» en el teléfono). La primera es la que se ve en la tienda.",
