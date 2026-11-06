@@ -1,6 +1,7 @@
 import { App } from "@capacitor/app";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Capacitor } from "@capacitor/core";
+import { FileTransfer } from "@capacitor/file-transfer";
 import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import { Network } from "@capacitor/network";
 import { Preferences } from "@capacitor/preferences";
@@ -8,6 +9,7 @@ import { SplashScreen } from "@capacitor/splash-screen";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { createIndexedDbPosStorage, localNumber, type PosStorage, type QueuedSale } from "@kshop/admin";
 import type { AuthStorage } from "@kshop/data";
+import { FileOpener } from "@capawesome-team/capacitor-file-opener";
 import { useEffect, useState } from "react";
 
 // Native pieces of the admin app (PRP-7 D8). In the browser (dev and QA) they fall back to the web.
@@ -156,4 +158,39 @@ export async function paintStatusBar() {
   } catch {
     // Not every Android version lets the app paint the status bar.
   }
+}
+
+/**
+ * Downloads an APK into the cache and opens the Android installer (KSH0008); signed with the same key, it updates
+ * this app in place and keeps its data. Android asks once to allow installing apps from this one. In the browser the
+ * APK just opens.
+ */
+export async function installApk(url: string, onProgress: (fraction: number | null) => void) {
+  if (!isNative) {
+    window.location.href = url;
+    return;
+  }
+  const { uri } = await Filesystem.getUri({ directory: Directory.Cache, path: "kshop-update.apk" });
+  const listener = await FileTransfer.addListener("progress", (p) =>
+    onProgress(p.lengthComputable && p.contentLength > 0 ? p.bytes / p.contentLength : null),
+  );
+  try {
+    await FileTransfer.downloadFile({ url, path: uri, progress: true });
+  } finally {
+    await listener.remove();
+  }
+  await FileOpener.openFile({ path: uri, mimeType: "application/vnd.android.package-archive" });
+}
+
+/** Runs `onResume` each time the app comes back to the foreground (the browser: the tab becomes visible). */
+export function useOnResume(onResume: () => void) {
+  useEffect(() => {
+    if (!isNative) {
+      const onVisible = () => document.visibilityState === "visible" && onResume();
+      document.addEventListener("visibilitychange", onVisible);
+      return () => document.removeEventListener("visibilitychange", onVisible);
+    }
+    const listener = App.addListener("appStateChange", ({ isActive }) => isActive && onResume());
+    return () => void listener.then((l) => l.remove());
+  }, [onResume]);
 }

@@ -52,7 +52,10 @@ pnpm app:keystore <slug|admin> --github
 4. Instala el APK, pruébalo y pulsa **Publicar** en **Superadmin › Apps**.
    - La versión de tienda se ofrece en la página `/app` de la tienda y en el aviso para Android, y responde a la
      petición del dueño.
-   - Las apps ya instaladas muestran «Actualizar».
+   - Las apps ya instaladas (de tienda y Kshop Admin) muestran arriba «Hay una versión nueva» al abrirse o al volver
+     a ellas: «Actualizar» baja el APK dentro de la app y abre el instalador de Android (KSH0008; permiso
+     `REQUEST_INSTALL_PACKAGES`, que `app:build` añade al manifiesto). La primera vez Android pide permitir instalar
+     desde esa app. Una versión anterior a este cambio no trae el aviso: se actualiza a mano una vez.
    - Kshop Admin aparece para descargar en Admin › App móvil.
    - Se borran las versiones anteriores de esa app (registro y APK del bucket). Las más nuevas que sigan ocultas
      se quedan. Por eso hay que probar antes de publicar: «Ocultar» la versión publicada deja la app sin descarga.

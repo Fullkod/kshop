@@ -143,6 +143,15 @@ if (!existsSync(androidDir)) {
 }
 run("pnpm", ["exec", "cap", "sync", "android"], { cwd: appDir, env: buildEnv });
 
+// KSH0008: the app installs its own updates (Android asks the user once to allow it).
+const manifestPath = join(androidDir, "app/src/main/AndroidManifest.xml");
+const installPermission = '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />';
+const manifest = readFileSync(manifestPath, "utf8");
+if (!manifest.includes(installPermission)) {
+  if (!manifest.includes("</manifest>")) throw new Error("</manifest> not found in AndroidManifest.xml");
+  writeFileSync(manifestPath, manifest.replace("</manifest>", `    ${installPermission}\n</manifest>`));
+}
+
 const gradlePath = join(androidDir, "app/build.gradle");
 const gradle = readFileSync(gradlePath, "utf8")
   .replace(/versionCode \d+/, `versionCode ${app.versionCode}`)

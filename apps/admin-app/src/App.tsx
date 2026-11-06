@@ -108,6 +108,7 @@ import {
   readOfflineStore,
   saveOfflineStore,
 } from "./offline";
+import { UpdateBanner } from "./update";
 
 // Kshop Admin (PRP-7 D2): the essentials of the store admin on the phone — today's sales, orders and products —
 // with the same screens as the web (@kshop/admin) and «Abrir el panel completo» for everything else.
@@ -203,6 +204,7 @@ function LoginScreen() {
   const navigate = useNavigate();
   return (
     <Notice>
+      <UpdateBanner className="rounded-xl" />
       <Brand />
       <p className="text-muted-foreground">Entra con el email y la contraseña de tu tienda.</p>
       <StaffLoginForm onSignedIn={() => void navigate("/admin", { replace: true })} />
@@ -548,6 +550,7 @@ function Shell({ onSwitch }: { onSwitch?: () => void }) {
           La tienda está suspendida: los clientes no pueden comprar.
         </Alert>
       )}
+      <UpdateBanner />
       <ScrollToTop />
       <main className="min-w-0 flex-1 pb-28">
         <Routes>

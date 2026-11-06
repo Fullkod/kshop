@@ -6,3 +6,4 @@ export * from "./password-input";
 export * from "./dialog";
 export * from "./confirm";
 export * from "./theme";
+export * from "./app-update";

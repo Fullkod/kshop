@@ -62,6 +62,9 @@ importers:
       '@capacitor/core':
         specifier: ^8.5.3
         version: 8.5.3
+      '@capacitor/file-transfer':
+        specifier: 2.0.6
+        version: 2.0.6(@capacitor/core@8.5.3)
       '@capacitor/filesystem':
         specifier: ^8.1.5
         version: 8.1.5(@capacitor/core@8.5.3)
@@ -77,6 +80,9 @@ importers:
       '@capacitor/status-bar':
         specifier: ^8.0.4
         version: 8.0.4(@capacitor/core@8.5.3)
+      '@capawesome-team/capacitor-file-opener':
+        specifier: 8.1.0
+        version: 8.1.0(@capacitor/core@8.5.3)
       '@fontsource-variable/dm-sans':
         specifier: ^5.3.0
         version: 5.3.0
@@ -147,6 +153,12 @@ importers:
       '@capacitor/core':
         specifier: ^8.5.3
         version: 8.5.3
+      '@capacitor/file-transfer':
+        specifier: 2.0.6
+        version: 2.0.6(@capacitor/core@8.5.3)
+      '@capacitor/filesystem':
+        specifier: ^8.1.5
+        version: 8.1.5(@capacitor/core@8.5.3)
       '@capacitor/network':
         specifier: ^8.0.1
         version: 8.0.1(@capacitor/core@8.5.3)
@@ -162,6 +174,9 @@ importers:
       '@capacitor/status-bar':
         specifier: ^8.0.4
         version: 8.0.4(@capacitor/core@8.5.3)
+      '@capawesome-team/capacitor-file-opener':
+        specifier: 8.1.0
+        version: 8.1.0(@capacitor/core@8.5.3)
       '@fontsource-variable/dm-sans':
         specifier: ^5.3.0
         version: 5.3.0
@@ -555,6 +570,11 @@ packages:
   '@capacitor/core@8.5.3':
     resolution: {integrity: sha512-oBE1oGuYE4ZzYYrulC75OuHdSsD6zLUy7d5o1tFwDLG4govGoubY15cxpiI5l0+q87Lm5p0bhbehMdzJg4aFag==}
 
+  '@capacitor/file-transfer@2.0.6':
+    resolution: {integrity: sha512-1KBmDqhz8iFCzJyuxp+0Xm2VlUzhq7Hy0png3Nl0H6659P2qd04nYISb1BdnnkdmiQwyLq7R86QYgrQOwVSrEQ==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
   '@capacitor/filesystem@8.1.5':
     resolution: {integrity: sha512-m1RkI8L83NJeppEKyRWioK3MDp2vjlA+QfUQcF8/xRlcXNC2HYxqoyYJ+K4M0EcVovy+g+4F24S05+bhK4Vgdg==}
     peerDependencies:
@@ -587,6 +607,11 @@ packages:
 
   '@capacitor/synapse@1.0.4':
     resolution: {integrity: sha512-/C1FUo8/OkKuAT4nCIu/34ny9siNHr9qtFezu4kxm6GY1wNFxrCFWjfYx5C1tUhVGz3fxBABegupkpjXvjCHrw==}
+
+  '@capawesome-team/capacitor-file-opener@8.1.0':
+    resolution: {integrity: sha512-0p/OKNJNBeUitCg10Rx8Vzi1Mg+5iLXqwgVWGW+03i+e+A7xNTYQg4bsoZ/0SPK2iwU93FxXy3sn8Ni+NbYGbg==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
 
   '@emnapi/runtime@1.11.3':
     resolution: {integrity: sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==}
@@ -4459,6 +4484,11 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@capacitor/file-transfer@2.0.6(@capacitor/core@8.5.3)':
+    dependencies:
+      '@capacitor/core': 8.5.3
+      '@capacitor/synapse': 1.0.4
+
   '@capacitor/filesystem@8.1.5(@capacitor/core@8.5.3)':
     dependencies:
       '@capacitor/core': 8.5.3
@@ -4485,6 +4515,10 @@ snapshots:
       '@capacitor/core': 8.5.3
 
   '@capacitor/synapse@1.0.4': {}
+
+  '@capawesome-team/capacitor-file-opener@8.1.0(@capacitor/core@8.5.3)':
+    dependencies:
+      '@capacitor/core': 8.5.3
 
   '@emnapi/runtime@1.11.3':
     dependencies:

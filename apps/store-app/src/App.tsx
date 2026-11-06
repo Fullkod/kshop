@@ -18,12 +18,14 @@ import {
   type LinkProps,
   type PublicStore,
 } from "@kshop/storefront";
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
+import { AppUpdateBanner } from "@kshop/ui";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { BrowserRouter, Link as RouterLink, Route, Routes, useLocation, useNavigate } from "react-router";
 import { useCached } from "./cache";
 import { appConfig, storeWebUrl } from "./config";
 import { apkUrl, loadAppInfo, loadShell, loadStore, type AppInfo } from "./data";
 import {
+  installApk,
   isNative,
   paintStatusBar,
   preferencesStorage,
@@ -117,6 +119,8 @@ function Unavailable({ store, info }: { store: PublicStore | undefined; info: Ap
 function Banners({ stale, info }: { stale: boolean; info: AppInfo | undefined }) {
   const online = useOnline();
   const latest = info?.latest;
+  // «Luego» hides it until the app is opened again.
+  const [later, setLater] = useState<number | null>(null);
   return (
     <>
       {(!online || stale) && (
@@ -124,13 +128,13 @@ function Banners({ stale, info }: { stale: boolean; info: AppInfo | undefined })
           Sin conexión: ves lo último que cargaste.
         </p>
       )}
-      {latest && latest.version_code > appConfig.versionCode && (
-        <p role="status" data-testid="update" className="bg-accent-soft px-4 py-2 text-center text-sm">
-          Hay una versión nueva de la app ({latest.version_name}).{" "}
-          <a href={apkUrl(latest.apk_path)} className="font-medium underline">
-            Actualizar
-          </a>
-        </p>
+      {latest && latest.version_code > appConfig.versionCode && later !== latest.version_code && (
+        <AppUpdateBanner
+          update={{ versionName: latest.version_name, sizeBytes: latest.size_bytes }}
+          appName="la app"
+          install={(onProgress) => installApk(apkUrl(latest.apk_path), onProgress)}
+          onLater={() => setLater(latest.version_code)}
+        />
       )}
     </>
   );

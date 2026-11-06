@@ -584,7 +584,18 @@ export const articles: HelpArticle[] = [
     summary:
       "Tus clientes con Android pueden instalar una app con el nombre y el icono de tu tienda. Y tú tienes Kshop Admin para llevar la tienda desde el teléfono.",
     audiences: ["owner"],
-    keywords: ["app", "aplicación", "android", "apk", "descargar", "kshop admin", "qr", "teléfono"],
+    keywords: [
+      "app",
+      "aplicación",
+      "android",
+      "apk",
+      "descargar",
+      "actualizar",
+      "versión nueva",
+      "kshop admin",
+      "qr",
+      "teléfono",
+    ],
     contexts: ["mobile-app"],
     steps: [
       {
@@ -595,6 +606,9 @@ export const articles: HelpArticle[] = [
       },
       {
         text: "Para ti y tu equipo, pulsa «Descargar Kshop Admin»: pedidos, la caja (también sin conexión), stock, precios y fotos desde el teléfono.",
+      },
+      {
+        text: "Cuando salga una versión nueva, Kshop Admin y la app de tu tienda lo avisan arriba. Pulsa «Actualizar» y luego «Instalar»: se conservan la sesión y las ventas sin subir. La primera vez Android pide permitir instalar apps desde ella; actívalo y vuelve atrás.",
       },
     ],
     related: ["counter-sale"],
@@ -752,7 +766,7 @@ export const articles: HelpArticle[] = [
         text: "Instala la versión oculta y pruébala antes de publicarla: al pulsar «Publicar» las versiones anteriores de esa app se borran.",
       },
       {
-        text: "En Apps, revisa la versión (número y tamaño) y pulsa «Publicar»: desde ese momento es la que descargan los clientes o el equipo.",
+        text: "En Apps, revisa la versión (número y tamaño) y pulsa «Publicar»: desde ese momento es la que descargan los clientes o el equipo, y quien tenga una versión anterior ve dentro de la app el aviso «Actualizar».",
       },
       {
         text: "Si una versión publicada da problemas, «Ocultar» la retira de la descarga y la app queda sin versión hasta que publiques una nueva.",
