@@ -461,7 +461,9 @@ function CounterSaleCard({
     <Card className="flex flex-col gap-2 text-sm" data-testid="counter-sale">
       <h3 className="font-semibold">Venta de mostrador</h3>
       <p className="text-muted-foreground">
-        {sale.localNumber} · vendida el {dateTime(sale.soldAt)} · subida el {dateTime(sale.uploadedAt)}
+        {sale.localNumber} · vendida el {dateTime(sale.soldAt)}
+        {sale.cashier && <span data-testid="counter-cashier"> por {sale.cashier}</span>} · subida el{" "}
+        {dateTime(sale.uploadedAt)}
       </p>
       {note && <p className="rounded bg-surface p-2">«{note}»</p>}
       {sale.flags.length > 0 && (

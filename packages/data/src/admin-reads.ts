@@ -21,7 +21,14 @@ import type { SupabaseConfig } from "./supabase";
 // returns exactly the result of the GraphQL query it replaces (scripts/compare-admin-reads.mjs checks it), so the
 // screens keep the same types. Cursors are opaque offsets.
 
-export type PosSaleInfo = { localNumber: string; soldAt: string; uploadedAt: string; flags: PosFlag[] };
+export type PosSaleInfo = {
+  localNumber: string;
+  soldAt: string;
+  uploadedAt: string;
+  /** Email of whoever sold it (KSH0011); null when that account no longer exists. */
+  cashier?: string | null;
+  flags: PosFlag[];
+};
 
 export type PosOverview = {
   count: number;

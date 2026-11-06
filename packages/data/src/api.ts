@@ -385,6 +385,8 @@ export type PosCatalogItem = {
   stock: number;
   trackInventory: boolean;
   imageUrl: string | null;
+  /** Unit cost in the base currency, only for owner and admin (KSH0011); absent for staff, null without a cost. */
+  cost?: number | null;
 };
 export type PosCatalogPage = {
   currency: CurrencyCode;

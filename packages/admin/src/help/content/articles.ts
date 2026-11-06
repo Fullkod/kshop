@@ -159,6 +159,9 @@ export const articles: HelpArticle[] = [
         screenshot: "pos-sell-mobile",
       },
       {
+        text: "Para venderlo a otro precio, toca el producto en el ticket, escribe el «Precio de venta» y, si quieres, el motivo. El dueño y el administrador también tienen «Al costo» y un aviso si queda por debajo del costo. El pedido guarda los dos precios, quién vendió y el motivo.",
+      },
+      {
         text: "Pulsa «Cobrar». Elige la «Moneda que entrega» el cliente y escribe la «Cantidad que entrega». Si paga en otra moneda, Kshop sugiere la tasa (puedes cambiarla) y te dice el vuelto; si da menos, «Añadir pago» suma otro pago, por ejemplo una parte en USD y otra en CUP. En «Método» marca si fue efectivo o transferencia: se ve en el pedido y en Ventas de hoy.",
       },
       {

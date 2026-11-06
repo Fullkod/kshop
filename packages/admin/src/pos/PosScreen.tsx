@@ -35,12 +35,20 @@ import {
   cn,
 } from "@kshop/ui";
 import { useMemo, useRef, useState } from "react";
+import { useAdmin } from "../admin-context";
 import { PosDay } from "./PosDay";
 import { usePosSales } from "./pos-sync";
 import { PosStatus, usePosCatalog, usePosPlace, usePosStorage } from "./PosStatus";
 import type { PosCatalogSnapshot } from "./storage";
 
-type CartLine = { item: PosCatalogItem; quantity: number; unitPrice: number };
+type CartLine = {
+  item: PosCatalogItem;
+  quantity: number;
+  unitPrice: number;
+  /** The cashier changed the price on purpose (KSH0011), with an optional reason. */
+  priceChanged?: boolean;
+  priceNote?: string;
+};
 type Paid = NonNullable<PosSaleInput["payments"]>[number] & { applied: number };
 
 /** The ticket in progress outlives leaving the Caja (to open a sale's order, say) until the app or page closes. */
@@ -66,6 +74,10 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
   }
   const [charging, setCharging] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [pricing, setPricing] = useState<string | null>(null);
+  const admin = useAdmin();
+  // Owner and admin get the cost in the catalog; a phone shared with staff must not show it from the cache.
+  const seesCost = admin.role === null || admin.role === "owner" || admin.role === "admin";
   // While the search has the focus the on-screen keyboard is up: the bottom bars step aside.
   const [typing, setTyping] = useState(false);
   const [saved, setSaved] = useState<{ number: string; change: string | null } | null>(null);
@@ -94,6 +106,22 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
     setQuery("");
     if (keepTyping) searchRef.current?.focus();
     else searchRef.current?.blur();
+  }
+
+  function setPrice(variantId: string, unitPrice: number, note: string) {
+    setCart((lines) =>
+      lines.map((l) => {
+        if (l.item.variantId !== variantId) return l;
+        const changed = Math.round(unitPrice * 100) !== Math.round(posItemPrice(l.item) * 100);
+        return {
+          ...l,
+          unitPrice,
+          priceChanged: changed || undefined,
+          priceNote: changed && note.trim() ? note.trim() : undefined,
+        };
+      }),
+    );
+    setPricing(null);
   }
 
   function setQuantity(variantId: string, quantity: number) {
@@ -234,10 +262,23 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
         <Card className="flex flex-col divide-y p-0" data-testid="pos-cart">
           {cart.map((line) => (
             <div key={line.item.variantId} className="flex items-center justify-between gap-3 px-4 py-3">
-              <div className="min-w-0">
+              <button
+                type="button"
+                className="-mx-2 min-w-0 rounded-md px-2 py-1 text-left hover:bg-surface"
+                aria-label={`Cambiar el precio de ${itemLabel(line.item)}`}
+                onClick={() => setPricing(line.item.variantId)}
+                data-testid="pos-line-price"
+              >
                 <p className="font-medium">{itemLabel(line.item)}</p>
                 <p className="text-sm text-muted-foreground">
-                  {formatMoney(line.unitPrice, currency)}
+                  {line.priceChanged && (
+                    <span className="mr-1 line-through">
+                      {formatMoney(posItemPrice(line.item), currency)}
+                    </span>
+                  )}
+                  <span className={cn(line.priceChanged && "font-semibold text-foreground")}>
+                    {formatMoney(line.unitPrice, currency)}
+                  </span>
                   {line.quantity > 1 && ` · ${formatMoney(line.unitPrice * line.quantity, currency)}`}
                   {line.item.trackInventory && line.quantity > line.item.stock && (
                     <Badge variant="muted" className="ml-2">
@@ -245,7 +286,8 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
                     </Badge>
                   )}
                 </p>
-              </div>
+                {line.priceNote && <p className="text-xs text-muted-foreground">{line.priceNote}</p>}
+              </button>
               <div className="flex shrink-0 items-center gap-1.5">
                 <Button
                   size="sm"
@@ -322,6 +364,20 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
         </div>
       </Dialog>
 
+      {pricing &&
+        (() => {
+          const line = cart.find((l) => l.item.variantId === pricing);
+          return line ? (
+            <PosPriceDialog
+              line={line}
+              currency={currency}
+              cost={seesCost ? (line.item.cost ?? null) : null}
+              onClose={() => setPricing(null)}
+              onApply={(price, note) => setPrice(line.item.variantId, price, note)}
+            />
+          ) : null;
+        })()}
+
       {charging && catalog.snapshot && (
         <PosCheckout
           snapshot={catalog.snapshot}
@@ -344,6 +400,7 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
                 productName: l.item.productName,
                 variantName: l.item.variantName || undefined,
                 sku: l.item.sku,
+                ...(l.priceChanged ? { priceChanged: true, priceNote: l.priceNote } : {}),
               })),
               payments: payments.map(({ applied: _applied, ...p }) => p),
             });
@@ -610,6 +667,106 @@ function PosCheckout({
           </Button>
         </div>
       </div>
+    </Dialog>
+  );
+}
+
+/** Changing the price of a line (KSH0011): anyone at the counter; «Al costo» and the warning only with the cost. */
+function PosPriceDialog({
+  line,
+  currency,
+  cost,
+  onClose,
+  onApply,
+}: {
+  line: CartLine;
+  currency: CurrencyCode;
+  /** In the sale currency; null when this user does not see costs or the product has none. */
+  cost: number | null;
+  onClose: () => void;
+  onApply: (unitPrice: number, note: string) => void;
+}) {
+  const list = posItemPrice(line.item);
+  const [price, setPrice] = useState(String(line.unitPrice));
+  const [note, setNote] = useState(line.priceNote ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const typed = parseDecimal(price);
+  const valid = price.trim() !== "" && Number.isFinite(typed) && typed >= 0;
+  const below = cost !== null && valid && typed < cost;
+
+  function apply() {
+    if (!valid) {
+      setError("Escribe el precio de venta.");
+      return;
+    }
+    onApply(Math.round(typed * 100) / 100, note);
+  }
+
+  return (
+    <Dialog open onClose={onClose} title={itemLabel(line.item)} compact>
+      <form
+        className="flex flex-col gap-3"
+        data-testid="pos-price-dialog"
+        onSubmit={(e) => {
+          e.preventDefault();
+          apply();
+        }}
+      >
+        <p className="text-sm text-muted-foreground">
+          Precio de la tienda:{" "}
+          <span className="font-medium text-foreground">{formatMoney(list, currency)}</span>
+        </p>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="pos-price">Precio de venta</Label>
+          <Input
+            id="pos-price"
+            inputMode="decimal"
+            value={price}
+            onFocus={(e) => e.target.select()}
+            onChange={(e) => {
+              setPrice(e.target.value);
+              setError(null);
+            }}
+            data-testid="pos-price-input"
+          />
+        </div>
+        {cost !== null && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setPrice(String(cost))}
+            data-testid="pos-price-cost"
+          >
+            Al costo ({formatMoney(cost, currency)})
+          </Button>
+        )}
+        {below && (
+          <Alert variant="warning" data-testid="pos-price-below-cost">
+            Por debajo del costo ({formatMoney(cost, currency)}): esta venta pierde dinero.
+          </Alert>
+        )}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="pos-price-note">Motivo (opcional)</Label>
+          <Input
+            id="pos-price-note"
+            value={note}
+            maxLength={200}
+            placeholder="Cliente fijo, liquidación…"
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </div>
+        {error && <Alert variant="destructive">{error}</Alert>}
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" data-testid="pos-price-apply">
+            Aplicar
+          </Button>
+          {line.priceChanged && (
+            <Button type="button" variant="ghost" onClick={() => onApply(list, "")}>
+              Volver al precio de la tienda
+            </Button>
+          )}
+        </div>
+      </form>
     </Dialog>
   );
 }

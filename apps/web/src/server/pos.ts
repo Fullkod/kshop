@@ -43,6 +43,8 @@ export async function recordPosSales(
           product_name: l.productName,
           variant_name: l.variantName ?? null,
           sku: l.sku ?? null,
+          price_changed: l.priceChanged ?? false,
+          price_note: l.priceNote ?? null,
         })),
         payments: sale.payments.map((p) => ({
           amount: p.amount,

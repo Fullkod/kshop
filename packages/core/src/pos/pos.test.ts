@@ -180,6 +180,22 @@ describe("what the owner reads", () => {
     expect(posFlagText({ type: "something_new" }, "CUP")).toBe("Algo no cuadró en esta venta.");
   });
 
+  it("a changed price with its reason, and a sale below cost without saying the cost", () => {
+    const changed = posFlagText(
+      { type: "price_changed", name: "Arroz", charged: 700, expected: 1000, note: "cliente fijo" },
+      "CUP",
+    );
+    expect(changed).toContain(formatMoney(700, "CUP"));
+    expect(changed).toContain(formatMoney(1000, "CUP"));
+    expect(changed).toContain("Motivo: cliente fijo");
+    expect(
+      posFlagText({ type: "price_changed", name: "Arroz", charged: 700, expected: 1000 }, "CUP"),
+    ).not.toContain("Motivo");
+    const below = posFlagText({ type: "below_cost", name: "Arroz", charged: 600 }, "CUP");
+    expect(below).toContain("por debajo del costo");
+    expect(below).toContain(formatMoney(600, "CUP"));
+  });
+
   it("quotes a stored rate the way it was typed", () => {
     expect(formatRate(850, "USD", "CUP")).toBe("1 USD = 850 CUP");
     expect(formatRate(1 / 850, "CUP", "USD")).toBe("1 USD = 850 CUP");

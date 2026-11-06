@@ -16,6 +16,9 @@ const posLineSchema = z.object({
   productName: z.string().trim().min(1).max(300),
   variantName: z.string().trim().max(300).optional(),
   sku: z.string().trim().max(64).optional(),
+  /** The cashier changed the price on purpose (KSH0011): the owner sees it noted, with the reason if any. */
+  priceChanged: z.boolean().optional(),
+  priceNote: z.string().trim().max(200).optional(),
 });
 
 const posPaymentSchema = z.object({
