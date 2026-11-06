@@ -107,9 +107,13 @@ describe("summary of the day", () => {
   const now = new Date("2026-10-31T15:00:00");
   const sold = (
     extra = {},
-    payments: { amount: number; currency?: string; changeAmount?: number; changeCurrency?: string }[] = [
-      { amount: 100 },
-    ],
+    payments: {
+      amount: number;
+      currency?: string;
+      changeAmount?: number;
+      changeCurrency?: string;
+      paymentMethodId?: string;
+    }[] = [{ amount: 100 }],
   ) => ({
     sale: { soldAt: "2026-10-31T10:00:00", payments, ...extra },
   });
@@ -130,7 +134,29 @@ describe("summary of the day", () => {
         { currency: "CUP", amount: 0.5 },
         { currency: "USD", amount: 50 },
       ],
+      byMethod: [],
     });
+  });
+
+  it("per payment method, net of the change given in the same currency", () => {
+    const summary = posDaySummary(
+      [
+        sold({}, [{ amount: 500, paymentMethodId: "transfer" }]),
+        sold({}, [{ amount: 1000, changeAmount: 200, changeCurrency: "CUP", paymentMethodId: "cash" }]),
+        sold({}, [
+          { amount: 10, currency: "USD", changeAmount: 100, changeCurrency: "CUP", paymentMethodId: "cash" },
+        ]),
+        sold({}, [{ amount: 300, paymentMethodId: "transfer" }, { amount: 50 }]),
+        sold({ voided: true }, [{ amount: 999, paymentMethodId: "transfer" }]),
+      ],
+      "CUP",
+      now,
+    );
+    expect(summary.byMethod).toEqual([
+      { methodId: "cash", currency: "CUP", amount: 800 },
+      { methodId: "cash", currency: "USD", amount: 10 },
+      { methodId: "transfer", currency: "CUP", amount: 800 },
+    ]);
   });
 
   it("voided sales and other days do not count", () => {
@@ -139,6 +165,7 @@ describe("summary of the day", () => {
     ).toEqual({
       count: 0,
       cash: [],
+      byMethod: [],
     });
   });
 });

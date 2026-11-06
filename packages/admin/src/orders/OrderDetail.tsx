@@ -534,6 +534,7 @@ function PaymentsCard({
   loadRates: () => Promise<PaymentRates>;
   payments: {
     id: string;
+    paymentMethodId?: string | null;
     amount: string;
     currency: string;
     appliedAmount: string;
@@ -551,6 +552,7 @@ function PaymentsCard({
   upload: (file: File) => Promise<string>;
   signedUrl: (path: string) => Promise<string | null>;
 }) {
+  const methodName = new Map(methods.map((m) => [m.id, m.name]));
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paidIn, setPaidIn] = useState<CurrencyCode>(currency);
@@ -643,6 +645,12 @@ function PaymentsCard({
           <li key={p.id} className="flex justify-between gap-2">
             <span>
               {formatMoney(Number(p.amount), p.currency)}
+              {p.paymentMethodId && methodName.get(p.paymentMethodId) && (
+                <span className="font-medium" data-testid="payment-method">
+                  {" "}
+                  · {methodName.get(p.paymentMethodId)}
+                </span>
+              )}
               {p.currency !== currency && Number(p.appliedAmount) > 0 && (
                 <span className="text-muted-foreground">
                   {" "}

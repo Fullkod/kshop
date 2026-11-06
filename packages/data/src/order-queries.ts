@@ -34,6 +34,15 @@ export const AdminOrdersQuery = graphql(`
               }
             }
           }
+          paymentsCollection(orderBy: [{ createdAt: AscNullsLast }], first: 20) {
+            edges {
+              node {
+                paymentMethods {
+                  name
+                }
+              }
+            }
+          }
         }
       }
     }

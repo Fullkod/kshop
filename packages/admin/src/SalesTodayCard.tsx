@@ -4,6 +4,7 @@ import { formatMoney } from "@kshop/core";
 import type { SalesToday } from "@kshop/data";
 import { Card } from "@kshop/ui";
 import { useEffect, useState } from "react";
+import { ReceivedByMethod } from "./ReceivedByMethod";
 import { useSession } from "./session";
 import { Link, useStore } from "@kshop/storefront";
 
@@ -59,6 +60,7 @@ export function SalesTodayCard() {
           </div>
         </dl>
       )}
+      <ReceivedByMethod byMethod={data?.byMethod} />
     </Card>
   );
 }

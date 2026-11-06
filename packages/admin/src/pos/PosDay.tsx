@@ -10,6 +10,7 @@ import type { QueuedSale } from "./storage";
 export function PosDay({
   sales,
   currency,
+  methods,
   syncing,
   canUpload,
   onUpload,
@@ -17,6 +18,8 @@ export function PosDay({
 }: {
   sales: QueuedSale[];
   currency: CurrencyCode;
+  /** The store's payment methods (catalog snapshot), to name how each sale was paid (KSH0010). */
+  methods: { id: string; name: string }[];
   syncing: boolean;
   canUpload: boolean;
   onUpload: () => void;
@@ -25,6 +28,16 @@ export function PosDay({
   const { confirm } = useConfirm();
   const place = usePosPlace();
   const summary = posDaySummary(sales, currency);
+  const methodName = new Map(methods.map((m) => [m.id, m.name]));
+  // Payments of a method the catalog no longer has stay out of the names, not out of the till.
+  const byMethod = new Map<string, string[]>();
+  for (const m of summary.byMethod) {
+    const name = methodName.get(m.methodId);
+    if (name) byMethod.set(name, [...(byMethod.get(name) ?? []), formatMoney(m.amount, m.currency)]);
+  }
+  const saleMethods = (queued: QueuedSale) => [
+    ...new Set(queued.sale.payments.flatMap((p) => methodName.get(p.paymentMethodId ?? "") ?? [])),
+  ];
   const held = sales.filter((s) => s.held && !s.uploaded);
   const pending = sales.filter((s) => !s.uploaded);
   const today = new Date().toDateString();
@@ -51,6 +64,11 @@ export function PosDay({
             {summary.count} {summary.count === 1 ? "venta" : "ventas"}
             {summary.cash.map((c) => ` · ${formatMoney(c.amount, c.currency)}`).join("")}
           </p>
+          {byMethod.size > 0 && (
+            <p className="text-sm text-muted-foreground" data-testid="pos-day-methods">
+              {[...byMethod].map(([name, amounts]) => `${name} ${amounts.join(" + ")}`).join(" · ")}
+            </p>
+          )}
         </div>
         {pending.length > 0 && (
           <Button
@@ -86,7 +104,8 @@ export function PosDay({
               <span className="min-w-0">
                 <span className="font-medium">{queued.sale.localNumber}</span>
                 {" · "}
-                {formatMoney(posCartTotal(queued.sale.lines), currency)}{" "}
+                {formatMoney(posCartTotal(queued.sale.lines), currency)}
+                {saleMethods(queued).map((m) => ` · ${m}`)}{" "}
                 {queued.sale.voided ? (
                   <Badge variant="muted">Anulada</Badge>
                 ) : queued.uploaded ? (

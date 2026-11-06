@@ -42,6 +42,8 @@ type Row = {
   createdAt: string;
   items: number;
   channel: string;
+  /** Payment methods used (Efectivo, Transferencia…), KSH0010. */
+  methods: string[];
 };
 
 const PAGE_SIZE = 30;
@@ -144,6 +146,13 @@ export function OrderList({ initialTab = "pending" }: { initialTab?: ListTab }) 
       createdAt: o.createdAt,
       items: (o.orderLinesCollection?.edges ?? []).reduce((sum, e) => sum + e.node.quantity, 0),
       channel: o.channel,
+      methods: [
+        ...new Set(
+          (o.paymentsCollection?.edges ?? []).flatMap((e) =>
+            e.node.paymentMethods ? [e.node.paymentMethods.name] : [],
+          ),
+        ),
+      ],
     }));
   }
 
@@ -256,6 +265,11 @@ export function OrderList({ initialTab = "pending" }: { initialTab?: ListTab }) 
                   {stale && <Badge variant="destructive">Más de 48 h</Badge>}
                   {row.channel === "admin" && <Badge variant="muted">Admin</Badge>}
                   {row.channel === "pos" && <Badge variant="muted">Mostrador</Badge>}
+                  {row.methods.map((m) => (
+                    <Badge key={m} variant="muted" data-testid="order-method">
+                      {m}
+                    </Badge>
+                  ))}
                   <span className="text-xs text-muted-foreground">
                     {row.items} {row.items === 1 ? "producto" : "productos"}
                   </span>

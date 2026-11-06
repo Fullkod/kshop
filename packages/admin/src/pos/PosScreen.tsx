@@ -312,6 +312,7 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
             <PosDay
               sales={queue.sales}
               currency={currency}
+              methods={catalog.snapshot?.paymentMethods ?? []}
               syncing={queue.syncing}
               canUpload={queue.canUpload}
               onUpload={() => void queue.sync()}

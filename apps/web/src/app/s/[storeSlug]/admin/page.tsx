@@ -5,6 +5,7 @@ import {
   greeting,
   LoadError,
   periodChange,
+  ReceivedByMethod,
   StatusPill,
   useAdminHome,
   useCheckoutSettings,
@@ -112,6 +113,9 @@ export default function AdminHomePage() {
             change={figures && periodChange(figures.orders, figures.previous.orders)}
             vs={vs}
           />
+          {period === "day" && (
+            <ReceivedByMethod byMethod={today?.byMethod} className="col-span-2 lg:col-span-4" />
+          )}
         </div>
       ) : (
         <Card className="flex items-center gap-3 text-sm">

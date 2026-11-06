@@ -8,6 +8,7 @@ import {
   OrderDetail,
   OrderList,
   PosScreen,
+  ReceivedByMethod,
   ProductEditor,
   ProductList,
   dayChange,
@@ -836,6 +837,7 @@ function HomeScreen({ home }: { home: AdminHome }) {
               value={summary?.toCollect != null ? formatMoney(summary.toCollect, base) : "…"}
               tone="text-warning"
             />
+            <ReceivedByMethod byMethod={today?.byMethod} className="col-span-2" />
           </div>
         )}
         <section className="flex flex-col gap-2">

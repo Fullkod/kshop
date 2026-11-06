@@ -430,6 +430,8 @@ export type SalesToday = {
   dayStart: string;
   orders: { currency: string; orders: number; amount: number }[];
   received: { currency: string; amount: number }[];
+  /** Received per payment method (only payments that name one), per currency (KSH0010). */
+  byMethod: { method: string; currency: string; amount: number }[];
   pending: number;
 };
 

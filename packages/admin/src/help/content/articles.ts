@@ -159,7 +159,7 @@ export const articles: HelpArticle[] = [
         screenshot: "pos-sell-mobile",
       },
       {
-        text: "Pulsa «Cobrar». Elige la «Moneda que entrega» el cliente y escribe la «Cantidad que entrega». Si paga en otra moneda, Kshop sugiere la tasa (puedes cambiarla) y te dice el vuelto; si da menos, «Añadir pago» suma otro pago, por ejemplo una parte en USD y otra en CUP.",
+        text: "Pulsa «Cobrar». Elige la «Moneda que entrega» el cliente y escribe la «Cantidad que entrega». Si paga en otra moneda, Kshop sugiere la tasa (puedes cambiarla) y te dice el vuelto; si da menos, «Añadir pago» suma otro pago, por ejemplo una parte en USD y otra en CUP. En «Método» marca si fue efectivo o transferencia: se ve en el pedido y en Ventas de hoy.",
       },
       {
         text: "Pulsa «Confirmar venta». Queda como pedido de «Mostrador», ya entregado, y aparece en Ventas de hoy y en Caja › Resumen.",
@@ -336,7 +336,10 @@ export const articles: HelpArticle[] = [
         text: "En «Monedas» marca en cuáles aceptas ese método (ninguna = todas). Pulsa «Guardar».",
       },
     ],
-    tips: ["Desmarca «Activo» para dejar de ofrecer un método sin borrarlo."],
+    tips: [
+      "Desmarca «Activo» para dejar de ofrecer un método sin borrarlo.",
+      "Los mismos métodos salen al cobrar en la caja (en Kshop Admin, tras «⋯» › «Actualizar catálogo»). Cada pago muestra su método en el pedido y en la lista de Pedidos, e Inicio suma lo cobrado hoy «Por método».",
+    ],
     related: ["shipping", "multi-currency"],
   },
   {
