@@ -23,10 +23,7 @@ const money = z.coerce
   .transform((v) => Math.round(v * 100) / 100);
 
 /** Supabase Auth password_min_length is 8 (supabase/auth-config.json). */
-export const passwordSchema = z
-  .string()
-  .min(8, "Mínimo 8 caracteres.")
-  .max(72, "Máximo 72 caracteres.");
+export const passwordSchema = z.string().min(8, "Mínimo 8 caracteres.").max(72, "Máximo 72 caracteres.");
 
 // ---------------------------------------------------------------------------
 // Customer accounts (D1–D5)
@@ -204,15 +201,21 @@ export const orderCancelSchema = z.object({ reason: optionalText(300) });
 export const orderNoteSchema = z.object({ text: text(1, 1000) });
 
 /** "Nuevo pedido" from the admin (channel admin, decision 23): same checkout, lines picked by the staff. */
-export const adminOrderSchema = checkoutSchema
-  .omit({ cartToken: true, createAccountPassword: true })
-  .extend({
-    customerId: uuid.optional(),
-    voucherCode: voucherCodeSchema.optional(),
-    manualDiscount: manualDiscountSchema.optional(),
-    lines: z
-      .array(z.object({ variantId: uuid, quantity: z.coerce.number().int().min(1).max(MAX_LINE_QUANTITY) }))
-      .min(1, "Añade al menos un producto.")
-      .max(100),
-  });
+export const adminOrderSchema = checkoutSchema.omit({ cartToken: true, createAccountPassword: true }).extend({
+  customerId: uuid.optional(),
+  voucherCode: voucherCodeSchema.optional(),
+  manualDiscount: manualDiscountSchema.optional(),
+  lines: z
+    .array(
+      z.object({
+        variantId: uuid,
+        quantity: z.coerce.number().int().min(1).max(MAX_LINE_QUANTITY),
+        /** A price set by the staff for this line (KSH0011), with an optional reason. */
+        unitPrice: z.coerce.number().min(0).max(9_999_999_999.99).optional(),
+        priceNote: z.string().trim().max(200).optional(),
+      }),
+    )
+    .min(1, "Añade al menos un producto.")
+    .max(100),
+});
 export type AdminOrderInput = z.infer<typeof adminOrderSchema>;

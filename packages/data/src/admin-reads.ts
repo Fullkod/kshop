@@ -159,6 +159,9 @@ export function createAdminReads(options: AdminReadsOptions) {
         p_store_id: storeId,
         p_query: query ?? null,
       }),
+    /** Unit cost in the base currency per variant id, only for owner and admin; {} for staff (KSH0011). */
+    variantCosts: (storeId: string, variantIds: readonly string[]) =>
+      rpc<Record<string, number>>("admin_variant_costs", { p_store_id: storeId, p_variant_ids: variantIds }),
     promotions: (storeId: string) =>
       rpc<ResultOf<typeof AdminPromotionsQuery>>("admin_promotions", { p_store_id: storeId }),
     vouchers: (storeId: string) =>

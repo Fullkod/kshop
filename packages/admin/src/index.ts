@@ -13,6 +13,7 @@ export * from "./orders/OrderList";
 export * from "./orders/OrderDetail";
 export * from "./SalesTodayCard";
 export * from "./ReceivedByMethod";
+export * from "./LinePriceDialog";
 export * from "./home";
 export * from "./StaffLoginForm";
 export * from "./LoadError";

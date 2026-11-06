@@ -1,6 +1,13 @@
 "use client";
 
-import { formatMoney, formatPhone, normalizePhone, SHIPPING_TYPE_LABELS } from "@kshop/core";
+import { LinePriceDialog } from "@kshop/admin";
+import {
+  formatMoney,
+  formatPhone,
+  normalizePhone,
+  SHIPPING_TYPE_LABELS,
+  type CurrencyCode,
+} from "@kshop/core";
 import { asResult } from "@kshop/data";
 import { Alert, Button, Card, Input, Label, Select } from "@kshop/ui";
 import { useRouter } from "next/navigation";
@@ -15,7 +22,9 @@ import { useCheckoutSettings } from "../use-orders";
 // transactional checkout (channel admin). Prices are the base prices; the server recomputes everything.
 
 type Result = { variantId: string; label: string; sku: string; price: number; available: number | null };
-type Line = Result & { quantity: number };
+/** `unitPrice` is a price set by the staff for this line (KSH0011); without it the server prices the line. */
+type Line = Result & { quantity: number; unitPrice?: number; priceNote?: string };
+const linePrice = (l: Line) => l.unitPrice ?? l.price;
 
 export function NewOrder() {
   const store = useStore();
@@ -34,6 +43,21 @@ export function NewOrder() {
   const [zoneId, setZoneId] = useState("");
   const [methodId, setMethodId] = useState("");
   const idempotencyKey = useRef<string | null>(null);
+  const [pricing, setPricing] = useState<string | null>(null);
+  // Owner and admin get the costs («Al costo» and the warning); for staff the server answers {}.
+  const seesCost = admin.role === null || admin.role === "owner" || admin.role === "admin";
+  const [costs, setCosts] = useState<Record<string, number>>({});
+  const variantIds = lines.map((l) => l.variantId).join(",");
+  useEffect(() => {
+    if (!seesCost || !variantIds) return;
+    let cancelled = false;
+    asResult(reads.variantCosts(store.id, variantIds.split(","))).then((r) => {
+      if (!cancelled && r.data) setCosts(r.data);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [reads, store.id, seesCost, variantIds]);
 
   useEffect(() => {
     const q = query.trim();
@@ -82,7 +106,7 @@ export function NewOrder() {
   );
   const method = methods.find((m) => m.id === methodId);
   const currency = settings?.baseCurrency ?? "CUP";
-  const subtotal = lines.reduce((sum, l) => sum + l.price * l.quantity, 0);
+  const subtotal = lines.reduce((sum, l) => sum + linePrice(l) * l.quantity, 0);
 
   function addLine(result: Result) {
     setLines((current) => {
@@ -102,7 +126,11 @@ export function NewOrder() {
         idempotencyKey: idempotencyKey.current!,
         customerId: match && linkCustomer ? match.id : undefined,
         customer: { name: text("name") ?? "", phone },
-        lines: lines.map((l) => ({ variantId: l.variantId, quantity: l.quantity })),
+        lines: lines.map((l) => ({
+          variantId: l.variantId,
+          quantity: l.quantity,
+          ...(l.unitPrice !== undefined && { unitPrice: l.unitPrice, priceNote: l.priceNote }),
+        })),
         shipping: {
           zoneId: zoneId || undefined,
           methodId: methodId || undefined,
@@ -128,244 +156,290 @@ export function NewOrder() {
 
   if (!settings) return <p className="text-muted-foreground">Cargando…</p>;
 
+  const priced = pricing ? lines.find((l) => l.variantId === pricing) : undefined;
   return (
-    <form onSubmit={onSubmit} className="grid gap-6 lg:grid-cols-[1fr_340px]">
-      <div className="flex flex-col gap-6">
-        <Card className="flex flex-col gap-3">
-          <h2 className="font-semibold">Productos</h2>
-          <Input
-            type="search"
-            placeholder="Buscar por nombre o SKU"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label="Buscar productos"
-          />
-          {query.trim().length >= 2 && results.length > 0 && (
-            <ul className="max-h-64 divide-y overflow-y-auto rounded-md border text-sm">
-              {results.map((r) => (
-                <li key={r.variantId} className="flex items-center justify-between gap-2 px-3 py-2">
-                  <span className="min-w-0">
-                    <span className="block truncate">{r.label}</span>
-                    <span className="text-muted-foreground">
-                      {r.sku} · {formatMoney(r.price, currency)}
-                      {r.available !== null && ` · ${r.available} disponibles`}
-                    </span>
-                  </span>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={r.available === 0}
-                    onClick={() => addLine(r)}
-                  >
-                    Añadir
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {lines.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Busca y añade los productos del pedido.</p>
-          ) : (
-            <ul className="divide-y text-sm">
-              {lines.map((l) => (
-                <li key={l.variantId} className="flex items-center gap-3 py-2">
-                  <span className="min-w-0 flex-1 truncate">{l.label}</span>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={999}
-                    value={l.quantity}
-                    onChange={(e) =>
-                      setLines((c) =>
-                        c.map((x) =>
-                          x === l ? { ...x, quantity: Math.max(1, Number(e.target.value) || 1) } : x,
-                        ),
-                      )
+    <>
+      {priced && (
+        <LinePriceDialog
+          title={priced.label}
+          listPrice={priced.price}
+          price={linePrice(priced)}
+          note={priced.priceNote}
+          changed={priced.unitPrice !== undefined}
+          currency={currency as CurrencyCode}
+          cost={seesCost ? (costs[priced.variantId] ?? null) : null}
+          onClose={() => setPricing(null)}
+          onApply={(price, note) => {
+            const changed = Math.round(price * 100) !== Math.round(priced.price * 100);
+            setLines((c) =>
+              c.map((x) =>
+                x.variantId === priced.variantId
+                  ? {
+                      ...x,
+                      unitPrice: changed ? price : undefined,
+                      priceNote: changed && note.trim() ? note.trim() : undefined,
                     }
-                    className="w-20"
-                    aria-label={`Cantidad de ${l.label}`}
-                  />
-                  <span className="w-24 text-right">{formatMoney(l.price * l.quantity, currency)}</span>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setLines((c) => c.filter((x) => x !== l))}
-                  >
-                    Quitar
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+                  : x,
+              ),
+            );
+            setPricing(null);
+          }}
+        />
+      )}
+      <form onSubmit={onSubmit} className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="flex flex-col gap-6">
+          <Card className="flex flex-col gap-3">
+            <h2 className="font-semibold">Productos</h2>
+            <Input
+              type="search"
+              placeholder="Buscar por nombre o SKU"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="Buscar productos"
+            />
+            {query.trim().length >= 2 && results.length > 0 && (
+              <ul className="max-h-64 divide-y overflow-y-auto rounded-md border text-sm">
+                {results.map((r) => (
+                  <li key={r.variantId} className="flex items-center justify-between gap-2 px-3 py-2">
+                    <span className="min-w-0">
+                      <span className="block truncate">{r.label}</span>
+                      <span className="text-muted-foreground">
+                        {r.sku} · {formatMoney(r.price, currency)}
+                        {r.available !== null && ` · ${r.available} disponibles`}
+                      </span>
+                    </span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={r.available === 0}
+                      onClick={() => addLine(r)}
+                    >
+                      Añadir
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {lines.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Busca y añade los productos del pedido.</p>
+            ) : (
+              <ul className="divide-y text-sm">
+                {lines.map((l) => (
+                  <li key={l.variantId} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
+                    {/* On a phone the name takes its own row: the quantity, price and «Quitar» go below. */}
+                    <span className="min-w-0 basis-full truncate sm:basis-0 sm:flex-1">{l.label}</span>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={999}
+                      value={l.quantity}
+                      onChange={(e) =>
+                        setLines((c) =>
+                          c.map((x) =>
+                            x === l ? { ...x, quantity: Math.max(1, Number(e.target.value) || 1) } : x,
+                          ),
+                        )
+                      }
+                      className="w-20"
+                      aria-label={`Cantidad de ${l.label}`}
+                    />
+                    <button
+                      type="button"
+                      className="ml-auto w-28 rounded-md px-1 py-1 text-right hover:bg-surface sm:ml-0"
+                      onClick={() => setPricing(l.variantId)}
+                      aria-label={`Cambiar el precio de ${l.label}`}
+                      data-testid="order-line-price"
+                    >
+                      {l.unitPrice !== undefined && (
+                        <span className="block text-xs text-muted-foreground line-through">
+                          {formatMoney(l.price * l.quantity, currency)}
+                        </span>
+                      )}
+                      <span className={l.unitPrice !== undefined ? "font-semibold" : undefined}>
+                        {formatMoney(linePrice(l) * l.quantity, currency)}
+                      </span>
+                    </button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setLines((c) => c.filter((x) => x !== l))}
+                    >
+                      Quitar
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
 
-        <Card className="grid gap-3 sm:grid-cols-2">
-          <h2 className="font-semibold sm:col-span-2">Cliente</h2>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="phone">Teléfono</Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="5 123 4567"
-              required
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="name">Nombre</Label>
-            <Input
-              id="name"
-              name="name"
-              key={match?.id ?? "none"}
-              defaultValue={match?.name ?? ""}
-              required
-            />
-          </div>
-          {match && (
-            <label className="flex items-center gap-2 text-sm sm:col-span-2">
-              <input
-                type="checkbox"
-                checked={linkCustomer}
-                onChange={(e) => setLinkCustomer(e.target.checked)}
+          <Card className="grid gap-3 sm:grid-cols-2">
+            <h2 className="font-semibold sm:col-span-2">Cliente</h2>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="phone">Teléfono</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="5 123 4567"
+                required
               />
-              Vincular a la cuenta de {match.name} ({formatPhone(normalized ?? phone)})
-            </label>
-          )}
-        </Card>
-
-        <Card className="grid gap-3 sm:grid-cols-2">
-          <h2 className="font-semibold sm:col-span-2">Entrega y pago</h2>
-          {activeZones.length > 0 && (
+            </div>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="zone">Zona</Label>
-              <Select
-                id="zone"
-                value={zoneId}
-                onChange={(e) => {
-                  setZoneId(e.target.value);
-                  setMethodId("");
-                }}
-              >
+              <Label htmlFor="name">Nombre</Label>
+              <Input
+                id="name"
+                name="name"
+                key={match?.id ?? "none"}
+                defaultValue={match?.name ?? ""}
+                required
+              />
+            </div>
+            {match && (
+              <label className="flex items-center gap-2 text-sm sm:col-span-2">
+                <input
+                  type="checkbox"
+                  checked={linkCustomer}
+                  onChange={(e) => setLinkCustomer(e.target.checked)}
+                />
+                Vincular a la cuenta de {match.name} ({formatPhone(normalized ?? phone)})
+              </label>
+            )}
+          </Card>
+
+          <Card className="grid gap-3 sm:grid-cols-2">
+            <h2 className="font-semibold sm:col-span-2">Entrega y pago</h2>
+            {activeZones.length > 0 && (
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="zone">Zona</Label>
+                <Select
+                  id="zone"
+                  value={zoneId}
+                  onChange={(e) => {
+                    setZoneId(e.target.value);
+                    setMethodId("");
+                  }}
+                >
+                  <option value="">—</option>
+                  {activeZones.map((z) => (
+                    <option key={z.id} value={z.id}>
+                      {z.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            )}
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="method">Método de entrega</Label>
+              <Select id="method" value={methodId} onChange={(e) => setMethodId(e.target.value)}>
                 <option value="">—</option>
-                {activeZones.map((z) => (
-                  <option key={z.id} value={z.id}>
-                    {z.name}
+                {methods.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} ·{" "}
+                    {m.type === "to_agree" ? SHIPPING_TYPE_LABELS.to_agree : formatMoney(m.price, currency)}
                   </option>
                 ))}
               </Select>
             </div>
-          )}
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="method">Método de entrega</Label>
-            <Select id="method" value={methodId} onChange={(e) => setMethodId(e.target.value)}>
-              <option value="">—</option>
-              {methods.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} ·{" "}
-                  {m.type === "to_agree" ? SHIPPING_TYPE_LABELS.to_agree : formatMoney(m.price, currency)}
-                </option>
-              ))}
-            </Select>
-          </div>
-          {method?.type !== "pickup" && (
-            <>
-              <div className="flex flex-col gap-1 sm:col-span-2">
-                <Label htmlFor="address">Dirección</Label>
-                <Input id="address" name="address" />
-              </div>
-              <div className="flex flex-col gap-1 sm:col-span-2">
-                <Label htmlFor="reference">Referencias</Label>
-                <Input id="reference" name="reference" />
-              </div>
-            </>
-          )}
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="payment">Método de pago</Label>
-            <Select id="payment" name="payment" defaultValue="">
-              <option value="">—</option>
-              {settings.paymentMethods
-                .filter((p) => p.isActive && (p.currencies.length === 0 || p.currencies.includes(currency)))
-                .map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-            </Select>
-          </div>
-          <div className="flex flex-col gap-1 sm:col-span-2">
-            <Label htmlFor="note">Nota del cliente</Label>
-            <Input id="note" name="note" />
-          </div>
-        </Card>
-      </div>
-
-      <Card className="flex h-fit flex-col gap-3 lg:sticky lg:top-6">
-        <h2 className="font-semibold">Resumen</h2>
-        <div className="flex justify-between text-sm">
-          <span>Subtotal</span>
-          <span>{formatMoney(subtotal, currency)}</span>
-        </div>
-        {/* Coupons and the manual discount come with the vouchers module (Pro or add-on). */}
-        {admin.enabledModules.has("vouchers") && (
-          <>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="voucher">Cupón (opcional)</Label>
-              <Input id="voucher" name="voucher" className="uppercase" placeholder="BIENVENIDA10" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="manualReward">Descuento manual</Label>
-              <Select
-                id="manualReward"
-                value={manualReward}
-                onChange={(e) => setManualReward(e.target.value as typeof manualReward)}
-              >
-                <option value="">Sin descuento</option>
-                <option value="percent">Porcentaje</option>
-                <option value="fixed">Importe ({currency})</option>
-              </Select>
-            </div>
-            {manualReward && (
+            {method?.type !== "pickup" && (
               <>
-                <div className="flex flex-col gap-1">
-                  <Label htmlFor="manualValue">
-                    {manualReward === "percent" ? "Porcentaje (%)" : `Importe (${currency})`}
-                  </Label>
-                  <Input id="manualValue" name="manualValue" inputMode="decimal" required />
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <Label htmlFor="address">Dirección</Label>
+                  <Input id="address" name="address" />
                 </div>
-                <div className="flex flex-col gap-1">
-                  <Label htmlFor="manualReason">Motivo</Label>
-                  <Input id="manualReason" name="manualReason" placeholder="Cliente habitual" />
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <Label htmlFor="reference">Referencias</Label>
+                  <Input id="reference" name="reference" />
                 </div>
               </>
             )}
-          </>
-        )}
-        <p className="text-xs text-muted-foreground">
-          Las ofertas, el cupón, el envío y el total se calculan al crear el pedido.
-        </p>
-        {action.error && <Alert variant="destructive">{action.error}</Alert>}
-        <Button
-          type="submit"
-          disabled={action.pending || lines.length === 0 || !normalized}
-          className="hidden lg:inline-flex"
-        >
-          {action.pending ? "Creando…" : "Crear pedido"}
-        </Button>
-      </Card>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="payment">Método de pago</Label>
+              <Select id="payment" name="payment" defaultValue="">
+                <option value="">—</option>
+                {settings.paymentMethods
+                  .filter((p) => p.isActive && (p.currencies.length === 0 || p.currencies.includes(currency)))
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1 sm:col-span-2">
+              <Label htmlFor="note">Nota del cliente</Label>
+              <Input id="note" name="note" />
+            </div>
+          </Card>
+        </div>
 
-      {/* On a phone the summary ends a long form: the subtotal and the button stay at the bottom of the screen. */}
-      <div className="sticky bottom-0 z-10 -mx-4 flex items-center justify-between gap-3 border-t bg-background px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] lg:hidden">
-        <span className="min-w-0">
-          <span className="block text-xs text-muted-foreground">Subtotal</span>
-          <span className="font-semibold">{formatMoney(subtotal, currency)}</span>
-        </span>
-        <Button type="submit" disabled={action.pending || lines.length === 0 || !normalized}>
-          {action.pending ? "Creando…" : "Crear pedido"}
-        </Button>
-      </div>
-    </form>
+        <Card className="flex h-fit flex-col gap-3 lg:sticky lg:top-6">
+          <h2 className="font-semibold">Resumen</h2>
+          <div className="flex justify-between text-sm">
+            <span>Subtotal</span>
+            <span>{formatMoney(subtotal, currency)}</span>
+          </div>
+          {/* Coupons and the manual discount come with the vouchers module (Pro or add-on). */}
+          {admin.enabledModules.has("vouchers") && (
+            <>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="voucher">Cupón (opcional)</Label>
+                <Input id="voucher" name="voucher" className="uppercase" placeholder="BIENVENIDA10" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="manualReward">Descuento manual</Label>
+                <Select
+                  id="manualReward"
+                  value={manualReward}
+                  onChange={(e) => setManualReward(e.target.value as typeof manualReward)}
+                >
+                  <option value="">Sin descuento</option>
+                  <option value="percent">Porcentaje</option>
+                  <option value="fixed">Importe ({currency})</option>
+                </Select>
+              </div>
+              {manualReward && (
+                <>
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="manualValue">
+                      {manualReward === "percent" ? "Porcentaje (%)" : `Importe (${currency})`}
+                    </Label>
+                    <Input id="manualValue" name="manualValue" inputMode="decimal" required />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="manualReason">Motivo</Label>
+                    <Input id="manualReason" name="manualReason" placeholder="Cliente habitual" />
+                  </div>
+                </>
+              )}
+            </>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Las ofertas, el cupón, el envío y el total se calculan al crear el pedido.
+          </p>
+          {action.error && <Alert variant="destructive">{action.error}</Alert>}
+          <Button
+            type="submit"
+            disabled={action.pending || lines.length === 0 || !normalized}
+            className="hidden lg:inline-flex"
+          >
+            {action.pending ? "Creando…" : "Crear pedido"}
+          </Button>
+        </Card>
+
+        {/* On a phone the summary ends a long form: the subtotal and the button stay at the bottom of the screen. */}
+        <div className="sticky bottom-0 z-10 -mx-4 flex items-center justify-between gap-3 border-t bg-background px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] lg:hidden">
+          <span className="min-w-0">
+            <span className="block text-xs text-muted-foreground">Subtotal</span>
+            <span className="font-semibold">{formatMoney(subtotal, currency)}</span>
+          </span>
+          <Button type="submit" disabled={action.pending || lines.length === 0 || !normalized}>
+            {action.pending ? "Creando…" : "Crear pedido"}
+          </Button>
+        </div>
+      </form>
+    </>
   );
 }

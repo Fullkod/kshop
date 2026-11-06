@@ -134,6 +134,9 @@ export const articles: HelpArticle[] = [
         screenshot: "order-new",
       },
       {
+        text: "Para cobrar un producto a otro precio, toca su importe, escribe el «Precio de venta» y, si quieres, el motivo. El dueño y el administrador también tienen «Al costo» y un aviso si queda por debajo del costo; el cambio queda en el historial del pedido.",
+      },
+      {
         text: "Escribe el teléfono y el nombre del cliente.",
       },
       {

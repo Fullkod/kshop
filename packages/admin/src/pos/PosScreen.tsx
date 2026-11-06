@@ -36,6 +36,7 @@ import {
 } from "@kshop/ui";
 import { useMemo, useRef, useState } from "react";
 import { useAdmin } from "../admin-context";
+import { LinePriceDialog } from "../LinePriceDialog";
 import { PosDay } from "./PosDay";
 import { usePosSales } from "./pos-sync";
 import { PosStatus, usePosCatalog, usePosPlace, usePosStorage } from "./PosStatus";
@@ -368,8 +369,12 @@ export function PosScreen({ storeId, online }: { storeId: string; online: boolea
         (() => {
           const line = cart.find((l) => l.item.variantId === pricing);
           return line ? (
-            <PosPriceDialog
-              line={line}
+            <LinePriceDialog
+              title={itemLabel(line.item)}
+              listPrice={posItemPrice(line.item)}
+              price={line.unitPrice}
+              note={line.priceNote}
+              changed={!!line.priceChanged}
               currency={currency}
               cost={seesCost ? (line.item.cost ?? null) : null}
               onClose={() => setPricing(null)}
@@ -667,106 +672,6 @@ function PosCheckout({
           </Button>
         </div>
       </div>
-    </Dialog>
-  );
-}
-
-/** Changing the price of a line (KSH0011): anyone at the counter; «Al costo» and the warning only with the cost. */
-function PosPriceDialog({
-  line,
-  currency,
-  cost,
-  onClose,
-  onApply,
-}: {
-  line: CartLine;
-  currency: CurrencyCode;
-  /** In the sale currency; null when this user does not see costs or the product has none. */
-  cost: number | null;
-  onClose: () => void;
-  onApply: (unitPrice: number, note: string) => void;
-}) {
-  const list = posItemPrice(line.item);
-  const [price, setPrice] = useState(String(line.unitPrice));
-  const [note, setNote] = useState(line.priceNote ?? "");
-  const [error, setError] = useState<string | null>(null);
-  const typed = parseDecimal(price);
-  const valid = price.trim() !== "" && Number.isFinite(typed) && typed >= 0;
-  const below = cost !== null && valid && typed < cost;
-
-  function apply() {
-    if (!valid) {
-      setError("Escribe el precio de venta.");
-      return;
-    }
-    onApply(Math.round(typed * 100) / 100, note);
-  }
-
-  return (
-    <Dialog open onClose={onClose} title={itemLabel(line.item)} compact>
-      <form
-        className="flex flex-col gap-3"
-        data-testid="pos-price-dialog"
-        onSubmit={(e) => {
-          e.preventDefault();
-          apply();
-        }}
-      >
-        <p className="text-sm text-muted-foreground">
-          Precio de la tienda:{" "}
-          <span className="font-medium text-foreground">{formatMoney(list, currency)}</span>
-        </p>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="pos-price">Precio de venta</Label>
-          <Input
-            id="pos-price"
-            inputMode="decimal"
-            value={price}
-            onFocus={(e) => e.target.select()}
-            onChange={(e) => {
-              setPrice(e.target.value);
-              setError(null);
-            }}
-            data-testid="pos-price-input"
-          />
-        </div>
-        {cost !== null && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setPrice(String(cost))}
-            data-testid="pos-price-cost"
-          >
-            Al costo ({formatMoney(cost, currency)})
-          </Button>
-        )}
-        {below && (
-          <Alert variant="warning" data-testid="pos-price-below-cost">
-            Por debajo del costo ({formatMoney(cost, currency)}): esta venta pierde dinero.
-          </Alert>
-        )}
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="pos-price-note">Motivo (opcional)</Label>
-          <Input
-            id="pos-price-note"
-            value={note}
-            maxLength={200}
-            placeholder="Cliente fijo, liquidación…"
-            onChange={(e) => setNote(e.target.value)}
-          />
-        </div>
-        {error && <Alert variant="destructive">{error}</Alert>}
-        <div className="flex flex-wrap gap-2">
-          <Button type="submit" data-testid="pos-price-apply">
-            Aplicar
-          </Button>
-          {line.priceChanged && (
-            <Button type="button" variant="ghost" onClick={() => onApply(list, "")}>
-              Volver al precio de la tienda
-            </Button>
-          )}
-        </div>
-      </form>
     </Dialog>
   );
 }

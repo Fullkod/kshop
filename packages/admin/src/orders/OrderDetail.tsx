@@ -83,6 +83,8 @@ const EVENT_LABELS: Record<string, string> = {
   shipping_set: "Costo de envío fijado",
   payment_recorded: "Pago registrado",
   refund_recorded: "Reembolso registrado",
+  price_changed: "Precio cambiado",
+  below_cost: "Vendido por debajo del costo",
   note: "Nota interna",
 };
 
@@ -354,9 +356,13 @@ export function OrderDetail({
                       (payload.reason ? ` (${String(payload.reason)})` : "")
                     : e.type === "note"
                       ? String(payload.text ?? "")
-                      : payload.amount !== undefined
-                        ? formatMoney(Number(payload.amount), String(payload.currency ?? currency))
-                        : "";
+                      : e.type === "price_changed"
+                        ? `${String(payload.name ?? "")}: ${formatMoney(Number(payload.from), String(payload.currency ?? currency))} → ${formatMoney(Number(payload.to), String(payload.currency ?? currency))}${payload.note ? ` (${String(payload.note)})` : ""}`
+                        : e.type === "below_cost"
+                          ? `${String(payload.name ?? "")} a ${formatMoney(Number(payload.price), String(payload.currency ?? currency))}`
+                          : payload.amount !== undefined
+                            ? formatMoney(Number(payload.amount), String(payload.currency ?? currency))
+                            : "";
                 return (
                   <li key={e.id} className="flex justify-between gap-3">
                     <span>

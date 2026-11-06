@@ -37,7 +37,9 @@ export async function checkoutOptions(storeId: string): Promise<CheckoutOptions>
     shippingEnabled
       ? service
           .from("shipping_methods")
-          .select("id, zone_id, type, name, price, free_over_subtotal, min_days, max_days, warehouses (name, address)")
+          .select(
+            "id, zone_id, type, name, price, free_over_subtotal, min_days, max_days, warehouses (name, address)",
+          )
           .eq("store_id", storeId)
           .eq("is_active", true)
           .order("sort_order")
@@ -84,9 +86,9 @@ export async function checkoutOptions(storeId: string): Promise<CheckoutOptions>
       maxDays: m.max_days,
       pickupPoint: m.warehouses ? { name: m.warehouses.name, address: m.warehouses.address } : null,
     })),
-    paymentMethods: (payments.data as { id: string; name: string; currencies: string[]; instructions: string | null }[]).map(
-      (p) => ({ id: p.id, name: p.name, currencies: p.currencies, instructions: p.instructions }),
-    ),
+    paymentMethods: (
+      payments.data as { id: string; name: string; currencies: string[]; instructions: string | null }[]
+    ).map((p) => ({ id: p.id, name: p.name, currencies: p.currencies, instructions: p.instructions })),
   };
 }
 
@@ -131,7 +133,12 @@ type OrderRow = {
     value: number;
     amount: number;
   }[];
-  order_events: { type: string; payload: Record<string, unknown>; created_at: string; is_internal: boolean }[];
+  order_events: {
+    type: string;
+    payload: Record<string, unknown>;
+    created_at: string;
+    is_internal: boolean;
+  }[];
 };
 
 const num = (v: number | null) => (v == null ? null : Number(v));
@@ -208,7 +215,11 @@ function toPublicOrder(row: OrderRow, customDomain: string | null): PublicOrder 
     events: row.order_events
       .filter((e) => !e.is_internal && (e.type === "created" || e.type === "status_changed"))
       .sort((a, b) => a.created_at.localeCompare(b.created_at))
-      .map((e) => ({ type: e.type, to: (e.payload.to as OrderStatus | undefined) ?? null, createdAt: e.created_at })),
+      .map((e) => ({
+        type: e.type,
+        to: (e.payload.to as OrderStatus | undefined) ?? null,
+        createdAt: e.created_at,
+      })),
     storeName: store.name,
     whatsappUrl: store.whatsapp_phone ? whatsappLink(store.whatsapp_phone, text) : null,
   };
@@ -239,8 +250,11 @@ export type PlaceOrderParams = {
   channel: OrderChannel;
   customerId: string | null;
   cartId: string | null;
-  lines: { variant_id: string; quantity: number }[];
-  input: Pick<CheckoutInput, "idempotencyKey" | "currency" | "customer" | "shipping" | "paymentMethodId" | "note"> & {
+  lines: { variant_id: string; quantity: number; unit_price?: number; price_note?: string | null }[];
+  input: Pick<
+    CheckoutInput,
+    "idempotencyKey" | "currency" | "customer" | "shipping" | "paymentMethodId" | "note"
+  > & {
     notifyCustomer?: boolean;
   };
   createdBy?: string | null;
@@ -285,9 +299,18 @@ export async function placeOrder(storeId: string, params: PlaceOrderParams): Pro
     },
   });
   if (error) mapDbError(error, "El pedido");
-  const result = data as { order_id: string; public_token: string; created: boolean; flipped_product_ids: string[] };
+  const result = data as {
+    order_id: string;
+    public_token: string;
+    created: boolean;
+    flipped_product_ids: string[];
+  };
   if (result.flipped_product_ids.length) refreshCatalog(storeId);
-  return { orderId: result.order_id, order: await getPublicOrder(storeId, result.public_token), created: result.created };
+  return {
+    orderId: result.order_id,
+    order: await getPublicOrder(storeId, result.public_token),
+    created: result.created,
+  };
 }
 
 export function emptyCartError(): HttpError {
