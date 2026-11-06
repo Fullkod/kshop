@@ -25,6 +25,7 @@ const USERS = {
   ownerA: "ord-owner-a@e2e.kshop.test",
   staffA: "ord-staff-a@e2e.kshop.test",
   ownerB: "ord-owner-b@e2e.kshop.test",
+  superadmin: "ord-superadmin@e2e.kshop.test",
 };
 const SLUGS = ["ord-e2e-a", "ord-e2e-b"];
 
@@ -351,7 +352,7 @@ async function checkout({ anon, storeA, storeB, ownerIds }) {
   return { A, B, order };
 }
 
-async function admin({ anon, ownerA, staffA, ownerB, storeA, storeB }, { A, B, order }) {
+async function admin({ anon, ownerA, staffA, ownerB, superadmin, storeA, storeB }, { A, B, order }) {
   const settings = `/stores/${storeA.id}/checkout-settings`;
   const orders = `/stores/${storeA.id}/orders`;
 
@@ -377,13 +378,19 @@ async function admin({ anon, ownerA, staffA, ownerB, storeA, storeB }, { A, B, o
   r = await ownerA("DELETE", `${settings}/zones/${zoneId}`);
   check("settings: owner deletes a zone", r.status === 204, r);
 
+  // The plan's module is switched off in the database; the superadmin's module change is what expires the cached
+  // modules of the store at once (a bare database edit would show within minutes, KSH0013).
+  const grants = `/platform/stores/${storeA.id}/subscription/module-grants`;
   await service.from("store_modules").update({ enabled: false }).eq("store_id", storeA.id).eq("module_code", "shipping");
+  r = await superadmin("PUT", grants, { moduleCode: "shipping", enabled: false });
+  check("superadmin switches a module off -> 200", r.status === 200, r);
   r = await ownerA("POST", `${settings}/zones`, { name: "Sin módulo" });
   check("settings: shipping module disabled -> 403 module_not_enabled",
     r.status === 403 && r.body.error.code === "module_not_enabled", r);
   r = await ownerA("POST", `${settings}/payment-methods`, { name: "Sigue funcionando" });
   check("settings: payment methods only need orders", r.status === 201, r);
   await service.from("store_modules").update({ enabled: true }).eq("store_id", storeA.id).eq("module_code", "shipping");
+  await superadmin("PUT", grants, { moduleCode: "shipping", enabled: false }); // expires the cache again
 
   // New order from the admin (channel admin).
   r = await staffA("POST", orders, {
@@ -526,7 +533,12 @@ async function run() {
   await cleanup();
   const ids = {};
   for (const [key, email] of Object.entries(USERS)) {
-    const { data, error } = await service.auth.admin.createUser({ email, password: PASSWORD, email_confirm: true });
+    const { data, error } = await service.auth.admin.createUser({
+      email,
+      password: PASSWORD,
+      email_confirm: true,
+      ...(key === "superadmin" && { app_metadata: { role: "superadmin" } }),
+    });
     if (error) throw error;
     ids[key] = data.user.id;
   }
@@ -539,6 +551,7 @@ async function run() {
     ownerA: api(await token(USERS.ownerA)),
     staffA: api(await token(USERS.staffA)),
     ownerB: api(await token(USERS.ownerB)),
+    superadmin: api(await token(USERS.superadmin)),
     storeA,
     storeB,
     ownerIds: ids,

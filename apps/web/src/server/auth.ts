@@ -9,6 +9,8 @@ export type ApiUser = {
   email: string | null;
   isSuperadmin: boolean;
   accessToken: string;
+  /** Auth session of the token (customers: checked against auth.sessions on each call, KSH0013). */
+  sessionId: string | null;
   /** Customer tokens carry { kind: "customer", store_id } (one account per store). */
   appMetadata: Record<string, unknown>;
 };
@@ -20,7 +22,7 @@ const requestUsers = new WeakMap<Request, Promise<ApiUser>>();
  * Validates `Authorization: Bearer <Supabase access token>` (web and mobile apps; no cookies). The JWT is verified
  * locally (getClaims: ES256 signature against the project's JWKS, cached in the instance) instead of a GoTrue call
  * per request (R11, decision D3 of Roberto): a user banned or deleted in Auth keeps access until the token expires
- * (≤ 1 h). Store membership is still checked on every call (requireStoreRole), and a superadmin token is always
+ * (≤ 1 h). A customer's session is checked in requireCustomer (KSH0013). Store membership is still checked on every call (requireStoreRole), and a superadmin token is always
  * confirmed with GoTrue.
  */
 export function getUserFromBearer(request: Request): Promise<ApiUser> {
@@ -48,6 +50,7 @@ async function verifyBearer(request: Request): Promise<ApiUser> {
       email: typeof claims.email === "string" && claims.email ? claims.email : null,
       isSuperadmin: false,
       accessToken,
+      sessionId: typeof claims.session_id === "string" ? claims.session_id : null,
       appMetadata,
     };
   }
@@ -60,6 +63,7 @@ async function verifyBearer(request: Request): Promise<ApiUser> {
     email: data.user.email ?? null,
     isSuperadmin: data.user.app_metadata?.role === "superadmin",
     accessToken,
+    sessionId: typeof claims.session_id === "string" ? claims.session_id : null,
     appMetadata: data.user.app_metadata ?? {},
   };
 }

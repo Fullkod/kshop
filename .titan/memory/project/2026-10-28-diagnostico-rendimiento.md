@@ -41,6 +41,13 @@ síntesis, 10 revisores que intentaron refutar cada causa: ninguna cayó). Infor
   una pasada de `test:rls` por migración y las mediciones.
 - D2: solo las **promociones** pueden ir hasta 5 min tarde (cron cada 5 min con ventana ampliada); WhatsApp sigue cada minuto.
 - D3: `getClaims` aceptado (baneado en Auth conserva acceso ≤ 1 h; superadmin sigue con `getUser`).
+  - KSH0013 (2026-11-06): **excepción para clientes**. `requireCustomer` ya leía la fila de `customers` en cada
+    llamada; ahora la lee con `public.api_customer(store, user, session_id)`, que solo la devuelve si la sesión del
+    token sigue en `auth.sessions`, y el reset de contraseña borra las sesiones (`auth_revoke_user_sessions`). Un
+    token de cliente revocado deja de valer al instante, sin consulta extra. El staff sigue con D3.
+  - Caché de módulos (`entitlements:{storeId}`): todo cambio del superadmin la expira (`expireStoreCaches`); un
+    `update store_modules` directo en la base tarda minutos en verse. Los e2e que apagan módulos así deben llamar
+    después a la API del superadmin (`subscription/module-grants` o `addons`), como `e2e-orders` y `e2e-discounts`.
 - D4: pagar Supabase Pro + Small / Vercel Pro se decide **después de medir R11**.
 - D5: G13 (RLS del personal) y G14 (esquema de pg_graphql) **dentro de R11** (fases 6b y 6c); el cambio de
   `search_path` en producción se avisa antes con la medición local.

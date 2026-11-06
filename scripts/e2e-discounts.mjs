@@ -25,6 +25,7 @@ const USERS = {
   ownerA: "disc-owner-a@e2e.kshop.test",
   staffA: "disc-staff-a@e2e.kshop.test",
   ownerB: "disc-owner-b@e2e.kshop.test",
+  superadmin: "disc-superadmin@e2e.kshop.test",
 };
 const SLUGS = ["disc-e2e-a", "disc-e2e-b"];
 
@@ -137,7 +138,12 @@ async function run() {
   await cleanup();
   const ids = {};
   for (const [k, email] of Object.entries(USERS)) {
-    const { data, error } = await service.auth.admin.createUser({ email, password: PASSWORD, email_confirm: true });
+    const { data, error } = await service.auth.admin.createUser({
+      email,
+      password: PASSWORD,
+      email_confirm: true,
+      ...(k === "superadmin" && { app_metadata: { role: "superadmin" } }),
+    });
     if (error) throw error;
     ids[k] = data.user.id;
   }
@@ -148,6 +154,11 @@ async function run() {
   const ownerA = api(await token(USERS.ownerA));
   const staffA = api(await token(USERS.staffA));
   const ownerB = api(await token(USERS.ownerB));
+  const superadmin = api(await token(USERS.superadmin));
+  // A module change from the superadmin expires the store's cached modules at once; a bare database edit would only
+  // show within minutes (KSH0013). Switching off a grant the store does not have changes nothing else.
+  const expireModules = (storeId) =>
+    superadmin("PUT", `/platform/stores/${storeId}/subscription/module-grants`, { moduleCode: "vouchers", enabled: false });
   const A = await seedCatalog(storeA, ids.ownerA, "DA");
   const B = await seedCatalog(storeB, ids.ownerB, "DB");
   const S = A.products.S;
@@ -189,12 +200,8 @@ async function run() {
   r = await ownerA("POST", `${base}/vouchers`, voucher);
   check("Base without the add-on: vouchers -> 403 module_not_enabled",
     r.status === 403 && r.body.error.code === "module_not_enabled", r);
-  {
-    const { error } = await service.rpc("set_store_addon", {
-      p_store_id: storeA.id, p_module_code: "vouchers", p_enabled: true, p_user_id: null,
-    });
-    if (error) throw error;
-  }
+  r = await superadmin("PUT", `/platform/stores/${storeA.id}/subscription/addons`, { moduleCode: "vouchers", enabled: true });
+  check("superadmin adds the vouchers add-on -> 200", r.status === 200, r);
   r = await anon("GET", `${base}/cart?token=${cartToken}`);
   check("with the add-on: the cart shows the coupon field", r.status === 200 && r.body.vouchersEnabled === true, r.body);
   r = await staffA("POST", `${base}/vouchers`, voucher);
@@ -285,11 +292,13 @@ async function run() {
 
   // Module off: no prices change, admin endpoints 403, data kept.
   await service.from("store_modules").update({ enabled: false }).eq("store_id", storeA.id).in("module_code", ["discounts", "vouchers"]);
+  await expireModules(storeA.id);
   r = await ownerA("POST", `${base}/promotions`, promo);
   check("module off: promotions -> 403 module_not_enabled", r.status === 403 && r.body.error.code === "module_not_enabled", r);
   r = await anon("PUT", `${base}/cart`, { lines: [{ variantId: S.variantId, quantity: 1 }], mode: "add" });
   check("module off: the cart uses the list price", r.status === 200 && r.body.lines[0]?.unitPrice === 1500, r.body);
   await service.from("store_modules").update({ enabled: true }).eq("store_id", storeA.id).in("module_code", ["discounts", "vouchers"]);
+  await expireModules(storeA.id);
 
   // Delete: a used voucher is deactivated, a promotion goes away and prices come back.
   const { data: used } = await service.from("vouchers").select("id").eq("store_id", storeA.id).eq("code", "BIENVENIDA10").single();

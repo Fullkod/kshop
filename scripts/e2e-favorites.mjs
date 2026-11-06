@@ -20,6 +20,8 @@ const APP = env.E2E_APP_URL ?? "http://localhost:3000";
 const PASSWORD = randomBytes(12).toString("base64url");
 const EMAIL = "fav-customer@e2e.kshop.test";
 const OTHER_EMAIL = "fav-customer-other@e2e.kshop.test";
+const OWNER_EMAIL = "fav-owner-other@e2e.kshop.test";
+const OTHER_SLUG = "fav-e2e-other";
 
 const service = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -34,10 +36,37 @@ function check(name, ok, detail) {
 }
 
 async function removeUsers() {
+  await service.from("stores").delete().eq("slug", OTHER_SLUG);
   const { data } = await service.auth.admin.listUsers({ perPage: 1000 });
   for (const u of data.users) {
-    if (u.email === EMAIL || u.email === OTHER_EMAIL) await service.auth.admin.deleteUser(u.id);
+    if ([EMAIL, OTHER_EMAIL, OWNER_EMAIL].includes(u.email)) await service.auth.admin.deleteUser(u.id);
   }
+}
+
+/** A temporary second store, for the cross-store token check (the test database only has the Tienda Demo). */
+async function otherStore() {
+  const { data: owner, error } = await service.auth.admin.createUser({
+    email: OWNER_EMAIL,
+    password: PASSWORD,
+    email_confirm: true,
+  });
+  if (error) throw error;
+  const { data, error: storeError } = await service
+    .rpc("create_store", {
+      p_name: "Fav E2E",
+      p_slug: OTHER_SLUG,
+      p_owner_id: owner.user.id,
+      p_base_currency: "CUP",
+      p_order_prefix: "FV",
+      p_whatsapp_phone: "5350000000",
+      p_plan_code: "base",
+      p_trial_days: 0,
+      p_platform_domain: "kshop.fullkod.com",
+      p_created_by: null,
+    })
+    .single();
+  if (storeError) throw storeError;
+  return data;
 }
 
 /** Customer account of a store (as the API creates them, minus the phone login) and its access token. */
@@ -80,11 +109,11 @@ const { data: products } = await service
   .eq("store_id", demo.id)
   .eq("status", "published")
   .limit(2);
-// Another store, for the cross-store token check (the FK test in 10_favorites_isolation covers foreign products).
-const { data: other } = await service.from("stores").select("id").neq("id", demo.id).limit(1).single();
 const [p1, p2] = products.map((p) => p.id);
 
 try {
+  // Another store, for the cross-store token check (the FK test in 10_favorites_isolation covers foreign products).
+  const other = await otherStore();
   const token = await customer(EMAIL, demo.id, "+5359990001");
   const otherToken = await customer(OTHER_EMAIL, other.id, "+5359990002");
   const base = `/stores/${demo.id}/customer/favorites`;

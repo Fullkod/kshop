@@ -314,6 +314,11 @@ export async function resetCustomerPassword(
     }
     throw updateError;
   }
+  // The new password signs out every other device (their tokens fail in requireCustomer from now on).
+  const { error: revokeError } = await getServiceClient().rpc("auth_revoke_user_sessions", {
+    p_user_id: data.user_id,
+  });
+  if (revokeError) throw revokeError;
   return loginCustomer(storeId, { phone: input.phone, password: input.password }, ip);
 }
 
@@ -332,13 +337,15 @@ export async function requireCustomer(request: Request, storeId: string): Promis
   const user = await getUserFromBearer(request);
   if (user.appMetadata.kind !== "customer" || user.appMetadata.store_id !== storeId) throw unauthorized();
 
-  const { data, error } = await getServiceClient()
-    .from("customers")
-    .select("*")
-    .eq("store_id", storeId)
-    .eq("user_id", user.id)
-    .maybeSingle<CustomerRow>();
+  // Null too when the token's session is gone (password reset): a revoked token stops at once (KSH0013).
+  if (!user.sessionId) throw unauthorized();
+  const { data: row, error } = await getServiceClient().rpc("api_customer", {
+    p_store_id: storeId,
+    p_user_id: user.id,
+    p_session_id: user.sessionId,
+  });
   if (error) throw error;
+  const data = row as CustomerRow | null;
   if (!data) throw unauthorized();
   if (data.is_blocked)
     throw new HttpError(403, "customer_blocked", "Tu cuenta está bloqueada. Escribe a la tienda.");
