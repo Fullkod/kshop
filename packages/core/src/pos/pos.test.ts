@@ -168,6 +168,12 @@ describe("summary of the day", () => {
       byMethod: [],
     });
   });
+
+  it("a sale whose order was cancelled after the upload does not count", () => {
+    expect(
+      posDaySummary([{ ...sold(), uploaded: { cancelled: true } }, { ...sold(), uploaded: {} }], "CUP", now).count,
+    ).toBe(1);
+  });
 });
 
 describe("what the owner reads", () => {

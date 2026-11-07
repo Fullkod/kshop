@@ -1,7 +1,7 @@
 "use client";
 
 import { POS_BATCH_SIZE } from "@kshop/core";
-import { ApiError, type ApiClient } from "@kshop/data";
+import { ApiError, type AdminReads, type ApiClient } from "@kshop/data";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "../session";
 import { usePosStorage } from "./PosStatus";
@@ -66,8 +66,33 @@ export async function uploadPosQueue(
   return result;
 }
 
+/**
+ * Today's uploaded sales whose order was cancelled afterwards (from the order page: the phone only voids what it has
+ * not uploaded) are marked, so «Hoy en este teléfono» stops counting them. Offline it keeps what it last knew.
+ */
+export async function markCancelledSales(
+  reads: Pick<AdminReads, "posCancelledOrders">,
+  storage: PosStorage,
+  storeId: string,
+  now: Date = new Date(),
+): Promise<number> {
+  const today = now.toDateString();
+  const open = (await storage.listSales(storeId)).filter(
+    (s) => s.uploaded && !s.uploaded.cancelled && new Date(s.sale.soldAt).toDateString() === today,
+  );
+  if (open.length === 0) return 0;
+  const cancelled = new Set(await reads.posCancelledOrders(storeId, open.map((s) => s.uploaded!.orderId)));
+  let marked = 0;
+  for (const queued of open) {
+    if (!queued.uploaded || !cancelled.has(queued.uploaded.orderId)) continue;
+    await storage.putSale(storeId, { ...queued, uploaded: { ...queued.uploaded, cancelled: true } });
+    marked += 1;
+  }
+  return marked;
+}
+
 export function usePosSales(storeId: string, online: boolean) {
-  const { api, session } = useSession();
+  const { api, reads, session } = useSession();
   const storage = usePosStorage();
   const [sales, setSales] = useState<QueuedSale[] | null>(null);
   const [syncing, setSyncing] = useState(false);
@@ -93,6 +118,7 @@ export function usePosSales(storeId: string, online: boolean) {
     setSyncing(true);
     try {
       await uploadPosQueue(api, storage, storeId);
+      await markCancelledSales(reads, storage, storeId).catch(() => {});
     } catch {
       // The phone's own storage failed: the sales stay where they are and the next try reads them again.
     } finally {
@@ -100,7 +126,7 @@ export function usePosSales(storeId: string, online: boolean) {
       setSyncing(false);
       await reload().catch(() => {});
     }
-  }, [api, canUpload, reload, storage, storeId]);
+  }, [api, canUpload, reads, reload, storage, storeId]);
 
   useEffect(() => {
     void Promise.resolve()

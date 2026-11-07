@@ -19,7 +19,7 @@ export type QueuedSale = {
   /** Why the server refused it: it stays on the phone until that is solved (D10). */
   held?: { code: string; message: string; at: string };
   /** The server has it: kept a few days for the summary of the day, no longer in the queue. */
-  uploaded?: { orderId: string; number: number; at: string };
+  uploaded?: { orderId: string; number: number; at: string; cancelled?: boolean };
 };
 
 export type PosStorage = {

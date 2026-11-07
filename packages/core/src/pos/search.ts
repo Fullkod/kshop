@@ -108,6 +108,8 @@ export function posDaySummary(
         paymentMethodId?: string;
       }[];
     };
+    /** Uploaded, and the order was cancelled afterwards (from the order page, on any phone or the web). */
+    uploaded?: { cancelled?: boolean };
   }[],
   baseCurrency: string,
   now: Date = new Date(),
@@ -127,8 +129,8 @@ export function posDaySummary(
     methodCents.set(key, (methodCents.get(key) ?? 0) + Math.round(amount * 100));
   };
   let count = 0;
-  for (const { sale } of sales) {
-    if (sale.voided || new Date(sale.soldAt).toDateString() !== today) continue;
+  for (const { sale, uploaded } of sales) {
+    if (sale.voided || uploaded?.cancelled || new Date(sale.soldAt).toDateString() !== today) continue;
     count += 1;
     for (const p of sale.payments) {
       const currency = p.currency ?? baseCurrency;

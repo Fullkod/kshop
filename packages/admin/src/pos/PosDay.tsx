@@ -108,6 +108,8 @@ export function PosDay({
                 {saleMethods(queued).map((m) => ` · ${m}`)}{" "}
                 {queued.sale.voided ? (
                   <Badge variant="muted">Anulada</Badge>
+                ) : queued.uploaded?.cancelled ? (
+                  <Badge variant="muted">Pedido {queued.uploaded.number} cancelado</Badge>
                 ) : queued.uploaded ? (
                   <Badge variant="muted">Pedido {queued.uploaded.number}</Badge>
                 ) : queued.held ? (

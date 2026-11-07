@@ -164,6 +164,9 @@ export function createAdminReads(options: AdminReadsOptions) {
     /** Null when the order is not a counter sale. */
     posSale: (orderId: string) => rpc<PosSaleInfo | null>("admin_pos_sale", { p_order_id: orderId }),
     /** KSH0012: closings of the last days (own for staff, all for owner and admin) and the float. */
+    /** Of the orders a phone uploaded, the ones cancelled since (the phone stops counting them). */
+    posCancelledOrders: (storeId: string, orderIds: readonly string[]) =>
+      rpc<string[]>("admin_pos_cancelled_orders", { p_store_id: storeId, p_order_ids: orderIds }),
     posClosings: (storeId: string, days = 30) =>
       rpc<PosClosings>("admin_pos_closings", { p_store_id: storeId, p_days: days }),
     posOverview: (storeId: string, days: number) =>
