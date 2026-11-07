@@ -25,8 +25,8 @@ const time = (iso: string) =>
   new Intl.DateTimeFormat("es", { timeStyle: "short", timeZone: "America/Havana" }).format(new Date(iso));
 
 /**
- * Cierres de caja (KSH0012): each closing by day and cashier, what should have been there, what was counted and the
- * difference, and its sales. Staff see their own; owner and admin see all and set the float of the till.
+ * Cierres de caja (KSH0012): each closing of the till (all phones and accounts since KSH0014), what should have been
+ * there, what was counted and the difference, what each account sold and its sales. Owner and admin set the float.
  */
 export function PosClosings() {
   const store = useStore();
@@ -102,10 +102,22 @@ export function PosClosings() {
                     <Badge variant={squares ? "success" : "destructive"}>{differenceText(diff)}</Badge>
                   </div>
                   <p className="text-muted-foreground">
-                    {c.cashier ?? "Cuenta borrada"} · {time(c.closedAt)} · {c.expected.sales}{" "}
+                    Cerró {c.cashier ?? "una cuenta borrada"} · {time(c.closedAt)} · {c.expected.sales}{" "}
                     {c.expected.sales === 1 ? "venta" : "ventas"}
                     {c.expected.voided > 0 && ` · ${c.expected.voided} anuladas`}
+                    {(c.expected.older ?? 0) > 0 && ` · ${c.expected.older} de días anteriores`}
                   </p>
+                  {(c.expected.by_cashier?.length ?? 0) > 1 && (
+                    <ul className="flex flex-col gap-0.5 text-muted-foreground">
+                      {c.expected.by_cashier!.map((v) => (
+                        <li key={v.cashier}>
+                          {v.cashier}: {v.sales} {v.sales === 1 ? "venta" : "ventas"}
+                          {Object.keys(v.cash).length > 0 &&
+                            ` · ${moneyList(v.cash, store.baseCurrency)} en efectivo`}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                   <dl className="grid grid-cols-2 gap-2">
                     <div>
                       <dt className="text-muted-foreground">Debía haber</dt>

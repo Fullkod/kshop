@@ -122,7 +122,8 @@ export function PosCloseDay({
     <section className="flex flex-col gap-2 border-t pt-4" data-testid="pos-close">
       <h2 className="font-semibold">Cierre del día</h2>
       <p className="text-sm text-muted-foreground">
-        Cuenta el efectivo al terminar: Kshop lo compara con tus ventas de hoy y le manda el cuadre al dueño.
+        Cuenta el efectivo de la caja al terminar: Kshop lo compara con las ventas de todos los teléfonos del
+        local y le manda el cuadre al dueño. Se cierra una sola vez, desde cualquier teléfono.
       </p>
       {error && step === "idle" && <Alert variant="destructive">{error}</Alert>}
       <Button
@@ -154,8 +155,8 @@ export function PosCloseDay({
                 {moneyList(result.expectedCash, currency)}; contaste {moneyList(result.counted, currency)}.
               </Alert>
               <p className="text-sm text-muted-foreground">
-                El cierre quedó guardado y el dueño recibe el cuadre por WhatsApp. Si vendes algo más hoy, irá
-                a otro cierre.
+                El cierre quedó guardado con las ventas de todos los teléfonos y el dueño recibe el cuadre por
+                WhatsApp. Si se vende algo más hoy, irá a otro cierre.
               </p>
               <Button onClick={() => setStep("idle")}>Listo</Button>
             </div>
@@ -172,11 +173,20 @@ export function PosCloseDay({
                 {preview.sales} {preview.sales === 1 ? "venta" : "ventas"}
                 {preview.voided > 0 && ` · ${preview.voided} anuladas`}
                 {preview.closedToday > 0 && " desde el último cierre"}
+                {preview.older > 0 && ` · ${preview.older} de días anteriores`}
               </p>
-              {preview.olderOpen > 0 && (
-                <Alert variant="warning">
-                  Hay {preview.olderOpen} ventas de días anteriores sin cerrar: no entran en este cierre.
-                </Alert>
+              {preview.byCashier.length > 1 && (
+                <ul
+                  className="flex flex-col gap-0.5 text-sm text-muted-foreground"
+                  data-testid="pos-close-cashiers"
+                >
+                  {preview.byCashier.map((c) => (
+                    <li key={c.cashier}>
+                      {c.cashier}: {c.sales} {c.sales === 1 ? "venta" : "ventas"}
+                      {Object.keys(c.cash).length > 0 && ` · ${moneyList(c.cash, currency)} en efectivo`}
+                    </li>
+                  ))}
+                </ul>
               )}
               <div className="flex flex-col gap-1.5">
                 {currencies.map((c) => (

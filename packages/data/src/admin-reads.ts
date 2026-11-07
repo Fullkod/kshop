@@ -42,6 +42,9 @@ export type PosClosing = {
     cash: Record<string, number>;
     expected_cash: Record<string, number>;
     methods: { name: string; currency: string; amount: number }[];
+    /** KSH0014: open sales of earlier days included, and what each account sold. */
+    older?: number;
+    by_cashier?: { cashier: string; sales: number; cash: Record<string, number> }[];
   };
   counted: Record<string, number>;
   note: string | null;

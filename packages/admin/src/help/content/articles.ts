@@ -152,7 +152,7 @@ export const articles: HelpArticle[] = [
     slug: "cash-closing",
     title: "Quiero cerrar la caja",
     summary:
-      "Al terminar el día cada empleado cuenta el efectivo: Kshop lo compara con sus ventas y le manda el cuadre al dueño por WhatsApp.",
+      "Al terminar el día se cuenta el efectivo de la caja una sola vez: Kshop lo compara con lo vendido desde todos los teléfonos y le manda el cuadre al dueño por WhatsApp.",
     audiences: ["owner", "staff"],
     keywords: [
       "cierre",
@@ -168,10 +168,10 @@ export const articles: HelpArticle[] = [
     contexts: ["pos", "pos-closings"],
     steps: [
       {
-        text: "En la Caja pulsa «⋯» y «Cerrar el día». Si hay ventas sin subir, se suben primero (hace falta conexión).",
+        text: "En la Caja de cualquier teléfono pulsa «⋯» y «Cerrar el día». Si en ese teléfono hay ventas sin subir, se suben primero (hace falta conexión); los demás teléfonos tienen que haber subido las suyas.",
       },
       {
-        text: "Kshop te dice cuánto efectivo debe haber: el fondo de caja más lo cobrado en efectivo menos los vueltos. Las transferencias y otros métodos salen aparte, para comprobarlas en el banco.",
+        text: "Kshop te dice cuánto efectivo debe haber en la caja: el fondo más lo cobrado en efectivo por todos, menos los vueltos, y cuánto vendió cada uno. Las transferencias y otros métodos salen aparte, para comprobarlas en el banco.",
       },
       {
         text: "Cuenta el dinero y escribe lo contado en cada moneda. Verás si cuadra, si sobra o si falta; añade una nota si hace falta y pulsa «Cerrar el día».",
@@ -182,7 +182,7 @@ export const articles: HelpArticle[] = [
     ],
     tips: [
       "El dueño o el administrador pone el «Fondo de caja» una vez en Caja › Cierres; si un día abres con otro fondo, cámbialo al cerrar.",
-      "Cada empleado cierra sus propias ventas. Si vendes algo después de cerrar, va a un segundo cierre del mismo día.",
+      "El cierre es de todo el local: entran las ventas de todos los teléfonos y cuentas, y también las de días anteriores que nadie cerró. Si se vende algo después de cerrar, va a un segundo cierre del mismo día.",
       "Para que el WhatsApp llegue, el teléfono del dueño tiene que estar en Avisos WhatsApp con «Recibe el cierre de caja de cada día».",
     ],
     related: ["counter-sale", "my-earnings"],

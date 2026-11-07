@@ -401,9 +401,14 @@ export type PosClosingPreview = {
   sales: number;
   voided: number;
   closedToday: number;
-  /** Sales of the last days that nobody closed (not in this closing). */
+  /** Always 0 since KSH0014 (earlier days go into the closing); kept for Kshop Admin 1.0.23. */
   olderOpen: number;
+  /** Open sales of earlier days that go into this closing (KSH0014). */
+  older: number;
+  /** What each account sold: the till is one, whatever phone sold (KSH0014). */
+  byCashier: PosClosingCashier[];
 };
+export type PosClosingCashier = { cashier: string; sales: number; cash: Record<string, number> };
 export type PosClosingResult = {
   id: string;
   day: string;

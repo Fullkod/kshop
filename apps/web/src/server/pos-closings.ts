@@ -4,7 +4,7 @@ import type { PosClosingPreview, PosClosingResult } from "@kshop/data";
 import { mapDbError } from "./db-errors";
 import { getServiceClient } from "./supabase";
 
-// KSH0012: closing the day at the counter. The SQL functions are service_role only; the routes check the store
+// KSH0012: closing the day at the counter; since KSH0014 the whole till (every account and phone) at once. The SQL functions are service_role only; the routes check the store
 // role and the pos module first.
 
 type Money = Record<string, number>;
@@ -36,6 +36,12 @@ export async function closingPreview(storeId: string, userId: string): Promise<P
     voided: Number(row.voided),
     closedToday: Number(row.closed_today),
     olderOpen: Number(row.older_open),
+    older: Number(row.older ?? 0),
+    byCashier: ((row.by_cashier ?? []) as { cashier: string; sales: unknown; cash: unknown }[]).map((c) => ({
+      cashier: c.cashier,
+      sales: Number(c.sales),
+      cash: money(c.cash),
+    })),
   };
 }
 

@@ -74,18 +74,22 @@ insert into public.store_notification_contacts (store_id, name, phone, notify_ne
 -- Preview and closing (service_role functions, called as the database owner like the API does)
 -- ---------------------------------------------------------------------------
 
-select tests.eq('preview: cash of cashier 1 = cash + «Efectivo» − change',
-  public.pos_closing_preview(tests.fx('store_a'), tests.fx('cashier_1')) -> 'cash', '{"CUP": 2700}'::jsonb);
+select tests.eq('preview: cash of the whole till = cash + «Efectivo» − change, both cashiers (KSH0014)',
+  public.pos_closing_preview(tests.fx('store_a'), tests.fx('cashier_1')) -> 'cash', '{"CUP": 3000}'::jsonb);
 select tests.eq('preview: expected cash adds the float',
-  public.pos_closing_preview(tests.fx('store_a'), tests.fx('cashier_1')) -> 'expected_cash', '{"CUP": 3200}'::jsonb);
+  public.pos_closing_preview(tests.fx('store_a'), tests.fx('cashier_1')) -> 'expected_cash', '{"CUP": 3500}'::jsonb);
 select tests.eq('preview: transfers apart',
   public.pos_closing_preview(tests.fx('store_a'), tests.fx('cashier_1')) -> 'methods',
   '[{"name": "Transferencia", "amount": 800, "currency": "CUP"}]'::jsonb);
 select tests.eq('preview: sales and voided',
   public.pos_closing_preview(tests.fx('store_a'), tests.fx('cashier_1')) -> 'sales' || (public.pos_closing_preview(tests.fx('store_a'), tests.fx('cashier_1')) -> 'voided'),
-  '[4, 1]'::jsonb);
-select tests.eq('preview: cashier 2 only sees its own sale',
-  public.pos_closing_preview(tests.fx('store_a'), tests.fx('cashier_2')) -> 'cash', '{"CUP": 300}'::jsonb);
+  '[5, 1]'::jsonb);
+select tests.eq('preview: cashier 2 sees the same till',
+  public.pos_closing_preview(tests.fx('store_a'), tests.fx('cashier_2')) -> 'cash', '{"CUP": 3000}'::jsonb);
+select tests.eq('preview: what each cashier sold',
+  (select jsonb_agg(jsonb_build_array(c -> 'sales', c -> 'cash') order by (c ->> 'sales')::int desc)
+   from jsonb_array_elements(public.pos_closing_preview(tests.fx('store_a'), tests.fx('cashier_2')) -> 'by_cashier') c),
+  '[[4, {"CUP": 2700}], [1, {"CUP": 300}]]'::jsonb);
 
 insert into pg_temp.fixtures (key, id)
 select 'closing_1', (public.pos_close_day(tests.fx('store_a'), tests.fx('cashier_1'),
@@ -93,16 +97,16 @@ select 'closing_1', (public.pos_close_day(tests.fx('store_a'), tests.fx('cashier
 
 select tests.eq('close: the difference is counted − expected',
   (select counted from public.pos_closings where id = tests.fx('closing_1')), '{"CUP": 3150}'::jsonb);
-select tests.eq('close: its 5 sales are inside it, cashier 2 untouched',
+select tests.eq('close: the 6 sales of both cashiers are inside it, none left open',
   (select jsonb_build_array(
     (select count(*) from public.pos_sales where closing_id = tests.fx('closing_1')),
     (select count(*) from public.pos_sales where cashier_id = tests.fx('cashier_2') and closing_id is null))),
-  '[5, 1]'::jsonb);
+  '[6, 0]'::jsonb);
 select tests.eq('close: the WhatsApp goes only to the contact that asked for it',
   (select jsonb_agg(recipient) from public.notification_log
    where store_id = tests.fx('store_a') and event = 'cash_closing'), '["+5355555555"]'::jsonb);
 select tests.check('close: the message says what is missing',
-  (select message from public.notification_log where store_id = tests.fx('store_a') and event = 'cash_closing') ~ 'Faltan 50');
+  (select message from public.notification_log where store_id = tests.fx('store_a') and event = 'cash_closing') ~ 'Faltan 350');
 select tests.check('close: the message lists the transfers',
   (select message from public.notification_log where store_id = tests.fx('store_a') and event = 'cash_closing') ~ 'Transferencia');
 
@@ -132,15 +136,15 @@ select tests.check('cashier 1: cannot change the float',
   tests.throws(format('update public.stores set pos_float = %L where id = %L', '{"CUP": 1}', tests.fx('store_a'))));
 
 select tests.login('cashier_2');
-select tests.eq('cashier 2: does not see the closings of cashier 1',
-  jsonb_array_length(public.admin_pos_closings(tests.fx('store_a'), 7) -> 'closings'), 0);
+select tests.eq('cashier 2: sees the closings of the till',
+  jsonb_array_length(public.admin_pos_closings(tests.fx('store_a'), 7) -> 'closings'), 2);
 
 select tests.login('owner_a');
 select tests.eq('owner A: sees every closing, with the cashier and its orders',
   (select jsonb_build_array(jsonb_array_length(c -> 'closings'), jsonb_array_length(c -> 'closings' -> 1 -> 'orders'),
     (c -> 'closings' -> 1 ->> 'cashier') is not null)
    from (select public.admin_pos_closings(tests.fx('store_a'), 7) as c) x),
-  '[2, 5, true]'::jsonb);
+  '[2, 6, true]'::jsonb);
 select tests.eq('owner A: reads the float', public.admin_pos_closings(tests.fx('store_a'), 7) -> 'float', '{"CUP": 500}'::jsonb);
 
 select tests.login('owner_b');
