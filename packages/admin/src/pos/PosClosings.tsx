@@ -182,20 +182,21 @@ function ClosingProfit({ profit }: { profit: ClosingProfitData }) {
       : null;
   return (
     <div className="flex flex-col gap-2 rounded-md border p-3" data-testid="pos-closing-profit">
-      <dl className="grid grid-cols-3 gap-2">
-        <div>
+      {/* One row per figure: three columns do not fit «118.973,80 CUP» on a phone. */}
+      <dl className="flex flex-col gap-1">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3">
           <dt className="text-muted-foreground">Ventas</dt>
-          <dd className="font-medium">{money(profit.revenue)}</dd>
+          <dd className="font-medium tabular-nums">{money(profit.revenue)}</dd>
         </div>
-        <div>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3">
           <dt className="text-muted-foreground">Costo</dt>
-          <dd className="font-medium">{money(profit.cost)}</dd>
+          <dd className="font-medium tabular-nums">{money(profit.cost)}</dd>
         </div>
-        <div>
-          <dt className="text-muted-foreground">Ganancia</dt>
-          <dd className="font-semibold text-success">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 border-t pt-1">
+          <dt className="font-medium">Ganancia</dt>
+          <dd className="text-right font-semibold text-success tabular-nums">
+            {percent && <span className="mr-2 text-xs font-normal text-muted-foreground">{percent}</span>}
             {money(profit.profit)}
-            {percent && <span className="ml-1 text-xs font-normal text-muted-foreground">{percent}</span>}
           </dd>
         </div>
       </dl>
