@@ -93,17 +93,17 @@ try {
       .first()
       .fill("100");
     await page.getByRole("button", { name: "Guardar" }).click();
-    await page.waitForURL(/\/admin\/catalog\/products\/[0-9a-f-]{36}$/, { timeout: 30000 });
-    created.push(page.url().split("/").at(-1));
-    await page
-      .getByRole("heading", { name })
+    // Roberto (2026-11-07): saving goes back to the list, where the new product shows.
+    await page.waitForURL(/\/admin\/catalog$/, { timeout: 30000 });
+    const { data: row } = await service.from("products").select("id").eq("name", name).maybeSingle();
+    if (row) created.push(row.id);
+    const listed = await page
+      .getByText(name)
+      .first()
       .waitFor({ timeout: 30000 })
-      .catch(() => {});
-    const failed = await page.getByText("No se pudo cargar el producto.").isVisible();
-    check(
-      `the new product loads after saving (${i + 1})`,
-      !failed && (await page.getByRole("heading", { name }).isVisible()),
-    );
+      .then(() => true)
+      .catch(() => false);
+    check(`saving goes back to the list and the new product is there (${i + 1})`, !!row && listed);
     await page.screenshot({ path: join(OUT, `alta-${i + 1}.png`) });
     // The next round opens «Nuevo producto» from the topbar «+»: a client navigation, so the hidden page comes back.
   }

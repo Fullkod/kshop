@@ -5,6 +5,7 @@ import {
   canCancelOrder,
   CURRENCY_CODES,
   formatMoney,
+  formatQuantity,
   formatPhone,
   formatRate,
   needsShippingCost,
@@ -17,6 +18,7 @@ import {
   paymentPreview,
   posFlagText,
   quoteToOrderRate,
+  perUnitSuffix,
   rateQuote,
   SHIPPING_TYPE_LABELS,
   storePublicOrigin,
@@ -269,7 +271,8 @@ export function OrderDetail({
                     </div>
                     <div className="text-right">
                       <div>
-                        {l.quantity} × {money(l.unitPrice)}
+                        {formatQuantity(l.quantity, l.unit)} × {money(l.unitPrice)}
+                        {perUnitSuffix(l.unit)}
                         {l.unitListPrice != null && Number(l.unitListPrice) > Number(l.unitPrice) && (
                           <s className="ml-1 text-muted-foreground">{money(l.unitListPrice)}</s>
                         )}

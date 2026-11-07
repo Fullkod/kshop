@@ -18,6 +18,9 @@ function toSaveProductPayload(input: ProductInput, productId?: string) {
     badge: input.badge ?? null,
     seo_title: input.seoTitle ?? null,
     seo_description: input.seoDescription ?? null,
+    // KSH0015: omitted = unchanged (old apps); the step only makes sense with a unit of measure.
+    ...(input.saleUnit !== undefined && { sale_unit: input.saleUnit }),
+    ...(input.quantityStep !== undefined && { quantity_step: input.quantityStep }),
     tags: input.tags,
     collection_ids: input.collectionIds,
     attributes: input.attributes.map((a) => ({

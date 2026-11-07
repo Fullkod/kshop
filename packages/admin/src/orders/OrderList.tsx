@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  countedQuantity,
   formatMoney,
   formatPhone,
   isStalePending,
@@ -144,7 +145,11 @@ export function OrderList({ initialTab = "pending" }: { initialTab?: ListTab }) 
       customerName: o.customerName,
       customerPhone: o.customerPhone,
       createdAt: o.createdAt,
-      items: (o.orderLinesCollection?.edges ?? []).reduce((sum, e) => sum + e.node.quantity, 0),
+      // KSH0015: a line sold by weight counts as one item.
+      items: (o.orderLinesCollection?.edges ?? []).reduce(
+        (sum, e) => sum + countedQuantity(Number(e.node.quantity), e.node.unit),
+        0,
+      ),
       channel: o.channel,
       methods: [
         ...new Set(

@@ -1,5 +1,6 @@
 "use client";
 
+import { isMeasured, perUnitSuffix } from "@kshop/core";
 import type { ProductCardData, StorefrontProduct } from "@kshop/data";
 import { Badge, buttonVariants, cn, Heart, MessageCircle, Plus, Trophy, X } from "@kshop/ui";
 import { useEffect, useRef, useState } from "react";
@@ -182,6 +183,9 @@ function Prices({ product, size }: { product: ProductCardData; size: string }) {
         overrides={product.overrides}
         className={`sf-heading font-bold ${size}`}
       />
+      {isMeasured(product.saleUnit) && (
+        <span className="text-xs text-muted-foreground">{perUnitSuffix(product.saleUnit).trim()}</span>
+      )}
       {product.compareAtPrice != null && (
         <Price
           amount={product.compareAtPrice}
@@ -214,7 +218,7 @@ function WhatsappButton({ product }: { product: ProductCardData }) {
   const store = useStore();
   const format = useFormatPrice();
   if (!store.whatsappPhone) return null;
-  const price = `${product.maxPrice > product.minPrice ? "desde " : ""}${format(product.minPrice, product.overrides)}`;
+  const price = `${product.maxPrice > product.minPrice ? "desde " : ""}${format(product.minPrice, product.overrides)}${perUnitSuffix(product.saleUnit)}`;
   const text = `Hola, quiero: ${product.name} – ${price}`;
   return (
     <a
@@ -261,7 +265,8 @@ export function QuickAdd({
     }
     setBusy(true);
     try {
-      await add(product.defaultVariantId, 1);
+      // KSH0015: by weight the quick add adds one step (0,5 lb).
+      await add(product.defaultVariantId, isMeasured(product.saleUnit) ? product.quantityStep : 1);
       added({ name: product.name, detail: null });
     } finally {
       setBusy(false);
@@ -395,7 +400,7 @@ function QuickAddOptions({
           if (!variant) return;
           setError(false);
           try {
-            await add(variant.id, 1);
+            await add(variant.id, isMeasured(product.saleUnit) ? product.quantityStep : 1);
             onDone(variant.name || null);
           } catch {
             setError(true);

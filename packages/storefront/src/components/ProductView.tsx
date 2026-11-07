@@ -1,6 +1,16 @@
 "use client";
 
-import { formatMoney } from "@kshop/core";
+import {
+  formatMoney,
+  formatQuantity,
+  isMeasured,
+  maxQuantity,
+  parseQuantity,
+  perUnitSuffix,
+  roundQuantity,
+  SALE_UNIT_INFO,
+  type SaleUnit,
+} from "@kshop/core";
 import type { DeliveryMethod, ProductCardData, StorefrontProduct, StorefrontShell } from "@kshop/data";
 import {
   ArrowLeft,
@@ -53,7 +63,8 @@ export function ProductView({
 }) {
   const selection = useVariantSelection(product.variants);
   const { variant } = selection;
-  const [quantity, setQuantity] = useState(1);
+  // KSH0015: by weight the quantity starts at one step (0,5 lb).
+  const [quantity, setQuantity] = useState(firstQuantity(product));
   const [status, setStatus] = useState<AddStatus>("idle");
 
   // Images of the chosen variant first.
@@ -94,11 +105,16 @@ export function ProductView({
 
           <PriceBox product={product} variant={variant} />
           <VariantPicker selection={selection} onPick={() => setImageIndex(0)} />
-          <StockLine variant={variant} />
+          <StockLine variant={variant} unit={product.saleUnit} />
 
           <div className="hidden flex-col gap-3 @min-[720px]:flex">
             <div className="flex gap-3">
-              <QuantityStepper value={quantity} onChange={setQuantity} />
+              <QuantityStepper
+                value={quantity}
+                onChange={setQuantity}
+                unit={product.saleUnit}
+                step={product.quantityStep}
+              />
               <AddButton
                 product={product}
                 variant={variant}
@@ -255,6 +271,9 @@ function ShareButton({ product }: { product: StorefrontProduct }) {
   );
 }
 
+/** One unit, or one step of a product sold by weight (0,5 lb). */
+const firstQuantity = (p: StorefrontProduct) => (isMeasured(p.saleUnit) ? p.quantityStep : 1);
+
 const percentOff = (before: number, price: number) =>
   before > price ? Math.floor(((before - price) / before) * 100) : null;
 
@@ -269,6 +288,9 @@ function PriceBox({ product, variant }: { product: StorefrontProduct; variant: V
           overrides={variant?.overrides}
           className="sf-heading text-[30px] leading-none font-extrabold"
         />
+        {isMeasured(product.saleUnit) && (
+          <span className="text-base text-muted-foreground">{perUnitSuffix(product.saleUnit).trim()}</span>
+        )}
         {variant?.compareAtPrice != null && discount && (
           <Price
             amount={variant.compareAtPrice}
@@ -292,7 +314,7 @@ function PriceBox({ product, variant }: { product: StorefrontProduct; variant: V
   );
 }
 
-function StockLine({ variant }: { variant: Variant | undefined }) {
+function StockLine({ variant, unit }: { variant: Variant | undefined; unit: SaleUnit }) {
   return (
     <p className="flex items-center gap-2 text-sm font-medium" aria-live="polite">
       {!variant ? (
@@ -302,7 +324,9 @@ function StockLine({ variant }: { variant: Variant | undefined }) {
           <span aria-hidden className="size-2 rounded-full bg-success" />
           <span className="text-success">
             Disponible
-            {variant.stock != null && variant.stock <= 5 && ` · quedan ${variant.stock}`}
+            {variant.stock != null &&
+              variant.stock <= 5 &&
+              ` · quedan ${formatQuantity(variant.stock, unit, { withUnit: isMeasured(unit) })}`}
           </span>
         </>
       ) : (
@@ -315,26 +339,62 @@ function StockLine({ variant }: { variant: Variant | undefined }) {
   );
 }
 
-function QuantityStepper({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+/** «− +» of the quantity; by weight or measure it moves by the product's step and can be typed (KSH0015). */
+function QuantityStepper({
+  value,
+  onChange,
+  unit,
+  step,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+  unit: SaleUnit;
+  step: number;
+}) {
+  const measured = isMeasured(unit);
+  const min = measured ? step : 1;
+  const max = measured ? maxQuantity(unit) : 99;
+  const by = measured ? step : 1;
+  const [text, setText] = useState<string | null>(null);
   return (
     <div className="flex h-[54px] shrink-0 items-center rounded-sf-btn border border-border">
       <button
         type="button"
         className="flex h-full w-[46px] items-center justify-center disabled:opacity-40"
-        onClick={() => onChange(Math.max(1, value - 1))}
-        disabled={value <= 1}
-        aria-label="Quitar uno"
+        onClick={() => onChange(Math.max(min, roundQuantity(value - by)))}
+        disabled={value <= min}
+        aria-label={measured ? `Quitar ${formatQuantity(by, unit)}` : "Quitar uno"}
       >
         <Minus size={16} aria-hidden />
       </button>
-      <span className="w-7 text-center font-semibold" aria-live="polite" aria-label={`Cantidad: ${value}`}>
-        {value}
-      </span>
+      {measured ? (
+        <label className="flex items-baseline gap-1">
+          <input
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
+            className="w-14 bg-transparent text-center text-base font-semibold outline-none"
+            aria-label={`Cantidad (${SALE_UNIT_INFO[unit].abbr})`}
+            value={text ?? formatQuantity(value, "unit")}
+            onChange={(e) => {
+              setText(e.target.value);
+              const n = parseQuantity(e.target.value);
+              if (n !== null && n >= min && n <= max) onChange(n);
+            }}
+            onBlur={() => setText(null)}
+          />
+          <span className="pr-1 text-sm text-muted-foreground">{SALE_UNIT_INFO[unit].abbr}</span>
+        </label>
+      ) : (
+        <span className="w-7 text-center font-semibold" aria-live="polite" aria-label={`Cantidad: ${value}`}>
+          {value}
+        </span>
+      )}
       <button
         type="button"
         className="flex h-full w-[46px] items-center justify-center"
-        onClick={() => onChange(Math.min(99, value + 1))}
-        aria-label="Añadir uno"
+        onClick={() => onChange(Math.min(max, roundQuantity(value + by)))}
+        aria-label={measured ? `Añadir ${formatQuantity(by, unit)}` : "Añadir uno"}
       >
         <Plus size={16} aria-hidden />
       </button>
@@ -420,7 +480,8 @@ function WhatsappOrder({
   if (!store.whatsappPhone) return null;
   const phone = store.whatsappPhone;
   const name = variant?.name ? `${product.name} (${variant.name})` : product.name;
-  const text = `Hola, quiero: ${quantity > 1 ? `${quantity} × ` : ""}${name} – ${format(variant?.price ?? product.minPrice, variant?.overrides)}`;
+  const amount = isMeasured(product.saleUnit) || quantity > 1 ? `${formatQuantity(quantity, product.saleUnit)} × ` : "";
+  const text = `Hola, quiero: ${amount}${name} – ${format(variant?.price ?? product.minPrice, variant?.overrides)}${perUnitSuffix(product.saleUnit)}`;
   return (
     <a
       href={whatsappUrl(phone, text)}
@@ -459,11 +520,11 @@ function BuyBar({
       data-testid="buy-bar"
       className="sticky bottom-0 z-30 -mx-[clamp(16px,4.4cqw,56px)] flex gap-2.5 border-t border-border bg-[color-mix(in_srgb,var(--bg)_94%,transparent)] px-4 pt-2.5 pb-[calc(10px+env(safe-area-inset-bottom))] backdrop-blur-md @min-[720px]:hidden"
     >
-      <WhatsappOrder product={product} variant={variant} quantity={1} compact />
+      <WhatsappOrder product={product} variant={variant} quantity={firstQuantity(product)} compact />
       <AddButton
         product={product}
         variant={variant}
-        quantity={1}
+        quantity={firstQuantity(product)}
         onStatus={onStatus}
         label={variant?.available ? `Añadir al carrito, ${price}` : undefined}
         className="h-[52px] flex-1 justify-between px-5"
@@ -645,7 +706,7 @@ export function FeaturedProduct({
 }) {
   const selection = useVariantSelection(product.variants);
   const { variant } = selection;
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(firstQuantity(product));
   const [status, setStatus] = useState<AddStatus>("idle");
   const [index, setIndex] = useState(0);
   const media = product.media.slice(0, 3);
@@ -737,7 +798,12 @@ export function FeaturedProduct({
         )}
         <VariantPicker selection={selection} />
         <div className="mt-1 flex flex-wrap gap-2.5">
-          <QuantityStepper value={quantity} onChange={setQuantity} />
+          <QuantityStepper
+                value={quantity}
+                onChange={setQuantity}
+                unit={product.saleUnit}
+                step={product.quantityStep}
+              />
           <AddButton
             product={product}
             variant={variant}

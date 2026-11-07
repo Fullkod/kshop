@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { collectionRulesSchema } from "../storefront/content";
 import { currencyCodeSchema } from "../currency";
+import { quantityValueSchema, saleUnitSchema } from "./units";
 
 // Inputs of /api/v1/stores/{storeId}/catalog/*. Shared by the web admin and the mobile admin app.
 
@@ -157,7 +158,7 @@ export const variantInputSchema = z.object({
   trackInventory: z.boolean().default(true),
   weight: z.coerce.number().min(0).nullable().optional(),
   /** Absolute stock in the default warehouse ("flat" editing). Omit to leave it unchanged. */
-  stock: z.coerce.number().int().min(0).max(1_000_000).optional(),
+  stock: quantityValueSchema({ max: 1_000_000 }).optional(),
   /** Private cost. null removes it; omit to leave it unchanged. */
   cost: z.object({ price: money, currency: currencyCodeSchema }).nullable().optional(),
   /** Per-currency overrides (multi_currency). Omit to leave them unchanged. */
@@ -197,7 +198,16 @@ export const productInputSchema = z
     collectionIds: z.array(uuid).max(50).default([]),
     attributes: z.array(productAttributeInputSchema).max(50).default([]),
     variants: z.array(variantInputSchema).min(1, "Añade al menos una variante.").max(300),
+    /** KSH0015: how it is sold (P1) and the step of the «− +» online (P4; null = the unit's). Omit = unchanged. */
+    saleUnit: saleUnitSchema.optional(),
+    quantityStep: quantityValueSchema({ positive: true }).nullable().optional(),
   })
+  .refine(
+    (p) =>
+      (p.saleUnit ?? "unit") !== "unit" ||
+      p.variants.every((v) => v.stock === undefined || Number.isInteger(v.stock)),
+    { message: "Un producto por unidades lleva el stock en números enteros.", path: ["variants"] },
+  )
   .refine(
     (p) => {
       const skus = p.variants.map((v) => v.sku.toUpperCase()).filter(Boolean);
@@ -218,7 +228,7 @@ export const productStatusBulkInputSchema = z.object({
 export const stockInputSchema = z.object({
   variantId: uuid,
   warehouseId: uuid,
-  quantity: z.coerce.number().int().min(0).max(1_000_000),
+  quantity: quantityValueSchema({ max: 1_000_000 }),
   note: optionalText(200),
 });
 export type StockInput = z.infer<typeof stockInputSchema>;

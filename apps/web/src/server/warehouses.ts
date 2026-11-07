@@ -1,5 +1,5 @@
 import "server-only";
-import type { StockMovementQuery, StockMovementType, StockTransferInput } from "@kshop/core";
+import { toSaleUnit, type StockMovementQuery, type StockMovementType, type StockTransferInput } from "@kshop/core";
 import type { StockMovementsPage, WarehouseStockRow, WarehousesOverview } from "@kshop/data";
 import type { ApiUser } from "./auth";
 import { invalidateCatalog } from "./catalog/access";
@@ -85,14 +85,16 @@ export async function getWarehouseStock(
       sku: string;
       quantity: number;
       allocated: number;
+      sale_unit: string;
     }[]
   ).map((r) => ({
     variantId: r.variant_id,
     productName: r.product_name,
     variantName: r.variant_name,
     sku: r.sku,
-    quantity: r.quantity,
-    allocated: r.allocated,
+    quantity: Number(r.quantity),
+    allocated: Number(r.allocated),
+    unit: toSaleUnit(r.sale_unit),
   }));
 }
 

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { CURRENCY_CODES } from "../currency";
 import type { ProductStatus } from "./schemas";
+import { saleUnitFromLabel } from "./units";
 
 // Excel layout shared by the template, the export and the import (decision 19, D1).
 // One row per variant; rows with the same "Código producto" form one product.
@@ -24,6 +25,8 @@ export const PRODUCT_COLUMNS = [
   { key: "collections", header: "Colecciones", width: 20 },
   { key: "tags", header: "Etiquetas", width: 20 },
   { key: "status", header: "Estado", width: 12 },
+  /** KSH0015: how it is sold (Unidad, Libra, kg…); empty = unchanged or «Unidad». */
+  { key: "saleUnit", header: "Unidad", width: 10 },
   { key: "images", header: "Imágenes (URLs)", width: 40 },
 ] as const;
 
@@ -128,7 +131,19 @@ export const excelRowSchema = z
       }
       return c as (typeof CURRENCY_CODES)[number];
     }),
-    stock: optionalNumber("Stock", { int: true }),
+    saleUnit: z
+      .string()
+      .default("")
+      .transform((v, ctx) => {
+        const unit = saleUnitFromLabel(v);
+        if (unit === null) {
+          ctx.addIssue({ code: "custom", message: `Unidad «${v}» no válida (Unidad, Libra, Kilogramo, Litro, Metro…).` });
+          return z.NEVER;
+        }
+        return unit;
+      }),
+    /** Decimals for products sold by weight or measure (KSH0015); whole units are checked against the unit. */
+    stock: optionalNumber("Stock"),
     /** Image URLs (separated by commas, spaces or line breaks); downloaded on import. */
     images: z.string().transform((v, ctx) => {
       const urls = v.split(/[\s,;]+/).filter(Boolean);
@@ -146,7 +161,7 @@ export const excelRowSchema = z
     attributes: z.record(z.string(), z.string()),
     /** Phase 6: «Precio USD»… (multi_currency) and «Stock {almacén}» (multi_warehouse); empty cells change nothing. */
     prices: numberCells("Precio", {}).default({}),
-    stocks: numberCells("Stock", { int: true }).default({}),
+    stocks: numberCells("Stock", {}).default({}),
   })
   .superRefine((row, ctx) => {
     if (row.cost !== undefined && !row.costCurrency) {

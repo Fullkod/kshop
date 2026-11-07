@@ -3,6 +3,7 @@ import {
   homeSectionInputSchema,
   linkHref,
   PRODUCTS_PER_PAGE,
+  quantityStep,
   savingPercent,
   sortOrderBy,
   type BenefitIcon,
@@ -10,6 +11,8 @@ import {
   type Link,
   type LinkType,
   type ProductSort,
+  type SaleUnit,
+  toSaleUnit,
 } from "@kshop/core";
 import type { ResultOf, VariablesOf } from "@graphql-typed-document-node/core";
 import type { Client } from "@urql/core";
@@ -266,6 +269,9 @@ export type ProductCardData = {
   variantCount: number;
   /** The only variant, when it can be added without choosing (quick add). */
   defaultVariantId: string | null;
+  /** KSH0015: how it is sold («/ lb» after the price) and the step of the quantity. */
+  saleUnit: SaleUnit;
+  quantityStep: number;
 };
 
 export type PriceOverride = { currency: string; price: number };
@@ -400,7 +406,9 @@ function toProductCard(p: ResultOf<typeof StorefrontProductCardFragment>): Produ
     overrides: cheapest?.overrides ?? [],
     swatches: [...swatches],
     variantCount: variantNodes.length,
-    defaultVariantId: only && (!only.trackInventory || only.stockAvailable > 0) ? only.id : null,
+    defaultVariantId: only && (!only.trackInventory || Number(only.stockAvailable) > 0) ? only.id : null,
+    saleUnit: toSaleUnit(p.saleUnit),
+    quantityStep: quantityStep(toSaleUnit(p.saleUnit), p.quantityStep),
   };
 }
 
@@ -523,6 +531,8 @@ function toStorefrontProduct(p: ResultOf<typeof StorefrontProductFullFragment>) 
     description: p.descriptionPlain,
     seoTitle: p.seoTitle ?? null,
     seoDescription: p.seoDescription ?? null,
+    saleUnit: toSaleUnit(p.saleUnit),
+    quantityStep: quantityStep(toSaleUnit(p.saleUnit), p.quantityStep),
     minPrice: Number(p.minPrice ?? 0),
     inStock: p.inStock,
     imageUrl: p.primaryMediaUrl ?? null,
@@ -570,9 +580,9 @@ function toStorefrontProduct(p: ResultOf<typeof StorefrontProductFullFragment>) 
         })),
         v.variantPromotions,
       ),
-      available: !v.trackInventory || v.stockAvailable > 0,
-      /** Units left when the variant tracks stock (null = not tracked). */
-      stock: v.trackInventory ? v.stockAvailable : null,
+      available: !v.trackInventory || Number(v.stockAvailable) > 0,
+      /** Units (or lb, kg… KSH0015) left when the variant tracks stock (null = not tracked). */
+      stock: v.trackInventory ? Number(v.stockAvailable) : null,
       mediaIds: nodes(v.variantMediaCollection).map((m) => m.mediaId),
       options: nodes(v.variantAttributeValuesCollection).flatMap((o) =>
         o.attributeValues

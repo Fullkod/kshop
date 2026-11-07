@@ -1,6 +1,6 @@
 "use client";
 
-import { convertFromBase, formatMoney, formatPhone, SHIPPING_TYPE_LABELS } from "@kshop/core";
+import { convertFromBase, formatMoney, formatPhone, formatQuantity, SHIPPING_TYPE_LABELS } from "@kshop/core";
 import { ApiError, type CheckoutOptions } from "@kshop/data";
 import { Alert, Button, FieldError, Input, Label, PasswordInput, Select } from "@kshop/ui";
 import { Link } from "../navigation";
@@ -335,7 +335,7 @@ export function CheckoutView() {
           {cart.lines.map((l) => (
             <li key={l.variantId} className="flex justify-between gap-3">
               <span>
-                {l.quantity} × {l.productName}
+                {formatQuantity(l.quantity, l.unit)} × {l.productName}
                 {l.variantName && <span className="text-muted-foreground"> ({l.variantName})</span>}
               </span>
               <span className="shrink-0">{money(l.lineTotal)}</span>

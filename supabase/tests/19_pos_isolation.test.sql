@@ -85,7 +85,7 @@ select tests.eq('events: all internal', (select bool_and(is_internal) from publi
 select tests.eq('no WhatsApp notice queued (trigger fired, notices on)',
   (select count(*) from public.notification_log where store_id = tests.fx('store_a'))::int, 0);
 select tests.eq('stock: 3 of 5 discounted',
-  (select quantity from public.stocks where variant_id = tests.fx('a_variant')), 2);
+  (select quantity from public.stocks where variant_id = tests.fx('a_variant')), 2::numeric);
 select tests.eq('cost: snapshot taken by the server',
   (select c.unit_cost from public.order_line_costs c join public.order_lines l on l.id = c.order_line_id
    where l.order_id = tests.fx('order_1')), 700.00);
@@ -97,7 +97,7 @@ select tests.eq('repeating the sale returns the same order',
 select tests.eq('repeating the sale creates nothing',
   (select count(*) from public.orders where store_id = tests.fx('store_a'))::int, 1);
 select tests.eq('repeating the sale does not discount again',
-  (select quantity from public.stocks where variant_id = tests.fx('a_variant')), 2);
+  (select quantity from public.stocks where variant_id = tests.fx('a_variant')), 2::numeric);
 
 -- ---------------------------------------------------------------------------
 -- It already happened: stock and price never reject it
@@ -108,8 +108,8 @@ select 'order_2', (public.pos_record_sale(tests.fx('store_a'), pg_temp.sale('222
   tests.fx('a_variant')), tests.fx('staff_a')) ->> 'order_id')::uuid;
 select tests.eq('no stock: the sale is recorded and the shortfall noted',
   (select f ->> 'missing' from public.pos_sales s, jsonb_array_elements(s.flags) f
-   where s.order_id = tests.fx('order_2') and f ->> 'type' = 'stock_shortfall'), '2');
-select tests.eq('no stock: it never goes negative', (select quantity from public.stocks where variant_id = tests.fx('a_variant')), 0);
+   where s.order_id = tests.fx('order_2') and f ->> 'type' = 'stock_shortfall'), '2.00');
+select tests.eq('no stock: it never goes negative', (select quantity from public.stocks where variant_id = tests.fx('a_variant')), 0::numeric);
 select tests.eq('another price: what was charged stays',
   (select unit_price from public.order_lines where order_id = tests.fx('order_2')), 900.00);
 select tests.eq('another price: noted',
@@ -118,7 +118,7 @@ select tests.eq('another price: noted',
 
 select public.order_cancel(tests.fx('store_a'), tests.fx('order_2'), 'Error', tests.fx('owner_a'));
 select tests.eq('cancel a counter sale: the stock comes back (only what it took)',
-  (select quantity from public.stocks where variant_id = tests.fx('a_variant')), 2);
+  (select quantity from public.stocks where variant_id = tests.fx('a_variant')), 2::numeric);
 select tests.eq('cancel a counter sale: the balance goes to 0',
   (select paid_total from public.orders where id = tests.fx('order_2')), 0.00);
 
@@ -133,12 +133,12 @@ select 'order_4', (public.pos_record_sale(tests.fx('store_a'), pg_temp.sale('444
   tests.fx('a_variant'), true), tests.fx('staff_a')) ->> 'order_id')::uuid;
 select tests.eq('voided: arrives cancelled, without money',
   (select status || ':' || paid_total from public.orders where id = tests.fx('order_4')), 'cancelled:0.00');
-select tests.eq('voided: no stock taken', (select quantity from public.stocks where variant_id = tests.fx('a_variant')), 2);
+select tests.eq('voided: no stock taken', (select quantity from public.stocks where variant_id = tests.fx('a_variant')), 2::numeric);
 
 select tests.eq('a variant of another store is not sold nor discounted',
   (select variant_id from public.order_lines where order_id = (public.pos_record_sale(tests.fx('store_a'),
     pg_temp.sale('55555555-5555-4555-8555-555555555555', 1, 1000, tests.fx('b_variant')), tests.fx('staff_a')) ->> 'order_id')::uuid), null::uuid);
-select tests.eq('... and B keeps its stock', (select quantity from public.stocks where variant_id = tests.fx('b_variant')), 5);
+select tests.eq('... and B keeps its stock', (select quantity from public.stocks where variant_id = tests.fx('b_variant')), 5::numeric);
 
 -- ---------------------------------------------------------------------------
 -- Other ways of paying

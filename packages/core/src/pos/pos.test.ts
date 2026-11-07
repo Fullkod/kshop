@@ -233,8 +233,9 @@ describe("posSaleSchema", () => {
 
   it("refuses a sale without lines or with a bad quantity", () => {
     expect(posSaleSchema.safeParse({ ...sale, lines: [] }).success).toBe(false);
-    expect(posSaleSchema.safeParse({ ...sale, lines: [{ ...sale.lines[0], quantity: 1.5 }] }).success).toBe(
-      false,
-    );
+    // KSH0015: 1.5 is fine here (sold by weight); whether the product takes decimals is the server's call.
+    expect(posSaleSchema.safeParse({ ...sale, lines: [{ ...sale.lines[0], quantity: 1.5 }] }).success).toBe(true);
+    expect(posSaleSchema.safeParse({ ...sale, lines: [{ ...sale.lines[0], quantity: 0 }] }).success).toBe(false);
+    expect(posSaleSchema.safeParse({ ...sale, lines: [{ ...sale.lines[0], quantity: "x" }] }).success).toBe(false);
   });
 });

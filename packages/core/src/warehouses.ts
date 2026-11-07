@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { quantityValueSchema } from "./catalog/units";
 
 // Phase 6: multi-warehouse module (zones served by each warehouse, transfers, stock movements).
 
@@ -39,7 +40,7 @@ export const stockTransferSchema = z
       .array(
         z.object({
           variantId: z.uuid(),
-          quantity: z.coerce.number().int().min(1, "Mínimo 1.").max(99_999),
+          quantity: quantityValueSchema({ positive: true }),
         }),
       )
       .min(1, "Añade al menos un producto.")

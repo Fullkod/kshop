@@ -1,6 +1,6 @@
 "use client";
 
-import type { CurrencyCode, OrderStatus, PaymentStatus, ShippingType } from "@kshop/core";
+import { countedQuantity, type CurrencyCode, type OrderStatus, type PaymentStatus, type ShippingType } from "@kshop/core";
 import type { HomeSummary, SalesToday } from "@kshop/data";
 import { useStore } from "@kshop/storefront";
 import { useCallback, useEffect, useState } from "react";
@@ -75,7 +75,11 @@ export function useAdminHome({
             customerPhone: o.customerPhone,
             shippingType: (o.shippingType as ShippingType | null) ?? null,
             createdAt: o.createdAt,
-            items: (o.orderLinesCollection?.edges ?? []).reduce((sum, e) => sum + e.node.quantity, 0),
+            // KSH0015: a line sold by weight counts as one item.
+            items: (o.orderLinesCollection?.edges ?? []).reduce(
+              (sum, e) => sum + countedQuantity(Number(e.node.quantity), e.node.unit),
+              0,
+            ),
           })),
         )
         .catch(() => null),

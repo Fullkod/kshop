@@ -3,19 +3,31 @@
 import {
   CURRENCY_CODES,
   amountToSettle,
+  countedQuantity,
   formatMoney,
+  formatQuantity,
+  isMeasured,
+  lineTotal,
+  maxQuantity,
   parseDecimal,
+  parseQuantity,
+  perUnitSuffix,
   paymentPreview,
   posCartTotal,
   posItemPrice,
   posSaleSchema,
   posSearchIndex,
+  quantityForAmount,
+  quantityStep,
   quoteToOrderRate,
   rateQuote,
+  roundQuantity,
+  SALE_UNIT_INFO,
   searchPosCatalog,
   suggestedQuote,
   type CurrencyCode,
   type PosSaleInput,
+  toSaleUnit,
 } from "@kshop/core";
 import type { PosCatalogItem } from "@kshop/data";
 import {
@@ -55,6 +67,82 @@ type Paid = NonNullable<PosSaleInput["payments"]>[number] & { applied: number };
 
 /** The ticket in progress outlives leaving the Caja (to open a sale's order, say) until the app or page closes. */
 const drafts = new Map<string, CartLine[]>();
+
+/** KSH0015: «− +» by the product's step when it is sold by weight (0,5 lb); 1 for units. */
+const stepOf = (item: PosCatalogItem) =>
+  isMeasured(item.saleUnit) ? quantityStep(toSaleUnit(item.saleUnit), item.quantityStep) : 1;
+
+/**
+ * The quantity of a ticket line. Units: whole numbers typed over the selected one. By weight or measure: what the
+ * scale says (1,37) or, with «Por importe», what the customer asks to spend («dame 100 CUP»): the quantity follows.
+ */
+function PosQuantityInput({
+  line,
+  onChange,
+  onAmount,
+}: {
+  line: CartLine;
+  onChange: (quantity: number) => void;
+  onAmount: (amount: number) => void;
+}) {
+  const unit = toSaleUnit(line.item.saleUnit);
+  const measured = isMeasured(unit);
+  const [text, setText] = useState<string | null>(null);
+  const [byAmount, setByAmount] = useState(false);
+  const shown = byAmount ? "" : formatQuantity(line.quantity, "unit");
+  return (
+    <span className="flex items-center gap-1">
+      <input
+        aria-label={byAmount ? `Importe de ${itemLabel(line.item)}` : `Cantidad de ${itemLabel(line.item)}`}
+        inputMode={measured ? "decimal" : "numeric"}
+        placeholder={byAmount ? "Importe" : undefined}
+        value={text ?? shown}
+        onFocus={(e) => e.target.select()}
+        onChange={(e) => {
+          setText(e.target.value);
+          if (byAmount) return;
+          // Typed over the selected number; an empty or zero field keeps what it had (− removes the line).
+          const n = measured ? parseQuantity(e.target.value) : parseInt(e.target.value.replace(/\D/g, ""), 10);
+          if (n != null && n > 0) onChange(n);
+        }}
+        onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+        onBlur={() => {
+          if (byAmount) {
+            const amount = parseDecimal(text ?? "");
+            if (amount != null && amount > 0) onAmount(amount);
+            setByAmount(false);
+          }
+          setText(null);
+        }}
+        className={cn(
+          "h-10 rounded-md border bg-background text-center text-base font-semibold",
+          measured ? "w-16" : "w-11",
+        )}
+        data-testid="pos-quantity"
+      />
+      {measured && (
+        <button
+          type="button"
+          className={cn(
+            "h-10 min-w-10 rounded-md border px-1 text-xs",
+            byAmount ? "border-primary text-primary" : "text-muted-foreground",
+          )}
+          aria-pressed={byAmount}
+          aria-label={`Vender ${itemLabel(line.item)} por importe`}
+          onPointerDown={(e) => e.preventDefault()}
+          onClick={(e) => {
+            setByAmount((v) => !v);
+            setText(null);
+            (e.currentTarget.previousElementSibling as HTMLInputElement | null)?.focus();
+          }}
+          data-testid="pos-by-amount"
+        >
+          {byAmount ? "$" : SALE_UNIT_INFO[unit].abbr}
+        </button>
+      )}
+    </span>
+  );
+}
 
 const itemLabel = (item: PosCatalogItem) =>
   item.variantName ? `${item.productName} · ${item.variantName}` : item.productName;
@@ -100,7 +188,8 @@ export function PosScreen({
   const results = useMemo(() => searchPosCatalog(index, query), [index, query]);
   const currency = (catalog.snapshot?.currency ?? "CUP") as CurrencyCode;
   const total = posCartTotal(cart);
-  const units = cart.reduce((sum, l) => sum + l.quantity, 0);
+  // KSH0015: a line sold by weight counts as one product.
+  const units = cart.reduce((sum, l) => sum + countedQuantity(l.quantity, l.item.saleUnit), 0);
   const pending = queue.sales ? queue.sales.filter((s) => !s.uploaded).length : null;
   const held = queue.sales ? queue.sales.some((s) => s.held && !s.uploaded) : false;
 
@@ -109,6 +198,8 @@ export function PosScreen({
     setSaved(null);
     setCart((lines) => {
       const found = lines.find((l) => l.item.variantId === item.variantId);
+      // By weight the cashier types what the scale says: tapping it again does not add another pound.
+      if (found && isMeasured(found.item.saleUnit)) return lines;
       if (found) {
         return lines.map((l) => (l === found ? { ...l, quantity: Math.min(l.quantity + 1, 999) } : l));
       }
@@ -117,6 +208,26 @@ export function PosScreen({
     setQuery("");
     if (keepTyping) searchRef.current?.focus();
     else searchRef.current?.blur();
+  }
+
+  /** P5 «Por importe»: the quantity that the amount buys, and the line charges exactly that amount. */
+  function sellByAmount(variantId: string, amount: number) {
+    setCart((lines) =>
+      lines.map((l) => {
+        if (l.item.variantId !== variantId) return l;
+        const quantity = quantityForAmount(amount, l.unitPrice);
+        if (quantity <= 0) return l;
+        const unitPrice = Math.round((amount / quantity) * 100) / 100;
+        const changed = Math.round(unitPrice * 100) !== Math.round(posItemPrice(l.item) * 100);
+        return {
+          ...l,
+          quantity,
+          unitPrice,
+          priceChanged: changed || undefined,
+          priceNote: changed ? `Por importe: ${formatMoney(amount, currency)}` : undefined,
+        };
+      }),
+    );
   }
 
   function setPrice(variantId: string, unitPrice: number, note: string) {
@@ -137,10 +248,12 @@ export function PosScreen({
 
   function setQuantity(variantId: string, quantity: number) {
     setCart((lines) =>
-      quantity < 1
+      quantity <= 0
         ? lines.filter((l) => l.item.variantId !== variantId)
         : lines.map((l) =>
-            l.item.variantId === variantId ? { ...l, quantity: Math.min(quantity, 999) } : l,
+            l.item.variantId === variantId
+              ? { ...l, quantity: Math.min(roundQuantity(quantity), maxQuantity(toSaleUnit(l.item.saleUnit))) }
+              : l,
           ),
     );
   }
@@ -290,10 +403,12 @@ export function PosScreen({
                   <span className={cn(line.priceChanged && "font-semibold text-foreground")}>
                     {formatMoney(line.unitPrice, currency)}
                   </span>
-                  {line.quantity > 1 && ` · ${formatMoney(line.unitPrice * line.quantity, currency)}`}
+                  {perUnitSuffix(line.item.saleUnit)}
+                  {(line.quantity !== 1 || isMeasured(line.item.saleUnit)) &&
+                    ` · ${formatQuantity(line.quantity, line.item.saleUnit, { withUnit: isMeasured(line.item.saleUnit) })} = ${formatMoney(lineTotal(line.unitPrice, line.quantity), currency)}`}
                   {line.item.trackInventory && line.quantity > line.item.stock && (
                     <Badge variant="muted" className="ml-2">
-                      Stock {line.item.stock}
+                      Stock {formatQuantity(line.item.stock, line.item.saleUnit)}
                     </Badge>
                   )}
                 </p>
@@ -304,28 +419,20 @@ export function PosScreen({
                   size="sm"
                   variant="outline"
                   aria-label={`Quitar uno de ${itemLabel(line.item)}`}
-                  onClick={() => setQuantity(line.item.variantId, line.quantity - 1)}
+                  onClick={() => setQuantity(line.item.variantId, roundQuantity(line.quantity - stepOf(line.item)))}
                 >
                   <Minus size={16} aria-hidden />
                 </Button>
-                <input
-                  aria-label={`Cantidad de ${itemLabel(line.item)}`}
-                  inputMode="numeric"
-                  value={line.quantity}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => {
-                    // Typed over the selected number; an empty or zero field keeps what it had (− removes the line).
-                    const n = parseInt(e.target.value.replace(/\D/g, ""), 10);
-                    if (n >= 1) setQuantity(line.item.variantId, n);
-                  }}
-                  className="h-10 w-11 rounded-md border bg-background text-center text-base font-semibold"
-                  data-testid="pos-quantity"
+                <PosQuantityInput
+                  line={line}
+                  onChange={(n) => setQuantity(line.item.variantId, n)}
+                  onAmount={(amount) => sellByAmount(line.item.variantId, amount)}
                 />
                 <Button
                   size="sm"
                   variant="outline"
                   aria-label={`Añadir uno de ${itemLabel(line.item)}`}
-                  onClick={() => setQuantity(line.item.variantId, line.quantity + 1)}
+                  onClick={() => setQuantity(line.item.variantId, roundQuantity(line.quantity + stepOf(line.item)))}
                 >
                   <Plus size={16} aria-hidden />
                 </Button>
@@ -421,6 +528,7 @@ export function PosScreen({
               lines: cart.map((l) => ({
                 variantId: l.item.variantId,
                 quantity: l.quantity,
+                ...(l.item.saleUnit && { unit: l.item.saleUnit }),
                 unitPrice: l.unitPrice,
                 productName: l.item.productName,
                 variantName: l.item.variantName || undefined,

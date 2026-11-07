@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { currencyCodeSchema } from "../currency";
 import { manualDiscountSchema, voucherCodeSchema } from "../discounts/schemas";
+import { quantityValueSchema } from "../catalog/units";
 import { phoneSchema } from "./phone";
 import { ORDER_STATUSES, SHIPPING_TYPES } from "./status";
 
@@ -92,8 +93,8 @@ export const MAX_LINE_QUANTITY = 999;
 
 export const cartLineSchema = z.object({
   variantId: uuid,
-  /** 0 removes the line. */
-  quantity: z.coerce.number().int().min(0).max(MAX_LINE_QUANTITY),
+  /** 0 removes the line. Decimals for products sold by weight or measure (KSH0015); the server checks the unit. */
+  quantity: quantityValueSchema(),
 });
 export type CartLineInput = z.infer<typeof cartLineSchema>;
 
@@ -209,7 +210,7 @@ export const adminOrderSchema = checkoutSchema.omit({ cartToken: true, createAcc
     .array(
       z.object({
         variantId: uuid,
-        quantity: z.coerce.number().int().min(1).max(MAX_LINE_QUANTITY),
+        quantity: quantityValueSchema({ positive: true }),
         /** A price set by the staff for this line (KSH0011), with an optional reason. */
         unitPrice: z.coerce.number().min(0).max(9_999_999_999.99).optional(),
         priceNote: z.string().trim().max(200).optional(),

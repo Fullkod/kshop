@@ -1,12 +1,16 @@
 "use client";
 
-import { formatMoney } from "@kshop/core";
+import { formatMoney, formatQuantity, isMeasured, lineTotal, roundQuantity } from "@kshop/core";
 import { ApiError, type Cart, type CartLine } from "@kshop/data";
 import { Alert, Button, buttonVariants, Input, Minus, Plus, ShoppingBag, X } from "@kshop/ui";
 import { useState } from "react";
 import { Link } from "../navigation";
 import { useStore } from "../store-context";
 import { useCart } from "./CartProvider";
+
+// KSH0015: by weight the «− +» moves by the product's step (0,5 lb), never below it.
+const stepOf = (l: CartLine) => (isMeasured(l.unit) ? l.step : 1);
+const minOf = (l: CartLine) => (isMeasured(l.unit) ? Math.min(l.step, l.quantity) : 1);
 
 // The cart's blocks, shared by the /cart page and the CartDrawer: lines (ProductCard «row» with a stepper), free
 // shipping progress, voucher, totals and the call to finish the order.
@@ -159,7 +163,7 @@ function CartLineRow({
         {line.issue === "unavailable" && <p className="text-sm text-destructive">Ya no está disponible.</p>}
         {line.issue === "insufficient" && (
           <p className="text-sm text-destructive">
-            Solo quedan {line.available}.{" "}
+            Solo quedan {formatQuantity(line.available, line.unit, { withUnit: isMeasured(line.unit) })}.{" "}
             <button
               type="button"
               className="underline"
@@ -174,19 +178,21 @@ function CartLineRow({
             <button
               type="button"
               className="flex h-full w-10 items-center justify-center disabled:opacity-40"
-              disabled={disabled || line.quantity <= 1}
-              onClick={() => onChange(line.variantId, line.quantity - 1)}
-              aria-label={`Quitar uno de ${line.productName}`}
+              disabled={disabled || line.quantity <= minOf(line)}
+              onClick={() => onChange(line.variantId, Math.max(minOf(line), roundQuantity(line.quantity - stepOf(line))))}
+              aria-label={`Quitar ${isMeasured(line.unit) ? formatQuantity(line.step, line.unit) : "uno"} de ${line.productName}`}
             >
               <Minus size={16} aria-hidden />
             </button>
-            <span className="w-7 text-center text-sm font-semibold">{line.quantity}</span>
+            <span className={`text-center text-sm font-semibold ${isMeasured(line.unit) ? "min-w-14 px-1" : "w-7"}`}>
+              {formatQuantity(line.quantity, line.unit, { withUnit: isMeasured(line.unit) })}
+            </span>
             <button
               type="button"
               className="flex h-full w-10 items-center justify-center disabled:opacity-40"
-              disabled={disabled || line.quantity >= line.available}
-              onClick={() => onChange(line.variantId, line.quantity + 1)}
-              aria-label={`Añadir uno de ${line.productName}`}
+              disabled={disabled || roundQuantity(line.quantity + stepOf(line)) > line.available}
+              onClick={() => onChange(line.variantId, roundQuantity(line.quantity + stepOf(line)))}
+              aria-label={`Añadir ${isMeasured(line.unit) ? formatQuantity(line.step, line.unit) : "uno"} de ${line.productName}`}
             >
               <Plus size={16} aria-hidden />
             </button>
@@ -194,7 +200,7 @@ function CartLineRow({
           <span className="flex flex-col items-end leading-tight">
             <span className="sf-heading text-[15px] font-bold">{money(line.lineTotal)}</span>
             {before !== null && (
-              <s className="text-xs text-muted-foreground">{money(before * line.quantity)}</s>
+              <s className="text-xs text-muted-foreground">{money(lineTotal(before, line.quantity))}</s>
             )}
           </span>
         </div>

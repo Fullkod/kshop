@@ -1,6 +1,13 @@
 "use client";
 
-import { formatMoney, ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS, SHIPPING_TYPE_LABELS } from "@kshop/core";
+import {
+  formatMoney,
+  formatQuantity,
+  ORDER_STATUS_LABELS,
+  PAYMENT_STATUS_LABELS,
+  perUnitSuffix,
+  SHIPPING_TYPE_LABELS,
+} from "@kshop/core";
 import type { PublicOrder } from "@kshop/data";
 import { Alert, Badge, Card } from "@kshop/ui";
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -100,7 +107,8 @@ export function OrderView({ token }: { token: string }) {
                 <span className="font-medium">{l.productName}</span>
                 {l.variantName && <span className="text-muted-foreground">{l.variantName}</span>}
                 <span className="text-muted-foreground">
-                  {l.quantity} × {money(l.unitPrice)}
+                  {formatQuantity(l.quantity, l.unit)} × {money(l.unitPrice)}
+                  {perUnitSuffix(l.unit)}
                   {l.listPrice !== null && l.listPrice > l.unitPrice && (
                     <s className="ml-2">{money(l.listPrice)}</s>
                   )}

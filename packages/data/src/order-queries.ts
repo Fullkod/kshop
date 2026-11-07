@@ -31,6 +31,7 @@ export const AdminOrdersQuery = graphql(`
             edges {
               node {
                 quantity
+                unit
               }
             }
           }
@@ -114,6 +115,7 @@ export const AdminOrderQuery = graphql(`
                 attributes
                 imageUrl
                 quantity
+                unit
                 unitListPrice
                 unitPrice
                 compareAtPrice
@@ -291,6 +293,7 @@ export const OrderVariantSearchQuery = graphql(`
           name
           status
           primaryMediaUrl
+          saleUnit
           productVariantsCollection(orderBy: [{ sortOrder: AscNullsLast }], first: 100) {
             edges {
               node {

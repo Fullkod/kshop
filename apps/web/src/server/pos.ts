@@ -39,6 +39,7 @@ export async function recordPosSales(
         lines: sale.lines.map((l) => ({
           variant_id: l.variantId,
           quantity: l.quantity,
+          unit: l.unit ?? null,
           unit_price: l.unitPrice,
           product_name: l.productName,
           variant_name: l.variantName ?? null,

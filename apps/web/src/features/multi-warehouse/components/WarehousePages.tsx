@@ -1,6 +1,14 @@
 "use client";
 
-import { STOCK_MOVEMENT_LABELS, STOCK_MOVEMENT_TYPES, type StockMovementType } from "@kshop/core";
+import {
+  formatQuantity,
+  isMeasured,
+  roundQuantity,
+  SALE_UNIT_INFO,
+  STOCK_MOVEMENT_LABELS,
+  STOCK_MOVEMENT_TYPES,
+  type StockMovementType,
+} from "@kshop/core";
 import {
   ApiError,
   type StockMovementsPage,
@@ -8,7 +16,7 @@ import {
   type WarehousesOverview,
   type ZoneWarehouses,
 } from "@kshop/data";
-import { Alert, Badge, Button, Card, Input, Label, Select, cn } from "@kshop/ui";
+import { Alert, Badge, Button, Card, Input, Label, QuantityInput, Select, cn } from "@kshop/ui";
 import { FilterBar } from "@kshop/admin";
 import Link from "next/link";
 import { AdminSubNav } from "@/components/AdminSubNav";
@@ -322,7 +330,7 @@ export function TransferPage() {
 
   function add(row: WarehouseStockRow) {
     if (lines.some((l) => l.variantId === row.variantId)) return;
-    setLines([...lines, { ...row, move: Math.min(1, row.quantity - row.allocated) }]);
+    setLines([...lines, { ...row, move: Math.min(1, roundQuantity(row.quantity - row.allocated)) }]);
   }
 
   async function submit(event: FormEvent) {
@@ -353,7 +361,7 @@ export function TransferPage() {
     }
   }
 
-  const invalid = lines.some((l) => l.move < 1 || l.move > l.quantity - l.allocated);
+  const invalid = lines.some((l) => l.move <= 0 || l.move > roundQuantity(l.quantity - l.allocated));
   return (
     <form onSubmit={(e) => void submit(e)} className="flex max-w-4xl flex-col gap-4">
       <Card className="grid gap-3 sm:grid-cols-2">
@@ -398,7 +406,7 @@ export function TransferPage() {
           <ul className="flex max-h-64 flex-col overflow-y-auto text-sm" data-testid="transfer-results">
             {results.length === 0 && <li className="py-2 text-muted-foreground">Sin resultados.</li>}
             {results.map((r) => {
-              const free = r.quantity - r.allocated;
+              const free = roundQuantity(r.quantity - r.allocated);
               return (
                 <li key={r.variantId} className="flex items-center gap-2 border-b py-2 last:border-0">
                   <span className="flex-1">
@@ -407,7 +415,8 @@ export function TransferPage() {
                     <span className="text-muted-foreground">({r.sku})</span>
                   </span>
                   <span className="text-muted-foreground">
-                    {free} libres{r.allocated > 0 && ` · ${r.allocated} reservadas`}
+                    {formatQuantity(free, r.unit)} libres
+                    {r.allocated > 0 && ` · ${formatQuantity(r.allocated, r.unit)} reservadas`}
                   </span>
                   <Button
                     type="button"
@@ -435,18 +444,17 @@ export function TransferPage() {
                 {l.variantName && ` · ${l.variantName}`}{" "}
                 <span className="text-muted-foreground">({l.sku})</span>
               </span>
-              <Input
-                type="number"
-                min={1}
-                max={l.quantity - l.allocated}
+              <QuantityInput
                 value={l.move}
+                decimals={isMeasured(l.unit)}
+                suffix={isMeasured(l.unit) ? SALE_UNIT_INFO[l.unit].abbr : undefined}
                 aria-label={`Unidades de ${l.sku}`}
-                onChange={(e) =>
-                  setLines(lines.map((x, j) => (j === i ? { ...x, move: Number(e.target.value) } : x)))
-                }
-                className="w-24"
+                onValueChange={(move) => setLines(lines.map((x, j) => (j === i ? { ...x, move } : x)))}
+                className="w-28"
               />
-              <span className="text-muted-foreground">de {l.quantity - l.allocated}</span>
+              <span className="text-muted-foreground">
+                de {formatQuantity(roundQuantity(l.quantity - l.allocated), l.unit)}
+              </span>
               <Button
                 type="button"
                 size="sm"
@@ -633,7 +641,7 @@ export function MovementsPage({ initialWarehouseId }: { initialWarehouseId?: str
                       m.quantity < 0 ? "text-destructive" : "text-success",
                     )}
                   >
-                    {m.quantity > 0 ? `+${m.quantity}` : m.quantity}
+                    {m.quantity > 0 ? `+${formatQuantity(m.quantity, "unit")}` : formatQuantity(m.quantity, "unit")}
                   </td>
                   <td className="px-4 py-2 text-muted-foreground">
                     {m.orderId ? (

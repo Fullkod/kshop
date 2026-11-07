@@ -320,7 +320,7 @@ create function pg_temp.lines(p_variant text, p_quantity int) returns jsonb lang
 $$;
 
 create function pg_temp.stock(p_variant text) returns text language sql as $$
-  select format('%s/%s/%s', s.quantity, s.quantity_allocated, v.stock_available)
+  select format('%s/%s/%s', trim_scale(s.quantity), trim_scale(s.quantity_allocated), trim_scale(v.stock_available))
   from public.stocks s join public.product_variants v on v.id = s.variant_id where s.variant_id = tests.fx(p_variant);
 $$;
 
@@ -442,7 +442,7 @@ select tests.eq('cart merge: returns the customer cart',
   public.cart_merge(tests.fx('store_a'), tests.fx('guest_token'), tests.fx('c_a')), tests.fx('cart_a'));
 select tests.eq('cart merge: quantities added, guest cart removed', (select quantity from public.cart_lines
   where cart_id = tests.fx('cart_a') and variant_id = tests.fx('fa_v_s')) * 10
-  + (select count(*) from public.carts where id = tests.fx('guest_cart'))::int, 30);
+  + (select count(*) from public.carts where id = tests.fx('guest_cart'))::int, 30::numeric);
 select tests.eq('cart merge: a customer of B cannot take a cart of A',
   public.cart_merge(tests.fx('store_b'), tests.fx('guest_token'), tests.fx('c_b')), null::uuid);
 
@@ -452,7 +452,7 @@ with w as (insert into public.warehouses (store_id, name) values (tests.fx('stor
 insert into pg_temp.fixtures select 'wh_b2', id from w;
 select public.set_stock_quantity(tests.fx('store_b'), tests.fx('fb_v_s'), tests.fx('wh_b2'), 3, 'adjustment', null, null);
 select tests.eq('multi-warehouse: stock_available sums both warehouses',
-  (select stock_available from public.product_variants where id = tests.fx('fb_v_s')), 7);
+  (select stock_available from public.product_variants where id = tests.fx('fb_v_s')), 7::numeric);
 insert into pg_temp.fixtures select 'ord_b_split', (public.checkout_create_order(tests.fx('store_b'), jsonb_build_object(
   'idempotency_key', 'key-ord-b-split', 'currency', 'USD',
   'lines', jsonb_build_array(jsonb_build_object('variant_id', tests.fx('fb_v_s'), 'quantity', 6)),
@@ -460,7 +460,7 @@ insert into pg_temp.fixtures select 'ord_b_split', (public.checkout_create_order
   'shipping', jsonb_build_object('method_id', (select id from public.shipping_methods where store_id = tests.fx('store_b') and type = 'delivery'),
     'zone_id', tests.fx('b_zone'), 'address', 'Calle 1'))) ->> 'order_id')::uuid;
 select tests.eq('multi-warehouse: 6 units reserved as 4 (default) + 2 (second)', (
-  select string_agg(r.quantity::text, '+' order by w.is_default desc)
+  select string_agg(trim_scale(r.quantity)::text, '+' order by w.is_default desc)
   from public.inventory_reservations r join public.warehouses w on w.id = r.warehouse_id
   where r.order_id = tests.fx('ord_b_split')), '4+2');
 select tests.check('multi-warehouse: one more unit than available is rejected', tests.throws(format(
@@ -472,11 +472,11 @@ select tests.check('multi-warehouse: one more unit than available is rejected', 
   tests.fx('store_b'), tests.fx('fb_v_s'), tests.fx('store_b'), tests.fx('b_zone'))));
 select public.order_transition(tests.fx('store_b'), tests.fx('ord_b_split'), 'paid', null);
 select tests.eq('multi-warehouse: paying consumes in both warehouses', (
-  select string_agg(s.quantity || '/' || s.quantity_allocated, ' ' order by w.is_default desc)
+  select string_agg(trim_scale(s.quantity) || '/' || trim_scale(s.quantity_allocated), ' ' order by w.is_default desc)
   from public.stocks s join public.warehouses w on w.id = s.warehouse_id where s.variant_id = tests.fx('fb_v_s')), '0/0 1/0');
 select public.order_cancel(tests.fx('store_b'), tests.fx('ord_b_split'), 'x', null);
 select tests.eq('multi-warehouse: cancelling a paid order restocks both warehouses', (
-  select string_agg(s.quantity || '/' || s.quantity_allocated, ' ' order by w.is_default desc)
+  select string_agg(trim_scale(s.quantity) || '/' || trim_scale(s.quantity_allocated), ' ' order by w.is_default desc)
   from public.stocks s join public.warehouses w on w.id = s.warehouse_id where s.variant_id = tests.fx('fb_v_s')), '4/0 3/0');
 
 -- Only service_role can call the write functions.

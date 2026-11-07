@@ -1,5 +1,6 @@
 import type {
   ProductSort,
+  SaleUnit,
   SectionSettings,
   SectionVisibilityInput,
   AttributeInput,
@@ -239,6 +240,9 @@ export type CartLine = {
   sku: string;
   imageUrl: string | null;
   quantity: number;
+  /** KSH0015: how it is sold (decimals for lb, kg…) and the step of the «− +». */
+  unit: SaleUnit;
+  step: number;
   /** Price before the promotion (= unitPrice without one). */
   listPrice: number;
   unitPrice: number;
@@ -350,6 +354,8 @@ export type PublicOrder = {
     attributes: { name: string; value: string }[];
     imageUrl: string | null;
     quantity: number;
+    /** KSH0015: the unit it was sold in. */
+    unit: SaleUnit;
     /** Price before the promotion (null in orders before phase 4). */
     listPrice: number | null;
     unitPrice: number;
@@ -388,6 +394,9 @@ export type PosCatalogItem = {
   imageUrl: string | null;
   /** Unit cost in the base currency, only for owner and admin (KSH0011); absent for staff, null without a cost. */
   cost?: number | null;
+  /** KSH0015: how it is sold; absent in catalogs downloaded before (= unit). */
+  saleUnit?: SaleUnit;
+  quantityStep?: number | null;
 };
 /** KSH0012: the day of a cashier before counting. Amounts per currency. */
 export type PosClosingPreview = {
@@ -673,6 +682,8 @@ export type WarehouseStockRow = {
   sku: string;
   quantity: number;
   allocated: number;
+  /** KSH0015: lb, kg… (decimals) or unit. */
+  unit: SaleUnit;
 };
 
 export type StockMovement = {

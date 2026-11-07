@@ -221,6 +221,8 @@ export const StorefrontProductCardFragment = graphql(`
     maxPrice
     inStock
     badge
+    saleUnit
+    quantityStep
     primaryMediaUrl
     brands {
       name
@@ -361,6 +363,8 @@ export const StorefrontProductFullFragment = graphql(`
     inStock
     primaryMediaUrl
     categoryId
+    saleUnit
+    quantityStep
     brands {
       name
       slug

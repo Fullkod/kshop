@@ -37,10 +37,10 @@ export const articles: HelpArticle[] = [
         screenshot: "product-editor",
       },
       {
-        text: "Un producto nuevo empieza «Publicado»: sale en la tienda en cuanto lo guardas. Si quieres terminarlo después, cámbialo a «Borrador». Pulsa «Guardar».",
+        text: "Un producto nuevo empieza «Publicado»: sale en la tienda en cuanto lo guardas. Si quieres terminarlo después, cámbialo a «Borrador». Pulsa «Guardar»: vuelves a la lista de productos.",
       },
       {
-        text: "Con el producto guardado aparece «Imágenes»: sube las fotos (o «Tomar foto» en el teléfono). La primera es la que se ve en la tienda.",
+        text: "Para las fotos, abre el producto en la lista: con el producto guardado aparece «Imágenes». Sube las fotos (o «Tomar foto» en el teléfono). La primera es la que se ve en la tienda.",
       },
     ],
     tips: [
@@ -48,7 +48,36 @@ export const articles: HelpArticle[] = [
       "Para ocultar un producto sin perderlo, ponlo en «Archivado»: desaparece de la tienda y los pedidos viejos lo conservan.",
       "¿Vendes ropa y zapatos? Crea dos atributos llamados «Talla» con distinto «Código» (talla-ropa y talla-calzado) y pon cada uno en su tipo de producto: así cada producto ofrece solo sus tallas.",
     ],
-    related: ["excel-catalog", "missing-section"],
+    related: ["excel-catalog", "missing-section", "sell-by-weight"],
+  },
+  {
+    slug: "sell-by-weight",
+    title: "Quiero vender por peso o medida",
+    summary:
+      "Arroz, queso o jamón por libra, refresco por litro, tela por metro: el producto dice cómo se vende, el precio es por esa unidad y la cantidad admite decimales (1,5 lb).",
+    audiences: ["owner", "staff"],
+    keywords: ["libra", "peso", "kilo", "litro", "metro", "decimales", "granel", "pesa", "por importe", "unidad"],
+    contexts: ["product", "products", "pos"],
+    steps: [
+      {
+        text: "Abre el producto y, en «Precio y stock», elige en «Se vende por» la unidad (Libra, Kilogramo, Litro, Metro…). El precio pasa a ser por esa unidad («Precio (CUP / lb)») y el stock admite decimales: 35,5 lb.",
+      },
+      {
+        text: "En «De cuánto en cuánto en la tienda» pon el paso del «− +» de la tienda online (vacío: 0,5 lb, 0,5 kg, 100 g…). El cliente también puede escribir la cantidad a mano.",
+      },
+      {
+        text: "En la Caja, toca el producto y escribe lo que marque la pesa (1,37). Si el cliente pide «100 pesos de queso», toca el botón de la unidad (lb) junto a la cantidad, escribe el importe y la cantidad se calcula sola.",
+      },
+      {
+        text: "En el Excel, la columna «Unidad» dice cómo se vende cada producto (Libra, Kilogramo…); vacía deja la que tiene.",
+      },
+    ],
+    tips: [
+      "Los pedidos, el ticket y el WhatsApp dicen la cantidad con su unidad: «1,5 lb × Jamón».",
+      "En los totales de productos vendidos, una línea por peso cuenta como un producto (no suma sus libras).",
+      "Los productos por unidad siguen igual: no admiten decimales.",
+    ],
+    related: ["first-product", "counter-sale", "excel-catalog"],
   },
   {
     slug: "excel-catalog",
@@ -181,6 +210,7 @@ export const articles: HelpArticle[] = [
       },
     ],
     tips: [
+      "El dueño y el administrador ven en cada cierre las ventas, el costo y la ganancia del día, y «Ganancia por producto». Los productos vendidos sin costo van aparte (su ganancia no se cuenta): ponles el costo y, al volver al cierre, ya entran, también en los cierres de días anteriores. El WhatsApp del cierre lleva la ganancia.",
       "El dueño o el administrador pone el «Fondo de caja» una vez en Caja › Cierres; si un día abres con otro fondo, cámbialo al cerrar.",
       "El cierre es de todo el local: entran las ventas de todos los teléfonos y cuentas, y también las de días anteriores que nadie cerró. Si se vende algo después de cerrar, va a un segundo cierre del mismo día.",
       "Para que el WhatsApp llegue, el teléfono del dueño tiene que estar en Avisos WhatsApp con «Recibe el cierre de caja de cada día».",

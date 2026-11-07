@@ -1,6 +1,6 @@
 "use client";
 
-import { formatMoney, type ProductStatus } from "@kshop/core";
+import { formatMoney, formatQuantity, type ProductStatus } from "@kshop/core";
 import { asResult, type AdminProductsQuery, type ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, buttonVariants, Card, Input, Select } from "@kshop/ui";
 import { useEffect, useRef, useState } from "react";
@@ -210,7 +210,7 @@ export function ProductList() {
             <tbody>
               {rows.map((r) => {
                 const variants = r.productVariantsCollection?.edges.map((e) => e.node) ?? [];
-                const stock = variants.reduce((sum, v) => sum + (v.trackInventory ? v.stockAvailable : 0), 0);
+                const stock = variants.reduce((sum, v) => sum + (v.trackInventory ? Number(v.stockAvailable) : 0), 0);
                 return (
                   <tr key={r.id} className="border-b last:border-0">
                     <td className="px-3 py-2">
@@ -248,7 +248,7 @@ export function ProductList() {
                     <td className="px-3 py-2 whitespace-nowrap">{price(r)}</td>
                     <td className="px-3 py-2">
                       <span className={r.inStock ? "" : "text-destructive"}>
-                        {r.inStock ? stock : "Agotado"}
+                        {r.inStock ? formatQuantity(stock, r.saleUnit) : "Agotado"}
                       </span>
                     </td>
                   </tr>

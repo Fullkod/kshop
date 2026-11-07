@@ -86,7 +86,7 @@ select 'sale_1', (public.pos_record_sale(tests.fx('store_a'), jsonb_build_object
 select tests.eq('caja: a counter sale is recorded as a delivered order',
   (select status::text from public.orders where id = tests.fx('sale_1')), 'delivered');
 select tests.eq('caja: the sale took its stock',
-  (select stock_available from public.product_variants where id = tests.fx('a_variant')), 3);
+  (select stock_available from public.product_variants where id = tests.fx('a_variant')), 3::numeric);
 
 -- ---------------------------------------------------------------------------
 -- Up to Base: the web turns on; back to Caja: off, nothing lost

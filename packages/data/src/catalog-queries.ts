@@ -170,6 +170,7 @@ export const AdminProductsQuery = graphql(`
           primaryMediaUrl
           updatedAt
           categoryId
+          saleUnit
           productVariantsCollection(first: 100) {
             edges {
               node {
@@ -201,6 +202,8 @@ export const ProductDetailQuery = graphql(`
           status
           featured
           badge
+          saleUnit
+          quantityStep
           seoTitle
           seoDescription
           productTagsCollection(first: 30) {

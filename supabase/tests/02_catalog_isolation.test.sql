@@ -90,7 +90,7 @@ select tests.eq('summary: min/max price and in_stock',
   (select format('%s-%s-%s', min_price, max_price, in_stock) from public.products where id = tests.fx('a_pub')),
   '1500.00-1800.00-t');
 select tests.eq('summary: variant stock_available',
-  (select stock_available from public.product_variants where sku = 'VA1-S' and store_id = tests.fx('store_a')), 4);
+  (select stock_available from public.product_variants where sku = 'VA1-S' and store_id = tests.fx('store_a')), 4::numeric);
 select tests.check('save_product: published_at set on publish',
   (select published_at is not null from public.products where id = tests.fx('a_pub')));
 -- Run the update first: a count in the same statement would use the snapshot from before the call.
@@ -184,7 +184,7 @@ select tests.check('stock: cannot go below reserved units', tests.throws(format(
   $$select public.set_stock_quantity(%L, (select id from public.product_variants where sku = 'VA1-S' and store_id = %L),
     %L, 1, 'adjustment', null, null)$$, tests.fx('store_a'), tests.fx('store_a'), tests.fx('wh_a'))));
 select tests.eq('stock: available = quantity - allocated',
-  (select stock_available from public.product_variants where sku = 'VA1-S' and store_id = tests.fx('store_a')), 2);
+  (select stock_available from public.product_variants where sku = 'VA1-S' and store_id = tests.fx('store_a')), 2::numeric);
 
 with x as (insert into public.categories (store_id, parent_id, name, slug) values (tests.fx('store_a'), tests.fx('a_cat'), 'Vestidos', 'vestidos')
   returning id) insert into pg_temp.fixtures select 'a_child', id from x;
@@ -214,7 +214,7 @@ select tests.eq('anon: sees published products of A and B, no drafts',
 select tests.eq('anon: sees the variants of published products only',
   (select count(*) from public.product_variants where store_id = tests.fx('store_a'))::int, 2);
 select tests.eq('anon: sees stock_available of a public variant',
-  (select stock_available from public.product_variants where sku = 'VA1-S'), 2);
+  (select stock_available from public.product_variants where sku = 'VA1-S'), 2::numeric);
 select tests.check('anon: cannot read variant_costs', tests.throws('select * from public.variant_costs'));
 select tests.check('anon: cannot read stocks', tests.throws('select * from public.stocks'));
 select tests.check('anon: cannot read stock_movements', tests.throws('select * from public.stock_movements'));

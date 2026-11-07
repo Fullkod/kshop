@@ -133,11 +133,11 @@ language sql as $$
 $$;
 
 select tests.eq('stock: with the module both warehouses count',
-  (select stock_available from public.product_variants where id = tests.fx('var_a')), 7);
+  (select stock_available from public.product_variants where id = tests.fx('var_a')), 7::numeric);
 insert into pg_temp.fixtures values ('ord_north', pg_temp.buy('key-pro-north', 'method_a2', 'zone_a2', 3));
 select tests.eq('zone Norte reserves from its warehouse',
   (select string_agg(w.name || ':' || r.quantity, ' ') from public.inventory_reservations r
-   join public.warehouses w on w.id = r.warehouse_id where r.order_id = tests.fx('ord_north')), 'Norte:3');
+   join public.warehouses w on w.id = r.warehouse_id where r.order_id = tests.fx('ord_north')), 'Norte:3.00');
 select tests.eq('the order keeps the warehouse that serves it',
   (select warehouse_id from public.orders where id = tests.fx('ord_north')), tests.fx('wh_a2'));
 -- Centro has no warehouses of its own after this: default first, then the others (the order may split).
@@ -145,7 +145,7 @@ select public.set_zone_warehouses(tests.fx('store_a'), tests.fx('zone_a'), '{}')
 insert into pg_temp.fixtures values ('ord_center', pg_temp.buy('key-pro-center', 'method_a', 'zone_a', 4));
 select tests.eq('a zone without warehouses takes the default one first, then the rest', (
   select string_agg(w.name || ':' || r.quantity, ' ' order by w.is_default desc) from public.inventory_reservations r
-  join public.warehouses w on w.id = r.warehouse_id where r.order_id = tests.fx('ord_center')), 'Principal:2 Norte:2');
+  join public.warehouses w on w.id = r.warehouse_id where r.order_id = tests.fx('ord_center')), 'Principal:2.00 Norte:2.00');
 select tests.check('a zone cannot use a warehouse of another store', tests.throws(format(
   $$select public.set_zone_warehouses(%L, %L, array[%L]::uuid[])$$,
   tests.fx('store_a'), tests.fx('zone_a2'), tests.fx('wh_b'))));
@@ -159,10 +159,10 @@ insert into pg_temp.fixtures select 'transfer_a', (public.transfer_stock(tests.f
   ->> 'transfer_id')::uuid;
 select tests.eq('transfer: two movements with the same id', (
   select string_agg(type::text || ':' || quantity, ' ' order by quantity) from public.stock_movements
-  where transfer_id = tests.fx('transfer_a')), 'transfer_out:-3 transfer_in:3');
+  where transfer_id = tests.fx('transfer_a')), 'transfer_out:-3.00 transfer_in:3.00');
 select tests.eq('transfer: stock moved (default 5/2, Norte 5/5)', (
   select string_agg(s.quantity || '/' || s.quantity_allocated, ' ' order by w.is_default desc) from public.stocks s
-  join public.warehouses w on w.id = s.warehouse_id where s.variant_id = tests.fx('var_a')), '5/2 5/5');
+  join public.warehouses w on w.id = s.warehouse_id where s.variant_id = tests.fx('var_a')), '5.00/2.00 5.00/5.00');
 select tests.check('transfer: not to the same warehouse', tests.throws(format(
   $$select public.transfer_stock(%L, %L, %L, '[{"variant_id": "%s", "quantity": 1}]', null, null)$$,
   tests.fx('store_a'), tests.fx('wh_a'), tests.fx('wh_a'), tests.fx('var_a'))));
@@ -176,11 +176,11 @@ select tests.check('transfer: not to a warehouse of another store', tests.throws
 -- Down to Base: only the default warehouse sells (D13); nothing is deleted.
 select public.change_plan(tests.fx('store_a'), 'base', 'month', tests.fx('owner_a'));
 select tests.eq('module off: available counts only the default warehouse',
-  (select stock_available from public.product_variants where id = tests.fx('var_a')), 3);
+  (select stock_available from public.product_variants where id = tests.fx('var_a')), 3::numeric);
 insert into pg_temp.fixtures values ('ord_base', pg_temp.buy('key-pro-base', 'method_a2', 'zone_a2', 1));
 select tests.eq('module off: the zone of Norte reserves from the default warehouse',
   (select string_agg(w.name || ':' || r.quantity, ' ') from public.inventory_reservations r
-   join public.warehouses w on w.id = r.warehouse_id where r.order_id = tests.fx('ord_base')), 'Principal:1');
+   join public.warehouses w on w.id = r.warehouse_id where r.order_id = tests.fx('ord_base')), 'Principal:1.00');
 select tests.check('module off: no transfers nor zone changes',
   tests.throws(format($$select public.transfer_stock(%L, %L, %L, '[{"variant_id": "%s", "quantity": 1}]', null, null)$$,
     tests.fx('store_a'), tests.fx('wh_a'), tests.fx('wh_a2'), tests.fx('var_a')))
@@ -189,10 +189,10 @@ select tests.eq('module off: the zone rows are kept',
   (select count(*) from public.warehouse_shipping_zones where zone_id = tests.fx('zone_a2'))::int, 1);
 select public.set_stock_quantity(tests.fx('store_a'), tests.fx('var_a'), tests.fx('wh_a2'), 6, 'adjustment', null, null);
 select tests.eq('module off: stock added to Norte is not for sale',
-  (select stock_available from public.product_variants where id = tests.fx('var_a')), 2);
+  (select stock_available from public.product_variants where id = tests.fx('var_a')), 2::numeric);
 select public.change_plan(tests.fx('store_a'), 'pro', 'month', tests.fx('owner_a'));
 select tests.eq('module back: both warehouses count again (2 + 1)',
-  (select stock_available from public.product_variants where id = tests.fx('var_a')), 3);
+  (select stock_available from public.product_variants where id = tests.fx('var_a')), 3::numeric);
 
 -- ---------------------------------------------------------------------------
 -- Finance (phase 6.3): the reports add up to the orders. Store C, base CUP, USD at 300 until yesterday 23:00 and
@@ -316,7 +316,7 @@ select tests.eq('inventory: units, cost value (4 × 2 USD × 500) and sale value
   (select format('%s|%s|%s|%s|%s', t ->> 'units', t ->> 'cost_value', t ->> 'sale_value', t ->> 'low_stock',
      t ->> 'without_cost')
    from (select public.finance_inventory(tests.fx('store_c'), null, 'CUP', 'all', 60, null, 50, 0) -> 'totals' as t) x),
-  '6|4000.00|10000.00|1|1');
+  '6.00|4000.00|10000.00|1|1');
 select tests.eq('inventory: filter low', (select string_agg(r ->> 'sku', ',') from jsonb_array_elements(
   public.finance_inventory(tests.fx('store_c'), null, 'CUP', 'low', 60, null, 50, 0) -> 'rows') r), 'C-BOL');
 select tests.check('finance: a period of more than a year is rejected', tests.throws(format(

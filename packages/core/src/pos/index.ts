@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { quantityValueSchema, saleUnitSchema } from "../catalog/units";
 import { currencyCodeSchema } from "../currency";
 
 export * from "./search";
@@ -10,7 +11,10 @@ const uuid = z.uuid();
 
 const posLineSchema = z.object({
   variantId: uuid,
-  quantity: z.number().int().min(1).max(999),
+  /** Whole for units; decimals for products sold by weight or measure (KSH0015). Old apps send whole numbers. */
+  quantity: quantityValueSchema({ positive: true }),
+  /** The unit the phone sold it in (KSH0015); old apps leave it out and the server takes the product's. */
+  unit: saleUnitSchema.optional(),
   unitPrice: money,
   /** The name on the phone, in case the product no longer exists when the sale arrives. */
   productName: z.string().trim().min(1).max(300),

@@ -4248,7 +4248,7 @@
                 "name": null,
                 "ofType": {
                   "kind": "SCALAR",
-                  "name": "Int",
+                  "name": "BigFloat",
                   "ofType": null
                 }
               },
@@ -4445,7 +4445,7 @@
               "name": "quantity",
               "type": {
                 "kind": "INPUT_OBJECT",
-                "name": "IntFilter",
+                "name": "BigFloatFilter",
                 "ofType": null
               },
               "description": null,
@@ -14803,7 +14803,7 @@
                 "name": null,
                 "ofType": {
                   "kind": "SCALAR",
-                  "name": "Int",
+                  "name": "BigFloat",
                   "ofType": null
                 }
               },
@@ -15064,7 +15064,7 @@
               "name": "quantity",
               "type": {
                 "kind": "INPUT_OBJECT",
-                "name": "IntFilter",
+                "name": "BigFloatFilter",
                 "ofType": null
               },
               "description": null,
@@ -21246,7 +21246,7 @@
                 "name": null,
                 "ofType": {
                   "kind": "SCALAR",
-                  "name": "Int",
+                  "name": "BigFloat",
                   "ofType": null
                 }
               },
@@ -21361,6 +21361,22 @@
                 "kind": "SCALAR",
                 "name": "String",
                 "ofType": null
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "unit",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
               },
               "description": null,
               "isDeprecated": false,
@@ -21635,7 +21651,7 @@
               "name": "quantity",
               "type": {
                 "kind": "INPUT_OBJECT",
-                "name": "IntFilter",
+                "name": "BigFloatFilter",
                 "ofType": null
               },
               "description": null,
@@ -21713,6 +21729,16 @@
             },
             {
               "name": "promotionName",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "StringFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "unit",
               "type": {
                 "kind": "INPUT_OBJECT",
                 "name": "StringFilter",
@@ -21960,6 +21986,16 @@
             },
             {
               "name": "promotionName",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "unit",
               "type": {
                 "kind": "ENUM",
                 "name": "OrderByDirection",
@@ -34334,7 +34370,7 @@
                 "name": null,
                 "ofType": {
                   "kind": "SCALAR",
-                  "name": "Int",
+                  "name": "BigFloat",
                   "ofType": null
                 }
               },
@@ -35383,7 +35419,7 @@
               "name": "stockAvailable",
               "type": {
                 "kind": "INPUT_OBJECT",
-                "name": "IntFilter",
+                "name": "BigFloatFilter",
                 "ofType": null
               },
               "description": null,
@@ -35978,6 +36014,34 @@
                   "name": "Boolean",
                   "ofType": null
                 }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "saleUnit",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              },
+              "description": null,
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "args": [],
+              "name": "quantityStep",
+              "type": {
+                "kind": "SCALAR",
+                "name": "BigFloat",
+                "ofType": null
               },
               "description": null,
               "isDeprecated": false,
@@ -37202,6 +37266,26 @@
               "defaultValue": null
             },
             {
+              "name": "saleUnit",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "StringFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "quantityStep",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "BigFloatFilter",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
               "name": "nodeId",
               "type": {
                 "kind": "INPUT_OBJECT",
@@ -37480,6 +37564,26 @@
             },
             {
               "name": "onSale",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "saleUnit",
+              "type": {
+                "kind": "ENUM",
+                "name": "OrderByDirection",
+                "ofType": null
+              },
+              "description": null,
+              "defaultValue": null
+            },
+            {
+              "name": "quantityStep",
               "type": {
                 "kind": "ENUM",
                 "name": "OrderByDirection",
@@ -39335,6 +39439,16 @@
                 },
                 {
                   "name": "pLowStock",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  },
+                  "description": null,
+                  "defaultValue": null
+                },
+                {
+                  "name": "pNoCost",
                   "type": {
                     "kind": "SCALAR",
                     "name": "Boolean",
@@ -52653,7 +52767,7 @@
                 "name": null,
                 "ofType": {
                   "kind": "SCALAR",
-                  "name": "Int",
+                  "name": "BigFloat",
                   "ofType": null
                 }
               },
@@ -52946,7 +53060,7 @@
               "name": "quantity",
               "type": {
                 "kind": "INPUT_OBJECT",
-                "name": "IntFilter",
+                "name": "BigFloatFilter",
                 "ofType": null
               },
               "description": null,
@@ -53278,7 +53392,7 @@
                 "name": null,
                 "ofType": {
                   "kind": "SCALAR",
-                  "name": "Int",
+                  "name": "BigFloat",
                   "ofType": null
                 }
               },
@@ -53294,7 +53408,7 @@
                 "name": null,
                 "ofType": {
                   "kind": "SCALAR",
-                  "name": "Int",
+                  "name": "BigFloat",
                   "ofType": null
                 }
               },
@@ -53307,7 +53421,7 @@
               "name": "lowStockThreshold",
               "type": {
                 "kind": "SCALAR",
-                "name": "Int",
+                "name": "BigFloat",
                 "ofType": null
               },
               "description": null,
@@ -53503,7 +53617,7 @@
               "name": "quantity",
               "type": {
                 "kind": "INPUT_OBJECT",
-                "name": "IntFilter",
+                "name": "BigFloatFilter",
                 "ofType": null
               },
               "description": null,
@@ -53513,7 +53627,7 @@
               "name": "quantityAllocated",
               "type": {
                 "kind": "INPUT_OBJECT",
-                "name": "IntFilter",
+                "name": "BigFloatFilter",
                 "ofType": null
               },
               "description": null,
@@ -53523,7 +53637,7 @@
               "name": "lowStockThreshold",
               "type": {
                 "kind": "INPUT_OBJECT",
-                "name": "IntFilter",
+                "name": "BigFloatFilter",
                 "ofType": null
               },
               "description": null,

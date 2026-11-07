@@ -2,6 +2,7 @@ import "server-only";
 import {
   orderCode,
   orderWhatsappText,
+  toSaleUnit,
   whatsappLink,
   type CheckoutInput,
   type ManualDiscountInput,
@@ -120,6 +121,7 @@ type OrderRow = {
     attributes: { name: string; value: string }[];
     image_url: string | null;
     quantity: number;
+    unit: string;
     unit_list_price: number | null;
     unit_price: number;
     line_total: number;
@@ -155,7 +157,8 @@ function toPublicOrder(row: OrderRow, customDomain: string | null): PublicOrder 
       sku: l.sku,
       attributes: l.attributes,
       imageUrl: l.image_url,
-      quantity: l.quantity,
+      quantity: Number(l.quantity),
+      unit: toSaleUnit(l.unit),
       listPrice: num(l.unit_list_price),
       unitPrice: Number(l.unit_price),
       lineTotal: Number(l.line_total),
@@ -177,6 +180,7 @@ function toPublicOrder(row: OrderRow, customDomain: string | null): PublicOrder 
     lines: lines.map((l) => ({
       name: `${l.productName}${l.variantName ? ` (${l.variantName})` : ""}`,
       quantity: l.quantity,
+      unit: l.unit,
       lineTotal: l.lineTotal,
     })),
     subtotal: Number(row.subtotal),
@@ -228,7 +232,7 @@ function toPublicOrder(row: OrderRow, customDomain: string | null): PublicOrder 
 const ORDER_SELECT = `id, number, public_token, status, payment_status, channel, currency, subtotal, shipping_total,
   discount_total, voucher_code, total, paid_total, customer_name, customer_note, shipping_type, shipping_snapshot,
   payment_snapshot, created_at, stores (name, slug, order_prefix, whatsapp_phone),
-  order_lines (product_name, variant_name, sku, attributes, image_url, quantity, unit_list_price, unit_price, line_total,
+  order_lines (product_name, variant_name, sku, attributes, image_url, quantity, unit, unit_list_price, unit_price, line_total,
     sort_order),
   order_discounts (kind, name, code, reward, value, amount),
   order_events (type, payload, created_at, is_internal)`;

@@ -1,5 +1,14 @@
 import "server-only";
-import { MAX_LINE_QUANTITY, type CartUpdateInput, type CurrencyCode, type VoucherScope } from "@kshop/core";
+import {
+  countedQuantity,
+  maxQuantity,
+  quantityStep,
+  roundQuantity,
+  toSaleUnit,
+  type CartUpdateInput,
+  type CurrencyCode,
+  type VoucherScope,
+} from "@kshop/core";
 import type { Cart, CartLine } from "@kshop/data";
 import { mapDbError } from "../db-errors";
 import { hasModule } from "../auth";
@@ -77,7 +86,14 @@ type LineRow = {
     stock_available: number;
     track_inventory: boolean;
     product_id: string;
-    products: { name: string; slug: string; status: string; primary_media_url: string | null } | null;
+    products: {
+      name: string;
+      slug: string;
+      status: string;
+      primary_media_url: string | null;
+      sale_unit: string;
+      quantity_step: number | null;
+    } | null;
   } | null;
 };
 
@@ -154,7 +170,7 @@ export async function cartView(storeId: string, cart: CartRow | null, requestedC
     .select(
       `variant_id, quantity,
        product_variants (sku, name, stock_available, track_inventory, product_id,
-         products (name, slug, status, primary_media_url))`,
+         products (name, slug, status, primary_media_url, sale_unit, quantity_step))`,
     )
     .eq("store_id", storeId)
     .eq("cart_id", cart.id)
@@ -177,7 +193,12 @@ export async function cartView(storeId: string, cart: CartRow | null, requestedC
     const p = prices.get(row.variant_id);
     if (!p) return [];
     const published = v.products!.status === "published";
-    const available = !published ? 0 : v.track_inventory ? Math.max(0, v.stock_available) : MAX_LINE_QUANTITY;
+    const unit = toSaleUnit(v.products!.sale_unit);
+    const available = !published
+      ? 0
+      : v.track_inventory
+        ? Math.max(0, Number(v.stock_available))
+        : maxQuantity(unit);
     return [
       {
         variantId: row.variant_id,
@@ -187,14 +208,16 @@ export async function cartView(storeId: string, cart: CartRow | null, requestedC
         variantName: v.name,
         sku: v.sku,
         imageUrl: v.products!.primary_media_url,
-        quantity: row.quantity,
+        quantity: Number(row.quantity),
+        unit,
+        step: quantityStep(unit, v.products!.quantity_step),
         listPrice: Number(p.list_price),
         unitPrice: Number(p.unit_price),
         compareAtPrice: p.compare_at_price == null ? null : Number(p.compare_at_price),
         promotionName: p.promotion?.name ?? null,
         lineTotal: Number(p.line_total),
         available,
-        issue: available === 0 ? "unavailable" : available < row.quantity ? "insufficient" : null,
+        issue: available === 0 ? "unavailable" : available < Number(row.quantity) ? "insufficient" : null,
       },
     ];
   });
@@ -214,7 +237,8 @@ export async function cartView(storeId: string, cart: CartRow | null, requestedC
     },
     discountTotal: Number(priced.discount_total),
     vouchersEnabled: priced.vouchers_enabled,
-    itemCount: lines.reduce((sum, l) => sum + l.quantity, 0),
+    // KSH0015: a line sold by weight counts as one item in the badge.
+    itemCount: lines.reduce((sum, l) => sum + countedQuantity(l.quantity, l.unit), 0),
     hasIssues: lines.some((l) => l.issue !== null),
   };
 }
@@ -249,15 +273,23 @@ export async function updateCart(storeId: string, owner: CartOwner, input: CartU
     .in("variant_id", ids)
     .returns<{ variant_id: string; quantity: number }[]>();
   if (readError) throw readError;
-  const current = new Map(existing.map((l) => [l.variant_id, l.quantity]));
+  const current = new Map(existing.map((l) => [l.variant_id, Number(l.quantity)]));
+  // KSH0015: whole numbers for products sold by unit, 2 decimals for weight and measure.
+  const { data: units, error: unitsError } = await service
+    .from("product_variants")
+    .select("id, products (sale_unit)")
+    .eq("store_id", storeId)
+    .in("id", ids)
+    .returns<{ id: string; products: { sale_unit: string } | null }[]>();
+  if (unitsError) throw unitsError;
+  const unitOf = new Map(units.map((u) => [u.id, toSaleUnit(u.products?.sale_unit)]));
 
   const upserts: { store_id: string; cart_id: string; variant_id: string; quantity: number }[] = [];
   const removals: string[] = [];
   for (const line of input.lines) {
-    const quantity = Math.min(
-      MAX_LINE_QUANTITY,
-      input.mode === "add" ? (current.get(line.variantId) ?? 0) + line.quantity : line.quantity,
-    );
+    const unit = unitOf.get(line.variantId) ?? "unit";
+    const wanted = input.mode === "add" ? (current.get(line.variantId) ?? 0) + line.quantity : line.quantity;
+    const quantity = Math.min(maxQuantity(unit), unit === "unit" ? Math.round(wanted) : roundQuantity(wanted));
     if (quantity <= 0) removals.push(line.variantId);
     else upserts.push({ store_id: storeId, cart_id: cart.id, variant_id: line.variantId, quantity });
   }

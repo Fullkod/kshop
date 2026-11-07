@@ -1,4 +1,5 @@
 import { formatMoney } from "../catalog/pricing";
+import { formatQuantity } from "../catalog/units";
 import { SHIPPING_TYPE_LABELS, type ShippingType } from "./status";
 
 // Text of the order sent to the store over WhatsApp (D17). Some clients cut wa.me texts around 2 000
@@ -9,7 +10,7 @@ export type WhatsappOrder = {
   storeName: string;
   customerName: string;
   currency: string;
-  lines: { name: string; quantity: number; lineTotal: number }[];
+  lines: { name: string; quantity: number; lineTotal: number; unit?: string | null }[];
   subtotal: number;
   shippingType: ShippingType;
   shippingTotal: number | null;
@@ -29,7 +30,8 @@ const MAX_TEXT = 1800;
 export function orderWhatsappText(order: WhatsappOrder): string {
   const money = (v: number) => formatMoney(v, order.currency);
   const head = [`Hola, ${order.storeName}. Acabo de hacer el pedido *${order.code}*:`, ""];
-  const lines = order.lines.map((l) => `• ${l.quantity} × ${l.name} — ${money(l.lineTotal)}`);
+  // KSH0015: «1,5 lb × Jamón», «2 × Jabón».
+  const lines = order.lines.map((l) => `• ${formatQuantity(l.quantity, l.unit)} × ${l.name} — ${money(l.lineTotal)}`);
   const shipping =
     order.shippingTotal === null
       ? "A convenir"

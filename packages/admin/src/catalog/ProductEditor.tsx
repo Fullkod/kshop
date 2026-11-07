@@ -7,14 +7,19 @@ import {
   convertFromBase,
   convertToBase,
   formatMoney,
+  isMeasured,
   marginPercent,
+  SALE_UNIT_INFO,
+  SALE_UNITS,
   suggestSku,
+  toSaleUnit,
   variantMatrix,
   variantName,
   VALUE_LIST_TYPES,
   type CurrencyCode,
   type ProductInput,
   type ProductStatus,
+  type SaleUnit,
 } from "@kshop/core";
 import { asResult, type ProductDetailQuery, type ProductMedia, type ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, Card, FieldError, Input, Label, Select, useConfirm, X } from "@kshop/ui";
@@ -78,6 +83,9 @@ type Form = {
   /** Selected values per variant-selection attribute (builds the matrix). */
   axes: Record<string, string[]>;
   variants: VariantRow[];
+  /** KSH0015: «Se vende por» and the step of the quantity online (empty = the unit's). */
+  saleUnit: SaleUnit;
+  quantityStep: string;
 };
 
 const emptyVariant = (currency: CurrencyCode): VariantRow => ({
@@ -115,6 +123,8 @@ function blankForm(structure: CatalogStructure, currency: CurrencyCode): Form {
     attributes: {},
     axes: {},
     variants: firstType && !firstType.hasVariants ? [emptyVariant(currency)] : [],
+    saleUnit: "unit",
+    quantityStep: "",
   };
 }
 
@@ -144,7 +154,7 @@ function productToForm(
     const warehouseStock = Object.fromEntries(
       stocks
         .filter((st) => st.warehouseId !== defaultWarehouseId)
-        .map((st) => [st.warehouseId, String(st.quantity)]),
+        .map((st) => [st.warehouseId, String(Number(st.quantity))]),
     );
     return {
       id: v.id,
@@ -155,7 +165,7 @@ function productToForm(
       compareAtPrice: v.compareAtPrice != null ? String(Number(v.compareAtPrice)) : "",
       cost: v.variantCosts ? String(Number(v.variantCosts.costPrice)) : "",
       costCurrency: (v.variantCosts?.costCurrency as CurrencyCode | undefined) ?? baseCurrency,
-      stock: String(stockRow?.quantity ?? 0),
+      stock: String(Number(stockRow?.quantity ?? 0)),
       trackInventory: v.trackInventory,
       attributeValues,
       mediaId: v.variantMediaCollection?.edges[0]?.node.mediaId ?? "",
@@ -198,6 +208,8 @@ function productToForm(
     attributes,
     axes,
     variants,
+    saleUnit: toSaleUnit(p.saleUnit),
+    quantityStep: p.quantityStep != null ? String(Number(p.quantityStep)).replace(".", ",") : "",
   };
   return { form, media };
 }
@@ -382,6 +394,8 @@ export function ProductEditor({ productId }: { productId?: string }) {
       badge: undefined,
       seoTitle: undefined,
       seoDescription: undefined,
+      saleUnit: form!.saleUnit,
+      quantityStep: isMeasured(form!.saleUnit) ? (num(form!.quantityStep) ?? null) : null,
       tags: form!.tags
         .split(",")
         .map((t) => t.trim())
@@ -451,20 +465,12 @@ export function ProductEditor({ productId }: { productId?: string }) {
       return saved;
     });
     if (!result) return;
-    if (!productId) {
-      // Cache Components keeps «Nuevo producto» mounted (hidden) after leaving it: empty it for the next one.
-      setForm(null);
-      setMediaEdits(null);
-      router.replace(`/admin/catalog/products/${result.id}`);
-      return;
-    }
-    set({ variants: form!.variants.map((v) => ({ ...v, savedWarehouseStock: { ...v.warehouseStock } })) });
-    // A variant saved without a SKU got one on the server: read the product again to show it.
-    if (form!.variants.some((v) => !v.sku.trim())) {
-      setForm(null);
-      setProductVersion((n) => n + 1);
-    }
-    setSaved(true);
+    // Roberto (2026-11-07): saving goes back to the list of products, new or edited.
+    // Cache Components keeps the editor mounted (hidden) after leaving it: empty it so the next visit reads it again.
+    setForm(null);
+    setMediaEdits(null);
+    if (productId) setProductVersion((n) => n + 1);
+    router.replace("/admin/catalog");
   }
 
   async function onUpload(files: FileList | File[] | null) {
@@ -600,7 +606,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
         {v.trackInventory ? (
           <Input
             aria-label={`Stock ${v.name}`}
-            inputMode="numeric"
+            inputMode={isMeasured(form?.saleUnit) ? "decimal" : "numeric"}
             value={v.stock}
             onChange={(e) => setVariant(i, { stock: e.target.value })}
             className="w-24"
@@ -809,6 +815,47 @@ export function ProductEditor({ productId }: { productId?: string }) {
       <Card className="flex flex-col gap-4">
         <h3 className="font-semibold">{type?.hasVariants ? "Variantes" : "Precio y stock"}</h3>
 
+        {/* KSH0015: by weight or measure the price is per unit and the quantity takes decimals. */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="sale-unit">Se vende por</Label>
+            <Select
+              id="sale-unit"
+              value={form.saleUnit}
+              onChange={(e) => set({ saleUnit: toSaleUnit(e.target.value) })}
+            >
+              {SALE_UNITS.map((u) => (
+                <option key={u} value={u}>
+                  {u === "unit" ? "Unidad" : `${SALE_UNIT_INFO[u].label} (${SALE_UNIT_INFO[u].abbr})`}
+                </option>
+              ))}
+            </Select>
+            {isMeasured(form.saleUnit) && (
+              <p className="text-xs text-muted-foreground">
+                El precio es por {SALE_UNIT_INFO[form.saleUnit].label.toLowerCase()} y la cantidad admite decimales
+                (1,5 {SALE_UNIT_INFO[form.saleUnit].abbr}).
+              </p>
+            )}
+          </div>
+          {isMeasured(form.saleUnit) && (
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="quantity-step">De cuánto en cuánto en la tienda</Label>
+              <Input
+                id="quantity-step"
+                inputMode="decimal"
+                placeholder={String(SALE_UNIT_INFO[form.saleUnit].step).replace(".", ",")}
+                value={form.quantityStep}
+                onChange={(e) => set({ quantityStep: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                El cliente pide de {String(SALE_UNIT_INFO[form.saleUnit].step).replace(".", ",")}{" "}
+                {SALE_UNIT_INFO[form.saleUnit].abbr} en {String(SALE_UNIT_INFO[form.saleUnit].step).replace(".", ",")}{" "}
+                si lo dejas vacío. En la caja vale lo que marque la pesa.
+              </p>
+            </div>
+          )}
+        </div>
+
         {type?.hasVariants && (
           <div className="flex flex-col gap-3">
             {selectionAttributes.length === 0 && (
@@ -906,7 +953,10 @@ export function ProductEditor({ productId }: { productId?: string }) {
                     <tr>
                       {type?.hasVariants && <th className="py-2 pr-2 font-medium">Variante</th>}
                       <th className="py-2 pr-2 font-medium">SKU</th>
-                      <th className="py-2 pr-2 font-medium">Precio ({baseCurrency})</th>
+                      <th className="py-2 pr-2 font-medium">
+                        Precio ({baseCurrency}
+                        {isMeasured(form.saleUnit) && ` / ${SALE_UNIT_INFO[form.saleUnit].abbr}`})
+                      </th>
                       <th className="py-2 pr-2 font-medium">Antes</th>
                       {seesCosts && <th className="py-2 pr-2 font-medium">Costo</th>}
                       <th className="py-2 pr-2 font-medium">
@@ -952,7 +1002,9 @@ export function ProductEditor({ productId }: { productId?: string }) {
                         {variantFields.sku(v, i)}
                       </div>
                       <div className="flex flex-col gap-1">
-                        Precio ({baseCurrency}){variantFields.price(v, i)}
+                        Precio ({baseCurrency}
+                        {isMeasured(form.saleUnit) && ` / ${SALE_UNIT_INFO[form.saleUnit].abbr}`})
+                        {variantFields.price(v, i)}
                       </div>
                       <div className="flex flex-col gap-1">
                         Antes
@@ -1099,7 +1151,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
                             <td key={w.id} className="py-2 pr-2">
                               <Input
                                 aria-label={`Stock ${w.name} ${v.name}`}
-                                inputMode="numeric"
+                                inputMode={isMeasured(form.saleUnit) ? "decimal" : "numeric"}
                                 className="w-20"
                                 value={v.warehouseStock[w.id] ?? "0"}
                                 disabled={!v.id}

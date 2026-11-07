@@ -4,12 +4,19 @@ import { LinePriceDialog } from "@kshop/admin";
 import {
   formatMoney,
   formatPhone,
+  formatQuantity,
+  isMeasured,
+  lineTotal,
   normalizePhone,
+  perUnitSuffix,
+  SALE_UNIT_INFO,
   SHIPPING_TYPE_LABELS,
+  toSaleUnit,
   type CurrencyCode,
+  type SaleUnit,
 } from "@kshop/core";
 import { asResult } from "@kshop/data";
-import { Alert, Button, Card, Input, Label, Select } from "@kshop/ui";
+import { Alert, Button, Card, Input, Label, QuantityInput, Select } from "@kshop/ui";
 import { useRouter } from "next/navigation";
 import { useAdmin } from "@/app/s/[storeSlug]/admin/admin-context";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
@@ -21,7 +28,15 @@ import { useCheckoutSettings } from "../use-orders";
 // "Nuevo pedido" from the admin (decision 23): orders taken by phone or in person, through the same
 // transactional checkout (channel admin). Prices are the base prices; the server recomputes everything.
 
-type Result = { variantId: string; label: string; sku: string; price: number; available: number | null };
+type Result = {
+  variantId: string;
+  label: string;
+  sku: string;
+  price: number;
+  available: number | null;
+  /** KSH0015: lb, kg… take decimals; the price is per unit of measure. */
+  unit: SaleUnit;
+};
 /** `unitPrice` is a price set by the staff for this line (KSH0011); without it the server prices the line. */
 type Line = Result & { quantity: number; unitPrice?: number; priceNote?: string };
 const linePrice = (l: Line) => l.unitPrice ?? l.price;
@@ -73,7 +88,8 @@ export function NewOrder() {
             label: v.name ? `${p.name} (${v.name})` : p.name,
             sku: v.sku,
             price: Number(v.price),
-            available: v.trackInventory ? v.stockAvailable : null,
+            available: v.trackInventory ? Number(v.stockAvailable) : null,
+            unit: toSaleUnit(p.saleUnit),
           })),
         ),
       );
@@ -106,7 +122,7 @@ export function NewOrder() {
   );
   const method = methods.find((m) => m.id === methodId);
   const currency = settings?.baseCurrency ?? "CUP";
-  const subtotal = lines.reduce((sum, l) => sum + linePrice(l) * l.quantity, 0);
+  const subtotal = lines.reduce((sum, l) => sum + lineTotal(linePrice(l), l.quantity), 0);
 
   function addLine(result: Result) {
     setLines((current) => {
@@ -205,7 +221,9 @@ export function NewOrder() {
                       <span className="block truncate">{r.label}</span>
                       <span className="text-muted-foreground">
                         {r.sku} · {formatMoney(r.price, currency)}
-                        {r.available !== null && ` · ${r.available} disponibles`}
+                        {perUnitSuffix(r.unit)}
+                        {r.available !== null &&
+                          ` · ${formatQuantity(r.available, r.unit, { withUnit: isMeasured(r.unit) })} disponibles`}
                       </span>
                     </span>
                     <Button
@@ -229,19 +247,15 @@ export function NewOrder() {
                   <li key={l.variantId} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
                     {/* On a phone the name takes its own row: the quantity, price and «Quitar» go below. */}
                     <span className="min-w-0 basis-full truncate sm:basis-0 sm:flex-1">{l.label}</span>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={999}
+                    <QuantityInput
                       value={l.quantity}
-                      onChange={(e) =>
-                        setLines((c) =>
-                          c.map((x) =>
-                            x === l ? { ...x, quantity: Math.max(1, Number(e.target.value) || 1) } : x,
-                          ),
-                        )
+                      decimals={isMeasured(l.unit)}
+                      suffix={isMeasured(l.unit) ? SALE_UNIT_INFO[l.unit].abbr : undefined}
+                      max={isMeasured(l.unit) ? 99_999 : 999}
+                      onValueChange={(quantity) =>
+                        quantity > 0 && setLines((c) => c.map((x) => (x === l ? { ...x, quantity } : x)))
                       }
-                      className="w-20"
+                      className={isMeasured(l.unit) ? "w-28" : "w-20"}
                       aria-label={`Cantidad de ${l.label}`}
                     />
                     <button
@@ -253,11 +267,11 @@ export function NewOrder() {
                     >
                       {l.unitPrice !== undefined && (
                         <span className="block text-xs text-muted-foreground line-through">
-                          {formatMoney(l.price * l.quantity, currency)}
+                          {formatMoney(lineTotal(l.price, l.quantity), currency)}
                         </span>
                       )}
                       <span className={l.unitPrice !== undefined ? "font-semibold" : undefined}>
-                        {formatMoney(linePrice(l) * l.quantity, currency)}
+                        {formatMoney(lineTotal(linePrice(l), l.quantity), currency)}
                       </span>
                     </button>
                     <Button

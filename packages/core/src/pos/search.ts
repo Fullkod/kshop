@@ -1,3 +1,4 @@
+import { lineTotal } from "../catalog/units";
 // Search of the counter (Roberto, P5): by name in pieces, the whole phrase and its longest consecutive pieces first, then
 // the words scattered around the name. By SKU too: a barcode reader types the code as if it were a keyboard.
 
@@ -189,6 +190,7 @@ export function posFlagText(flag: PosFlag, currency: string): string {
 }
 
 /** Sum of the lines in cents, to avoid floating point drift. */
+/** Sum of round(price × quantity, 2) per line, like the server (KSH0015: quantities may be 1,37 lb). */
 export function posCartTotal(lines: readonly { unitPrice: number; quantity: number }[]): number {
-  return lines.reduce((cents, l) => cents + Math.round(l.unitPrice * 100) * l.quantity, 0) / 100;
+  return lines.reduce((cents, l) => cents + Math.round(lineTotal(l.unitPrice, l.quantity) * 100), 0) / 100;
 }

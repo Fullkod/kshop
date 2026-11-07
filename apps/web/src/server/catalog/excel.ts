@@ -10,7 +10,9 @@ import {
   IMPORT_BATCH_SIZE,
   PRODUCT_COLUMNS,
   productKey,
+  SALE_UNIT_INFO,
   splitCategoryPath,
+  toSaleUnit,
   splitList,
   STATUS_LABEL,
   VALUE_LIST_TYPES,
@@ -228,7 +230,8 @@ async function buildWorkbook(s: Structure, rows: ExportRow[]): Promise<Buffer> {
     "• Categoría: escribe la ruta separada por «>», por ejemplo «Mujer > Vestidos».",
     "• Colecciones y Etiquetas: varios valores separados por comas.",
     `• Precio y Precio anterior en ${s.baseCurrency}. Costo con su moneda (CUP, USD o EUR).`,
-    "• Stock: unidades en el almacén principal.",
+    "• Unidad: cómo se vende (Unidad, Libra, Kilogramo, Litro, Metro…). Vacía = la que tiene, o Unidad si es nuevo.",
+    "• Precio por esa unidad (por libra, por kilo…). Stock en el almacén principal: entero por unidades; con 2 decimales por peso o medida (35,5).",
     ...(s.saleCurrencies.length
       ? [
           `• ${s.saleCurrencies.map((c) => `Precio ${c}`).join(", ")}: precio fijo en esa moneda. Vacío: se convierte con la tasa.`,
@@ -255,6 +258,7 @@ type ExportProduct = {
   name: string;
   description_plain: string;
   status: keyof typeof STATUS_LABEL;
+  sale_unit: string;
   category_id: string | null;
   brand_id: string | null;
   product_tags: { tag: string }[];
@@ -301,7 +305,7 @@ export async function buildExport(storeId: string, productTypeId: string): Promi
     const { data, error } = await db
       .from("products")
       .select(
-        `slug, name, description_plain, status, category_id, brand_id,
+        `slug, name, description_plain, status, sale_unit, category_id, brand_id,
          product_tags(tag), collection_products(collection_id),
          product_attribute_values(attribute_id, value_id, value_text, value_numeric),
          product_media(url, sort_order),
@@ -344,6 +348,7 @@ export async function buildExport(storeId: string, productTypeId: string): Promi
                 : null,
             tags: i === 0 ? p.product_tags.map((t) => t.tag).join(", ") : null,
             status: i === 0 ? STATUS_LABEL[p.status] : null,
+            saleUnit: i === 0 ? SALE_UNIT_INFO[toSaleUnit(p.sale_unit)].label : null,
             images:
               i === 0
                 ? [...p.product_media]
@@ -566,6 +571,11 @@ export async function createImportJob(params: {
       const first = group.find((r) => r.data?.name)?.data;
       if (!first) group[0]!.errors.push("Falta el nombre del producto.");
       for (const r of group) if (r.data && r.data.price === undefined) r.errors.push("Falta el precio.");
+      // KSH0015: a product sold by unit keeps whole stock; decimals need «Unidad» (Libra, Kilogramo…).
+      if ((group.find((r) => r.data?.saleUnit)?.data?.saleUnit ?? "unit") === "unit")
+        for (const r of group)
+          if (r.data && [r.data.stock, ...Object.values(r.data.stocks)].some((n) => n !== undefined && !Number.isInteger(n)))
+            r.errors.push("Stock con decimales: indica la «Unidad» (Libra, Kilogramo…) o usa números enteros.");
       if (!s.type.hasVariants && group.length > 1)
         group[0]!.errors.push(`«${s.type.name}» no tiene variantes: usa una fila por producto.`);
     }
@@ -755,6 +765,9 @@ function buildPayload(
     payload.category_id = pathIndex.get(norm(splitCategoryPath(categoryText).join(" > "))) ?? null;
   if (brandText) payload.brand_id = s.brands.find((b) => norm(b.name) === norm(brandText))?.id ?? null;
   if (status || !isUpdate) payload.status = status ?? "draft";
+  // KSH0015: empty «Unidad» keeps the product's (or «unit» for a new one).
+  const saleUnit = group.find((r) => r.saleUnit)?.saleUnit;
+  if (saleUnit || !isUpdate) payload.sale_unit = saleUnit ?? "unit";
   if (tagsText || !isUpdate) payload.tags = tagsText ? splitList(tagsText) : [];
   payload.collection_ids = collectionsText
     ? splitList(collectionsText).flatMap((n) =>
