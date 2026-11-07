@@ -23,7 +23,8 @@ de la línea (KSH0011), sacos después.
 ## Estado (2026-11-07)
 - **En producción:** migraciones `20261108102500` y `20261108102600` (ganancia del cierre), web `0cc534c` (Vercel
   ok), Kshop Admin 1.0.25 publicado directo (sin pasar por Superadmin, a pedido de Roberto; se borró la 1.0.24).
-- Falta: APK de las apps de tienda, QA en navegador, `test:rls` en producción, `help:shots` + `help:pdf`.
+- Apps de tienda publicadas directo el mismo día: Minimercado 1.0.26, Klau's Shop 1.0.27, Tienda Demo 1.0.28.
+- Falta (KSH0020): QA en navegador, `test:rls` en producción, `help:shots` + `help:pdf`.
 
 ## Ojo
 - Publicar un APK sin el botón: `app:publish` lo sube oculto; luego `published = true` y borrar las versiones
