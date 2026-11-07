@@ -1,6 +1,7 @@
 # PRP KSH0012: Cierre de caja
 
 > **Estado**: HECHO 2026-11-06 (aprobado por Roberto; P1 = ajuste fijo por tienda, «validamos en la práctica»).
+> **Cambiado por KSH0014 (2026-11-06)**: el cierre ya no es por empleado sino de todo el local; ver «Cambio KSH0014» al final.
 > **Fecha**: 2026-11-06
 > **Proyecto**: Kshop · Tasknic KSH0012
 
@@ -125,3 +126,17 @@ alter table public.pos_sales add column closing_id uuid references public.pos_cl
 - `pnpm db:test:query "<sql>"` pasa por el shell de Windows: se pierden los saltos de línea y `>` redirige. Para
   SQL de varias líneas, `pnpm db:test:query -f archivo.sql`.
 - En `p_input -> 'x'` un JSON `null` no es SQL `NULL`: `coalesce` no lo salta; comprobar `jsonb_typeof`.
+
+## Cambio KSH0014: el cierre es de todo el local (2026-11-06)
+- Por qué: Minimercado vende desde tres teléfonos y dos cuentas en una sola gaveta; con el cierre por empleado cada uno
+  veía solo lo suyo y no se podía cuadrar. Roberto: «aunque se vendan de tres teléfonos, se cierra todo junto de una vez».
+- Ahora «Cerrar el día» junta **todas** las ventas abiertas de la tienda (cualquier cuenta y teléfono, y las de días
+  anteriores que nadie cerró), con un conteo, un fondo y un WhatsApp; `expected.by_cashier` y `expected.older` dicen
+  cuánto vendió cada cuenta y cuántas eran de otros días. `pos_closings.cashier_id` = quién cerró. Cualquiera con
+  acceso a la caja puede cerrar (decisión por defecto, Roberto no la cambió); todos los del local ven los cierres.
+- Unicidad `(store_id, day, sequence)`, candado por tienda, `pos_sales_open_idx (store_id, sold_at)`.
+  Migración `20261108102300_pos_closing_whole_store.sql` (prueba y producción; no había cierres en producción).
+- La vista previa conserva sus claves (`older_open` = 0): Kshop Admin 1.0.23 ya cierra el local completo; la 1.0.24
+  enseña el desglose por persona. Suite `22_pos_closings_isolation` reescrita (830/830 en prueba y producción).
+- Pendiente por la prisa: `e2e:pos` sin correr tras el cambio, y las capturas y el PDF de la ayuda sin regenerar
+  (el texto de la guía `cash-closing` sí está al día).

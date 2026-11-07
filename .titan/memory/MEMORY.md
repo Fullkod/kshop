@@ -51,7 +51,7 @@
 - [2026-11-01-sku-automatico.md](project/2026-11-01-sku-automatico.md) — Un SKU vacío se crea en el servidor del nombre del producto (`skuBase`/`fillMissingSkus`), único en la tienda; el Excel sigue exigiéndolo
 - [2026-11-02-codigo-de-atributo.md](project/2026-11-02-codigo-de-atributo.md) — Campo «Código» del atributo (como Saleor): dos «Talla» (ropa, calzado) con códigos distintos; error claro si se repite
 - [2026-10-31-ksh0003-calculadora-precio.md](project/2026-10-31-ksh0003-calculadora-precio.md) — KSH0003: calculadora de costo unitario + margen en el editor de producto (diálogo, web y Kshop Admin), `unitCost`/`priceFromCost` en core, teléfonos cubanos como `+53 5 256 4206`; `pnpm qa:price-calculator`
-- [2026-11-05-caja-v2.md](project/2026-11-05-caja-v2.md) — Caja v2 en el teléfono: ticket como pantalla, «⋯» con catálogo y ventas del día (abren su pedido), teclado sin barras, «Equivale a», pagos hechos en verde, safe area en `Dialog`, «Mostrador» segundo en Pedidos
+- [2026-11-05-caja-v2.md](project/2026-11-05-caja-v2.md) — Caja v2 en el teléfono: ticket como pantalla, «⋯» con catálogo y ventas del día (abren su pedido), teclado sin barras, «Equivale a», pagos hechos en verde, safe area en `Dialog`, «Mostrador» segundo en Pedidos; método de pago en todos lados (KSH0010), cambiar el precio de una línea (KSH0011) y cierre de caja de todo el local (KSH0012/KSH0014)
 - [2026-10-30-donde-quedamos.md](project/2026-10-30-donde-quedamos.md) — Superado: cobro mixto y POS fases 1-2 en producción
 
 ## feedback/ — Correcciones y preferencias
@@ -89,4 +89,4 @@
 - `prp-ksh0004-plan-caja.md` — KSH0004: plan «Caja» (mostrador sin tienda online) con módulo nuevo `storefront` que apaga la web pública; P1–P7 aprobados y **HECHO** y desplegado 2026-11-01 (plan visible en producción)
 - `prp-ksh0005-ayuda.md` — KSH0005: ayuda en la app como la de Tasknic («?» por vista, página Ayuda, primer día, glosario, FAQ, capturas por script, PDF/MD) en admin, Kshop Admin y superadmin; decisiones de Roberto del 2026-11-01; **HECHO** y desplegado 2026-11-01 (5 fases, `qa:help` 55/55 con Kshop Admin; aprendizajes del deploy dentro)
 - `prp-pos-offline.md` — POS sin conexión en Kshop Admin (módulo `pos`), aprobado 2026-10-30: fases 1 a 6 en producción y APK publicados; falta probar en un Android real. Inventario en la etapa 2
-- `prp-ksh0012-cierre-de-caja.md` — KSH0012: cierre de caja por día y empleado (esperado vs contado, fondo fijo por tienda, WhatsApp al dueño con el cuadre); HECHO 2026-11-06, dónde está cada pieza y aprendizajes dentro
+- `prp-ksh0012-cierre-de-caja.md` — KSH0012: cierre de caja (esperado vs contado, fondo fijo por tienda, WhatsApp al dueño con el cuadre); HECHO 2026-11-06; **KSH0014: el cierre es de todo el local** (todas las cuentas y teléfonos, días anteriores sin cerrar, desglose por persona); dónde está cada pieza, pendientes y aprendizajes dentro
