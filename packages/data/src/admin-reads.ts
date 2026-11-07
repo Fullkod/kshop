@@ -104,6 +104,8 @@ export type AdminProductsArgs = {
   status?: string | null;
   categoryId?: string | null;
   lowStock?: boolean | null;
+  /** Only products with a variant that has no cost yet (owners and admins see costs). */
+  noCost?: boolean | null;
 };
 
 export function createAdminReads(options: AdminReadsOptions) {
@@ -176,6 +178,7 @@ export function createAdminReads(options: AdminReadsOptions) {
         p_status: args.status ?? null,
         p_category_id: args.categoryId ?? null,
         p_low_stock: args.lowStock ?? null,
+        p_no_cost: args.noCost ?? null,
       }),
     product: (productId: string) =>
       rpc<ResultOf<typeof ProductDetailQuery>>("admin_product", { p_product_id: productId }),

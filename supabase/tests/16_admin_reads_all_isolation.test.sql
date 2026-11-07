@@ -71,6 +71,11 @@ select tests.eq('owner A: the variant cost in the product',
      ->'productsCollection'->'edges'->0->'node'->'productVariantsCollection'->'edges'->0->'node'
      ->'variantCosts'->>'costPrice'),
   '7.00');
+select tests.eq('owner A: «Sin costo» leaves out the product whose variant has a cost',
+  (select format('%s %s',
+     public.admin_products(tests.fx('store_a'), 10, p_no_cost => true)->'adminSearchProducts'->>'totalCount',
+     public.admin_products(tests.fx('store_a'), 10, p_no_cost => false)->'adminSearchProducts'->>'totalCount')),
+  '0 1');
 select tests.eq('owner A: search a customer by name and by exact phone',
   (select format('%s %s',
      public.admin_customers(tests.fx('store_a'), 10, p_name => '%ana%')->'customersCollection'->>'totalCount',

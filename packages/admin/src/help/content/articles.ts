@@ -692,7 +692,7 @@ export const articles: HelpArticle[] = [
       },
     ],
     tips: [
-      "El margen solo cuenta bien si cada producto tiene su costo.",
+      "El margen solo cuenta bien si cada producto tiene su costo: en Catálogo › Productos, marca «Sin costo» para ver los que faltan.",
       "Para lo de hoy sin entrar en Finanzas, mira Ventas de hoy o Inicio.",
       "«Ver todo en» pasa las cifras a otra moneda; «Exportar a Excel» descarga el periodo.",
     ],

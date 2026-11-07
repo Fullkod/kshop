@@ -4,6 +4,7 @@ import { formatMoney, type ProductStatus } from "@kshop/core";
 import { asResult, type AdminProductsQuery, type ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, buttonVariants, Card, Input, Select } from "@kshop/ui";
 import { useEffect, useRef, useState } from "react";
+import { useAdmin } from "../admin-context";
 import { FilterBar } from "../FilterBar";
 import { LoadError } from "../LoadError";
 import { useSession } from "../session";
@@ -23,6 +24,9 @@ const PAGE_SIZE = 25;
 export function ProductList() {
   const store = useStore();
   const { reads } = useSession();
+  const admin = useAdmin();
+  // Costs are for the owner and admins (null: the superadmin); the staff do not see them.
+  const seesCosts = admin.role === null || admin.role === "owner" || admin.role === "admin";
   const { data: structure } = useCatalogStructure();
   const { catalog } = useCatalogApi();
   const action = useApiAction();
@@ -31,6 +35,7 @@ export function ProductList() {
   const [status, setStatus] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [lowStock, setLowStock] = useState(false);
+  const [noCost, setNoCost] = useState(false);
   const [rows, setRows] = useState<Row[] | null>(null);
   const [total, setTotal] = useState(0);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -47,6 +52,7 @@ export function ProductList() {
     status: status || null,
     categoryId: categoryId || null,
     lowStock: lowStock || null,
+    noCost: noCost || null,
     first: PAGE_SIZE,
     after,
   });
@@ -76,7 +82,7 @@ export function ProductList() {
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- variables() is derived from these
-  }, [reads, store.id, query, status, categoryId, lowStock, version]);
+  }, [reads, store.id, query, status, categoryId, lowStock, noCost, version]);
 
   async function loadMore() {
     const result = await asResult(reads.products(variables(cursor)));
@@ -117,8 +123,8 @@ export function ProductList() {
       </div>
 
       <FilterBar
-        active={(status ? 1 : 0) + (categoryId ? 1 : 0) + (lowStock ? 1 : 0)}
-        layout="md:grid-cols-[10rem_14rem_auto]"
+        active={(status ? 1 : 0) + (categoryId ? 1 : 0) + (lowStock ? 1 : 0) + (noCost ? 1 : 0)}
+        layout={seesCosts ? "md:grid-cols-[10rem_14rem_auto_auto]" : "md:grid-cols-[10rem_14rem_auto]"}
         search={
           <Input
             placeholder="Buscar por nombre o SKU"
@@ -147,6 +153,12 @@ export function ProductList() {
           <input type="checkbox" checked={lowStock} onChange={(e) => setLowStock(e.target.checked)} />
           Stock bajo
         </label>
+        {seesCosts && (
+          <label className="flex min-h-11 items-center gap-2 text-sm whitespace-nowrap">
+            <input type="checkbox" checked={noCost} onChange={(e) => setNoCost(e.target.checked)} />
+            Sin costo
+          </label>
+        )}
       </FilterBar>
 
       {loadError && <LoadError message={loadError} onRetry={() => setVersion((v) => v + 1)} />}
@@ -169,7 +181,7 @@ export function ProductList() {
 
       {rows && rows.length === 0 && (
         <Card className="text-center text-muted-foreground">
-          No hay productos{query || status || categoryId || lowStock ? " con esos filtros" : " todavía"}.
+          No hay productos{query || status || categoryId || lowStock || noCost ? " con esos filtros" : " todavía"}.
         </Card>
       )}
 
