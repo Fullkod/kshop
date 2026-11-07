@@ -20,7 +20,12 @@ de la línea (KSH0011), sacos después.
   la tienda. Guía de ayuda `sell-by-weight`.
 - **Compatibilidad:** apps viejas mandan enteros y sin `unit`; el servidor toma la unidad del producto.
 
+## Estado (2026-11-07)
+- **En producción:** migraciones `20261108102500` y `20261108102600` (ganancia del cierre), web `0cc534c` (Vercel
+  ok), Kshop Admin 1.0.25 publicado directo (sin pasar por Superadmin, a pedido de Roberto; se borró la 1.0.24).
+- Falta: APK de las apps de tienda, QA en navegador, `test:rls` en producción, `help:shots` + `help:pdf`.
+
 ## Ojo
-- La migración **aún no está en producción**: bloquea `stocks`, `order_lines`… — aplicarla fuera de horas, luego
-  `test:rls` en producción, deploy de la web y APK nuevos (el orden: BD → web → APK).
+- Publicar un APK sin el botón: `app:publish` lo sube oculto; luego `published = true` y borrar las versiones
+  menores de ese `app_id` (registro y archivo de `store-apps`), lo mismo que `setAppBuildPublished`.
 - `products` da SELECT por columnas: toda columna nueva necesita su `grant select (…)`.

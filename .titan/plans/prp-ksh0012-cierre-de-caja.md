@@ -141,7 +141,7 @@ alter table public.pos_sales add column closing_id uuid references public.pos_cl
 - Pendiente por la prisa: `e2e:pos` sin correr tras el cambio, y las capturas y el PDF de la ayuda sin regenerar
   (el texto de la guía `cash-closing` sí está al día).
 
-## Ganancia del día en el cierre (2026-11-07)
+## Ganancia del día en el cierre (KSH0017, 2026-11-07)
 
 Decisiones de Roberto: la ganancia se calcula **al leer** el cierre (un cierre viejo se actualiza solo); poner el
 costo a un producto que no lo tenía **completa sus ventas pasadas** (`order_line_costs`, nunca pisa un costo ya
@@ -154,4 +154,5 @@ el dueño); solo la del local, no por persona; **solo la ven dueño y administra
   WhatsApp), `admin_pos_closings` con `profit`, `pos_close_day` con `ganancia` (resto igual a 20261108102300).
 - Test `supabase/tests/25_closing_profit.test.sql` (10/10). UI: `ClosingProfit` en `packages/admin/src/pos/PosClosings.tsx`
   (Ventas · Costo · Ganancia, aviso con enlace a cada producto sin costo, «Ganancia por producto»). Guía `cash-closing`.
+- **En producción 2026-11-07** (commit `b70758f`, web desplegada); sin QA en navegador ni `test:rls` en producción.
 - La plantilla de la plataforma gana `{{ganancia}}`; una tienda con plantilla propia no la recibe hasta editarla.

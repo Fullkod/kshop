@@ -50,3 +50,4 @@ Pedido por Roberto: un pie como el de Klau's Shop, solo con lo que le encaja. Es
   «Revisión» vacía. «La Florida (paquete blanco)» (MM-0172, duplicado de la levadura) se borró de la BD el 2026-11-05 con
   sus imágenes. Falta importar con «Actualizarlos con los datos del Excel».
 - En la tienda hay duplicados creados a mano (café espresso, levadura La Florida, toallitas húmedas) y un SKU «1.» (Roberto lo cambió a `MM-0202`).
+- 2026-11-07 (KSH0019): Excel de costos de Leo preparado (`productos-general-costos.xlsx`, modo «actualizar», sin stock ni precios); dudas abiertas en la tarea.

@@ -52,10 +52,10 @@
 - [2026-11-02-codigo-de-atributo.md](project/2026-11-02-codigo-de-atributo.md) — Campo «Código» del atributo (como Saleor): dos «Talla» (ropa, calzado) con códigos distintos; error claro si se repite
 - [2026-10-31-ksh0003-calculadora-precio.md](project/2026-10-31-ksh0003-calculadora-precio.md) — KSH0003: calculadora de costo unitario + margen en el editor de producto (diálogo, web y Kshop Admin), `unitCost`/`priceFromCost` en core, teléfonos cubanos como `+53 5 256 4206`; `pnpm qa:price-calculator`
 - [2026-11-05-caja-v2.md](project/2026-11-05-caja-v2.md) — Caja v2 en el teléfono: ticket como pantalla, «⋯» con catálogo y ventas del día (abren su pedido), teclado sin barras, «Equivale a», pagos hechos en verde, safe area en `Dialog`, «Mostrador» segundo en Pedidos; método de pago en todos lados (KSH0010), cambiar el precio de una línea (KSH0011) y cierre de caja de todo el local (KSH0012/KSH0014)
-- [2026-11-07-ksh0015-venta-por-peso.md](project/2026-11-07-ksh0015-venta-por-peso.md) — KSH0015 venta por peso/medida: dónde está cada pieza (units.ts, migración `20261108102500_sale_units`, `QuantityInput`, «Por importe»); **migración solo en prueba**, falta producción fuera de horas, deploy y APK
-- Ganancia del día en el cierre (2026-11-07): calculada al leer, costos nuevos rellenan ventas pasadas, solo dueño/admin, en el WhatsApp; detalle en `.titan/plans/prp-ksh0012-cierre-de-caja.md` (migración `20261108102600`, sin producción aún)
-- Guardar un producto vuelve a «Productos» (2026-11-07, Roberto): las fotos se suben abriéndolo de nuevo
-- Filtro «Sin costo» en Catálogo › Productos (2026-11-07, `admin_products(p_no_cost)`, migración `20261108102400`), solo dueño/admin
+- [2026-11-07-ksh0015-venta-por-peso.md](project/2026-11-07-ksh0015-venta-por-peso.md) — KSH0015 venta por peso/medida: dónde está cada pieza (units.ts, migración `20261108102500_sale_units`, `QuantityInput`, «Por importe»); **en producción 2026-11-07** (web `0cc534c`, Kshop Admin 1.0.25); pendientes en KSH0020
+- KSH0017 Ganancia del día en el cierre (2026-11-07): calculada al leer, costos nuevos rellenan ventas pasadas, solo dueño/admin, en el WhatsApp; detalle en `.titan/plans/prp-ksh0012-cierre-de-caja.md` (migración `20261108102600`, en producción 2026-11-07)
+- KSH0018 Guardar un producto vuelve a «Productos» (2026-11-07, Roberto): las fotos se suben abriéndolo de nuevo
+- KSH0016 Filtro «Sin costo» en Catálogo › Productos (2026-11-07, `admin_products(p_no_cost)`, migración `20261108102400`), solo dueño/admin
 - [2026-10-30-donde-quedamos.md](project/2026-10-30-donde-quedamos.md) — Superado: cobro mixto y POS fases 1-2 en producción
 
 ## feedback/ — Correcciones y preferencias

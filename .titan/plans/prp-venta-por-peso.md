@@ -1,6 +1,6 @@
 # PRP: Venta por peso y medida (KSH0015)
 
-> **Estado**: APROBADO por Roberto (2026-11-07): P1–P6 respondidas, P2 con **2 decimales**
+> **Estado**: EN PRODUCCIÓN 2026-11-07 (migración, web `0cc534c` y Kshop Admin 1.0.25). Lo pendiente está en KSH0020
 > **Fecha**: 2026-11-07
 > **Proyecto**: Kshop · Tasknic KSH0015
 
@@ -225,10 +225,10 @@ hay pantalla nueva; todo el sistema funcionando de punta a punta.
 | Fase | Estado |
 |------|--------|
 | 1 Core | Hecha: `packages/core/src/catalog/units.ts` (+ tests), esquemas Zod con `quantityValueSchema`, Excel «Unidad» |
-| 2 BD | **En prueba**: `20261108102500_sale_units.sql` (23 funciones parcheadas, 3 helpers `private.quantity_ok/counted_quantity/quantity_text`), `24_sale_units.test.sql` 18/18, `test:rls` 849/849, comparadores 33/33 y 36/36, schema + codegen. **Falta producción (fuera de horas)** y `test:rls` allí |
+| 2 BD | **En producción** (2026-11-07, sin `test:rls` allí aún): `20261108102500_sale_units.sql` (23 funciones parcheadas, 3 helpers `private.quantity_ok/counted_quantity/quantity_text`), `24_sale_units.test.sql` 18/18, `test:rls` 849/849, comparadores 33/33 y 36/36, schema + codegen. Falta `test:rls` en producción |
 | 3 API | Hecha: carrito por unidad (`cart.ts`), pedido público y WhatsApp con unidad, caja pasa `unit`, Excel import/export, almacenes con `unit`. Sin e2e aún |
 | 4 Admin web | Hecha: «Se vende por» y paso en el editor, «Precio (CUP / lb)», stock decimal, Nuevo pedido con `QuantityInput`, traspasos, detalle del pedido. Sin QA en navegador |
-| 5 Caja | Hecha en código: `PosQuantityInput` (decimales, «Por importe» con el botón de la unidad), «− +» por el paso, total por línea redondeado. **Falta APK** y `qa:pos`/`qa:pos-offline` |
+| 5 Caja | Hecha en código: `PosQuantityInput` (decimales, «Por importe» con el botón de la unidad), «− +» por el paso, total por línea redondeado. Kshop Admin 1.0.25 publicado directo (Roberto); faltan `qa:pos`/`qa:pos-offline` y el APK de las apps de tienda |
 | 6 Tienda | Hecha en código: «/ lb» en tarjeta y ficha, stepper con paso y cantidad a mano, carrito, checkout, página del pedido. Sin QA |
 | 7 Ayuda | Guía `sell-by-weight`; faltan capturas (`help:shots`) y `help:pdf` |
 
