@@ -1,7 +1,7 @@
 "use client";
 
-import { formatMoney, parseDecimal } from "@kshop/core";
-import type { PosClosings as PosClosingsData } from "@kshop/data";
+import { formatMoney, formatQuantity, parseDecimal } from "@kshop/core";
+import type { ClosingProfit as ClosingProfitData, PosClosings as PosClosingsData } from "@kshop/data";
 import { Link, useStore } from "@kshop/storefront";
 import { Alert, Badge, Button, Card, Input, Label } from "@kshop/ui";
 import { useCallback, useEffect, useState } from "react";
@@ -139,6 +139,7 @@ export function PosClosings() {
                         .join(", ")}
                     </p>
                   )}
+                  {c.profit && <ClosingProfit profit={c.profit} />}
                   {c.note && <p className="rounded bg-surface p-2">«{c.note}»</p>}
                   {c.orders.length > 0 && (
                     <details>
@@ -163,6 +164,98 @@ export function PosClosings() {
             );
           })}
         </ul>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Profit of the day (owner and admin only: the server sends nothing to the staff). Recomputed on every read, so an
+ * old closing counts the costs added since; the products sold without a cost are apart, with a link to each.
+ */
+function ClosingProfit({ profit }: { profit: ClosingProfitData }) {
+  const money = (n: number) => formatMoney(Number(n), profit.currency);
+  const missing = profit.byProduct.filter((p) => p.missingCost);
+  const percent =
+    Number(profit.revenueWithCost) > 0
+      ? `${((Number(profit.profit) * 100) / Number(profit.revenueWithCost)).toFixed(1).replace(".", ",")} %`
+      : null;
+  return (
+    <div className="flex flex-col gap-2 rounded-md border p-3" data-testid="pos-closing-profit">
+      <dl className="grid grid-cols-3 gap-2">
+        <div>
+          <dt className="text-muted-foreground">Ventas</dt>
+          <dd className="font-medium">{money(profit.revenue)}</dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">Costo</dt>
+          <dd className="font-medium">{money(profit.cost)}</dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">Ganancia</dt>
+          <dd className="font-semibold text-success">
+            {money(profit.profit)}
+            {percent && <span className="ml-1 text-xs font-normal text-muted-foreground">{percent}</span>}
+          </dd>
+        </div>
+      </dl>
+      {profit.withoutCost.products > 0 && (
+        <Alert>
+          {profit.withoutCost.products === 1
+            ? "1 producto vendido sin costo"
+            : `${profit.withoutCost.products} productos vendidos sin costo`}{" "}
+          ({money(profit.withoutCost.amount)}): su ganancia no está contada. Ponles el costo y vuelve a mirar este
+          cierre.
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {missing.map((p) =>
+              p.productId ? (
+                <li key={p.productId}>
+                  <Link
+                    href={`/admin/catalog/products/${p.productId}`}
+                    className="inline-flex min-h-10 items-center rounded-md border bg-background px-3"
+                  >
+                    {p.name}
+                  </Link>
+                </li>
+              ) : (
+                <li key={p.name} className="inline-flex min-h-10 items-center px-1">
+                  {p.name}
+                </li>
+              ),
+            )}
+          </ul>
+        </Alert>
+      )}
+      {profit.byProduct.length > 0 && (
+        <details>
+          <summary className="cursor-pointer text-primary">Ganancia por producto</summary>
+          <div className="mt-2 overflow-x-auto">
+            <table className="w-full min-w-[480px] text-left text-sm">
+              <thead className="text-muted-foreground">
+                <tr>
+                  <th className="py-1 pr-2 font-medium">Producto</th>
+                  <th className="py-1 pr-2 text-right font-medium">Cantidad</th>
+                  <th className="py-1 pr-2 text-right font-medium">Venta</th>
+                  <th className="py-1 pr-2 text-right font-medium">Costo</th>
+                  <th className="py-1 text-right font-medium">Ganancia</th>
+                </tr>
+              </thead>
+              <tbody>
+                {profit.byProduct.map((p) => (
+                  <tr key={p.productId ?? p.name} className="border-t">
+                    <td className="py-1 pr-2">{p.name}</td>
+                    <td className="py-1 pr-2 text-right tabular-nums">{formatQuantity(p.quantity, p.unit)}</td>
+                    <td className="py-1 pr-2 text-right tabular-nums">{money(p.revenue)}</td>
+                    <td className="py-1 pr-2 text-right tabular-nums">
+                      {p.cost == null ? <Badge variant="muted">Sin costo</Badge> : money(p.cost)}
+                    </td>
+                    <td className="py-1 text-right tabular-nums">{p.profit == null ? "—" : money(p.profit)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
       )}
     </div>
   );

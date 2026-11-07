@@ -50,6 +50,27 @@ export type PosClosing = {
   note: string | null;
   closedAt: string;
   orders: { id: string; number: number; cancelled: boolean }[];
+  /** Profit of the day, recomputed on every read; null for the staff (costs are for owner and admin). */
+  profit?: ClosingProfit | null;
+};
+export type ClosingProfit = {
+  currency: string;
+  revenue: number;
+  /** Sales of the products that have a cost: the profit is on these. */
+  revenueWithCost: number;
+  cost: number;
+  profit: number;
+  withoutCost: { products: number; amount: number; productIds: string[] };
+  byProduct: {
+    productId: string | null;
+    name: string;
+    unit: string;
+    quantity: number;
+    revenue: number;
+    cost: number | null;
+    profit: number | null;
+    missingCost: boolean;
+  }[];
 };
 export type PosClosings = { float: Record<string, number>; closings: PosClosing[] };
 
