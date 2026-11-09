@@ -57,6 +57,8 @@
 - KSH0018 Guardar un producto vuelve a «Productos» (2026-11-07, Roberto): las fotos se suben abriéndolo de nuevo
 - KSH0016 Filtro «Sin costo» en Catálogo › Productos (2026-11-07, `admin_products(p_no_cost)`, migración `20261108102400`), solo dueño/admin
 - [2026-10-30-donde-quedamos.md](project/2026-10-30-donde-quedamos.md) — Superado: cobro mixto y POS fases 1-2 en producción
+- [2026-11-08 — Acompañar a un negocio nuevo](project/2026-11-08-alta-de-un-negocio-nuevo.md) — Qué pedirle al cliente, qué hacemos en la carga, módulos y límites de Caja/Base/Pro; el cierre por WhatsApp es solo Pro o suelto y Caja no tiene el botón de Kshop Admin
+- [2026-11-08 — Guías en PDF por plan](project/2026-11-08-guias-por-plan.md) — Seis PDF (app y web de Caja, Base y Pro) en `_materiales/kshop/guias/`, cómo regenerarlos con `build.cjs` y qué falta
 
 ## feedback/ — Correcciones y preferencias
 

@@ -111,15 +111,16 @@
 ## Decisiones del 2026-11-08 (Roberto)
 31. **Puesta en marcha: 5 USD, una sola vez**, a cada negocio nuevo: crear la tienda y acompañarlo en la carga inicial
     (nombre, logo, productos, pagos, equipo). **La prueba gratis baja de 30 a 15 días** (`default_trial_days = 15` en
-    prueba y producción) y los 5 USD se cobran **al terminar los 15 días**, junto a la primera factura: hoy a mano,
-    con un ajuste (`POST /api/v1/platform/invoices/{id}/adjustments`, «Puesta en marcha»); no se añade solo.
+    prueba y producción) y los 5 USD se cobran **al terminar los 15 días**. No se añaden solos: hoy a mano, como
+    ajuste «Puesta en marcha» en una factura pendiente (`POST /api/v1/platform/invoices/{id}/adjustments`).
     En el landing: `SETUP_FEE_USD` en `apps/web/src/app/(platform)/page.tsx`.
 32. **Servicio opcional «Te llevamos el inventario»** (cambiar precios y cantidades, subir productos nuevos): sale en el
     landing «desde 8 USD/mes» (`INVENTORY_SERVICE_FROM_USD`, propuesta de Claude), aunque lo más probable es que no se
     haga. Propuesta de tarifas: Básico 8 USD/mes (una actualización por semana de hasta 100 productos y 20 productos
     nuevos al mes), Semanal+ 15 USD/mes (dos por semana, 50 nuevos), suelto 3 USD por actualización (hasta 100
     productos) y 0,15 USD por producto nuevo (0,25 con foto preparada). Se cobra como ajuste en la factura del mes.
-    Pendiente: que Roberto confirme las cifras antes de desplegar.
+    Los «desde 8 USD/mes» ya están en producción (commit `e515051`, 2026-11-08); el detalle de las tarifas sigue siendo
+    una propuesta que Roberto no ha confirmado.
 
 ## Preguntas abiertas
 - [x] DNS: `kshop.fullkod.com` y `*.kshop.fullkod.com` funcionan en Vercel (Roberto, 2026-10-26: configurado y probado).
