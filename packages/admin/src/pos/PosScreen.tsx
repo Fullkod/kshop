@@ -302,7 +302,7 @@ export function PosScreen({
       )}
 
       {catalog.snapshot && (
-        <div className="sticky top-0 z-10 -mx-4 flex items-center gap-2 bg-surface px-4 py-2">
+        <div className="sticky top-[var(--admin-header-height,0px)] z-10 -mx-4 flex items-center gap-2 bg-surface px-4 py-2">
           <div className="relative flex-1">
             <Search
               size={18}

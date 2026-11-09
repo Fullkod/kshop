@@ -18,6 +18,20 @@ body {
 /* Safe areas (status bar, gesture bar) around the app. */
 .app-root {
   padding-top: env(safe-area-inset-top);
+  /* What sticks to the top of a screen (Guardar, the Caja search) stops below the status bar. */
+  --admin-header-height: env(safe-area-inset-top, 0px);
+}
+/* Android 15+ draws the app behind the status bar and ignores its color: this band keeps the light icons readable
+   and nothing scrolls under them. A dialog lives in the top layer, above the body's band, so it needs its own. */
+body::before,
+dialog[open]::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 40;
+  height: env(safe-area-inset-top, 0px);
+  background: #24104f;
+  pointer-events: none;
 }
 .app-tabs {
   padding-bottom: env(safe-area-inset-bottom);

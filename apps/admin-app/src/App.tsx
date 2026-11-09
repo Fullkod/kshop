@@ -569,7 +569,7 @@ function Shell({ onSwitch }: { onSwitch?: () => void }) {
                       target="_blank"
                       rel="noreferrer"
                       aria-label="Nuevo pedido (en el panel)"
-                      className="fixed right-[18px] bottom-[92px] z-20 flex size-[58px] items-center justify-center rounded-[18px] bg-primary text-primary-foreground shadow-lg"
+                      className="fixed right-[18px] bottom-[calc(92px+env(safe-area-inset-bottom))] z-20 flex size-[58px] items-center justify-center rounded-[18px] bg-primary text-primary-foreground shadow-lg"
                     >
                       <Plus size={24} aria-hidden />
                     </a>

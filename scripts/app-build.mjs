@@ -152,6 +152,19 @@ if (!manifest.includes(installPermission)) {
   writeFileSync(manifestPath, manifest.replace("</manifest>", `    ${installPermission}\n</manifest>`));
 }
 
+// With a WebView older than 140 Capacitor leaves the system bars out of the page and shows the window behind them:
+// night, as the app's light status bar icons need (a newer WebView gets the band in styles.css instead).
+if (isAdmin) {
+  const stylesPath = join(androidDir, "app/src/main/res/values/styles.xml");
+  const windowBackground = '<item name="android:windowBackground">#24104F</item>';
+  const noBackground = '<item name="android:background">@null</item>';
+  const styles = readFileSync(stylesPath, "utf8");
+  if (!styles.includes(windowBackground)) {
+    if (!styles.includes(noBackground)) throw new Error("AppTheme.NoActionBar not found in styles.xml");
+    writeFileSync(stylesPath, styles.replace(noBackground, `${noBackground}\n        ${windowBackground}`));
+  }
+}
+
 const gradlePath = join(androidDir, "app/build.gradle");
 const gradle = readFileSync(gradlePath, "utf8")
   .replace(/versionCode \d+/, `versionCode ${app.versionCode}`)
