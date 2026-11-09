@@ -174,6 +174,11 @@ const MODULE_PITCH: Record<ModuleCode, string | null> = {
 
 const amount = (n: number) => new Intl.NumberFormat("es", { maximumFractionDigits: 2 }).format(n);
 
+/** One-time charge for setting up a new store (Roberto, 2026-11-08), billed when the trial ends. */
+const SETUP_FEE_USD = 5;
+/** Optional service: Kshop keeps the store's inventory (prices, quantities, new products). Starting price. */
+const INVENTORY_SERVICE_FROM_USD = 8;
+
 /** Plan lines from its limits and modules; a higher plan lists only what it adds to the previous one. */
 function planLines(plan: BillingPlan, previous: BillingPlan | undefined, order: ModuleCode[]): string[] {
   const { maxProducts, maxStaff } = plan.limits;
@@ -208,6 +213,7 @@ export default async function PlatformHome() {
   const createUrl = wa("Hola, quiero crear mi tienda en Kshop.") ?? "#precios";
   const trialUrl = wa(`Hola, quiero probar Kshop ${data.trialDays} días gratis.`) ?? "#precios";
   const talkUrl = wa("Hola, tengo una pregunta sobre Kshop.");
+  const inventoryUrl = wa("Hola, me interesa que Kshop me lleve el inventario.");
   const demo = demoStore && {
     store: demoStore,
     origin: storeOrigin(demoStore.slug, publicEnv.platformDomain, platformProtocol),
@@ -399,6 +405,11 @@ export default async function PlatformHome() {
           <p className="text-muted-foreground">
             {data.trialDays} días de prueba con todo el plan {trialPlan}. Luego eliges.
           </p>
+          <p className="max-w-[640px] text-sm text-muted-foreground" data-testid="landing-setup-fee">
+            Te dejamos la tienda lista y te ayudamos a cargar tus productos:{" "}
+            <b className="text-foreground">{SETUP_FEE_USD} USD una sola vez</b>, que pagas al terminar la
+            prueba.
+          </p>
         </div>
         <div
           className="grid w-full max-w-[1100px] grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-4"
@@ -431,6 +442,24 @@ export default async function PlatformHome() {
             {basePlan.name}.
           </p>
         )}
+        <p
+          className="max-w-[640px] text-center text-sm text-muted-foreground"
+          data-testid="landing-inventory-service"
+        >
+          ¿No tienes tiempo de llevar el inventario? Te cambiamos precios y cantidades y subimos tus productos
+          nuevos desde <b className="text-foreground">{INVENTORY_SERVICE_FROM_USD} USD/mes</b>.
+          {inventoryUrl && (
+            <>
+              {" "}
+              <a
+                href={inventoryUrl}
+                className="font-semibold text-primary underline-offset-4 hover:underline"
+              >
+                Pregúntanos
+              </a>
+            </>
+          )}
+        </p>
         <p className="max-w-[640px] text-center text-sm text-muted-foreground">
           {data.minAddonPrice != null && (
             <>

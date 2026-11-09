@@ -10,7 +10,7 @@
 ## project/ — Proyectos y decisiones activas
 
 - [identidad-kshop.md](project/identidad-kshop.md) — Nombre, dominio kshop.fullkod.com, qué es, índice de los documentos de diseño
-- [decisiones.md](project/decisiones.md) — Decisiones tomadas (0–24, hasta 2026-10-25; 25–29 del 2026-10-31), recomendaciones confirmadas y preguntas abiertas. LEER ANTES DE CADA FASE
+- [decisiones.md](project/decisiones.md) — Decisiones tomadas (0–24, hasta 2026-10-25; 25–30 del 2026-10-31/11-01; 31–32 del 2026-11-08: puesta en marcha 5 USD, prueba de 15 días, servicio de inventario), recomendaciones confirmadas y preguntas abiertas. LEER ANTES DE CADA FASE
 - [2026-10-24-estudio-klaushop-vs-dcabellos.md](project/2026-10-24-estudio-klaushop-vs-dcabellos.md) — Qué se adopta de cada uno y qué no
 - [modelo-de-datos.md](project/modelo-de-datos.md) — Esquema v0: plataforma, clientes, catálogo Saleor, monedas, carrito, órdenes, descuentos, temas, entregas, WhatsApp, Excel
 - [tenancy-dominios-auth.md](project/tenancy-dominios-auth.md) — Tienda por host, wildcard Vercel, email sintético por tienda, alta de tienda, storage
