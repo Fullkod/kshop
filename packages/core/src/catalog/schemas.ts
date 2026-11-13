@@ -225,6 +225,20 @@ export const productStatusBulkInputSchema = z.object({
   status: z.enum(PRODUCT_STATUSES),
 });
 
+/** KSH0022: the costs of some variants from Catálogo › Productos (null removes one). Owner and admins only. */
+export const variantCostsInputSchema = z.object({
+  costs: z
+    .array(
+      z.object({
+        variantId: uuid,
+        cost: z.object({ price: money, currency: currencyCodeSchema }).nullable(),
+      }),
+    )
+    .min(1)
+    .max(100),
+});
+export type VariantCostsInput = z.infer<typeof variantCostsInputSchema>;
+
 export const stockInputSchema = z.object({
   variantId: uuid,
   warehouseId: uuid,

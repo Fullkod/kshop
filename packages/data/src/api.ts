@@ -27,6 +27,7 @@ import type {
   ProductStatus,
   ProductTypeInput,
   StockInput,
+  VariantCostsInput,
   WarehouseInput,
   StockMovementQuery,
   StockMovementType,
@@ -970,6 +971,8 @@ export function createApiClient(options: ApiClientOptions) {
           request<ProductMedia>("POST", `${base}/products/${productId}/media`, input),
         deleteMedia: (productId: string, mediaId: string) =>
           request<null>("DELETE", `${base}/products/${productId}/media/${mediaId}`),
+        setVariantCosts: (input: VariantCostsInput) =>
+          request<{ updated: number }>("PUT", `${base}/costs`, input),
         setStock: (input: StockInput) =>
           request<{ quantity: number; quantityAllocated: number }>("PUT", `${base}/stock`, input),
         setCurrency: (input: CurrencyInput) =>

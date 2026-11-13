@@ -176,8 +176,15 @@ export const AdminProductsQuery = graphql(`
               node {
                 id
                 sku
+                name
+                price
+                sortOrder
                 stockAvailable
                 trackInventory
+                variantCosts {
+                  costPrice
+                  costCurrency
+                }
               }
             }
           }

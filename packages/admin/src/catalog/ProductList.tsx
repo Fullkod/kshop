@@ -1,6 +1,6 @@
 "use client";
 
-import { formatMoney, formatQuantity, type ProductStatus } from "@kshop/core";
+import { formatMoney, formatQuantity, type CurrencyCode, type ProductStatus } from "@kshop/core";
 import { asResult, type AdminProductsQuery, type ResultOf } from "@kshop/data";
 import { Alert, Badge, Button, buttonVariants, Card, Input, Select } from "@kshop/ui";
 import { useEffect, useRef, useState } from "react";
@@ -9,6 +9,7 @@ import { FilterBar } from "../FilterBar";
 import { LoadError } from "../LoadError";
 import { useSession } from "../session";
 import { Link, useStore } from "@kshop/storefront";
+import { CostCell, type Cost } from "./ProductCosts";
 import { categoryOptions, useApiAction, useCatalogApi, useCatalogStructure } from "./use-catalog";
 
 type Row = NonNullable<ResultOf<typeof AdminProductsQuery>["adminSearchProducts"]>["edges"][number]["node"];
@@ -105,6 +106,30 @@ export function ProductList() {
     });
 
   const currency = structure?.currencies.find((c) => c.isBase)?.currency ?? store.baseCurrency;
+  const rate = (c: CurrencyCode) =>
+    !structure ? null : c === currency ? 1 : structure.currencies.find((x) => x.currency === c)?.rateToBase;
+  // KSH0022: a cost saved from the list shows at once (and the «Sin costo» filter catches up on the next load).
+  const costsSaved = (productId: string, saved: { variantId: string; cost: Cost }[]) =>
+    setRows((current) =>
+      (current ?? []).map((r) =>
+        r.id !== productId || !r.productVariantsCollection
+          ? r
+          : {
+              ...r,
+              productVariantsCollection: {
+                ...r.productVariantsCollection,
+                edges: r.productVariantsCollection.edges.map((e) => {
+                  const s = saved.find((x) => x.variantId === e.node.id);
+                  if (!s) return e;
+                  const variantCosts = s.cost
+                    ? { costPrice: String(s.cost.price), costCurrency: s.cost.currency }
+                    : null;
+                  return { ...e, node: { ...e.node, variantCosts } as typeof e.node };
+                }),
+              },
+            },
+      ),
+    );
   const price = (r: Row) => {
     if (r.minPrice == null) return "—";
     const min = formatMoney(Number(r.minPrice), currency);
@@ -181,7 +206,8 @@ export function ProductList() {
 
       {rows && rows.length === 0 && (
         <Card className="text-center text-muted-foreground">
-          No hay productos{query || status || categoryId || lowStock || noCost ? " con esos filtros" : " todavía"}.
+          No hay productos
+          {query || status || categoryId || lowStock || noCost ? " con esos filtros" : " todavía"}.
         </Card>
       )}
 
@@ -205,12 +231,16 @@ export function ProductList() {
                 <th className="hidden px-3 py-2 font-medium md:table-cell">Estado</th>
                 <th className="px-3 py-2 font-medium">Precio</th>
                 <th className="px-3 py-2 font-medium">Stock</th>
+                {seesCosts && <th className="px-3 py-2 font-medium">Costo</th>}
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => {
                 const variants = r.productVariantsCollection?.edges.map((e) => e.node) ?? [];
-                const stock = variants.reduce((sum, v) => sum + (v.trackInventory ? Number(v.stockAvailable) : 0), 0);
+                const stock = variants.reduce(
+                  (sum, v) => sum + (v.trackInventory ? Number(v.stockAvailable) : 0),
+                  0,
+                );
                 return (
                   <tr key={r.id} className="border-b last:border-0">
                     <td className="px-3 py-2">
@@ -251,6 +281,17 @@ export function ProductList() {
                         {r.inStock ? formatQuantity(stock, r.saleUnit) : "Agotado"}
                       </span>
                     </td>
+                    {seesCosts && (
+                      <td className="px-3 py-2 align-top">
+                        <CostCell
+                          productName={r.name}
+                          variants={variants}
+                          baseCurrency={currency as CurrencyCode}
+                          rate={rate}
+                          onSaved={(saved) => costsSaved(r.id, saved)}
+                        />
+                      </td>
+                    )}
                   </tr>
                 );
               })}

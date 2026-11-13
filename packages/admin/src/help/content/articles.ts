@@ -45,6 +45,7 @@ export const articles: HelpArticle[] = [
     ],
     tips: [
       "«Calcular» abre la calculadora: le das lo que te costó el paquete y cuántas unidades trae, y te propone el precio con el margen que quieras.",
+      "¿Los costos cambian a menudo? En la lista de productos, la columna «Costo» (desliza la tabla hacia el lado en el teléfono) los muestra con su margen: corrige el costo ahí mismo y se guarda al salir del campo. Si el producto tiene variantes, pulsa «Editar» para cambiarlas todas juntas.",
       "Para ocultar un producto sin perderlo, ponlo en «Archivado»: desaparece de la tienda y los pedidos viejos lo conservan.",
       "¿Vendes ropa y zapatos? Crea dos atributos llamados «Talla» con distinto «Código» (talla-ropa y talla-calzado) y pon cada uno en su tipo de producto: así cada producto ofrece solo sus tallas.",
     ],
@@ -722,7 +723,7 @@ export const articles: HelpArticle[] = [
       },
     ],
     tips: [
-      "El margen solo cuenta bien si cada producto tiene su costo: en Catálogo › Productos, marca «Sin costo» para ver los que faltan.",
+      "El margen solo cuenta bien si cada producto tiene su costo: en Catálogo › Productos, marca «Sin costo» para ver los que faltan y escríbelo en la columna «Costo».",
       "Para lo de hoy sin entrar en Finanzas, mira Ventas de hoy o Inicio.",
       "«Ver todo en» pasa las cifras a otra moneda; «Exportar a Excel» descarga el periodo.",
     ],
