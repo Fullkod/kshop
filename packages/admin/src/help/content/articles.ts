@@ -718,7 +718,7 @@ export const articles: HelpArticle[] = [
         text: "«Margen» muestra cuánto dejó cada producto o categoría; «Desglose», las ventas por método de pago, zona, canal y moneda.",
       },
       {
-        text: "«Inventario» dice cuántas unidades tienes y cuánto valen a costo y a precio de venta, y qué está agotado o con pocas unidades.",
+        text: "«Inventario» dice cuántas unidades tienes y cuánto valen a costo y a precio de venta, y qué está agotado o con pocas unidades. Lo que vendes por peso o medida se cuenta aparte y cada fila lleva su unidad (por ejemplo, «12,5 lb»).",
       },
     ],
     tips: [

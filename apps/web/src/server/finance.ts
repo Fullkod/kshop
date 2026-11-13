@@ -3,6 +3,8 @@ import {
   INVENTORY_FILTER_LABELS,
   MARGIN_GROUP_LABELS,
   ORDER_CHANNEL_LABELS,
+  SALE_UNIT_INFO,
+  toSaleUnit,
   type ExpenseInput,
   type FinanceInventoryQuery,
   type FinancePeriod,
@@ -27,6 +29,12 @@ import { getServiceClient } from "./supabase";
 // shape and the Excel export. The routes check owner/admin and the finance module first.
 
 const INVENTORY_PAGE_SIZE = 50;
+
+/** «u», «lb», «kg»… for the Excel unit column (the quantity stays a number). */
+const unitLabel = (unit: string) => {
+  const u = toSaleUnit(unit);
+  return u === "unit" ? "u" : SALE_UNIT_INFO[u].abbr;
+};
 
 /** snake_case keys of the SQL jsonb -> camelCase (values untouched). */
 function camelize<T>(value: unknown): T {
@@ -249,14 +257,15 @@ export async function buildFinanceExport(storeId: string, p: FinancePeriod): Pro
   ] as const) {
     const ws = sheet(name, [
       { header: "Nombre", key: "name", width: 32 },
-      { header: "Unidades", key: "units", width: 10 },
+      { header: "Cantidad", key: "units", width: 10 },
+      { header: "Unidad", key: "unit", width: 8 },
       { header: `Ingresos (${p.currency})`, key: "revenue", width: 16 },
       { header: `Costo (${p.currency})`, key: "cost", width: 16 },
       { header: `Margen (${p.currency})`, key: "margin", width: 16 },
       { header: "Margen %", key: "marginPct", width: 10 },
       { header: "Líneas sin costo", key: "linesWithoutCost", width: 14 },
     ]);
-    ws.addRows(data.rows);
+    ws.addRows(data.rows.map((r) => ({ ...r, unit: unitLabel(r.unit) })));
   }
 
   const desglose = sheet("Desglose", [
@@ -278,13 +287,14 @@ export async function buildFinanceExport(storeId: string, p: FinancePeriod): Pro
     { header: "Producto", key: "productName", width: 30 },
     { header: "Variante", key: "variantName", width: 18 },
     { header: "SKU", key: "sku", width: 18 },
-    { header: "Unidades", key: "quantity", width: 10 },
+    { header: "Stock", key: "quantity", width: 10 },
+    { header: "Unidad", key: "saleUnit", width: 8 },
     { header: "Reservadas", key: "allocated", width: 11 },
     { header: "Disponibles", key: "available", width: 11 },
     { header: `Valor a costo (${p.currency})`, key: "costValue", width: 18 },
     { header: `Valor a precio (${p.currency})`, key: "saleValue", width: 18 },
   ]);
-  inv.addRows(inventory.rows);
+  inv.addRows(inventory.rows.map((r) => ({ ...r, saleUnit: unitLabel(r.saleUnit) })));
   if (inventory.total > inventory.rows.length) {
     inv.addRow({ productName: `… y ${inventory.total - inventory.rows.length} más (${INVENTORY_FILTER_LABELS.all})` });
   }

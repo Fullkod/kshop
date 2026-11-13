@@ -775,7 +775,9 @@ export type FinanceMargin = {
   rows: {
     key: string | null;
     name: string;
+    /** Quantity sold in `unit` (a product sold in one unit); counted products («unit») by category or brand. */
     units: number;
+    unit: string;
     revenue: number;
     cost: number;
     margin: number;
@@ -798,8 +800,10 @@ export type FinanceInventory = {
   currency: CurrencyCode;
   totals: {
     variants: number;
+    /** Products sold by the unit only; the measured ones in stock are in `measured`. */
     units: number;
     reserved: number;
+    measured: number;
     costValue: number;
     saleValue: number;
     withoutCost: number;
@@ -814,6 +818,7 @@ export type FinanceInventory = {
     productName: string;
     variantName: string;
     sku: string;
+    saleUnit: string;
     quantity: number;
     allocated: number;
     available: number;

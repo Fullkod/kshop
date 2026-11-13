@@ -152,6 +152,23 @@ select tests.check('order_template_vars: the WhatsApp lines say «0,75 lb ×»',
 select tests.eq('counted_quantity: a measured line counts as one product',
   private.counted_quantity(42.5, 'lb') + private.counted_quantity(3, 'unit'), 4::numeric);
 
+-- KSH0020: Finanzas. By product the pounds sold with their unit; by category one product per measured line.
+select tests.eq('finance_margin by product: 0,75 lb of ham and 2 soaps',
+  (select string_agg(format('%s:%s:%s', r ->> 'name', r ->> 'units', r ->> 'unit'), ' ')
+   from jsonb_array_elements(public.finance_margin(tests.fx('store_a'), current_date - 1, current_date + 1, 'CUP',
+     'product') -> 'rows') r),
+  'Prod jamon:0.75:lb Prod jabon:2.00:unit');
+select tests.eq('finance_margin by category and totals: the measured line counts as 1 (1 + 2)',
+  (select format('%s:%s|%s', m -> 'rows' -> 0 ->> 'units', m -> 'rows' -> 0 ->> 'unit', m -> 'totals' ->> 'units')
+   from (select public.finance_margin(tests.fx('store_a'), current_date - 1, current_date + 1, 'CUP', 'category') m) x),
+  '3.00:unit|3.00');
+select tests.eq('finance_inventory: units only add whole products (8 soaps), the ham counts apart; rows bring the unit',
+  (select format('%s|%s|%s', i -> 'totals' ->> 'units', i -> 'totals' ->> 'measured',
+     (select string_agg((r ->> 'sku') || ':' || (r ->> 'quantity') || ':' || (r ->> 'sale_unit'), ',' order by r ->> 'sku')
+      from jsonb_array_elements(i -> 'rows') r))
+   from (select public.finance_inventory(tests.fx('store_a'), null, 'CUP', 'all', 60, null, 50, 0) i) x),
+  '8.00|1|JABON:8.00:unit,JAMON:34.75:lb');
+
 select tests.login('owner_a');
 select tests.eq('owner A: the product and its stock as text, with the unit',
   (select format('%s %s',

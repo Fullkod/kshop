@@ -3,6 +3,7 @@
 import {
   EXPENSE_CATEGORY_SUGGESTIONS,
   formatMoney,
+  formatQuantity,
   INVENTORY_FILTER_LABELS,
   INVENTORY_FILTERS,
   MARGIN_GROUP_LABELS,
@@ -496,7 +497,7 @@ export function FinanceMarginPage() {
         <Kpi
           label="Ingresos de productos"
           value={money(m.totals.revenue)}
-          detail={`${m.totals.units} unidades`}
+          detail={`${m.totals.units} ${m.totals.units === 1 ? "unidad" : "unidades"}`}
         />
         <Kpi label="Costo de lo vendido" value={money(m.totals.cost)} />
         <Kpi
@@ -565,7 +566,7 @@ export function FinanceMarginPage() {
                     </span>
                   )}
                 </td>
-                <td className="px-4 py-2 text-right tabular-nums">{r.units}</td>
+                <td className="px-4 py-2 text-right tabular-nums">{formatQuantity(r.units, r.unit)}</td>
                 <td className="px-4 py-2 text-right tabular-nums">{money(r.revenue)}</td>
                 <td className="px-4 py-2 text-right tabular-nums">{money(r.cost)}</td>
                 <td
@@ -651,7 +652,13 @@ export function FinanceInventoryPage() {
           <Kpi
             label="Unidades en stock"
             value={String(report.data.totals.units)}
-            detail={`${report.data.totals.reserved} reservadas por pedidos`}
+            detail={[
+              `${report.data.totals.reserved} reservadas por pedidos`,
+              report.data.totals.measured > 0 &&
+                `+ ${report.data.totals.measured} ${report.data.totals.measured === 1 ? "producto" : "productos"} por peso o medida`,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           />
           <Kpi
             label="Valor a costo"
@@ -760,15 +767,15 @@ export function FinanceInventoryPage() {
                     {r.variantName && ` · ${r.variantName}`}{" "}
                     <span className="text-muted-foreground">({r.sku})</span>
                   </td>
-                  <td className="px-4 py-2 text-right tabular-nums">{r.quantity}</td>
-                  <td className="px-4 py-2 text-right tabular-nums">{r.allocated}</td>
+                  <td className="px-4 py-2 text-right tabular-nums">{formatQuantity(r.quantity, r.saleUnit)}</td>
+                  <td className="px-4 py-2 text-right tabular-nums">{formatQuantity(r.allocated, r.saleUnit)}</td>
                   <td
                     className={cn(
                       "px-4 py-2 text-right font-medium tabular-nums",
                       r.available <= 0 ? "text-destructive" : r.available <= r.threshold && "text-gold",
                     )}
                   >
-                    {r.available}
+                    {formatQuantity(r.available, r.saleUnit)}
                   </td>
                   <td className="px-4 py-2 text-right tabular-nums">
                     {r.costValue === null ? (

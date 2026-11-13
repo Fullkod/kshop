@@ -25,6 +25,10 @@ de la línea (KSH0011), sacos después.
   ok), Kshop Admin 1.0.25 publicado directo (sin pasar por Superadmin, a pedido de Roberto; se borró la 1.0.24).
 - Apps de tienda publicadas directo el mismo día: Minimercado 1.0.26, Klau's Shop 1.0.27, Tienda Demo 1.0.28.
 - Falta (KSH0020): QA en navegador, `test:rls` en producción, `help:shots` + `help:pdf`.
+- Finanzas con productos por medida (KSH0020, 2026-11-13, migración `20261108102800_finance_sale_units`): Margen por
+  producto da la cantidad real con su unidad (`rows[].unit`); por categoría/marca y en los totales, 1 por línea medida.
+  Inventario: `totals.units`/`reserved` solo suman productos por unidad, `totals.measured` cuenta los medidos con stock
+  y cada fila trae `sale_unit`. El Excel lleva la cantidad como número y una columna «Unidad».
 
 ## Ojo
 - Publicar un APK sin el botón: `app:publish` lo sube oculto; luego `published = true` y borrar las versiones
