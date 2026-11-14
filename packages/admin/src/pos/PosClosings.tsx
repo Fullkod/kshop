@@ -1,13 +1,20 @@
 "use client";
 
 import { formatMoney, formatQuantity, parseDecimal } from "@kshop/core";
-import type { ClosingProfit as ClosingProfitData, PosClosings as PosClosingsData } from "@kshop/data";
+import type {
+  ClosingProfit as ClosingProfitData,
+  PosClosing,
+  PosClosings as PosClosingsData,
+} from "@kshop/data";
 import { Link, useStore } from "@kshop/storefront";
 import { Alert, Badge, Button, Card, Input, Label } from "@kshop/ui";
 import { useCallback, useEffect, useState } from "react";
 import { useAdmin } from "../admin-context";
 import { useSession } from "../session";
 import { differenceText } from "./PosCloseDay";
+import { closingDayLabel, havanaTime } from "./PosClosingSales";
+import { productSalesHref } from "./PosProductSales";
+import { rememberScroll, rememberState, rememberedState, restoreScroll } from "./screen-memory";
 
 type Money = Record<string, number>;
 
@@ -17,12 +24,11 @@ const moneyList = (m: Money, zero: string) =>
     .map(([c, v]) => formatMoney(Number(v), c))
     .join(" y ") || formatMoney(0, zero);
 
-const dayLabel = (day: string) =>
-  new Intl.DateTimeFormat("es", { weekday: "long", day: "numeric", month: "short", timeZone: "UTC" }).format(
-    new Date(`${day}T00:00:00Z`),
-  );
-const time = (iso: string) =>
-  new Intl.DateTimeFormat("es", { timeStyle: "short", timeZone: "America/Havana" }).format(new Date(iso));
+const dayLabel = closingDayLabel;
+const time = havanaTime;
+
+/** The pages loaded so far (the first one = the last 30 days), remembered for «atrás». */
+type Pages = { float: Money; closings: PosClosing[]; before: string; hasOlder: boolean; pages: number };
 
 /**
  * Cierres de caja (KSH0012): each closing of the till (all phones and accounts since KSH0014), what should have been
@@ -33,27 +39,67 @@ export function PosClosings() {
   const admin = useAdmin();
   const { reads, api } = useSession();
   const canEdit = admin.role === null || admin.role === "owner" || admin.role === "admin";
-  const [data, setData] = useState<PosClosingsData | null>(null);
+  const memoryKey = `closings:${store.id}`;
+  const [data, setData] = useState<Pages | null>(() => rememberedState<Pages>(memoryKey) ?? null);
   const [failed, setFailed] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
 
   const [attempt, setAttempt] = useState(0);
   const load = useCallback(() => setAttempt((n) => n + 1), []);
+  // The last 30 days, always read again (a closing may have been made since); older pages loaded before stay.
   useEffect(() => {
     let cancelled = false;
     reads.posClosings(store.id, 30).then(
-      (d) => {
+      (d: PosClosingsData) => {
         if (cancelled) return;
         setFailed(false);
-        setData(d);
+        setData((prev) => {
+          const next: Pages =
+            prev && prev.pages > 1
+              ? {
+                  ...prev,
+                  float: d.float,
+                  closings: [...d.closings, ...prev.closings.filter((c) => c.day < d.before)],
+                }
+              : { float: d.float, closings: d.closings, before: d.before, hasOlder: d.hasOlder, pages: 1 };
+          rememberState(memoryKey, next);
+          return next;
+        });
       },
       () => !cancelled && setFailed(true),
     );
     return () => {
       cancelled = true;
     };
-  }, [reads, store.id, attempt]);
+  }, [reads, store.id, memoryKey, attempt]);
 
-  if (failed) {
+  const loaded = data !== null;
+  useEffect(() => {
+    if (loaded) restoreScroll(memoryKey);
+  }, [loaded, memoryKey]);
+
+  const loadOlder = async () => {
+    if (!data) return;
+    setLoadingOlder(true);
+    try {
+      const d = await reads.posClosings(store.id, 30, data.before);
+      const next: Pages = {
+        ...data,
+        closings: [...data.closings, ...d.closings],
+        before: d.before,
+        hasOlder: d.hasOlder,
+        pages: data.pages + 1,
+      };
+      rememberState(memoryKey, next);
+      setData(next);
+    } catch {
+      setFailed(true);
+    } finally {
+      setLoadingOlder(false);
+    }
+  };
+
+  if (failed && !data) {
     return (
       <Alert variant="destructive">
         No se pudieron cargar los cierres.{" "}
@@ -77,9 +123,21 @@ export function PosClosings() {
           }}
         />
       )}
+      {(data.closings.length > 0 || data.hasOlder) && (
+        <Link
+          href={productSalesHref()}
+          onClick={() => rememberScroll(memoryKey)}
+          className="inline-flex min-h-10 items-center gap-2 self-start rounded-md border px-3 text-sm font-medium"
+          data-testid="pos-closings-product-search"
+        >
+          Buscar un producto en todos los cierres
+        </Link>
+      )}
       {data.closings.length === 0 ? (
         <Card className="text-sm text-muted-foreground">
-          Aún no hay cierres. Se cierra desde la caja: «⋯» › «Cerrar el día».
+          {data.hasOlder
+            ? "No hay cierres en los últimos 30 días."
+            : "Aún no hay cierres. Se cierra desde la caja: «⋯» › «Cerrar el día»."}
         </Card>
       ) : (
         <ul className="flex flex-col gap-3">
@@ -139,31 +197,46 @@ export function PosClosings() {
                         .join(", ")}
                     </p>
                   )}
-                  {c.profit && <ClosingProfit profit={c.profit} />}
+                  {c.profit && (
+                    <ClosingProfit
+                      profit={c.profit}
+                      salesHref={(name) => `/admin/pos/closings/${c.id}?q=${encodeURIComponent(name)}`}
+                      onOpen={() => rememberScroll(memoryKey)}
+                    />
+                  )}
                   {c.note && <p className="rounded bg-surface p-2">«{c.note}»</p>}
                   {c.orders.length > 0 && (
-                    <details>
-                      <summary className="cursor-pointer text-primary">Ver sus ventas</summary>
-                      <ul className="mt-2 flex flex-wrap gap-2">
-                        {c.orders.map((o) => (
-                          <li key={o.id}>
-                            <Link
-                              href={`/admin/orders/${o.id}`}
-                              className="inline-flex min-h-10 items-center rounded-md border px-3"
-                            >
-                              {o.number}
-                              {o.cancelled && " (anulada)"}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </details>
+                    <Link
+                      href={`/admin/pos/closings/${c.id}`}
+                      onClick={() => rememberScroll(memoryKey)}
+                      className="inline-flex min-h-10 items-center justify-center rounded-md border px-3 font-medium text-primary"
+                      data-testid="pos-closing-sales-link"
+                    >
+                      Ver sus ventas ({c.orders.length})
+                    </Link>
                   )}
                 </Card>
               </li>
             );
           })}
         </ul>
+      )}
+      {failed && (
+        <p className="text-sm text-destructive">No se pudieron cargar más cierres. Revisa la conexión.</p>
+      )}
+      {data.hasOlder ? (
+        <Button
+          variant="outline"
+          onClick={loadOlder}
+          disabled={loadingOlder}
+          data-testid="pos-closings-older"
+        >
+          {loadingOlder ? "Cargando…" : "Ver cierres anteriores"}
+        </Button>
+      ) : (
+        data.pages > 1 && (
+          <p className="text-center text-sm text-muted-foreground">No hay cierres más antiguos.</p>
+        )
       )}
     </div>
   );
@@ -173,7 +246,16 @@ export function PosClosings() {
  * Profit of the day (owner and admin only: the server sends nothing to the staff). Recomputed on every read, so an
  * old closing counts the costs added since; the products sold without a cost are apart, with a link to each.
  */
-function ClosingProfit({ profit }: { profit: ClosingProfitData }) {
+function ClosingProfit({
+  profit,
+  salesHref,
+  onOpen,
+}: {
+  profit: ClosingProfitData;
+  /** The sales of the closing filtered by a product. */
+  salesHref: (name: string) => string;
+  onOpen: () => void;
+}) {
   const money = (n: number) => formatMoney(Number(n), profit.currency);
   const missing = profit.byProduct.filter((p) => p.missingCost);
   const percent =
@@ -205,8 +287,8 @@ function ClosingProfit({ profit }: { profit: ClosingProfitData }) {
           {profit.withoutCost.products === 1
             ? "1 producto vendido sin costo"
             : `${profit.withoutCost.products} productos vendidos sin costo`}{" "}
-          ({money(profit.withoutCost.amount)}): su ganancia no está contada. Ponles el costo y vuelve a mirar este
-          cierre.
+          ({money(profit.withoutCost.amount)}): su ganancia no está contada. Ponles el costo y vuelve a mirar
+          este cierre.
           <ul className="mt-2 flex flex-wrap gap-2">
             {missing.map((p) =>
               p.productId ? (
@@ -244,13 +326,25 @@ function ClosingProfit({ profit }: { profit: ClosingProfitData }) {
               <tbody>
                 {profit.byProduct.map((p) => (
                   <tr key={p.productId ?? p.name} className="border-t">
-                    <td className="py-1 pr-2">{p.name}</td>
-                    <td className="py-1 pr-2 text-right tabular-nums">{formatQuantity(p.quantity, p.unit)}</td>
+                    <td className="py-1 pr-2">
+                      <Link
+                        href={salesHref(p.name)}
+                        onClick={onOpen}
+                        className="inline-flex min-h-10 items-center text-primary underline"
+                      >
+                        {p.name}
+                      </Link>
+                    </td>
+                    <td className="py-1 pr-2 text-right tabular-nums">
+                      {formatQuantity(p.quantity, p.unit)}
+                    </td>
                     <td className="py-1 pr-2 text-right tabular-nums">{money(p.revenue)}</td>
                     <td className="py-1 pr-2 text-right tabular-nums">
                       {p.cost == null ? <Badge variant="muted">Sin costo</Badge> : money(p.cost)}
                     </td>
-                    <td className="py-1 text-right tabular-nums">{p.profit == null ? "—" : money(p.profit)}</td>
+                    <td className="py-1 text-right tabular-nums">
+                      {p.profit == null ? "—" : money(p.profit)}
+                    </td>
                   </tr>
                 ))}
               </tbody>

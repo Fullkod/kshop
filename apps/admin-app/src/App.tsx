@@ -8,6 +8,8 @@ import {
   OrderDetail,
   OrderList,
   PosClosings,
+  PosClosingSales,
+  PosProductSales,
   PosScreen,
   ReceivedByMethod,
   ProductEditor,
@@ -89,6 +91,7 @@ import {
   useLocation,
   useNavigate,
   useParams,
+  useSearchParams,
 } from "react-router";
 import { appConfig, webAdminUrl } from "./config";
 import {
@@ -635,6 +638,26 @@ function Shell({ onSwitch }: { onSwitch?: () => void }) {
               }
             />
           )}
+          {pos && (
+            <Route
+              path="/admin/pos/closings/search"
+              element={
+                <Screen title="Buscar un producto">
+                  <ProductSalesRoute />
+                </Screen>
+              }
+            />
+          )}
+          {pos && (
+            <Route
+              path="/admin/pos/closings/:closingId"
+              element={
+                <Screen title="Ventas del cierre">
+                  <ClosingSalesRoute />
+                </Screen>
+              }
+            />
+          )}
           <Route path="/admin/more" element={<MoreScreen onSwitch={onSwitch} />} />
           <Route path="/admin/help" element={<HelpScreen />} />
           <Route path="/" element={<Navigate to="/admin" replace />} />
@@ -737,6 +760,26 @@ function HelpScreen() {
 function OrderRoute() {
   const { orderId = "" } = useParams();
   return <OrderDetail key={orderId} orderId={orderId} />;
+}
+
+function ClosingSalesRoute() {
+  const { closingId = "" } = useParams();
+  const [params] = useSearchParams();
+  return (
+    <PosClosingSales
+      key={closingId}
+      closingId={closingId}
+      closingsHref="/admin/pos/closings"
+      initialQuery={params.get("q") ?? ""}
+    />
+  );
+}
+
+function ProductSalesRoute() {
+  const [params] = useSearchParams();
+  return (
+    <PosProductSales closingsHref="/admin/pos/closings" initialProductId={params.get("product") ?? ""} />
+  );
 }
 
 function ProductRoute() {

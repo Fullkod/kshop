@@ -26,7 +26,7 @@ import {
   useConfirm,
 } from "@kshop/ui";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ADMIN_CONTENT_CLASS, SIDEBAR_NAV_CLASS } from "@/components/admin-content";
 import { platformProtocol, publicEnv } from "@/env";
@@ -87,6 +87,9 @@ function primaryAction(pathname: string): { href: string; label: string } | null
  * Store admin (redesign R6, always the Kshop brand): night sidebar with the modules by group (locked ones with PRO),
  * store switcher and user card; a topbar with «Ver tienda», the bell (orders to confirm) and the main action.
  */
+/** ?from= of the address when it is a page of this admin (never another site). */
+const safeFrom = (from: string | null) => (from && from.startsWith("/admin/") ? from : null);
+
 export function AdminShell({ children }: { children: ReactNode }) {
   const store = useStore();
   const { session, ready, api, supabase } = useSession();
@@ -97,6 +100,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [liveToConfirm, setLiveToConfirm] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const from = safeFrom(useSearchParams().get("from"));
   const live = useStoreVersion(isPublic ? null : store.id, ORDER_TABLES);
   const sectionsLive = useStoreVersion(isPublic ? null : store.id, SECTION_TABLES);
   const userId = session?.user.id;
@@ -263,8 +267,15 @@ export function AdminShell({ children }: { children: ReactNode }) {
     (m) => pathname === m.adminPath || pathname.startsWith(`${m.adminPath}/`),
   ).sort((a, b) => b.adminPath.length - a.adminPath.length)[0];
   const currentSection = current ? menuSection(admin, current.code) : null;
-  // A subpage of a module (an order, a product, Categorías…) gets «Volver» to the module on a phone.
-  const parentHref = current && pathname !== current.adminPath ? current.adminPath : null;
+  // A subpage of a module (an order, a product, Categorías…) gets «Volver» to the module on a phone; a page opened from
+  // a closing's sales (?from=) goes back there with its filter, and those pages go back to Caja › Cierres.
+  const parentHref =
+    from ??
+    (pathname.startsWith("/admin/pos/closings/")
+      ? "/admin/pos?tab=closings"
+      : current && pathname !== current.adminPath
+        ? current.adminPath
+        : null);
   const email = session.user.email ?? "";
   const otherStores = admin.stores.filter((s) => s.id !== store.id);
 

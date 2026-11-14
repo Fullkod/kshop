@@ -25,3 +25,5 @@ export * from "./pos/pos-sync";
 export * from "./pos/PosDay";
 export * from "./pos/PosCloseDay";
 export * from "./pos/PosClosings";
+export * from "./pos/PosClosingSales";
+export * from "./pos/PosProductSales";

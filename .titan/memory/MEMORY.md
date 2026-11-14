@@ -61,6 +61,7 @@
 - [2026-11-08 — Acompañar a un negocio nuevo](project/2026-11-08-alta-de-un-negocio-nuevo.md) — Qué pedirle al cliente, qué hacemos en la carga, módulos y límites de Caja/Base/Pro; el cierre por WhatsApp es solo Pro o suelto y Caja no tiene el botón de Kshop Admin
 - [2026-11-08 — Guías en PDF por plan](project/2026-11-08-guias-por-plan.md) — Seis PDF (app y web de Caja, Base y Pro) en `_materiales/kshop/guias/`, cómo regenerarlos con `build.cjs` y qué falta
 - [2026-11-13 — KSH0022 Costo en la lista de productos](project/2026-11-13-ksh0022-costos-en-lista.md) — Columna «Costo» editable (dueño/admin), diálogo para variantes, `PUT catalog/costs` → `set_variant_costs`
+- [2026-11-14 — Ventas de un cierre y búsqueda por producto](project/2026-11-14-cierres-ventas-por-producto.md) — Pedido de Minimercado: «Ver sus ventas» abre las ventas con sus productos, filtro que se conserva al volver, cierres anteriores y búsqueda en todos; dónde está cada pieza y qué falta
 
 ## feedback/ — Correcciones y preferencias
 
@@ -99,3 +100,4 @@
 - `prp-pos-offline.md` — POS sin conexión en Kshop Admin (módulo `pos`), aprobado 2026-10-30: fases 1 a 6 en producción y APK publicados; falta probar en un Android real. Inventario en la etapa 2
 - `prp-ksh0012-cierre-de-caja.md` — KSH0012: cierre de caja (esperado vs contado, fondo fijo por tienda, WhatsApp al dueño con el cuadre); HECHO 2026-11-06; **KSH0014: el cierre es de todo el local** (todas las cuentas y teléfonos, días anteriores sin cerrar, desglose por persona); dónde está cada pieza, pendientes y aprendizajes dentro
 - `prp-venta-por-peso.md` — KSH0015: Venta por peso y medida (lb, kg, L, m…): cantidad decimal `numeric(12,2)` en carrito, pedidos, caja (también sin conexión) y stock, unidad en el producto, tienda online también; P1–P6 respondidas por Roberto (2026-11-07), aprobado; 7 fases
+- `prp-cierres-ventas-por-producto.md` — Ventas de un cierre con sus productos, filtro por producto que se conserva al volver, «Ver cierres anteriores» y búsqueda de un producto en todos los cierres (pedido de Minimercado, D1–D3 de Roberto 2026-11-14); fases 1–5 hechas en prueba, falta producción/deploy/APK

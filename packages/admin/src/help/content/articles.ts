@@ -218,7 +218,7 @@ export const articles: HelpArticle[] = [
         text: "Cuenta el dinero y escribe lo contado en cada moneda. Verás si cuadra, si sobra o si falta; añade una nota si hace falta y pulsa «Cerrar el día».",
       },
       {
-        text: "El cierre queda guardado y no se puede cambiar. El dueño recibe el cuadre por WhatsApp y lo ve en Caja › Cierres (en Kshop Admin, «Ver los cierres»), con las ventas de cada cierre.",
+        text: "El cierre queda guardado y no se puede cambiar. El dueño recibe el cuadre por WhatsApp y lo ve en Caja › Cierres (en Kshop Admin, «Ver los cierres»); «Ver sus ventas» abre las ventas de ese cierre con sus productos.",
       },
     ],
     tips: [
@@ -227,7 +227,44 @@ export const articles: HelpArticle[] = [
       "El cierre es de todo el local: entran las ventas de todos los teléfonos y cuentas, y también las de días anteriores que nadie cerró. Si se vende algo después de cerrar, va a un segundo cierre del mismo día.",
       "Para que el WhatsApp llegue, el teléfono del dueño tiene que estar en Avisos WhatsApp con «Recibe el cierre de caja de cada día».",
     ],
-    related: ["counter-sale", "my-earnings"],
+    related: ["closing-sales", "counter-sale", "my-earnings"],
+  },
+  {
+    slug: "closing-sales",
+    title: "Quiero ver qué se vendió en un cierre",
+    summary:
+      "Cada cierre abre sus ventas con los productos de cada una. Buscas un producto y quedan solo las ventas que lo llevan, con cuánto se vendió; también puedes buscarlo en todos los cierres.",
+    audiences: ["owner", "staff"],
+    keywords: [
+      "cierre",
+      "ventas del cierre",
+      "buscar producto",
+      "qué se vendió",
+      "cuántos vendí",
+      "cierres anteriores",
+      "revisar cierre",
+    ],
+    contexts: ["pos-closings"],
+    steps: [
+      {
+        text: "En Caja › Cierres (en Kshop Admin, «Ver los cierres») busca el día y pulsa «Ver sus ventas». Salen todas las ventas del cierre, la más nueva primero, cada una con su hora, quién vendió, el total, cómo se pagó y sus productos.",
+      },
+      {
+        text: "En «Buscar producto» escribe el nombre o el código, por ejemplo «aceite». Quedan solo las ventas que lo llevan, con la línea marcada, y arriba cuántas ventas son y cuánto se vendió de cada producto. Las anuladas salen tachadas y no se suman.",
+      },
+      {
+        text: "Toca una venta para abrir el pedido. Al volver atrás sigues en la misma lista, con la misma búsqueda y en el mismo punto.",
+      },
+      {
+        text: "Para buscar un producto en todos los cierres, pulsa «Buscar un producto en todos los cierres» y elígelo. Salen por día las ventas que lo llevan, con el cierre de cada una o «Sin cerrar»; «Ver días anteriores» trae 30 días más.",
+      },
+    ],
+    tips: [
+      "Al final de la lista de cierres, «Ver cierres anteriores» trae los de 30 días más atrás, tantas veces como haga falta.",
+      "El dueño y el administrador también llegan desde «Ganancia por producto»: tocar un producto abre las ventas del cierre que lo llevan.",
+      "La búsqueda en todos los cierres es de productos del catálogo; un producto que ya se borró se encuentra dentro de cada cierre escribiendo su nombre.",
+    ],
+    related: ["cash-closing", "counter-sale"],
   },
   {
     slug: "counter-sale",

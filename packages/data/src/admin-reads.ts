@@ -72,7 +72,49 @@ export type ClosingProfit = {
     missingCost: boolean;
   }[];
 };
-export type PosClosings = { float: Record<string, number>; closings: PosClosing[] };
+export type PosClosings = {
+  float: Record<string, number>;
+  closings: PosClosing[];
+  /** The `before` of the next (older) page. */
+  before: string;
+  hasOlder: boolean;
+};
+
+/** A counter sale with its lines (Ventas del cierre, búsqueda por producto). Numbers as text, like the other reads. */
+export type PosSaleCard = {
+  orderId: string;
+  number: number;
+  soldAt: string;
+  /** Cuban day of the sale. */
+  day: string;
+  cashier: string | null;
+  cancelled: boolean;
+  currency: CurrencyCode;
+  total: string;
+  /** null = not closed yet. */
+  closingId: string | null;
+  /** Payment methods with a name (Transferencia…); cash without a method is not listed. */
+  payments: string[];
+  lines: {
+    productId: string | null;
+    name: string;
+    variant: string;
+    sku: string;
+    quantity: string;
+    unit: string;
+    lineTotal: string;
+  }[];
+};
+export type PosClosingSales = {
+  closing: { id: string; day: string; sequence: number; cashier: string | null; closedAt: string };
+  sales: PosSaleCard[];
+};
+export type PosProductSales = {
+  product: { id: string; name: string } | null;
+  sales: (PosSaleCard & { closingSequence: number | null; closingDay: string | null })[];
+  before: string;
+  hasOlder: boolean;
+};
 
 export type PosOverview = {
   count: number;
@@ -167,8 +209,23 @@ export function createAdminReads(options: AdminReadsOptions) {
     /** Of the orders a phone uploaded, the ones cancelled since (the phone stops counting them). */
     posCancelledOrders: (storeId: string, orderIds: readonly string[]) =>
       rpc<string[]>("admin_pos_cancelled_orders", { p_store_id: storeId, p_order_ids: orderIds }),
-    posClosings: (storeId: string, days = 30) =>
-      rpc<PosClosings>("admin_pos_closings", { p_store_id: storeId, p_days: days }),
+    /** `before` (a day, exclusive) pages back: pass the `before` of the previous page. */
+    posClosings: (storeId: string, days = 30, before?: string | null) =>
+      rpc<PosClosings>("admin_pos_closings", { p_store_id: storeId, p_days: days, p_before: before ?? null }),
+    /** The sales of one closing with their lines; null when it is not of that store. */
+    posClosingSales: (storeId: string, closingId: string) =>
+      rpc<PosClosingSales | null>("admin_pos_closing_sales", {
+        p_store_id: storeId,
+        p_closing_id: closingId,
+      }),
+    /** The counter sales with one product, `days` at a time going back from `before`. */
+    posProductSales: (storeId: string, productId: string, days = 30, before?: string | null) =>
+      rpc<PosProductSales>("admin_pos_product_sales", {
+        p_store_id: storeId,
+        p_product_id: productId,
+        p_days: days,
+        p_before: before ?? null,
+      }),
     posOverview: (storeId: string, days: number) =>
       rpc<PosOverview>("admin_pos_overview", { p_store_id: storeId, p_days: days }),
     checkoutSettings: (storeId: string) =>
