@@ -103,7 +103,7 @@
 - Confirmaciones con `useConfirm()` de `@kshop/ui` (R14), nunca `window.confirm`/`prompt`/`alert` (lint `no-alert`); todo
   borrado y toda acción que cambie la factura o suspenda una tienda pregunta antes.
 - **Ayuda en la app (KSH0005):** el contenido vive en `packages/admin/src/help/content/` (guías por tarea, primer día,
-  glosario, FAQ) y lo usan el «?» de cada pantalla, `/admin/help`, `/superadmin/help`, Kshop Admin, el PDF y el Markdown.
+  glosario, FAQ) y lo usan el «?» de cada pantalla, `/admin/help`, `/superadmin/help`, la ayuda pública `kshop.fullkod.com/help` (enlazada desde la portada), Kshop Admin, el PDF y el Markdown.
   **Si una tarea cambia la interfaz** (botones, pestañas, pasos), actualiza en el mismo commit las guías que la describen,
   `pnpm help:shots <slug…>` de sus capturas (revísalas: sin datos de prueba ni teléfonos reales) y `pnpm help:pdf`.
   Los **manuales por plan** (`packages/admin/src/help/guides/app.html` y `web.html`, PDF en `/help/guias/` que todas

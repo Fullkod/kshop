@@ -45,8 +45,11 @@ export function HelpCenter({
   viewer,
   screenshotBase,
   linkAs,
+  publicPage = false,
 }: {
   scope: HelpScope;
+  /** kshop.fullkod.com/help: for someone outside any store (no «?», no links into the admin, manuals first). */
+  publicPage?: boolean;
   /** The reader's role: the default filter. */
   viewer: HelpAudience;
   screenshotBase?: string;
@@ -85,6 +88,45 @@ export function HelpCenter({
       .map(([file, f]) => ({ file, label: f.label })),
   ];
 
+  const manuals = (
+    <section className="flex flex-col gap-3" aria-labelledby="help-guides">
+      <h2 id="help-guides" className="font-display text-xl font-bold">
+        Manuales de cada plan
+      </h2>
+      <p className="text-sm text-muted-foreground">
+        {publicPage
+          ? "Un manual de Kshop Admin (la app del teléfono) y otro del panel web por plan, en PDF: así ves qué trae cada plan antes de elegir."
+          : scope === "store"
+            ? "Un manual de Kshop Admin (la app del teléfono) y otro del panel web por plan, en PDF. Están todos: así ves también lo que traen los otros planes."
+            : "Los manuales que ve cada tienda en su Ayuda, para mandárselos a un cliente."}
+      </p>
+      <ul className="flex flex-col divide-y rounded-md border" data-testid="help-guides">
+        {HELP_GUIDE_PLANS.map((g) => (
+          <li
+            key={g.plan}
+            className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <span className="font-medium">Plan {g.name}</span>
+            <span className="flex flex-wrap gap-2">
+              {(["app", "web"] as const).map((kind) => (
+                <a
+                  key={kind}
+                  href={`${base}/help/${helpGuideFile(g.plan, kind)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch:min-h-10")}
+                >
+                  <Download size={16} aria-hidden />
+                  {kind === "app" ? "Kshop Admin" : "Panel web"}
+                </a>
+              ))}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+
   function pickFilter(value: HelpAudienceFilter) {
     setPicked(value);
     saveHelpAudience(value);
@@ -96,9 +138,11 @@ export function HelpCenter({
         <div>
           <h1 className="font-display text-2xl font-bold">Ayuda</h1>
           <p className="text-muted-foreground">
-            {scope === "store"
-              ? "Guías paso a paso para el día a día de tu tienda. En cada pantalla, el botón «?» abre las suyas."
-              : "Guías del panel de Kshop. En cada pantalla, el botón «?» abre las suyas."}
+            {publicPage
+              ? "Guías paso a paso para el día a día de una tienda en Kshop, y el manual de cada plan para descargar."
+              : scope === "store"
+                ? "Guías paso a paso para el día a día de tu tienda. En cada pantalla, el botón «?» abre las suyas."
+                : "Guías del panel de Kshop. En cada pantalla, el botón «?» abre las suyas."}
           </p>
         </div>
         <div className="relative">
@@ -150,10 +194,17 @@ export function HelpCenter({
         </section>
       ) : null}
 
+      {publicPage && manuals}
+
       {firstDay.length > 0 && (
         <section id={HELP_ANCHORS.firstDay} className="flex scroll-mt-24 flex-col gap-3">
           <h2 className="font-display text-xl font-bold">Tu primer día</h2>
-          <FirstDayChecklist steps={firstDay} screenshotBase={screenshotBase} linkAs={linkAs} />
+          <FirstDayChecklist
+            steps={firstDay}
+            screenshotBase={screenshotBase}
+            linkAs={linkAs}
+            showLinks={!publicPage}
+          />
         </section>
       )}
 
@@ -237,40 +288,7 @@ export function HelpCenter({
         </div>
       </section>
 
-      <section className="flex flex-col gap-3" aria-labelledby="help-guides">
-        <h2 id="help-guides" className="font-display text-xl font-bold">
-          Manuales de cada plan
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {scope === "store"
-            ? "Un manual de Kshop Admin (la app del teléfono) y otro del panel web por plan, en PDF. Están todos: así ves también lo que traen los otros planes."
-            : "Los manuales que ve cada tienda en su Ayuda, para mandárselos a un cliente."}
-        </p>
-        <ul className="flex flex-col divide-y rounded-md border" data-testid="help-guides">
-          {HELP_GUIDE_PLANS.map((g) => (
-            <li
-              key={g.plan}
-              className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <span className="font-medium">Plan {g.name}</span>
-              <span className="flex flex-wrap gap-2">
-                {(["app", "web"] as const).map((kind) => (
-                  <a
-                    key={kind}
-                    href={`${base}/help/${helpGuideFile(g.plan, kind)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch:min-h-10")}
-                  >
-                    <Download size={16} aria-hidden />
-                    {kind === "app" ? "Kshop Admin" : "Panel web"}
-                  </a>
-                ))}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {!publicPage && manuals}
     </div>
   );
 }

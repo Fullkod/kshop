@@ -402,6 +402,31 @@ try {
     await shot(app, "07-app-ayuda");
     await app.context().close();
   }
+
+  // kshop.fullkod.com/help: the help without signing in, linked from the landing; manuals first, nothing into the admin.
+  const visitor = await (
+    await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+  ).newPage();
+  const visitorErrors = [];
+  visitor.on("pageerror", (e) => visitorErrors.push(e.message));
+  await visitor.goto(PLATFORM_URL);
+  await visitor.getByTestId("landing-help").click();
+  await visitor.getByTestId("help-center").waitFor({ timeout: 30000 });
+  check("landing: «Ayuda y manuales» opens the public help", new URL(visitor.url()).pathname === "/help");
+  check(
+    "public help: the six manuals, and no «Ir ahora» into the admin",
+    (await visitor.getByTestId("help-guides").locator("a").count()) === 6 &&
+      (await visitor.getByText("Ir ahora").count()) === 0,
+  );
+  await visitor.getByLabel("Buscar en la ayuda").fill("cierre");
+  check(
+    "public help: the search finds guides",
+    (await visitor.getByTestId("help-results").locator("a").count()) > 0,
+  );
+  check("public help: does not overflow on a phone", (await overflow(visitor)) <= 0, await overflow(visitor));
+  check("public help: no page errors", visitorErrors.length === 0, visitorErrors.join(" | "));
+  await shot(visitor, "08-ayuda-publica-390");
+  await visitor.context().close();
 } finally {
   await removeRoot().catch(() => {});
   await browser.close();

@@ -35,6 +35,7 @@ const NAV = [
   { href: "#temas", label: "Temas" },
   { href: "#precios", label: "Precios" },
   { href: "#app", label: "App" },
+  { href: "/help", label: "Ayuda" },
 ];
 
 const TRUST = ["Pago en efectivo", "Sin tarjeta", "Soporte por WhatsApp"];
@@ -518,9 +519,14 @@ export default async function PlatformHome() {
             </a>
             · {domain}
           </span>
-          <Link href="/superadmin" className="hover:text-foreground">
-            Acceso Fullkod
-          </Link>
+          <span className="flex items-center gap-4">
+            <Link href="/help" className="hover:text-foreground" data-testid="landing-help">
+              Ayuda y manuales
+            </Link>
+            <Link href="/superadmin" className="hover:text-foreground">
+              Acceso Fullkod
+            </Link>
+          </span>
         </div>
       </footer>
     </main>

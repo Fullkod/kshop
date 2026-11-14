@@ -17,10 +17,13 @@ export function FirstDayChecklist({
   steps,
   screenshotBase,
   linkAs: StepLink,
+  showLinks = true,
 }: {
   steps: FirstDayStep[];
   screenshotBase?: string;
   linkAs: HelpLinkComponent;
+  /** «Ir ahora» opens a screen of the admin: not on the public page, outside any store. */
+  showLinks?: boolean;
 }) {
   // The server renders nothing done; the browser its saved progress. `local` keeps the clicks when storage fails.
   const raw = useSyncExternalStore(subscribeHelpStorage, readFirstDayRaw, () => "[]");
@@ -70,7 +73,7 @@ export function FirstDayChecklist({
                   {s.title}
                 </p>
                 <p className="text-sm text-muted-foreground">{s.detail}</p>
-                {s.link && (
+                {showLinks && s.link && (
                   <StepLink href={s.link} className="self-start text-sm font-medium text-primary underline">
                     Ir ahora
                   </StepLink>
