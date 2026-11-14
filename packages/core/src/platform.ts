@@ -32,6 +32,8 @@ export const createStoreInputSchema = z.object({
   founderPrice: z.number().min(0).max(1000).multipleOf(0.01).nullable().optional(),
   /** Courtesy: never billed. */
   comped: z.boolean().optional(),
+  /** KSH0023: setup fee on the first invoice (USD). Omitted = the platform setting; null or 0 = none. */
+  setupFee: z.number().min(0).max(1000).multipleOf(0.01).nullable().optional(),
 });
 export type CreateStoreInput = z.infer<typeof createStoreInputSchema>;
 

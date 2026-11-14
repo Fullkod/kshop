@@ -8,10 +8,10 @@ import {
   slugify,
   type CreateStoreInput,
 } from "@kshop/core";
-import { ApiError, type CreateStoreResponse } from "@kshop/data";
+import { ApiError, type BillingSettings, type CreateStoreResponse } from "@kshop/data";
 import { Alert, Button, buttonVariants, Card, FieldError, Input, Label, Select } from "@kshop/ui";
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { publicEnv } from "@/env";
 import { storeUrl } from "@/lib/format";
@@ -37,6 +37,12 @@ export default function NewStorePage() {
   const [pending, setPending] = useState(false);
   const [created, setCreated] = useState<CreateStoreResponse | null>(null);
   const [copied, setCopied] = useState(false);
+  // Trial days and setup fee come from Superadmin › Facturación (KSH0023).
+  const [settings, setSettings] = useState<BillingSettings | null>(null);
+
+  useEffect(() => {
+    api.platform.billingSettings().then(setSettings, () => setSettings(null));
+  }, [api]);
 
   function onNameChange(value: string) {
     setName(value);
@@ -60,6 +66,12 @@ export default function NewStorePage() {
         ? Number(String(form.get("founderPrice")).replace(",", "."))
         : null,
       comped: form.get("comped") === "on",
+      // Empty = no setup fee; when the settings did not load, the server uses the platform's amount.
+      setupFee: String(form.get("setupFee") ?? "").trim()
+        ? Number(String(form.get("setupFee")).replace(",", "."))
+        : settings
+          ? null
+          : undefined,
     });
     if (!parsed.success) {
       const fieldErrors = z.flattenError(parsed.error).fieldErrors as Record<string, string[] | undefined>;
@@ -223,8 +235,29 @@ export default function NewStorePage() {
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="trialDays">Días de prueba</Label>
-          <Input id="trialDays" name="trialDays" type="number" min={0} max={365} defaultValue={30} />
+          <Input
+            key={settings ? "trial-settings" : "trial-default"}
+            id="trialDays"
+            name="trialDays"
+            type="number"
+            min={0}
+            max={365}
+            defaultValue={settings?.defaultTrialDays ?? 15}
+          />
           <FieldError>{errors.trialDays}</FieldError>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="setupFee">Puesta en marcha (USD, en la primera factura)</Label>
+          <Input
+            key={settings ? "fee-settings" : "fee-default"}
+            id="setupFee"
+            name="setupFee"
+            inputMode="decimal"
+            defaultValue={settings?.setupFeeUsd || ""}
+            placeholder="Vacío = no se cobra"
+          />
+          <FieldError>{errors.setupFee}</FieldError>
         </div>
 
         <div className="flex flex-col gap-2">

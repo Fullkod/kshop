@@ -98,6 +98,8 @@ export const subscriptionUpdateSchema = z.object({
   notes: z.string().trim().max(2000).optional(),
   cancelAt: isoDate.nullable().optional(),
   comped: z.boolean().optional(),
+  /** KSH0023: one-time setup fee on the first invoice (null or 0 = none); only while not invoiced. */
+  setupFee: usd.max(1000).nullable().optional(),
 });
 export type SubscriptionUpdateInput = z.infer<typeof subscriptionUpdateSchema>;
 
@@ -126,6 +128,8 @@ export const billingSettingsSchema = z.object({
   graceDays: z.coerce.number().int().min(0).max(60),
   trialReminderDays: z.coerce.number().int().min(0).max(60),
   defaultTrialDays: z.coerce.number().int().min(0).max(365),
+  /** KSH0023: setup fee put on the first invoice of each new store (0 = none). */
+  setupFeeUsd: usd.max(1000),
   billingInstructions: z.string().trim().max(500),
   supportWhatsapp: z
     .string()

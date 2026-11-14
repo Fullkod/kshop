@@ -62,6 +62,7 @@ export default function SuperadminBillingPage() {
           graceDays: n("graceDays"),
           trialReminderDays: n("trialReminderDays"),
           defaultTrialDays: n("defaultTrialDays"),
+          setupFeeUsd: Number(String(form.get("setupFeeUsd") ?? "").replace(",", ".") || 0),
           billingInstructions: String(form.get("billingInstructions") ?? "").trim(),
           supportWhatsapp: String(form.get("supportWhatsapp") ?? "").trim() || null,
         }),
@@ -155,6 +156,17 @@ export default function SuperadminBillingPage() {
                 <FieldError>{fields[name]}</FieldError>
               </div>
             ))}
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="setupFeeUsd">Puesta en marcha (USD, en la 1.ª factura)</Label>
+              <Input
+                id="setupFeeUsd"
+                name="setupFeeUsd"
+                inputMode="decimal"
+                defaultValue={settings.setupFeeUsd}
+                placeholder="0 = no se cobra"
+              />
+              <FieldError>{fields.setupFeeUsd}</FieldError>
+            </div>
             <div className="flex flex-col gap-1">
               <Label htmlFor="supportWhatsapp">WhatsApp de soporte de Kshop</Label>
               <Input

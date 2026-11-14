@@ -32,7 +32,7 @@ export const faq: FaqEntry[] = [
   {
     question: "¿Cómo pago Kshop?",
     answer:
-      "Kshop cobra a mano, sin tarjeta. En Plan y facturación tienes la próxima factura y «Cómo pagar»; si tienes dudas, «Escribir a Kshop por WhatsApp».",
+      "Kshop cobra a mano, sin tarjeta. En Plan y facturación tienes la próxima factura y «Cómo pagar»; la primera incluye la puesta en marcha (una sola vez). Si tienes dudas, «Escribir a Kshop por WhatsApp».",
     audiences: ["owner"],
     related: ["my-plan"],
   },

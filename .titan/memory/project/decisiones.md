@@ -111,9 +111,10 @@
 ## Decisiones del 2026-11-08 (Roberto)
 31. **Puesta en marcha: 5 USD, una sola vez**, a cada negocio nuevo: crear la tienda y acompañarlo en la carga inicial
     (nombre, logo, productos, pagos, equipo). **La prueba gratis baja de 30 a 15 días** (`default_trial_days = 15` en
-    prueba y producción) y los 5 USD se cobran **al terminar los 15 días**. No se añaden solos: hoy a mano, como
-    ajuste «Puesta en marcha» en una factura pendiente (`POST /api/v1/platform/invoices/{id}/adjustments`).
-    En el landing: `SETUP_FEE_USD` en `apps/web/src/app/(platform)/page.tsx`.
+    prueba y producción) y los 5 USD se cobran **al terminar los 15 días**. ~~A mano como ajuste~~ Desde KSH0023
+    (2026-11-14, pedido por Claudia) **van solos en la primera factura** de cada tienda nueva, en una sola factura con
+    el plan: importe en Superadmin › Cobros (`setup_fee_usd`), editable al crear la tienda y en «Condiciones de esta
+    tienda» mientras no esté facturada; el landing lo lee de ahí. Ver `2026-11-14-ksh0023-puesta-en-marcha.md`.
 32. **Servicio opcional «Te llevamos el inventario»** (cambiar precios y cantidades, subir productos nuevos): sale en el
     landing «desde 8 USD/mes» (`INVENTORY_SERVICE_FROM_USD`, propuesta de Claude), aunque lo más probable es que no se
     haga. Propuesta de tarifas: Básico 8 USD/mes (una actualización por semana de hasta 100 productos y 20 productos

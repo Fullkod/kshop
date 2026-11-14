@@ -16,6 +16,8 @@ export type LandingData = {
   /** Cheapest add-on over the Base plan, null when no module is sold separately. */
   minAddonPrice: number | null;
   trialDays: number;
+  /** KSH0023: one-time setup fee on the first invoice (0 = none). */
+  setupFeeUsd: number;
   supportWhatsapp: string | null;
 };
 
@@ -30,6 +32,7 @@ export async function getLandingData(): Promise<LandingData> {
     modules,
     minAddonPrice: addons.length ? Math.min(...addons) : null,
     trialDays: settings.defaultTrialDays,
+    setupFeeUsd: settings.setupFeeUsd,
     supportWhatsapp: settings.supportWhatsapp,
   };
 }

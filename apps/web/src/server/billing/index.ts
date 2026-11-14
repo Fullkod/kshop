@@ -318,6 +318,8 @@ type SubscriptionRow = {
   price_override: number | null;
   limit_overrides: { max_products?: number | null; max_staff?: number | null };
   notes: string | null;
+  setup_fee: number | null;
+  setup_fee_invoice: { number: string; status: string } | null;
   plans: { code: PlanCode; name: string };
   stores: { status: StoreBilling["storeStatus"]; suspended_reason: StoreBilling["suspendedReason"] };
 };
@@ -327,7 +329,9 @@ async function readSubscription(storeId: string): Promise<SubscriptionRow> {
     .from("subscriptions")
     .select(
       `status, billing_interval, trial_ends_at, current_period_start, current_period_end, founder, cancel_at,
-      price_override, limit_overrides, notes, plans (code, name), stores (status, suspended_reason)`,
+      price_override, limit_overrides, notes, setup_fee,
+      setup_fee_invoice:platform_invoices!subscriptions_setup_fee_invoice_id_fkey (number, status),
+      plans (code, name), stores (status, suspended_reason)`,
     )
     .eq("store_id", storeId)
     .maybeSingle<SubscriptionRow>();
@@ -344,6 +348,7 @@ async function getBillingSettings(): Promise<BillingSettings> {
     graceDays: num(s.grace_days),
     trialReminderDays: num(s.trial_reminder_days),
     defaultTrialDays: num(s.default_trial_days),
+    setupFeeUsd: num(s.setup_fee_usd),
     billingInstructions: String(s.billing_instructions ?? ""),
     supportWhatsapp: (s.support_whatsapp as string | null) ?? null,
   };
@@ -359,6 +364,7 @@ export async function setBillingSettings(input: BillingSettingsInput): Promise<B
       grace_days: input.graceDays,
       trial_reminder_days: input.trialReminderDays,
       default_trial_days: input.defaultTrialDays,
+      setup_fee_usd: input.setupFeeUsd,
       billing_instructions: input.billingInstructions,
       support_whatsapp: input.supportWhatsapp,
     },
@@ -488,6 +494,9 @@ export async function getPlatformSubscription(storeId: string): Promise<Platform
       maxStaff: sub.limit_overrides.max_staff,
     },
     notes: sub.notes,
+    setupFee: numOrNull(sub.setup_fee),
+    setupFeeInvoiceNumber:
+      sub.setup_fee_invoice && sub.setup_fee_invoice.status !== "void" ? sub.setup_fee_invoice.number : null,
     grants: grants.data.map((g) => ({
       id: g.id,
       type: g.type,
@@ -601,6 +610,7 @@ export async function updateSubscription(storeId: string, input: SubscriptionUpd
   if (input.notes !== undefined) patch.notes = input.notes;
   if (input.cancelAt !== undefined) patch.cancel_at = input.cancelAt;
   if (input.comped !== undefined) patch.comped = input.comped;
+  if (input.setupFee !== undefined) patch.setup_fee = input.setupFee;
   await rpc("subscription_update", { p_store_id: storeId, p_patch: patch, p_actor: actor }, "La tienda");
   return afterChange(storeId);
 }

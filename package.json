@@ -60,6 +60,7 @@
     "qa:price-calculator": "node scripts/db-env.mjs node scripts/qa-price-calculator.mjs",
     "e2e:plan-caja": "node scripts/db-env.mjs node scripts/e2e-plan-caja.mjs",
     "qa:plan-caja": "node scripts/db-env.mjs node scripts/qa-plan-caja.mjs",
+    "qa:setup-fee": "node scripts/db-env.mjs node scripts/qa-setup-fee.mjs",
     "qa:orders": "node scripts/db-env.mjs node scripts/qa-orders.mjs",
     "qa:payments": "node scripts/db-env.mjs node scripts/qa-payments.mjs",
     "qa:pos": "node scripts/db-env.mjs node scripts/qa-pos.mjs",

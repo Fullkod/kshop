@@ -57,7 +57,18 @@ export const articles: HelpArticle[] = [
     summary:
       "Arroz, queso o jamón por libra, refresco por litro, tela por metro: el producto dice cómo se vende, el precio es por esa unidad y la cantidad admite decimales (1,5 lb).",
     audiences: ["owner", "staff"],
-    keywords: ["libra", "peso", "kilo", "litro", "metro", "decimales", "granel", "pesa", "por importe", "unidad"],
+    keywords: [
+      "libra",
+      "peso",
+      "kilo",
+      "litro",
+      "metro",
+      "decimales",
+      "granel",
+      "pesa",
+      "por importe",
+      "unidad",
+    ],
     contexts: ["product", "products", "pos"],
     steps: [
       {
@@ -302,7 +313,7 @@ export const articles: HelpArticle[] = [
         screenshot: "billing",
       },
       {
-        text: "Arriba ves tu plan y la próxima factura. En «Cómo pagar» están las formas de pago; pulsa «Escribir a Kshop por WhatsApp» si tienes dudas o para avisar de que pagaste.",
+        text: "Arriba ves tu plan y la próxima factura. La primera trae también la «Puesta en marcha» (crear tu tienda y cargar tus datos), una sola vez. En «Cómo pagar» están las formas de pago; pulsa «Escribir a Kshop por WhatsApp» si tienes dudas o para avisar de que pagaste.",
       },
       {
         text: "«Uso del plan» dice cuántos productos y personas del equipo llevas. Para cambiar de plan o añadir un módulo suelto, pulsa «Solicitar» en el que quieras: se abre WhatsApp con el mensaje para Kshop ya escrito.",
@@ -360,6 +371,9 @@ export const articles: HelpArticle[] = [
       },
       {
         text: "Elige el plan y los «Días de prueba». Para un socio fundador escribe su precio congelado; marca «Cortesía» si la tienda no se factura nunca.",
+      },
+      {
+        text: "«Puesta en marcha» viene con el importe de Cobros (5 USD): va una sola vez en la primera factura de la tienda, junto al plan. Déjalo vacío si no se cobra.",
       },
       {
         text: "Pulsa «Crear tienda». En «Tienda creada» pulsa «Enviar por WhatsApp» para mandarle al dueño su enlace de acceso.",
@@ -790,7 +804,17 @@ export const articles: HelpArticle[] = [
     summary:
       "Kshop cobra a mano: cada tienda recibe su factura y, cuando paga, la marcas tú. Las que no pagan se pueden suspender.",
     audiences: ["superadmin"],
-    keywords: ["cobros", "facturas", "pagar", "vencidas", "suspender", "efectivo", "anular", "ajuste"],
+    keywords: [
+      "cobros",
+      "facturas",
+      "pagar",
+      "vencidas",
+      "suspender",
+      "efectivo",
+      "anular",
+      "ajuste",
+      "puesta en marcha",
+    ],
     contexts: ["superadmin-billing", "superadmin-store"],
     steps: [
       {
@@ -803,10 +827,13 @@ export const articles: HelpArticle[] = [
         text: "«Ajuste» añade una línea a la factura (negativo = a favor de la tienda). «Anular» la deja sin efecto; Kshop pregunta antes.",
       },
       {
-        text: "En «Ciclo de cobro» pon el WhatsApp de soporte y el texto «Cómo pagar» que ve cada tienda en su Plan y facturación.",
+        text: "En «Ciclo de cobro» pon el WhatsApp de soporte, el texto «Cómo pagar» que ve cada tienda en su Plan y facturación y la «Puesta en marcha» de las tiendas nuevas (0 = no se cobra).",
       },
     ],
-    tips: ["Desde la ficha de una tienda, «Emitir factura ahora» crea su próxima factura sin esperar."],
+    tips: [
+      "Desde la ficha de una tienda, «Emitir factura ahora» crea su próxima factura sin esperar.",
+      "La puesta en marcha sale sola en la primera factura de cada tienda nueva; la cambias o la quitas en «Condiciones de esta tienda» mientras no esté facturada. Si anulas esa factura, pasa a la siguiente.",
+    ],
     related: ["superadmin-store", "superadmin-plans"],
   },
   {

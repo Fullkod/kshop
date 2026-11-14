@@ -174,8 +174,6 @@ const MODULE_PITCH: Record<ModuleCode, string | null> = {
 
 const amount = (n: number) => new Intl.NumberFormat("es", { maximumFractionDigits: 2 }).format(n);
 
-/** One-time charge for setting up a new store (Roberto, 2026-11-08), billed when the trial ends. */
-const SETUP_FEE_USD = 5;
 /** Optional service: Kshop keeps the store's inventory (prices, quantities, new products). Starting price. */
 const INVENTORY_SERVICE_FROM_USD = 8;
 
@@ -405,11 +403,14 @@ export default async function PlatformHome() {
           <p className="text-muted-foreground">
             {data.trialDays} días de prueba con todo el plan {trialPlan}. Luego eliges.
           </p>
-          <p className="max-w-[640px] text-sm text-muted-foreground" data-testid="landing-setup-fee">
-            Te dejamos la tienda lista y te ayudamos a cargar tus productos:{" "}
-            <b className="text-foreground">{SETUP_FEE_USD} USD una sola vez</b>, que pagas al terminar la
-            prueba.
-          </p>
+          {/* One-time setup fee (Roberto, 2026-11-08; Superadmin › Facturación), on the first invoice. */}
+          {data.setupFeeUsd > 0 && (
+            <p className="max-w-[640px] text-sm text-muted-foreground" data-testid="landing-setup-fee">
+              Te dejamos la tienda lista y te ayudamos a cargar tus productos:{" "}
+              <b className="text-foreground">{amount(data.setupFeeUsd)} USD una sola vez</b>, que pagas con tu
+              primera factura, al terminar la prueba.
+            </p>
+          )}
         </div>
         <div
           className="grid w-full max-w-[1100px] grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-4"

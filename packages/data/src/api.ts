@@ -626,6 +626,10 @@ export type PlatformSubscription = StoreBilling & {
   priceOverride: number | null;
   limitOverrides: { maxProducts?: number | null; maxStaff?: number | null };
   notes: string | null;
+  /** KSH0023: one-time setup fee still owed or already invoiced (null = none). */
+  setupFee: number | null;
+  /** Number of the live invoice that carries the setup fee (null = not invoiced yet). */
+  setupFeeInvoiceNumber: string | null;
   grants: SubscriptionGrant[];
   storeModules: {
     code: ModuleCode;
@@ -643,6 +647,7 @@ export type BillingSettings = {
   graceDays: number;
   trialReminderDays: number;
   defaultTrialDays: number;
+  setupFeeUsd: number;
   billingInstructions: string;
   supportWhatsapp: string | null;
 };

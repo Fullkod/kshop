@@ -50,6 +50,13 @@ export async function prepareOwner(email: string, redirectTo: string) {
   return { userId: magic.data.user.id, link: magic.data.properties.action_link, created: false };
 }
 
+async function defaultSetupFee(): Promise<number | null> {
+  const { data, error } = await getServiceClient().rpc("platform_billing_get");
+  if (error) throw error;
+  const fee = Number((data as { setup_fee_usd?: unknown } | null)?.setup_fee_usd ?? 0);
+  return fee > 0 ? fee : null;
+}
+
 export async function createPlatformStore(
   input: CreateStoreInput,
   createdBy: string,
@@ -116,12 +123,19 @@ export async function createPlatformStore(
     );
   if (sections.error) throw sections.error;
 
-  if (input.founderPrice != null || input.comped) {
+  // KSH0023: the setup fee goes on the first invoice (the platform's amount unless the form says otherwise).
+  const setupFee = input.comped
+    ? null
+    : input.setupFee !== undefined
+      ? input.setupFee
+      : await defaultSetupFee();
+  if (input.founderPrice != null || input.comped || setupFee) {
     const update = await getServiceClient().rpc("subscription_update", {
       p_store_id: data.id,
       p_patch: {
         ...(input.founderPrice != null ? { founder: true } : {}),
         ...(input.comped ? { comped: true } : {}),
+        ...(setupFee ? { setup_fee: setupFee } : {}),
       },
       p_actor: createdBy,
     });

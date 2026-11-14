@@ -126,6 +126,8 @@ export default function SuperadminStoreSubscriptionPage() {
           comped: form.get("comped") === "on",
           cancelAt: isoFromDate(text("cancelAt")),
           notes: text("notes"),
+          // Once on an invoice it is changed with an adjustment there, not here.
+          ...(data?.setupFeeInvoiceNumber ? {} : { setupFee: optionalNumber("setupFee") }),
         }),
       "Guardado.",
     );
@@ -459,6 +461,8 @@ export default function SuperadminStoreSubscriptionPage() {
               data.cancelAt,
               data.status,
               data.founder,
+              data.setupFee,
+              data.setupFeeInvoiceNumber,
             ])}
           >
             <h2 className="font-semibold sm:col-span-2">Condiciones de esta tienda</h2>
@@ -476,6 +480,23 @@ export default function SuperadminStoreSubscriptionPage() {
             <div className="flex flex-col gap-1">
               <Label htmlFor="cancelAt">Baja programada</Label>
               <Input id="cancelAt" name="cancelAt" type="date" defaultValue={dateInput(data.cancelAt)} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="setupFee">Puesta en marcha (USD, en la primera factura)</Label>
+              {data.setupFeeInvoiceNumber ? (
+                <p className="py-2 text-sm text-muted-foreground" data-testid="setup-fee-invoiced">
+                  {formatUsd(data.setupFee ?? 0)} · en la factura {data.setupFeeInvoiceNumber}
+                </p>
+              ) : (
+                <Input
+                  id="setupFee"
+                  name="setupFee"
+                  inputMode="decimal"
+                  defaultValue={data.setupFee ?? ""}
+                  placeholder="No se cobra"
+                />
+              )}
+              <FieldError>{fields.setupFee}</FieldError>
             </div>
             <div className="flex flex-col gap-1">
               <Label htmlFor="maxProducts">Límite de productos</Label>
