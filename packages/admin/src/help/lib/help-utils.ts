@@ -101,6 +101,17 @@ export const HELP_MARKDOWN_FILES: Record<
 };
 export const HELP_PDF_FILE = "kshop-ayuda.pdf";
 
+/**
+ * The manuals of every plan (`pnpm help:guides`, under `/help/guias/`): offered to every store, so it sees what the
+ * other plans have, and to the superadmin, to send them.
+ */
+export const HELP_GUIDE_PLANS = [
+  { plan: "caja", name: "Caja" },
+  { plan: "base", name: "Base" },
+  { plan: "pro", name: "Pro" },
+] as const;
+export const helpGuideFile = (plan: string, kind: "app" | "web") => `guias/kshop-${plan}-${kind}.pdf`;
+
 /** Section anchors shared by the page, the Markdown export and the search index. */
 export const HELP_ANCHORS = {
   firstDay: "primer-dia",

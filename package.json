@@ -57,6 +57,7 @@
     "qa:help": "node scripts/db-env.mjs node scripts/qa-help.mjs",
     "help:shots": "node scripts/db-env.mjs node scripts/help-shots.mjs",
     "help:pdf": "node scripts/help-pdf.mjs",
+    "help:guides": "node scripts/help-guides.mjs",
     "qa:price-calculator": "node scripts/db-env.mjs node scripts/qa-price-calculator.mjs",
     "e2e:plan-caja": "node scripts/db-env.mjs node scripts/e2e-plan-caja.mjs",
     "qa:plan-caja": "node scripts/db-env.mjs node scripts/qa-plan-caja.mjs",

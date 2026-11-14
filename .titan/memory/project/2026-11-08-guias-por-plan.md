@@ -1,5 +1,11 @@
 # Guías en PDF para los clientes, por plan
 
+> **Desde 2026-11-14 viven en el repo** (pedido de Roberto): fuentes en `packages/admin/src/help/guides/`, PDF en
+> `apps/web/public/help/guias/kshop-<plan>-<app|web>.pdf` con `pnpm help:guides`, y **todas las tiendas descargan
+> los seis** en Ayuda › «Manuales de cada plan» (web, Kshop Admin y superadmin), para ver lo que traen los otros
+> planes. La regla de AGENTS.md los incluye: si cambia la interfaz, se corrigen y regeneran en el mismo commit.
+> Lo de abajo (rutas en `_materiales`, `build.cjs`) quedó superado; esa carpeta tiene un LEEME que lo dice.
+
 Date: 2026-11-08
 
 Fuente: pedido de Roberto del 2026-11-08. Pasos y botones sacados de `packages/admin/src/help/content/articles.ts` y del

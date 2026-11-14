@@ -1,0 +1,491 @@
+<!doctype html>
+<!--
+  Fuente del manual del panel web (A4). Un elemento con data-plans="…" solo sale en esos planes
+  (caja, base, pro); sin data-plans sale en todos. {{PLAN}}, {{EQUIPO}} y {{PRODUCTOS}} los pone build.cjs.
+  Capturas: las de la ayuda de Kshop (apps/web/public/help/screens), recortadas sin el menú de la Tienda Demo (Pro).
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Kshop · Manual del panel web · Plan {{PLAN}}</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+<style>@page { size: A4; margin: 0; }</style>
+</head>
+<body class="a4">
+
+<!-- Portada -->
+<section class="page cover">
+  <img src="kshop-horizontal-reversed.svg" alt="Kshop" style="height:13mm;align-self:flex-start">
+  <div>
+    <span class="plan-chip">PLAN {{PLAN}}</span>
+    <h1 style="margin-top:5mm">Tu negocio<br>en la <span class="gold">web</span>.</h1>
+    <p class="sub">Manual del panel de Kshop: todo lo que puedes hacer desde la computadora o el navegador del teléfono.</p>
+  </div>
+  <div>
+    <p style="font-family:Outfit;font-weight:700;color:#fff;margin-bottom:3mm;font-size:13pt">En este manual</p>
+    <ol class="toc">
+      <li>Entrar y el menú</li>
+      <li>Inicio</li>
+      <li>La caja: vender, cobrar, resumen y cierres</li>
+      <li>Pedidos</li>
+      <li data-plans="base pro">Pedidos de la tienda online y clientes</li>
+      <li>Productos e Importar Excel</li>
+      <li data-plans="base pro">Tu tienda online</li>
+      <li data-plans="base pro">Entregas y métodos de pago</li>
+      <li data-plans="base pro">Ofertas</li>
+      <li data-plans="pro">Cupones y Avisos WhatsApp</li>
+      <li data-plans="pro">Apariencia y Dominio propio</li>
+      <li data-plans="pro">Finanzas, Almacenes y Monedas</li>
+      <li data-plans="base pro">La app de tu tienda</li>
+      <li>Ventas de hoy, Equipo y Plan</li>
+      <li>Quién puede hacer qué</li>
+      <li>Reglas de oro y ayuda</li>
+    </ol>
+  </div>
+  <span class="num"></span>
+</section>
+
+<!-- Entrar -->
+<section class="page">
+  <span class="tag">Antes de empezar</span>
+  <h2>Entrar al panel</h2>
+  <p class="lead">El panel de tu negocio se abre en cualquier navegador: Chrome, Safari, Edge… en la computadora o en el teléfono.</p>
+  <ol class="steps">
+    <li>Abre la dirección de tu negocio con <b>/admin</b> al final. Te la damos al empezar. Ejemplo: <b>minegocio.kshop.fullkod.com/admin</b>.</li>
+    <li>Escribe <b>tu correo</b> y <b>tu contraseña</b> y toca <span class="btn">Entrar</span></li>
+    <li>¿No te acuerdas de la contraseña? Toca <b>«¿Olvidaste tu contraseña?»</b> y sigue los pasos.</li>
+    <li>Para salir, abajo del menú está tu nombre y, al lado, el botón de <b>cerrar sesión</b>.</li>
+  </ol>
+  <div class="box"><b>Guárdala en favoritos</b> (o «Añadir a pantalla de inicio» en el teléfono) para entrar con un toque.</div>
+  <div class="box"><b>Cada persona entra con su usuario.</b> Así queda guardado quién vendió y quién cambió cada cosa. No compartas tu contraseña.</div>
+  <div class="box warn"><b>Web o app:</b> la web necesita internet. Si en tu local la conexión falla, vende con <b>Kshop Admin</b> en un Android: guarda las ventas sin conexión y las sube solas. <span data-plans="base pro">La descargas en <b>App móvil</b> › «Descargar Kshop Admin».</span> Todo lo que vende la app aparece también aquí.</div>
+  <h3>Claro u oscuro</h3>
+  <p>Abajo del menú hay tres botones para ver el panel en modo <b>claro</b>, <b>oscuro</b> o como esté tu equipo.</p>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Menú -->
+<section class="page">
+  <span class="tag">Orientarte</span>
+  <h2>El menú</h2>
+  <p class="lead">A la izquierda en la computadora. En el teléfono, toca el botón <b>☰</b> de arriba.</p>
+  <div class="row">
+    <div class="menu">
+      <div class="i on">Inicio</div>
+      <div class="g">VENTAS</div>
+      <div class="i">Pedidos</div>
+      <div class="i">Clientes</div>
+      <div class="i" data-plans="base pro">Entregas</div>
+      <div class="i lock" data-plans="caja">Entregas <span class="pill">BASE</span></div>
+      <div class="i" data-plans="base pro">Ofertas</div>
+      <div class="i" data-plans="pro">Cupones</div>
+      <div class="i" data-plans="pro">Avisos WhatsApp</div>
+      <div class="i">Caja</div>
+      <div class="g">CATÁLOGO</div>
+      <div class="i">Productos</div>
+      <div class="i">Importar Excel</div>
+      <div class="i" data-plans="pro">Almacenes</div>
+      <div class="i" data-plans="pro">Monedas</div>
+      <div class="g" data-plans="base pro">TIENDA</div>
+      <div class="i" data-plans="pro">Apariencia</div>
+      <div class="i" data-plans="base pro">App móvil</div>
+      <div class="i" data-plans="pro">Dominio propio</div>
+      <div class="g">NEGOCIO</div>
+      <div class="i">Ventas de hoy</div>
+      <div class="i" data-plans="pro">Finanzas</div>
+      <div class="i">Plan y facturación</div>
+      <div class="i">Equipo</div>
+      <div class="g">&nbsp;</div>
+      <div class="i">Ayuda</div>
+    </div>
+    <div style="flex:1">
+      <table>
+        <tr><td class="k">Inicio</td><td>Cómo va el día y lo que tienes por hacer.</td></tr>
+        <tr><td class="k">Pedidos</td><td>Todas las ventas: las de la caja (Mostrador), las que apuntas a mano<span data-plans="base pro"> y las de la tienda online</span>.</td></tr>
+        <tr><td class="k">Clientes</td><td>Quienes te han comprado con su nombre y teléfono.</td></tr>
+        <tr data-plans="base pro"><td class="k">Entregas</td><td>A dónde entregas, cómo y cuánto cuesta.</td></tr>
+        <tr data-plans="base pro"><td class="k">Ofertas</td><td>Rebajas con el precio tachado en la tienda.</td></tr>
+        <tr data-plans="pro"><td class="k">Cupones</td><td>Códigos de descuento.</td></tr>
+        <tr data-plans="pro"><td class="k">Avisos WhatsApp</td><td>Avisos a ti y a tus clientes.</td></tr>
+        <tr><td class="k">Caja</td><td>Vender, ver el resumen y cerrar el día.</td></tr>
+        <tr><td class="k">Productos</td><td>Lo que vendes: precio, costo, cantidad<span data-plans="base pro">, fotos</span> y categorías.</td></tr>
+        <tr><td class="k">Importar Excel</td><td>Subir o actualizar muchos productos de una vez.</td></tr>
+        <tr data-plans="pro"><td class="k">Almacenes · Monedas</td><td>Stock por almacén; vender en USD y EUR con tu tasa.</td></tr>
+        <tr data-plans="pro"><td class="k">Apariencia · Dominio</td><td>Cómo se ve tu tienda y tu propio dominio.</td></tr>
+        <tr data-plans="base pro"><td class="k">App móvil</td><td>La app de tu tienda para tus clientes, y Kshop Admin para ti.</td></tr>
+        <tr><td class="k">Ventas de hoy</td><td>Lo vendido y cobrado hoy, de un vistazo.</td></tr>
+        <tr data-plans="pro"><td class="k">Finanzas</td><td>Ventas, costos, gastos y ganancia de cualquier periodo.</td></tr>
+        <tr><td class="k">Plan · Equipo</td><td>Tu plan y tu factura; quién trabaja contigo.</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="box" data-plans="caja base"><b>¿Ves opciones con candado</b> (<span class="pill">BASE</span> o <span class="pill">PRO</span>)? Son de otros planes. Si un día las quieres, escríbenos.</div>
+  <div class="box"><b>Arriba</b> tienes el buscador (pedidos, productos y clientes; en la computadora también con <b>Ctrl K</b>), el botón <span class="btn o">?</span> con la ayuda de esa pantalla<span data-plans="base pro">, «Ver tienda» para abrir tu tienda online</span> y un botón violeta con la acción más usada de la pantalla (por ejemplo <span class="btn">Nuevo pedido</span>).</div>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Inicio -->
+<section class="page">
+  <span class="tag">Lo primero que ves</span>
+  <h2>Inicio</h2>
+  <p class="lead">Un resumen del negocio. Arriba a la derecha eliges <b>Hoy</b>, <b>7 días</b> o <b>Mes</b>.</p>
+  <div class="crop"><img src="admin-home.png" alt="Inicio"></div>
+  <p class="cap">Inicio de la tienda de ejemplo.</p>
+  <table>
+    <tr><td class="k" style="width:32%">Vendido hoy</td><td>Lo que sumaron las ventas, comparado con ayer.</td></tr>
+    <tr><td class="k">Cobrado</td><td>El dinero que de verdad entró.</td></tr>
+    <tr><td class="k">Por cobrar</td><td>Pedidos abiertos que todavía no se han pagado.</td></tr>
+    <tr><td class="k">Ventas de la semana</td><td>Una barra por día para ver qué días se vende más.</td></tr>
+    <tr><td class="k">Por hacer</td><td>Avisos: pedidos por confirmar y <b>productos con poco stock</b> (tócalo para ver cuáles reponer).</td></tr>
+    <tr><td class="k">Últimos pedidos</td><td>Las ventas más recientes. «Ver todos» te lleva a Pedidos.</td></tr>
+  </table>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Vender -->
+<section class="page">
+  <span class="tag">Caja</span>
+  <h2>Vender en el mostrador</h2>
+  <p class="lead">En el menú toca <b>Caja</b>. Arriba hay tres pestañas: <span class="btn">Vender</span> <span class="btn o">Resumen</span> <span class="btn o">Cierres</span></p>
+  <div class="row">
+    <div style="flex:1">
+      <ol class="steps">
+        <li>En el buscador escribe el <b>nombre o el código</b> del producto.</li>
+        <li>Toca el producto: entra al ticket.</li>
+        <li>Cambia la cantidad con <b>−</b> y <b>+</b>, o toca el número y escríbelo. Con <b>−</b> hasta cero, el producto sale del ticket.</li>
+        <li>Abajo ves cuántos productos llevas y el total. Para cobrar, toca <span class="btn">Cobrar</span></li>
+      </ol>
+      <h3>Por libra, kilo o litro</h3>
+      <p>Si el producto se vende por peso, escribe lo que marca la pesa, con coma: <b>1,37</b>.</p>
+      <p>Si el cliente pide <b>«100 pesos de queso»</b>, toca el botón de la unidad (<b>lb</b>) junto a la cantidad y escribe <b>100</b>: la cantidad se calcula sola.</p>
+      <h3>A otro precio</h3>
+      <p>Toca el producto en el ticket y escribe el <b>«Precio de venta»</b> y, si quieres, el motivo. El dueño y el administrador tienen además <b>«Al costo»</b> y un aviso si queda por debajo del costo.</p>
+    </div>
+    <div>
+      <img class="shot" src="pos-sell-mobile.png" alt="Vender">
+      <p class="cap" style="margin-top:1.5mm;width:50mm">La caja de la tienda de ejemplo, en el teléfono.</p>
+    </div>
+  </div>
+  <div class="box"><b>Si te vas a «Resumen» o «Cierres»</b> en medio de una venta, el ticket te espera al volver a «Vender».</div>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Cobrar -->
+<section class="page">
+  <span class="tag">Caja</span>
+  <h2>Cobrar y dar el vuelto</h2>
+  <p class="lead">Después de tocar <span class="btn">Cobrar</span>:</p>
+  <ol class="steps">
+    <li>En <b>«Moneda que entrega»</b> elige con qué paga el cliente: CUP, USD o EUR.</li>
+    <li>En <b>«Cantidad que entrega»</b> escribe el dinero que te dio. Kshop te dice <b>el vuelto</b>.</li>
+    <li>Si paga en otra moneda, Kshop pone la <b>tasa</b>; la puedes cambiar ahí mismo.</li>
+    <li>¿Te da menos de lo que cuesta? Toca <span class="btn o">Añadir pago</span> y apunta el resto (por ejemplo, una parte en USD y otra en CUP).</li>
+    <li>En <b>«Método»</b> marca si fue <b>efectivo</b> o <b>transferencia</b>.</li>
+    <li>Toca <span class="btn">Confirmar venta</span></li>
+  </ol>
+  <div class="box"><b>¿Qué pasa al confirmar?</b> La venta queda como un pedido de <b>«Mostrador»</b>, ya entregado. El stock baja al momento y la venta aparece en Pedidos, en Ventas de hoy y en Caja › Resumen.</div>
+  <div class="box"><b>No hace falta</b> el nombre ni el teléfono del cliente para vender en la caja.</div>
+  <h3>Me equivoqué en una venta ya confirmada</h3>
+  <ol class="steps">
+    <li>Ve a <b>Pedidos</b> y toca el filtro <span class="btn o">Mostrador</span></li>
+    <li>Abre esa venta y toca <span class="btn">Cancelar</span>. Kshop te pide confirmarlo.</li>
+    <li>El stock vuelve. Haz la venta de nuevo, bien.</li>
+  </ol>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Resumen y cierres -->
+<section class="page">
+  <span class="tag">Caja</span>
+  <h2>Resumen y cierre del día</h2>
+  <h3 style="margin-top:2mm">Resumen</h3>
+  <p>En <b>Caja › Resumen</b> eliges <b>Hoy</b>, <b>7 días</b> o <b>30 días</b> y ves cuántas ventas hubo, el dinero <b>en caja</b> por moneda, las canceladas, las <b>tasas usadas</b> y las ventas <b>«Para revisar»</b> (por ejemplo, vendidas a otro precio). Las ventas de Kshop Admin también salen aquí, con la hora en que se vendieron.</p>
+  <h3>Cerrar el día</h3>
+  <p>Se cierra <b>una vez</b> al terminar el día y es de <b>todo el local</b>: entran las ventas de todos, desde la web y desde los teléfonos.</p>
+  <ol class="steps">
+    <li>En <b>Caja › Vender</b> toca <span class="btn o">⋯</span> (al lado del buscador) y luego <span class="btn">Cerrar el día</span></li>
+    <li>Kshop te dice <b>cuánto efectivo debe haber</b> (el fondo, más lo cobrado en efectivo, menos los vueltos) y cuánto vendió cada persona. Las transferencias salen aparte, para revisarlas en el banco.</li>
+    <li>Cuenta el dinero y escribe <b>lo contado</b> en cada moneda.</li>
+    <li>Verás si <b class="ok">cuadra</b>, si <b>sobra</b> o si <b class="bad">falta</b>. Pon una nota si hace falta y toca <span class="btn">Cerrar el día</span></li>
+  </ol>
+  <div class="box warn"><b>Un cierre no se puede cambiar.</b> Si alguien vende después de cerrar, esa venta va a un segundo cierre del mismo día. Las ventas de días que nadie cerró entran en el próximo cierre.</div>
+  <h3>Cierres</h3>
+  <p>En <b>Caja › Cierres</b> está cada cierre: lo esperado, lo <b>contado</b>, la diferencia y <b>«Ver sus ventas»</b> (en la página siguiente). <b>El dueño y el administrador</b> ven además el costo y la <b>ganancia</b> de cada cierre y «Ganancia por producto». Los productos vendidos sin costo van aparte: ponles el costo y, al volver al cierre, ya se cuentan.</p>
+  <div class="box"><b>Fondo de caja:</b> el dinero en cambio con el que abres. El dueño o el administrador lo pone una vez en <b>Cierres</b>. Si un día abres con otro fondo, cámbialo al cerrar.</div>
+  <div class="box" data-plans="pro"><b>Cierre por WhatsApp:</b> pon tu teléfono en <b>Avisos WhatsApp › Contactos</b> con «Recibe el cierre de caja de cada día» y te llegará el cuadre con la ganancia.</div>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Ventas de un cierre -->
+<section class="page">
+  <span class="tag">Caja</span>
+  <h2>Qué se vendió en un cierre</h2>
+  <ol class="steps">
+    <li>En <b>Caja › Cierres</b> pulsa <span class="btn o">Ver sus ventas</span> en el cierre. Salen todas sus ventas, la más nueva primero, cada una con la hora, quién vendió, el total, cómo se pagó y <b>sus productos</b>.</li>
+    <li>En <b>«Buscar producto»</b> escribe el nombre o el código, por ejemplo <b>aceite</b>. Quedan solo las ventas que lo llevan, con la línea marcada, y arriba cuántas ventas son y cuánto se vendió de cada producto. Las anuladas salen tachadas y no se suman.</li>
+    <li>Toca una venta para abrir el pedido. Al volver atrás sigues en la misma lista, con la misma búsqueda y en el mismo punto.</li>
+  </ol>
+  <h3>Un producto en todos los cierres</h3>
+  <p>En <b>Caja › Cierres</b> pulsa <b>«Buscar un producto en todos los cierres»</b>, escríbelo y elígelo. Salen sus ventas día por día, con el cierre de cada una o <b>«Sin cerrar»</b>. <b>«Ver días anteriores»</b> trae 30 días más, y <b>«Ver las ventas de ese cierre»</b> abre el cierre ya filtrado por ese producto.</p>
+  <div class="box"><b>Cierres antiguos:</b> al final de la lista, «Ver cierres anteriores» trae los de más de 30 días, tantas veces como haga falta.</div>
+  <div class="box"><b>Dueño y administrador:</b> en «Ganancia por producto», tocar un producto abre las ventas del cierre que lo llevan.</div>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Pedidos -->
+<section class="page">
+  <span class="tag">Ventas</span>
+  <h2>Pedidos</h2>
+  <p class="lead">Arriba hay cuatro pestañas: <b>Pedidos</b>, <b>Nuevo pedido</b>, <b>Clientes</b> y <b>Métodos de pago</b>.</p>
+  <div class="crop short"><img src="orders-list.png" alt="Pedidos"></div>
+  <h3>La lista</h3>
+  <p>Los filtros te dejan ver los pedidos por estado: <b>Pendientes</b>, Pagados, En preparación, Enviados, Entregados, Cancelados y <b>Mostrador</b> (las ventas de la caja). Busca por número, nombre o teléfono. Toca un pedido para ver sus productos, sus pagos, quién lo hizo y su historial.</p>
+  <h3>Nuevo pedido (encargos)</h3>
+  <p>Para lo que te piden por WhatsApp o por teléfono:</p>
+  <ol class="steps">
+    <li>Busca los productos y toca <span class="btn o">Añadir</span> en cada uno. Para otro precio, toca el importe y escribe el «Precio de venta».</li>
+    <li>Escribe el teléfono y el nombre del cliente.</li>
+    <li>Elige <span data-plans="base pro">la zona, el método de entrega y </span>el método de pago y, si quieres, un <b>«Descuento manual»</b> con su motivo.</li>
+    <li>Toca <span class="btn">Crear pedido</span>. Después lo llevas como cualquier pedido: <span class="btn o">Confirmar</span>, <span class="btn o">Registrar pago</span> y hasta <b>Entregado</b>.</li>
+  </ol>
+  <h3>Métodos de pago</h3>
+  <p>Toca <span class="btn">Nuevo método</span>, ponle nombre (efectivo, transferencia, Zelle…)<span data-plans="base pro"> y escribe las <b>«Instrucciones»</b> que verá el cliente al hacer el pedido: número de tarjeta, a quién transferir…</span><span data-plans="caja">. Son los que salen al cobrar y al registrar un pago.</span> Desmarca «Activo» para dejar de usarlo sin borrarlo.</p>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Pedidos online -->
+<section class="page" data-plans="base pro">
+  <span class="tag">Tienda online</span>
+  <h2>Me llegó un pedido</h2>
+  <p class="lead">Cada pedido de tu tienda entra en Pedidos como <b>«Por confirmar»</b>. El número junto a Pedidos en el menú dice cuántos hay; los de más de 48 h llevan la marca «Más de 48 h».</p>
+  <div class="crop mid"><img src="order-detail.png" alt="Detalle de un pedido"></div>
+  <ol class="steps">
+    <li>Abre el pedido y pulsa <span class="btn o">WhatsApp al cliente</span> para hablar con él sin copiar su número.</li>
+    <li>Con todo hablado, pulsa <span class="btn">Confirmar</span>. Si la entrega era «a convenir», Kshop te pide antes el precio del envío.</li>
+    <li>Cuando te paguen, pulsa <span class="btn o">Registrar pago</span> (moneda, método y, si quieres, el comprobante) o «Marcar pagado».</li>
+    <li>Después <b>«Preparar»</b>, <b>«Enviar»</b> y <b>«Entregado»</b>, según avance.</li>
+  </ol>
+  <div class="box"><b>«Nota interna»</b> es para lo que el cliente no debe ver (por ejemplo, quién lo lleva). <b>«Cancelar»</b> devuelve el stock; un pedido enviado o entregado ya no se cancela.</div>
+  <h3>Clientes</h3>
+  <p>En <b>Clientes</b> están quienes tienen cuenta en tu tienda (los que compran sin cuenta salen en sus pedidos). Si alguien olvidó su contraseña, <b>«Código de recuperación»</b> te da un código para mandárselo por WhatsApp. Si alguien hace pedidos falsos, <b>«Bloquear»</b>.</p>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Productos -->
+<section class="page">
+  <span class="tag">Catálogo</span>
+  <h2>Productos</h2>
+  <p class="lead">En <b>Productos</b> está todo lo que vendes. Arriba hay pestañas como <b>Categorías</b><span data-plans="base pro">, <b>Marcas</b>, <b>Colecciones</b></span> y <b>Tipos de producto</b>.</p>
+  <h3>Crear un producto</h3>
+  <ol class="steps">
+    <li>Toca <span class="btn">Nuevo producto</span> y elige el tipo (por ejemplo <b>«General»</b>, sin variantes, o «Ropa» con talla y color).</li>
+    <li>Escribe el <b>nombre</b>. La categoría y la descripción son opcionales. El <b>SKU</b> (código) se crea solo si lo dejas vacío.</li>
+    <li>En <b>«Se vende por»</b> elige <b>Unidad</b>, o <b>Libra</b>, <b>Kilogramo</b>, <b>Litro</b>… El precio pasa a ser por esa unidad.</li>
+    <li>Pon el <b>precio</b>, el <b>costo</b> (solo lo ve tu equipo, nunca el cliente) y la <b>cantidad</b> (stock). Con variantes, «Generar variantes» y una fila por cada una.</li>
+    <li>Toca <span class="btn">Guardar</span>: vuelves a la lista. <b>Las fotos</b> se suben abriendo el producto otra vez<span data-plans="base pro">; la primera es la que se ve en la tienda</span>.</li>
+  </ol>
+  <div class="box"><b>«Calcular»</b>, al lado del costo, abre la calculadora: le dices lo que te costó el paquete y cuántas unidades trae, y te propone el precio con el margen que quieras.</div>
+  <h3>Estados</h3>
+  <table>
+    <tr><td class="k" style="width:28%">Publicado</td><td>Se vende<span data-plans="base pro"> y sale en la tienda online</span>. Es como empieza un producto nuevo.</td></tr>
+    <tr><td class="k">Borrador</td><td>Para terminarlo después.</td></tr>
+    <tr><td class="k">Archivado</td><td>Ya no lo vendes, pero no se pierde: los pedidos viejos lo conservan.</td></tr>
+  </table>
+  <div class="box"><b>Costos en la lista</b> (dueño y administrador): la columna <b>«Costo»</b> enseña el costo y el margen de cada producto, y se cambia ahí mismo (con variantes, «Editar»). El filtro <b>«Sin costo»</b> deja los que no lo tienen: sin costo, su ganancia no se cuenta.</div>
+  <div class="box" data-plans="base pro"><b>Ordena tu catálogo:</b> las <b>categorías</b> (hasta 3 niveles) y las <b>marcas</b> con foto o logo salen en la portada de tu tienda; una <b>colección</b> junta productos de distintas categorías (Novedades, Verano…) y puede llenarse sola con sus reglas.</div>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Excel -->
+<section class="page">
+  <span class="tag">Catálogo · dueño y administrador</span>
+  <h2>Importar Excel</h2>
+  <p class="lead">Para subir muchos productos de una vez, o cambiar muchos precios y cantidades.</p>
+  <div class="crop"><img src="excel-import.png" alt="Importar Excel"></div>
+  <ol class="steps">
+    <li>Elige el <b>tipo de producto</b> y toca <span class="btn o">Descargar plantilla</span>. Para cambiar lo que ya tienes, mejor <span class="btn o">Exportar productos</span>: te baja tu catálogo en Excel.</li>
+    <li>Rellénalo en Excel o en Google Sheets y guárdalo como <b>.xlsx</b>. Una fila por producto (o por variante): nombre, categoría, unidad, precio, costo, stock<span data-plans="base pro">, enlaces de las fotos</span>…</li>
+    <li>Súbelo y elige qué hacer con los que ya existen: <b>dejarlos como están</b> o <b>actualizarlos con los datos del Excel</b>. Toca <span class="btn">Revisar archivo</span></li>
+    <li>Mira la <b>vista previa</b>. Las filas con error no se suben: corrígelas y vuelve a subir el archivo. Si todo está bien, confirma.</li>
+  </ol>
+  <div class="box"><b>Deja marcada</b> «Crear las categorías… que falten» para no tener que crearlas antes.</div>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Tienda online + entregas -->
+<section class="page" data-plans="base pro">
+  <span class="tag">Tienda online</span>
+  <h2>Tu tienda online</h2>
+  <p class="lead">Tus clientes ven tus productos publicados en <b>tu dirección de Kshop</b> (por ejemplo <b>minegocio.kshop.fullkod.com</b>)<span data-plans="pro"> o en tu dominio propio</span>, eligen, y te mandan el pedido. Llega a <b>Pedidos</b><span data-plans="pro"> y te avisa por WhatsApp</span>.</p>
+  <ol class="steps">
+    <li>Pulsa <span class="btn o">Ver tienda</span> arriba para verla como un cliente.</li>
+    <li>Copia la dirección y pásala por WhatsApp, en tus estados, en tus grupos o impresa.</li>
+    <li>Revisa que tus productos tengan <b>foto, precio y stock</b>: los «Publicados» salen en la tienda.</li>
+  </ol>
+  <h3>Entregas</h3>
+  <p>Las <b>zonas</b> dicen a dónde entregas; los <b>métodos de entrega</b>, cómo y cuánto cuesta.</p>
+  <ol class="steps">
+    <li>En <b>Entregas › Zonas</b> pulsa «Nueva zona» por cada municipio o área donde entregas.</li>
+    <li>En <b>Métodos de entrega</b> pulsa «Nuevo método»: el tipo (mensajería con precio, recogida o «a convenir»), la zona, el precio y los días.</li>
+    <li>Para que recojan en tu local, marca un almacén como <b>«Punto de recogida para clientes»</b> (Productos › Almacenes) y crea un método de recogida con ese punto.</li>
+  </ol>
+  <div class="box"><b>Métodos de pago:</b> en Pedidos › Métodos de pago escribe las <b>instrucciones</b> que verá el cliente (tarjeta, a quién transferir, cuándo se paga) y en qué monedas acepta cada uno.</div>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Ofertas + app -->
+<section class="page" data-plans="base pro">
+  <span class="tag">Vender más</span>
+  <h2>Ofertas y la app de tu tienda</h2>
+  <h3 style="margin-top:2mm">Ofertas</h3>
+  <p>Una oferta baja el precio sola, sin código: el cliente ve el <b>precio tachado</b> mientras dure.</p>
+  <div class="crop short"><img src="discounts.png" alt="Ofertas"></div>
+  <ol class="steps">
+    <li>En <b>Ofertas</b> pulsa <span class="btn">Nueva promoción</span></li>
+    <li>Escribe el nombre (lo ve el cliente) y elige a qué se aplica: una categoría, una colección, una marca o productos sueltos.</li>
+    <li>Elige porcentaje o cantidad fija, el valor, y cuándo <b>empieza</b> y <b>termina</b>. Pulsa «Guardar».</li>
+  </ol>
+  <div class="box"><b>Para pausarla</b> sin borrarla, desmarca «Activa». Si a un producto le tocan varias, se aplica la que deja el precio más bajo.</div>
+  <h3>La app de tu tienda</h3>
+  <ol class="steps">
+    <li>En <b>App móvil</b> pulsa <span class="btn">Pedir mi app</span>. La preparamos con tu nombre y tu logo; mientras tanto la verás como «Pedida».</li>
+    <li>Cuando esté <b>«Publicada»</b>, comparte la página de descarga por WhatsApp, en tus redes o impresa con el <b>código QR</b>. Los clientes con Android también ven un aviso en tu tienda para descargarla.</li>
+  </ol>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Pro: cupones + WhatsApp -->
+<section class="page" data-plans="pro">
+  <span class="tag">Plan Pro</span>
+  <h2>Cupones y Avisos WhatsApp</h2>
+  <h3 style="margin-top:2mm">Cupones</h3>
+  <p>Un cupón es un <b>código</b> que el cliente escribe en el carrito para llevarse un descuento.</p>
+  <ol class="steps">
+    <li>En <b>Cupones</b> pulsa <span class="btn">Nuevo cupón</span></li>
+    <li>Escribe el código (por ejemplo <b>BIENVENIDA10</b>) y el nombre, y elige de qué se descuenta y cuánto. Para envío gratis: 100 % sobre el envío.</li>
+    <li>Si quieres, limita productos, un mínimo de productos y los usos (en total y por cliente). Pulsa «Guardar» y comparte el código.</li>
+  </ol>
+  <h3>Avisos WhatsApp</h3>
+  <p>Kshop manda avisos desde su número: <b>a ti</b>, cuando entra un pedido o un pago, y <b>al cliente</b>, cuando su pedido cambia de estado.</p>
+  <div class="crop short"><img src="whatsapp-templates.png" alt="Avisos WhatsApp"></div>
+  <ol class="steps">
+    <li>En <b>Contactos</b> pulsa «Nuevo contacto» y añade los teléfonos que deben recibir los pedidos. Marca «Recibe el cierre de caja de cada día» en el del dueño.</li>
+    <li>En <b>Mensajes</b> pulsa «Editar» en un aviso para cambiar su texto o desactivarlo; «Volver al texto de Kshop» deshace tus cambios.</li>
+    <li>En <b>Historial</b> ves cada aviso enviado. Si uno falló: «Reintentar» o «Abrir en WhatsApp».</li>
+  </ol>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Pro: apariencia + dominio -->
+<section class="page" data-plans="pro">
+  <span class="tag">Plan Pro</span>
+  <h2>Apariencia y Dominio propio</h2>
+  <h3 style="margin-top:2mm">Apariencia</h3>
+  <div class="crop short"><img src="themes-home.png" alt="Apariencia"></div>
+  <table>
+    <tr><td class="k" style="width:22%">Tema</td><td>Los colores y el estilo de tu tienda.</td></tr>
+    <tr><td class="k">Portada</td><td>Elige el «Tipo» (carrusel, categorías, productos, beneficios, oferta con cuenta atrás…) y pulsa «Añadir sección». Ordénalas con las flechas y «Editar» para su contenido.</td></tr>
+    <tr><td class="k">Banners</td><td>Las imágenes grandes de arriba.</td></tr>
+    <tr><td class="k">Menús</td><td>Los enlaces de arriba y las columnas del pie («Añadir columna o enlace»).</td></tr>
+    <tr><td class="k">Páginas</td><td>Textos fijos: quiénes somos, envíos, devoluciones, preguntas frecuentes. Con barra de formato y vista previa.</td></tr>
+  </table>
+  <div class="box"><b>Si Apariencia lleva la marca «Admin»</b>, la configuramos nosotros: pídenos los cambios por WhatsApp.</div>
+  <h3>Dominio propio</h3>
+  <ol class="steps">
+    <li>Compra el dominio donde prefieras (por ejemplo <b>mitienda.com</b>). En <b>Dominio propio</b> escríbelo sin «www» y pulsa «Conectar dominio».</li>
+    <li>Kshop te muestra unos registros (Tipo, Nombre, Valor): cópialos en la configuración DNS de donde compraste el dominio.</li>
+    <li>Pulsa «Comprobar». Puede tardar unas horas; cuando esté, pasa a «Activo».</li>
+  </ol>
+  <div class="box"><b>El panel sigue en tu dirección de Kshop</b>; el dominio propio es para tus clientes.</div>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Pro: finanzas, almacenes, monedas -->
+<section class="page" data-plans="pro">
+  <span class="tag">Plan Pro</span>
+  <h2>Finanzas, Almacenes y Monedas</h2>
+  <h3 style="margin-top:2mm">Finanzas</h3>
+  <div class="crop short"><img src="finance.png" alt="Finanzas"></div>
+  <table>
+    <tr><td class="k" style="width:22%">Resumen</td><td>Elige el periodo: lo vendido, lo cobrado, lo pendiente, el margen bruto, los gastos y la <b>ganancia neta</b>, y el cierre de cada día.</td></tr>
+    <tr><td class="k">Gastos</td><td>«Añadir gasto» para lo que pagas (alquiler, transporte…): se resta de la ganancia.</td></tr>
+    <tr><td class="k">Margen</td><td>Cuánto dejó cada producto o categoría.</td></tr>
+    <tr><td class="k">Desglose</td><td>Ventas por método de pago, zona, canal y moneda.</td></tr>
+    <tr><td class="k">Inventario</td><td>Unidades y su valor a costo y a precio de venta; lo agotado y lo que tiene pocas unidades.</td></tr>
+  </table>
+  <p style="margin-top:2mm">«Ver todo en» pasa las cifras a otra moneda; «Exportar a Excel» descarga el periodo.</p>
+  <h3>Almacenes</h3>
+  <p>Crea cada almacén en Productos › <b>Almacenes</b>. En el módulo <b>Almacenes</b>: «Resumen» (unidades por almacén), <b>«Traspasar»</b> mercancía de uno a otro y <b>«Movimientos»</b> (cada entrada y salida).</p>
+  <h3>Monedas</h3>
+  <p>Activa «Vender en …» en cada moneda y pon su <b>tasa</b>; «Actualizar tasa» cuando cambie (o «Usar esta tasa» si Kshop te sugiere la del día). Los precios se calculan solos; si quieres uno fijo, ponlo en «Precios en otras monedas» del producto. El «Historial de tasas» guarda cada cambio.</p>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Ventas de hoy, equipo, plan -->
+<section class="page">
+  <span class="tag">Negocio</span>
+  <h2>Ventas de hoy, Equipo y Plan</h2>
+  <h3>Ventas de hoy</h3>
+  <p>Lo del día de un vistazo: cuántos <b>pedidos</b>, cuánto se <b>vendió</b> y cuánto se <b>cobró</b>, por moneda.</p>
+  <h3>Equipo (dueño y administrador)</h3>
+  <ol class="steps">
+    <li>Toca <span class="btn">Invitar persona</span>, escribe su correo y elige el rol: <b>Empleado</b> o <b>Administrador</b>.</li>
+    <li>Kshop te da un enlace: mándaselo por WhatsApp con el botón que aparece. Con él crea su contraseña y entra.</li>
+    <li>Para quitar a alguien, toca <b>«Quitar»</b> en su fila. Sus ventas se quedan como estaban.</li>
+  </ol>
+  <p>El plan {{PLAN}} incluye <b>{{EQUIPO}} personas</b> además del dueño y <b>{{PRODUCTOS}}</b>.</p>
+  <h3>Plan y facturación (dueño y administrador)</h3>
+  <p>Tu plan, lo que usas de él (productos y personas), la próxima factura y <b>cómo pagarla</b>. El botón <b>«Escribir a Kshop por WhatsApp»</b> sirve para avisar de que pagaste o para preguntar. <span data-plans="caja base">Si quieres algo de otro plan, pulsa «Solicitar»: se abre WhatsApp con el mensaje ya escrito.</span> Kshop cobra a mano: no hace falta tarjeta. La <b>primera factura</b> de una tienda nueva incluye la <b>puesta en marcha</b> (crear la tienda y cargar los datos), una sola vez.</p>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Roles -->
+<section class="page">
+  <span class="tag">Permisos</span>
+  <h2>Quién puede hacer qué</h2>
+  <p class="lead">Hay tres roles. El dueño es quien abrió el negocio en Kshop.</p>
+  <table>
+    <tr><th></th><th class="c">Dueño</th><th class="c">Administrador</th><th class="c">Empleado</th></tr>
+    <tr><td>Vender en la caja y cerrar el día</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Ver, crear y cancelar pedidos</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Vender a otro precio</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>«Al costo» y aviso de venta bajo el costo</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">—</td></tr>
+    <tr><td>Crear y cambiar productos<span data-plans="base pro"> y sus fotos</span></td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Ver y cambiar costos, ganancia de los cierres y fondo de caja</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">—</td></tr>
+    <tr><td>Importar Excel</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">—</td></tr>
+    <tr data-plans="base pro"><td>Entregas, métodos de pago y ofertas<span data-plans="pro">, cupones, avisos, apariencia, monedas y dominio</span></td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">—</td></tr>
+    <tr data-plans="pro"><td>Finanzas</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">—</td></tr>
+    <tr><td>Equipo y Plan y facturación</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">—</td></tr>
+    <tr><td>Nombrar administradores</td><td class="c ok">✓</td><td class="c no">—</td><td class="c no">—</td></tr>
+  </table>
+  <div class="box"><b>Consejo:</b> da el rol de <b>Administrador</b> solo a quien lleve las cuentas contigo. Para quien solo vende, <b>Empleado</b>.</div>
+  <span class="foot">Kshop · Manual del plan {{PLAN}}</span><span class="num"></span>
+</section>
+
+<!-- Reglas de oro -->
+<section class="page">
+  <span class="tag">Para no fallar</span>
+  <h2>Reglas de oro</h2>
+  <ol class="steps" style="margin-top:5mm">
+    <li><b>Todo lo que sale del local, se vende en la caja.</b> Si no, el stock y el cierre no cuadran.</li>
+    <li><b>Cada uno con su usuario.</b> Así se sabe quién vendió qué.</li>
+    <li><b>Cierra el día todos los días</b>, contando el dinero de verdad.</li>
+    <li><b>Ponle el costo a cada producto</b> para saber cuánto ganas.</li>
+    <li><b>Cuando cambie un precio, cámbialo en Kshop</b> ese mismo día.</li>
+    <li data-plans="base pro"><b>Contesta los pedidos online el mismo día</b> y mantén al día el stock: lo que se agota no se puede pedir.</li>
+    <li><b>¿Se fue internet?</b> Sigue vendiendo con Kshop Admin en el Android; la web necesita conexión.</li>
+  </ol>
+  <div class="box" style="margin-top:8mm;font-size:11.5pt">
+    <b>¿Dudas?</b><br>
+    • En cada pantalla, el botón <span class="btn o">?</span> abre la ayuda de esa pantalla. En el menú, <b>Ayuda</b> tiene todas las guías y «Tu primer día».<br>
+    • O escríbenos por WhatsApp: <b>+1 575 263 9686</b>. Te ayudamos.
+  </div>
+  <div style="position:absolute;bottom:16mm;left:16mm;display:flex;align-items:center;gap:3mm;color:var(--gris);font-size:10pt">
+    <img src="kshop-symbol.svg" alt="" style="height:8mm"> Kshop · Un producto de Fullkod
+  </div>
+  <span class="num"></span>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!doctype html>
+<!--
+  Fuente de la guía de Kshop Admin (A5). Un elemento con data-plans="…" solo sale en esos planes
+  (caja, base, pro); sin data-plans sale en todos. {{PLAN}}, {{EQUIPO}} y {{PRODUCTOS}} los pone build.cjs.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Kshop Admin · Guía del plan {{PLAN}}</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+<style>@page { size: A5; margin: 0; }</style>
+</head>
+<body class="a5">
+
+<!-- Portada -->
+<section class="page cover">
+  <img src="kshop-horizontal-reversed.svg" alt="Kshop" style="height:11mm;align-self:flex-start">
+  <div>
+    <span class="plan-chip">PLAN {{PLAN}}</span>
+    <h1 style="margin-top:4mm" data-plans="caja">Tu caja,<br><span class="gold">fácil.</span></h1>
+    <h1 style="margin-top:4mm" data-plans="base pro">Tu negocio<br>en el <span class="gold">bolsillo.</span></h1>
+    <p class="sub">Guía rápida de Kshop Admin, la app del teléfono, para el dueño y para los que venden.</p>
+  </div>
+  <div>
+    <p style="font-family:Outfit;font-weight:700;color:#fff;margin-bottom:2mm">Aquí aprendes a:</p>
+    <ul style="padding-left:5mm">
+      <li>Entrar a la app</li>
+      <li>Vender, cobrar y dar el vuelto</li>
+      <li>Vender por libra o por kilo</li>
+      <li>Vender sin internet y cerrar la caja</li>
+      <li>Revisar un cierre y buscar un producto</li>
+      <li data-plans="base pro">Atender los pedidos de tu tienda online</li>
+      <li>Cambiar precios, cantidades y fotos</li>
+    </ul>
+  </div>
+  <span class="num"></span>
+</section>
+
+<!-- Entrar -->
+<section class="page">
+  <span class="tag">Antes de empezar</span>
+  <h2>Entra a la app</h2>
+  <ol class="steps">
+    <li data-plans="caja">Te mandamos por WhatsApp el enlace de <b>Kshop Admin</b>. Ábrelo en tu teléfono Android e instálala.</li>
+    <li data-plans="base pro">Descarga <b>Kshop Admin</b>: en el panel web, <b>App móvil</b> › <span class="btn o">Descargar Kshop Admin</span>, o con el enlace que te mandamos por WhatsApp.</li>
+    <li>Si Android dice que no deja instalar apps de ese sitio, toca <b>Permitir</b> (o «Configuración» y activa el permiso) y vuelve atrás.</li>
+    <li>Abre Kshop Admin y entra con <b>tu correo y tu contraseña</b>. Cada persona tiene la suya: no se comparte.</li>
+  </ol>
+  <h3>Las pestañas de abajo</h3>
+  <div class="tabs"><span>Inicio</span><span>Caja</span><span>Pedidos</span><span>Productos</span><span>Más</span></div>
+  <table>
+    <tr><td class="k">Inicio</td><td>Lo cobrado, lo que falta por cobrar y los avisos: pedidos por confirmar<span data-plans="base pro"> o por entregar</span> y productos con poco stock.</td></tr>
+    <tr><td class="k">Caja</td><td>Para vender en el mostrador.</td></tr>
+    <tr><td class="k">Pedidos</td><td>Todas las ventas<span data-plans="base pro"> y los pedidos de la tienda online</span>.</td></tr>
+    <tr><td class="k">Productos</td><td>Precios, cantidades y fotos.</td></tr>
+    <tr><td class="k">Más</td><td>Ventas de hoy, ayuda, tema claro u oscuro, cerrar sesión y el resto del panel.</td></tr>
+  </table>
+  <div class="box warn"><b>Cuando salga una versión nueva</b>, la app lo avisa arriba. Toca <span class="btn">Actualizar</span> y luego <b>Instalar</b>. No pierdes nada.</div>
+  <span class="num"></span>
+</section>
+
+<!-- Vender -->
+<section class="page">
+  <span class="tag">Lo de todos los días</span>
+  <h2>Vender</h2>
+  <div class="row">
+    <ol class="steps" style="flex:1">
+      <li>Abajo toca <b>Caja</b> y escribe el nombre o el código del producto en el buscador.</li>
+      <li>Toca el producto: entra al ticket.</li>
+      <li>¿Lleva más de uno? Usa <b>−</b> y <b>+</b>, o toca el número y escríbelo.</li>
+      <li>Con <b>−</b> hasta cero, el producto sale del ticket.</li>
+      <li>Cuando esté todo, toca <span class="btn">Cobrar</span></li>
+    </ol>
+    <img class="shot" src="pos-sell-mobile.png" alt="Pantalla de la caja">
+  </div>
+  <div class="box"><b>Abajo siempre ves</b> cuántos productos llevas y el total a cobrar.</div>
+  <div class="box"><b>¿A otro precio?</b> Toca el producto en el ticket y escribe el «Precio de venta». Si quieres, pon el motivo (por ejemplo, «cliente fijo»).</div>
+  <span class="num"></span>
+</section>
+
+<!-- Cobrar -->
+<section class="page">
+  <span class="tag">Lo de todos los días</span>
+  <h2>Cobrar y dar el vuelto</h2>
+  <ol class="steps">
+    <li>En <b>«Moneda que entrega»</b> elige con qué te paga el cliente: CUP, USD o EUR.</li>
+    <li>En <b>«Cantidad que entrega»</b> escribe el dinero que te dio. La app te dice <b>el vuelto</b>.</li>
+    <li>En <b>«Método»</b> marca si fue <b>efectivo</b> o <b>transferencia</b>.</li>
+    <li>Toca <span class="btn">Confirmar venta</span>. ¡Listo! El producto se descuenta solo.</li>
+  </ol>
+  <div class="box"><b>¿Paga una parte en USD y otra en CUP?</b> Escribe lo primero y toca <span class="btn o">Añadir pago</span> para lo que falta.</div>
+  <div class="box"><b>¿Paga en otra moneda?</b> La app pone la tasa. Si hoy cambias a otra, la puedes cambiar ahí mismo.</div>
+  <div class="box"><b>No hace falta</b> el nombre ni el teléfono del cliente para vender en la caja.</div>
+  <span class="num"></span>
+</section>
+
+<!-- Por peso -->
+<section class="page">
+  <span class="tag">Arroz, azúcar, jamón, queso…</span>
+  <h2>Vender por libra o por kilo</h2>
+  <p>Hay productos que se venden por peso. Su precio es <b>por libra</b> (o por kilo, litro…) y la cantidad puede llevar coma.</p>
+  <div class="box">
+    <b>Caso 1:</b> pesas el jamón y la pesa marca <span class="ex">1,37</span><br>
+    Toca el producto y escribe <b>1,37</b> en la cantidad. La app calcula el precio.
+  </div>
+  <div class="box">
+    <b>Caso 2:</b> el cliente dice <span class="ex">«dame 100 pesos de queso»</span><br>
+    Toca el producto, toca el botón de la unidad (<b>lb</b>) que está junto a la cantidad y escribe <b>100</b>. La app te dice cuánto pesar.
+  </div>
+  <div class="box warn"><b>Ojo:</b> los productos que se venden por unidad (un refresco, un paquete) no llevan coma.</div>
+  <span class="num"></span>
+</section>
+
+<!-- Me equivoqué -->
+<section class="page">
+  <span class="tag">Pasa, no te preocupes</span>
+  <h2>Me equivoqué</h2>
+  <h3>Antes de cobrar</h3>
+  <p>Baja la cantidad con <b>−</b> hasta quitar el producto del ticket.</p>
+  <h3>Ya confirmé la venta y estaba mal</h3>
+  <ol class="steps">
+    <li>En la Caja toca <span class="btn o">⋯</span> (al lado del buscador): ahí están las ventas de hoy de ese teléfono. Toca la venta para abrirla. También la encuentras en <b>Pedidos</b>.</li>
+    <li>Toca <span class="btn">Cancelar</span>. La app te pregunta si estás seguro.</li>
+    <li>Los productos vuelven al inventario. Después haz la venta bien.</li>
+  </ol>
+  <div class="box"><b>El dueño ve</b> las ventas canceladas, quién vendió y a qué precio.</div>
+  <span class="num"></span>
+</section>
+
+<!-- Sin internet -->
+<section class="page">
+  <span class="tag">Se fue la conexión</span>
+  <h2>Vender sin internet</h2>
+  <p style="font-size:13.5pt"><b>Sigue vendiendo como siempre.</b> Kshop Admin guarda las ventas en el teléfono y las sube sola cuando vuelve la conexión.</p>
+  <div class="box">
+    <b>El numerito</b> que sale sobre el botón <span class="btn o">⋯</span> dice cuántas ventas faltan por subir. Ese botón también dice de cuándo es el catálogo del teléfono y lo actualiza.
+  </div>
+  <div class="box warn">
+    <b>Muy importante:</b> mientras haya ventas sin subir, <b>no desinstales la app, no borres sus datos y no cierres sesión</b>. Si cierras sesión, la app te avisa: las ventas se quedan en el teléfono, pero no suben hasta que alguien de la tienda vuelva a entrar.
+  </div>
+  <div class="box"><b>Si cambiaste precios</b> en el panel, en la Caja toca <span class="btn o">⋯</span> y actualiza el catálogo para que el teléfono los tenga.</div>
+  <span class="num"></span>
+</section>
+
+<!-- Cerrar la caja -->
+<section class="page">
+  <span class="tag">Al final del día</span>
+  <h2>Cerrar la caja</h2>
+  <p>La caja se cierra <b>una sola vez</b> por día, desde cualquier teléfono. Junta lo vendido por todos.</p>
+  <ol class="steps">
+    <li>En la Caja toca <span class="btn o">⋯</span> y luego <span class="btn">Cerrar el día</span>. Si hay ventas sin subir, se suben primero (hace falta internet).</li>
+    <li>La app te dice <b>cuánto efectivo debe haber</b>: el fondo, más lo cobrado, menos los vueltos.</li>
+    <li>Cuenta el dinero y escribe <b>lo contado</b> en cada moneda.</li>
+    <li>La app te dice si <span class="ok">cuadra</span>, si <b>sobra</b> o si <span class="bad">falta</span>. Pon una nota si hace falta y toca <span class="btn">Cerrar el día</span></li>
+  </ol>
+  <div class="box warn"><b>Un cierre no se puede cambiar.</b> Si se vende algo después de cerrar, esa venta va a un segundo cierre del mismo día.</div>
+  <div class="box" data-plans="pro"><b>Al dueño le llega el cuadre por WhatsApp</b>, con la ganancia del día, si su teléfono está en Avisos WhatsApp con «Recibe el cierre de caja de cada día».</div>
+  <span class="num"></span>
+</section>
+
+<!-- Revisar un cierre -->
+<section class="page">
+  <span class="tag">Al final del día</span>
+  <h2>Revisar un cierre</h2>
+  <p>En la Caja toca <span class="btn o">⋯</span> › <b>«Ver los cierres»</b>. Cada cierre dice lo que debía haber, lo contado y la diferencia.</p>
+  <ol class="steps">
+    <li>En el cierre toca <span class="btn o">Ver sus ventas</span>: salen todas, con la hora, quién vendió, el total y <b>sus productos</b>.</li>
+    <li>En <b>«Buscar producto»</b> escribe, por ejemplo, <b>aceite</b>. Quedan solo las ventas que lo llevan, y arriba cuántas son y cuánto se vendió. Las anuladas salen tachadas y no se suman.</li>
+    <li>Toca una venta para abrirla. Con el botón <b>atrás</b> del teléfono vuelves a la misma lista, con la misma búsqueda.</li>
+  </ol>
+  <div class="box"><b>¿Qué días se vendió un producto?</b> En los cierres toca «Buscar un producto en todos los cierres» y elígelo: salen sus ventas día por día, también las que aún no se han cerrado.</div>
+  <div class="box">Al final de la lista, <b>«Ver cierres anteriores»</b> trae los de más de 30 días.</div>
+  <span class="num"></span>
+</section>
+
+<!-- Pedidos online -->
+<section class="page" data-plans="base pro">
+  <span class="tag">Tienda online</span>
+  <h2>Me llegó un pedido</h2>
+  <p>Los pedidos de tu tienda online entran en <b>Pedidos</b> como «Por confirmar». El número sobre la pestaña dice cuántos hay<span data-plans="pro">, y te llega un aviso por WhatsApp</span>.</p>
+  <ol class="steps">
+    <li>Abre el pedido y toca <span class="btn o">WhatsApp al cliente</span> para hablar con él sin copiar su número.</li>
+    <li>Con todo hablado, toca <span class="btn">Confirmar</span>. Si la entrega era «a convenir», la app te pide antes el precio del envío.</li>
+    <li>Cuando te paguen, toca <span class="btn o">Registrar pago</span> (moneda, método y, si quieres, la foto del comprobante) o <b>«Marcar pagado»</b>.</li>
+    <li>Después <b>«Preparar»</b>, <b>«Enviar»</b> y <b>«Entregado»</b>, según avance.</li>
+  </ol>
+  <div class="box"><b>¿El cliente se arrepiente?</b> «Cancelar» devuelve el stock. Un pedido ya enviado o entregado no se puede cancelar.</div>
+  <div class="box"><b>Para apuntar un pedido</b> que te hacen por WhatsApp o teléfono, toca el <b>+</b> en Pedidos: se abre «Nuevo pedido» en el panel web.</div>
+  <span class="num"></span>
+</section>
+
+<!-- Productos -->
+<section class="page">
+  <span class="tag">Tu inventario</span>
+  <h2>Productos en el teléfono</h2>
+  <h3>Cambiar un precio o la cantidad</h3>
+  <p>Abajo toca <b>Productos</b>, busca el producto, ábrelo, cámbialo y toca <span class="btn">Guardar</span></p>
+  <h3>Un producto nuevo</h3>
+  <ol class="steps">
+    <li>Toca <span class="btn">Nuevo producto</span> y elige el tipo.</li>
+    <li>Escribe el nombre, el <b>precio</b>, el <b>costo</b> y la <b>cantidad</b>. En <b>«Se vende por»</b> elige Unidad, Libra, Kilogramo…</li>
+    <li>Toca <span class="btn">Guardar</span></li>
+  </ol>
+  <h3>Las fotos</h3>
+  <p>Abre el producto ya guardado: en <b>«Imágenes»</b> toca <b>«Tomar foto»</b> o sube una de la galería. <span data-plans="base pro">La primera es la que se ve en tu tienda online.</span></p>
+  <div class="box"><b>«Calcular»</b>, al lado del costo, te ayuda con el precio: le dices lo que te costó el paquete y cuántas unidades trae, y te propone el precio con el margen que quieras.</div>
+  <span class="num"></span>
+</section>
+
+<!-- Dueño -->
+<section class="page">
+  <span class="tag">Solo para el dueño</span>
+  <h2>Lo que ves tú</h2>
+  <table>
+    <tr><td class="k">¿Cuánto vendí hoy?</td><td><b>Inicio</b>, o <b>Más</b> › «Ventas de hoy y de la semana».</td></tr>
+    <tr><td class="k">¿Cuánto gané?</td><td>En la Caja, <span class="btn o">⋯</span> › <b>«Ver los cierres»</b>: cada cierre trae lo vendido, el costo y la ganancia.</td></tr>
+    <tr data-plans="pro"><td class="k">Finanzas del mes</td><td><b>Más</b> › Ventas de hoy › <b>Finanzas</b>: ventas, costos, gastos y ganancia de cualquier periodo.</td></tr>
+    <tr><td class="k">Fondo de caja</td><td>En los cierres, «Fondo de caja».</td></tr>
+    <tr><td class="k">Costos</td><td>En <b>Productos</b>, la columna «Costo»: se cambia ahí mismo. El filtro <b>«Sin costo»</b> te dice a cuáles les falta.</td></tr>
+    <tr><td class="k">Un empleado nuevo</td><td><b>Más</b> › Equipo › Invitar persona.</td></tr>
+    <tr data-plans="base pro"><td class="k">Entregas, ofertas<span data-plans="pro">, cupones</span>…</td><td>En <b>Más</b>: se abren en el panel web.</td></tr>
+  </table>
+  <div class="box"><b>Lo que lleva el icono ↗ o un candado</b> en «Más» se abre en el navegador, en el panel web. El candado (<span class="pill">BASE</span> o <span class="pill">PRO</span>) es de otro plan.</div>
+  <span class="num"></span>
+</section>
+
+<!-- Reglas de oro -->
+<section class="page">
+  <span class="tag">Para no fallar</span>
+  <h2>Reglas de oro</h2>
+  <ul class="gold-list">
+    <li><b>Todo lo que sale, se vende en la caja.</b> Si no, el inventario y el cierre no cuadran.</li>
+    <li><b>Cada uno con su usuario.</b> Así se sabe quién vendió qué.</li>
+    <li><b>Cierra la caja todos los días</b>, contando el dinero de verdad.</li>
+    <li><b>Pon el costo a cada producto</b> para saber cuánto ganas.</li>
+    <li data-plans="base pro"><b>Contesta rápido los pedidos online:</b> los que pasan de 48 h se marcan.</li>
+    <li><b>Sin internet, no borres la app</b> hasta que suba las ventas.</li>
+  </ul>
+  <div class="box" style="margin-top:6mm">
+    <b>¿Dudas?</b><br>
+    • En <b>Más</b> › <b>Ayuda</b> están todas las guías.<br>
+    • O escríbenos por WhatsApp: <b>+1 575 263 9686</b>. Te ayudamos.
+  </div>
+  <div style="position:absolute;bottom:14mm;left:12mm;display:flex;align-items:center;gap:2.5mm;color:var(--gris);font-size:10pt">
+    <img src="kshop-symbol.svg" alt="" style="height:7mm"> Kshop · Un producto de Fullkod
+  </div>
+  <span class="num"></span>
+</section>
+
+</body>
+</html>

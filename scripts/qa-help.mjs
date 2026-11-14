@@ -255,6 +255,17 @@ try {
     .locator("a")
     .evaluateAll((as) => as.map((a) => a.href));
   check("the Ayuda page offers the PDF and three Markdown files", links.length === 4, links.join(" "));
+  // The manuals of every plan (pnpm help:guides): all six for every store.
+  const guides = await page
+    .getByTestId("help-guides")
+    .locator("a")
+    .evaluateAll((as) => as.map((a) => a.href));
+  check(
+    "the Ayuda page offers the six manuals (app and web of Caja, Base and Pro)",
+    guides.length === 6,
+    guides.join(" "),
+  );
+  links.push(...guides);
   for (const href of links) {
     // From the page: Node does not resolve *.localhost subdomains on Windows, Chromium does.
     const got = await page.evaluate(async (url) => {

@@ -59,7 +59,7 @@
 - [2026-11-14-ksh0023-puesta-en-marcha.md](project/2026-11-14-ksh0023-puesta-en-marcha.md) — KSH0023: la puesta en marcha (5 USD, `setup_fee_usd`) va sola en la primera factura de cada tienda nueva; dónde está cada pieza
 - [2026-10-30-donde-quedamos.md](project/2026-10-30-donde-quedamos.md) — Superado: cobro mixto y POS fases 1-2 en producción
 - [2026-11-08 — Acompañar a un negocio nuevo](project/2026-11-08-alta-de-un-negocio-nuevo.md) — Qué pedirle al cliente, qué hacemos en la carga, módulos y límites de Caja/Base/Pro; el cierre por WhatsApp es solo Pro o suelto y Caja no tiene el botón de Kshop Admin
-- [2026-11-08 — Guías en PDF por plan](project/2026-11-08-guias-por-plan.md) — Seis PDF (app y web de Caja, Base y Pro) en `_materiales/kshop/guias/`, cómo regenerarlos con `build.cjs` y qué falta (al día 2026-11-14: cierres, costos en la lista, puesta en marcha)
+- [2026-11-08 — Guías en PDF por plan](project/2026-11-08-guias-por-plan.md) — Seis PDF (app y web de Caja, Base y Pro) en `_materiales/kshop/guias/`, cómo regenerarlos con `build.cjs` y qué falta (al día 2026-11-14; desde ese día en el repo: `packages/admin/src/help/guides/`, `pnpm help:guides`, descargables en Ayuda por todas las tiendas)
 - [2026-11-13 — KSH0022 Costo en la lista de productos](project/2026-11-13-ksh0022-costos-en-lista.md) — Columna «Costo» editable (dueño/admin), diálogo para variantes, `PUT catalog/costs` → `set_variant_costs`
 - [2026-11-14 — Ventas de un cierre y búsqueda por producto](project/2026-11-14-cierres-ventas-por-producto.md) — Pedido de Minimercado: «Ver sus ventas» abre las ventas con sus productos, filtro que se conserva al volver, cierres anteriores y búsqueda en todos; dónde está cada pieza y qué falta
 

@@ -1,0 +1,92 @@
+/* Shared style of the Kshop guides. body.a5 = Kshop Admin guide, body.a4 = web manual. */
+:root { --violeta:#5B21B6; --noche:#24104F; --dorado:#F2B705; --lila:#F3EEFC; --gris:#5b5670; --verde:#15803d; --rojo:#b91c1c; }
+* { box-sizing: border-box; }
+body { margin:0; font-family:"DM Sans",system-ui,sans-serif; color:var(--noche); line-height:1.45; background:#fff; counter-reset:pg; }
+h1,h2,h3 { font-family:Outfit,system-ui,sans-serif; margin:0; line-height:1.15; }
+.page { position:relative; overflow:hidden; page-break-after:always; counter-increment:pg; }
+.page:last-child { page-break-after:auto; }
+.num { position:absolute; font-size:9pt; color:var(--gris); }
+.num::after { content: counter(pg); }
+.cover .num { display:none; }
+.foot { position:absolute; font-size:9pt; color:var(--gris); }
+.tag { display:inline-block; font-family:Outfit; font-weight:700; font-size:9pt; letter-spacing:.08em; text-transform:uppercase; color:var(--violeta); margin-bottom:2mm; }
+p { margin:0 0 2.5mm; }
+.btn { display:inline-block; background:var(--violeta); color:#fff; font-family:Outfit; font-weight:700; padding:.3mm 2.4mm; border-radius:2mm; white-space:nowrap; }
+.btn.o { background:#fff; color:var(--noche); border:.3mm solid #d9d2ea; }
+.pill { font-family:Outfit; font-size:.75em; background:var(--dorado); color:var(--noche); border-radius:1mm; padding:0 1.2mm; font-weight:700; }
+.steps { list-style:none; padding:0; margin:0; counter-reset:s; }
+.steps li { counter-increment:s; position:relative; }
+.steps li::before { content:counter(s); position:absolute; left:0; border-radius:50%; background:var(--dorado); color:var(--noche); font-family:Outfit; font-weight:800; display:flex; align-items:center; justify-content:center; }
+.box { background:var(--lila); border-radius:3mm; }
+.box b:first-child { color:var(--violeta); }
+.warn { background:#FFF7DB; border-left:1.2mm solid var(--dorado); }
+.row { display:flex; gap:5mm; align-items:flex-start; }
+.shot { border-radius:3mm; border:.35mm solid #e2dcf0; flex:none; }
+.cap { font-size:9pt; color:var(--gris); }
+.ex { font-family:Outfit; font-weight:700; color:var(--violeta); }
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; font-family:Outfit; padding:2mm 1.5mm; border-bottom:.5mm solid var(--violeta); }
+td { padding:2mm 1.5mm; border-bottom:.3mm solid #e6e0f2; vertical-align:top; }
+td.k { font-weight:700; }
+.c { text-align:center; }
+.ok { color:var(--verde); font-weight:700; } .bad { color:var(--rojo); font-weight:700; } .no { color:#b8b2c8; }
+.cover { background:var(--noche); color:#fff; display:flex; flex-direction:column; justify-content:space-between; }
+.cover h1 { color:#fff; }
+.cover .sub { color:#d9ccf5; }
+.cover .gold { color:var(--dorado); }
+.cover ul, .cover ol { margin:0; color:#e9e2fa; }
+.plan-chip { display:inline-block; font-family:Outfit; font-weight:800; background:var(--dorado); color:var(--noche); border-radius:2mm; padding:.6mm 3mm; letter-spacing:.05em; text-transform:uppercase; }
+.gold-list { padding-left:0; list-style:none; margin:0; }
+.gold-list li { padding-left:7mm; position:relative; margin-bottom:3.2mm; }
+.gold-list li::before { content:"★"; position:absolute; left:0; color:var(--dorado); }
+
+/* A5: Kshop Admin guide */
+@media print { body.a5 { } }
+body.a5 { font-size:12pt; }
+.a5 .page { width:148mm; height:210mm; padding:13mm 12mm 12mm; }
+.a5 .num { bottom:7mm; right:12mm; }
+.a5 h2 { font-size:20pt; margin-bottom:4.5mm; }
+.a5 h3 { font-size:13pt; margin:3.5mm 0 1.5mm; }
+.a5 .btn { font-size:10pt; }
+.a5 .steps li { padding-left:10.5mm; margin-bottom:3.4mm; }
+.a5 .steps li::before { top:-.4mm; width:7mm; height:7mm; font-size:11.5pt; }
+.a5 .box { padding:3mm 3.8mm; margin-top:3.2mm; font-size:11pt; }
+.a5 .shot { width:44mm; }
+.a5 .ex { font-size:14pt; }
+.a5 table { font-size:10.5pt; }
+.a5 .cover { padding:13mm 12mm 12mm; }
+.a5 .cover h1 { font-size:32pt; }
+.a5 .cover .sub { font-size:13.5pt; margin-top:4mm; }
+.a5 .cover li { margin-bottom:1.4mm; }
+
+/* A4: web manual */
+body.a4 { font-size:11.5pt; }
+.a4 .page { width:210mm; height:297mm; padding:16mm 16mm 14mm; }
+.a4 .num { bottom:8mm; right:16mm; }
+.a4 .foot { bottom:8mm; left:16mm; }
+.a4 h2 { font-size:24pt; margin-bottom:3mm; }
+.a4 h3 { font-size:13.5pt; margin:5mm 0 2mm; }
+.a4 .lead { color:var(--gris); font-size:12pt; margin-bottom:5mm; }
+.a4 .btn { font-size:10pt; }
+.a4 .steps li { padding-left:10mm; margin-bottom:3mm; }
+.a4 .steps li::before { top:-.3mm; width:6.8mm; height:6.8mm; font-size:11pt; }
+.a4 .box { padding:3mm 4mm; margin-top:3.5mm; font-size:10.5pt; }
+.a4 .shot { width:50mm; }
+.a4 table { font-size:10.5pt; }
+.a4 .cover { padding:22mm 20mm; }
+.a4 .cover h1 { font-size:44pt; }
+.a4 .cover .sub { font-size:15pt; margin-top:5mm; max-width:140mm; }
+.a4 .toc { columns:2; column-gap:10mm; font-size:12pt; padding-left:5mm; }
+.a4 .toc li { margin-bottom:2mm; break-inside:avoid; }
+.crop { overflow:hidden; border-radius:2.5mm; border:.3mm solid #e2dcf0; aspect-ratio:1032/800; margin:3mm 0; }
+.crop.short { aspect-ratio:1032/430; }
+.crop.mid { aspect-ratio:1032/600; }
+.crop img { width:124.03%; margin-left:-24.03%; display:block; }
+.menu { background:var(--noche); color:#fff; border-radius:3mm; padding:5mm; width:62mm; flex:none; font-size:10.5pt; }
+.menu .g { font-family:Outfit; font-size:8pt; letter-spacing:.1em; color:#a99bd0; margin:3mm 0 1.2mm; }
+.menu .i { padding:1.1mm 2.5mm; border-radius:1.5mm; }
+.menu .i.on { background:var(--violeta); }
+.menu .lock { color:#8f84b3; }
+.tabs { display:flex; border:.35mm solid #e2dcf0; border-radius:3mm; overflow:hidden; margin:2mm 0 4mm; }
+.tabs span { flex:1; text-align:center; padding:2mm 0; font-family:Outfit; font-weight:700; font-size:9.5pt; border-right:.3mm solid #eee8f7; }
+.tabs span:last-child { border-right:0; }

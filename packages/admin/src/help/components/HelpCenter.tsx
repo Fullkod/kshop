@@ -8,7 +8,9 @@ import { loadHelpAudience, saveHelpAudience, subscribeHelpStorage } from "../lib
 import {
   HELP_ANCHORS,
   HELP_MARKDOWN_FILES,
+  HELP_GUIDE_PLANS,
   HELP_PDF_FILE,
+  helpGuideFile,
   articleAnchor,
   inScope,
   matchesAudience,
@@ -233,6 +235,41 @@ export function HelpCenter({
             </a>
           ))}
         </div>
+      </section>
+
+      <section className="flex flex-col gap-3" aria-labelledby="help-guides">
+        <h2 id="help-guides" className="font-display text-xl font-bold">
+          Manuales de cada plan
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {scope === "store"
+            ? "Un manual de Kshop Admin (la app del teléfono) y otro del panel web por plan, en PDF. Están todos: así ves también lo que traen los otros planes."
+            : "Los manuales que ve cada tienda en su Ayuda, para mandárselos a un cliente."}
+        </p>
+        <ul className="flex flex-col divide-y rounded-md border" data-testid="help-guides">
+          {HELP_GUIDE_PLANS.map((g) => (
+            <li
+              key={g.plan}
+              className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <span className="font-medium">Plan {g.name}</span>
+              <span className="flex flex-wrap gap-2">
+                {(["app", "web"] as const).map((kind) => (
+                  <a
+                    key={kind}
+                    href={`${base}/help/${helpGuideFile(g.plan, kind)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch:min-h-10")}
+                  >
+                    <Download size={16} aria-hidden />
+                    {kind === "app" ? "Kshop Admin" : "Panel web"}
+                  </a>
+                ))}
+              </span>
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );
