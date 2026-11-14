@@ -1,6 +1,6 @@
 # PRP: Ventas de un cierre y búsqueda por producto
 
-> **Estado**: APROBADO (Roberto, 2026-11-14) — fases 1–5 hechas en prueba; falta la 6 (producción, deploy y APK, con permiso)
+> **Estado**: COMPLETADO 2026-11-14 — en producción (web `99ba868`, Kshop Admin 1.0.33)
 > **Fecha**: 2026-11-14
 > **Proyecto**: Kshop · pedido de Minimercado (`minimercado`)
 > **Tarea Tasknic**: por asignar (KSH00xx)
@@ -134,7 +134,7 @@ Numeric como texto, igual que las demás lecturas. Sin costos en estas funciones
 - Migración `20261108103100_closing_sales.sql`: `private.pos_sale_card`, `admin_pos_closings(p_store_id, p_days, p_before)`
   (añade `before` y `hasOlder`; las llamadas viejas con dos parámetros siguen valiendo), `admin_pos_closing_sales`,
   `admin_pos_product_sales`. Aplicada en **prueba**; test `28_closing_sales` 21/21 y suite 913/913 en prueba.
-  **Falta producción** (migración + `test:rls` una vez, con la web sin uso).
+  En producción 2026-11-14: migración aplicada y `test:rls` 913/913.
 - Datos: `reads.posClosings(store, days, before)`, `reads.posClosingSales`, `reads.posProductSales` y tipos
   `PosSaleCard`, `PosClosingSales`, `PosProductSales`. El filtro usa `normalizeSearch` de `@kshop/core` (ya existía).
 - UI en `packages/admin/src/pos/`: `PosClosings` (enlace «Ver sus ventas (N)», «Ver cierres anteriores», «Buscar un
@@ -148,6 +148,10 @@ Numeric como texto, igual que las demás lecturas. Sin costos en estas funciones
   proyecto de **prueba** se cerraron las 60 ventas abiertas de la Tienda Demo y el cierre vacío que había se movió
   40 días atrás. Falta probarlo dentro de Kshop Admin en un Android (usa los mismos componentes; el botón atrás de
   Android hace `history.back()`).
+
+- Entrega (permiso de Roberto, 2026-11-14): push de `99ba868` (Vercel en verde), workflow «Android app» run
+  43617744603 → Kshop Admin 1.0.33 subido con `app:publish admin` y publicado (borrada la 1.0.32). Publicado con la
+  clave de servicio haciendo lo mismo que `setAppBuildPublished` (no hay sesión de superadmin en `.env.local`).
 
 ## Aprendizajes
 

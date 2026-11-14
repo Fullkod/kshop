@@ -10,5 +10,5 @@ incluida. Plan y detalle en `.titan/plans/prp-cierres-ventas-por-producto.md`.
 - «Atrás» conserva filtro, páginas y scroll con `packages/admin/src/pos/screen-memory.ts`; en la web el pedido
   abierto desde un cierre lleva `?from=` y el «Volver» del teléfono vuelve ahí.
 - `pnpm qa:closing-sales` (Tienda Demo de prueba, solo lectura).
-- Estado: hecho y probado en el proyecto de prueba; **falta** migrar producción (+ `test:rls`), desplegar la web y
-  publicar Kshop Admin, con permiso de Roberto.
+- En producción 2026-11-14: migración + `test:rls` 913/913, web `99ba868` y Kshop Admin 1.0.33 publicado (borrada
+  la 1.0.32). Falta que Minimercado lo pruebe en su Android.
