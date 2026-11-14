@@ -3,7 +3,7 @@
 > **Estado**: COMPLETADO 2026-11-14 — en producción (web `99ba868`, Kshop Admin 1.0.33)
 > **Fecha**: 2026-11-14
 > **Proyecto**: Kshop · pedido de Minimercado (`minimercado`)
-> **Tarea Tasknic**: por asignar (KSH00xx)
+> **Tarea Tasknic**: KSH0024
 
 ---
 
@@ -152,6 +152,10 @@ Numeric como texto, igual que las demás lecturas. Sin costos en estas funciones
 - Entrega (permiso de Roberto, 2026-11-14): push de `99ba868` (Vercel en verde), workflow «Android app» run
   43617744603 → Kshop Admin 1.0.33 subido con `app:publish admin` y publicado (borrada la 1.0.32). Publicado con la
   clave de servicio haciendo lo mismo que `setAppBuildPublished` (no hay sesión de superadmin en `.env.local`).
+
+- Después, en la misma tarea (2026-11-14): manuales por plan en el repo y descargables en Ayuda (`cdfeca5`, Kshop
+  Admin 1.0.34) y ayuda pública en `kshop.fullkod.com/help` enlazada desde la portada (`b137768`, desplegada por
+  Roberto).
 
 ## Aprendizajes
 

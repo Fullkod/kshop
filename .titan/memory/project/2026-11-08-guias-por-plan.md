@@ -4,7 +4,7 @@
 > `apps/web/public/help/guias/kshop-<plan>-<app|web>.pdf` con `pnpm help:guides`, y **todas las tiendas descargan
 > los seis** en Ayuda › «Manuales de cada plan» (web, Kshop Admin y superadmin), para ver lo que traen los otros
 > planes. La regla de AGENTS.md los incluye: si cambia la interfaz, se corrigen y regeneran en el mismo commit.
-> En producción 2026-11-14: web `cdfeca5` y Kshop Admin 1.0.34 publicado (borrada la 1.0.33).
+> En producción 2026-11-14: web `cdfeca5` y Kshop Admin 1.0.34 publicado (borrada la 1.0.33). Tarea KSH0024.
 > Lo de abajo (rutas en `_materiales`, `build.cjs`) quedó superado; esa carpeta tiene un LEEME que lo dice.
 
 Date: 2026-11-08
